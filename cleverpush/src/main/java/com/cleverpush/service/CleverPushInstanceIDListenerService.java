@@ -1,0 +1,96 @@
+package com.cleverpush.service;
+
+import android.content.Intent;
+
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
+import com.cleverpush.CleverPushHttpClient;
+import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.FcmSenderIdListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.FirebaseInstanceIdService;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdService {
+
+    private static final String TAG = "CPInstanceIDLS";
+
+    @Override
+    public void onTokenRefresh() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
+        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        if (channelId == null) {
+            return;
+        }
+
+        getFcmSenderId(channelId, fcmSenderId -> {
+            try {
+                String token = FirebaseInstanceId.getInstance().getToken("FCM", fcmSenderId);
+
+                sendRegistrationToServer(sharedPreferences, channelId, subscriptionId, token);
+
+                sharedPreferences.edit().putBoolean(CleverPushPreferences.SENT_TOKEN_TO_SERVER, true).apply();
+            } catch (Exception e) {
+                Log.d(TAG, "Failed to complete token refresh", e);
+                sharedPreferences.edit().putBoolean(CleverPushPreferences.SENT_TOKEN_TO_SERVER, false).apply();
+            }
+            Intent registrationComplete = new Intent(CleverPushPreferences.REGISTRATION_COMPLETE);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);
+        });
+    }
+
+    private static void getFcmSenderId(String channelId, FcmSenderIdListener listener) {
+        CleverPushHttpClient.get("channel/" + channelId + "/fcm-params", new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    JSONObject responseJson = new JSONObject(response);
+                    if (responseJson.has("fcmSenderId")) {
+                        listener.complete(responseJson.getString("fcmSenderId"));
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+
+            }
+        });
+    }
+
+    private void sendRegistrationToServer(SharedPreferences sharedPreferences, String channelId, String subscriptionId, String token) {
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("fcmToken", token);
+            jsonBody.put("subscriptionId", subscriptionId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        CleverPushHttpClient.post("subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    JSONObject responseJson = new JSONObject(response);
+                    if (responseJson.has("subscriptionId")) {
+                        sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, responseJson.getString("subscriptionId")).apply();
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+
+            }
+        });
+    }
+}
