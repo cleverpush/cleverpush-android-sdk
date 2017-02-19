@@ -52,10 +52,17 @@ public class CleverPush {
     }
 
     public void fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
+        if (notificationOpenedListener == null) {
+            return;
+        }
         if (Looper.getMainLooper().getThread() == Thread.currentThread())
             notificationOpenedListener.notificationOpened(openedResult);
         else {
             ((Activity) this.context).runOnUiThread(() -> notificationOpenedListener.notificationOpened(openedResult));
         }
+    }
+
+    public void removeNotificationOpenedListener() {
+        notificationOpenedListener = null;
     }
 }
