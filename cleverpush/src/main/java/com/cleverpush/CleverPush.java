@@ -42,10 +42,10 @@ public class CleverPush {
         if (channelId == null) {
             throw new Exception("Please set up your CLEVERPUSH_CHANNEL_ID in AndroidManifest.xml");
         }
-        init(notificationOpenedListener, channelId);
+        init(channelId, notificationOpenedListener);
     }
 
-    public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, String channelId) throws Exception {
+    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) throws Exception {
         this.notificationOpenedListener = notificationOpenedListener;
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
         sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, channelId).apply();
