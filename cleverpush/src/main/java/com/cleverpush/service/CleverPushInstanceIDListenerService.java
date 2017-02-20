@@ -3,9 +3,11 @@ package com.cleverpush.service;
 import android.content.Intent;
 
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.FcmSenderIdListener;
@@ -70,6 +72,10 @@ public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdServi
         try {
             jsonBody.put("fcmToken", token);
             jsonBody.put("subscriptionId", subscriptionId);
+            jsonBody.put("platformName", "Android");
+            jsonBody.put("platformVersion", Build.VERSION.RELEASE);
+            jsonBody.put("browserType", "SDK");
+            jsonBody.put("browserVersion", CleverPush.SDK_VERSION);
         } catch (JSONException e) {
             e.printStackTrace();
         }

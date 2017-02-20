@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Scanner;
 
 import org.json.JSONObject;
@@ -42,6 +43,7 @@ public class CleverPushHttpClient {
 
             if (method != null) {
                 con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                con.setRequestProperty("Accept-Language", Locale.getDefault().getLanguage());
                 con.setRequestMethod(method);
                 con.setDoOutput(true);
             }

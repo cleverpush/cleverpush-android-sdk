@@ -12,6 +12,8 @@ import com.cleverpush.listener.NotificationOpenedListener;
 
 public class CleverPush {
 
+    public static final String SDK_VERSION = "0.0.1";
+
     private static CleverPush instance;
 
     public static CleverPush getInstance(@NonNull Context context) {
