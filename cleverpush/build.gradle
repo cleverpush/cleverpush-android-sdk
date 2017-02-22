@@ -1,4 +1,11 @@
 apply plugin: 'com.android.library'
+apply from: 'maven-push.gradle'
+
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xbootclasspath/a:" + System.properties.get("java.home") + "/lib/rt.jar"
+    }
+}
 
 android {
     compileSdkVersion 25
@@ -7,9 +14,15 @@ android {
     defaultConfig {
         minSdkVersion 14
     }
+
     compileOptions {
-        targetCompatibility 1.8
-        sourceCompatibility 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
     }
 }
 
