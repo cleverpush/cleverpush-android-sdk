@@ -3,9 +3,10 @@
 1. Add the needed libraries to your Gradle config
 
    ```groovy
-   compile 'com.cleverpush:cleverpush:+'
-   compile 'com.android.support:support-v4:+'
-   compile 'com.google.firebase:firebase-messaging:+'
+   implementation 'com.cleverpush:cleverpush:+'
+   implementation 'com.android.support:support-v4:+'
+   implementation 'com.google.firebase:firebase-messaging:+'
+   implementation 'com.google.code.gson:gson:2.8.5'
    ```
 
 2. Add the following tags to your AndroidManifest.xml file
@@ -43,6 +44,7 @@
    }
    ```
 
+
    You can also add a `NotificationOpenedListener`
 
 
@@ -51,10 +53,30 @@
        public void onCreate(Bundle savedInstanceState) {
            CleverPush.getInstance(this).init(new NotificationOpenedListener() {
                notificationOpened(NotificationOpenedResult result) {
-                  Map data = result.getData();
-                  System.out.println(data.get("url"));
+                  System.out.println("Opened CleverPush Notification with URL: " + result.getNotification().getUrl());
               };
            });
        }
+   }
+   ```
+
+
+   And a `SubscribedListener`
+
+
+   ```java
+   public class MainActivity extends Activity {
+      public void onCreate(Bundle savedInstanceState) {
+          CleverPush.getInstance(this).init(new NotificationOpenedListener() {
+              notificationOpened(NotificationOpenedResult result) {
+                 Map data = result.getData();
+                 System.out.println(data.get("url"));
+             };
+          }, new SubscribedListener() {
+               subscribed(String subscriptionId) {
+                  System.out.println("CleverPush Subscription ID: " + subscriptionId);
+              };
+           });
+      }
    }
    ```

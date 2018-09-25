@@ -8,11 +8,21 @@ import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
+
 import com.cleverpush.listener.NotificationOpenedListener;
+import com.cleverpush.listener.SubscribedListener;
+import com.cleverpush.manager.SubscriptionManager;
+import com.cleverpush.manager.SubscriptionManagerADM;
+import com.cleverpush.manager.SubscriptionManagerFCM;
+import com.cleverpush.manager.SubscriptionManagerGCM;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.1";
+    public static final String SDK_VERSION = "0.0.3";
 
     private static CleverPush instance;
 
@@ -26,6 +36,7 @@ public class CleverPush {
     private Context context;
 
     private NotificationOpenedListener notificationOpenedListener;
+    private SubscribedListener subscribedListener;
 
     private CleverPush(@NonNull Context context) {
         if (context instanceof Application) {
@@ -36,21 +47,64 @@ public class CleverPush {
     }
 
     public void init() throws Exception {
-        init(null);
+        init(null, null, null);
+    }
+
+    public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) throws Exception {
+        init(null, notificationOpenedListener, subscribedListener);
     }
 
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) throws Exception {
         String channelId = MetaDataUtils.getChannelId(this.context);
         if (channelId == null) {
-            throw new Exception("Please set up your CLEVERPUSH_CHANNEL_ID in AndroidManifest.xml");
+            throw new Exception("Please set up your CLEVERPUSH_CHANNEL_ID in AndroidManifest.xml or as first parameter");
         }
         init(channelId, notificationOpenedListener);
     }
 
+    public void init(@Nullable final SubscribedListener subscribedListener) throws Exception {
+        String channelId = MetaDataUtils.getChannelId(this.context);
+        if (channelId == null) {
+            throw new Exception("Please set up your CLEVERPUSH_CHANNEL_ID in AndroidManifest.xml or as first parameter");
+        }
+        init(channelId, subscribedListener);
+    }
+
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) throws Exception {
+        init(channelId, notificationOpenedListener, null);
+    }
+
+    public void init(String channelId, @Nullable final SubscribedListener subscribedListener) throws Exception {
+        init(channelId, null, subscribedListener);
+    }
+
+    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) throws Exception {
         this.notificationOpenedListener = notificationOpenedListener;
+        this.subscribedListener = subscribedListener;
+
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
         sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, channelId).apply();
+
+        SubscriptionManagerFCM.disableFirebaseInstanceIdService(this.context);
+
+        int currentTime = (int) (System.currentTimeMillis() / 1000L);
+        int threeDays = 3 * 60 * 60 * 24;
+        int lastSync = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0);
+        int nextSync = lastSync + threeDays;
+        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        if (subscriptionId == null || nextSync < currentTime) {
+            SubscriptionManager subscriptionManager = this.getSubscriptionManager();
+            subscriptionManager.subscribe(newSubscriptionId -> {
+                Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
+                this.fireSubscribedListener(newSubscriptionId);
+            });
+        } else {
+            Date nextSyncDate = new Date(nextSync*1000L);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+            String formattedDate = sdf.format(nextSyncDate);
+            Log.d("CleverPush", "subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
+            this.fireSubscribedListener(subscriptionId);
+        }
     }
 
     public void fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
@@ -66,5 +120,52 @@ public class CleverPush {
 
     public void removeNotificationOpenedListener() {
         notificationOpenedListener = null;
+    }
+
+    public void fireSubscribedListener(final String subscriptionId) {
+        if (subscribedListener == null) {
+            return;
+        }
+        if (Looper.getMainLooper().getThread() == Thread.currentThread())
+            subscribedListener.subscribed(subscriptionId);
+        else {
+            ((Activity) this.context).runOnUiThread(() -> subscribedListener.subscribed(subscriptionId));
+        }
+    }
+
+    public void removeSubscribedListener() {
+        subscribedListener = null;
+    }
+
+    private SubscriptionManager subscriptionManager;
+    private SubscriptionManager getSubscriptionManager() {
+        if (subscriptionManager != null) {
+            return subscriptionManager;
+        }
+
+        boolean isAmazon = false;
+        try {
+            Class.forName("com.amazon.device.messaging.ADM");
+            isAmazon = true;
+        } catch (ClassNotFoundException ignored) {
+        }
+
+        boolean isFcm = false;
+        try {
+            if (com.google.firebase.messaging.FirebaseMessaging.class != null) {
+                isFcm = true;
+            }
+        } catch (Throwable ignored) {
+        }
+
+        if (isAmazon) {
+            subscriptionManager = new SubscriptionManagerADM(this.context);
+        } else if (isFcm) {
+            subscriptionManager = new SubscriptionManagerFCM(this.context);
+        } else {
+            subscriptionManager = new SubscriptionManagerGCM(this.context);
+        }
+
+        return subscriptionManager;
     }
 }

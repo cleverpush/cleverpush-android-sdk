@@ -47,7 +47,7 @@ public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdServi
     }
 
     private static void getFcmSenderId(String channelId, FcmSenderIdListener listener) {
-        CleverPushHttpClient.get("channel/" + channelId + "/fcm-params", new CleverPushHttpClient.ResponseHandler() {
+        CleverPushHttpClient.get("/channel/" + channelId + "/fcm-params", new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 try {
@@ -80,13 +80,13 @@ public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdServi
             e.printStackTrace();
         }
 
-        CleverPushHttpClient.post("subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
+        CleverPushHttpClient.post("/subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 try {
                     JSONObject responseJson = new JSONObject(response);
-                    if (responseJson.has("subscriptionId")) {
-                        sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, responseJson.getString("subscriptionId")).apply();
+                    if (responseJson.has("id")) {
+                        sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, responseJson.getString("id")).apply();
                     }
                 } catch (Throwable t) {
                     t.printStackTrace();
@@ -95,7 +95,7 @@ public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdServi
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-
+                System.out.println("CleverPush IIDLS failure: " + statusCode + " " + response);
             }
         });
     }

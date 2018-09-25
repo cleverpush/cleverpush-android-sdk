@@ -2,59 +2,45 @@ package com.cleverpush;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
+
+import com.google.gson.Gson;
+
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 public class NotificationOpenedProcessor {
 
     public static void processIntent(Context context, Intent intent) {
-        Map data = null;
-        try {
-            data = jsonToMap(intent.getStringExtra("data"));
-        } catch (Throwable t) {
-            t.printStackTrace();
+        Gson gson = new Gson();
+        Notification notification = gson.fromJson(intent.getStringExtra("notification"), Notification.class);
+        Subscription subscription = gson.fromJson(intent.getStringExtra("subscription"), Subscription.class);
+
+        if (notification == null || subscription == null) {
+            return;
+        }
+
+        String notificationId = notification.getId();
+        String subscriptionId = subscription.getId();
+
+        if (notificationId == null || subscriptionId == null) {
+            return;
         }
 
         NotificationOpenedResult result = new NotificationOpenedResult();
-        result.setData(data);
+        result.setNotification(notification);
+        result.setSubscription(subscription);
 
-        if (data != null) {
-            String notificationId = (String) data.get("notificationId");
-            String subscriptionId = (String) data.get("subscriptionId");
-
-            if (notificationId != null && subscriptionId != null) {
-                JSONObject jsonBody = new JSONObject();
-                try {
-                    jsonBody.put("notificationId", notificationId);
-                    jsonBody.put("subscriptionId", subscriptionId);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-                CleverPushHttpClient.post("notification/clicked", jsonBody, null);
-            }
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("notificationId", notificationId);
+            jsonBody.put("subscriptionId", subscriptionId);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
+        CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
 
         CleverPush.getInstance(context).fireNotificationOpenedListener(result);
-    }
-
-    public static Map<String, Object> jsonToMap(String jsonString ) throws JSONException {
-        Map<String, Object> keys = new HashMap<>();
-        org.json.JSONObject jsonObject = new JSONObject( jsonString );
-        Iterator<?> keyset = jsonObject.keys();
-        while (keyset.hasNext()) {
-            String key =  (String) keyset.next();
-            Object value = jsonObject.get(key);
-            if (value instanceof JSONObject) {
-                keys.put(key, jsonToMap(value.toString()));
-            } else {
-                keys.put(key, value);
-            }
-        }
-        return keys;
     }
 }

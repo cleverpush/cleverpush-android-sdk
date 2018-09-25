@@ -1,15 +1,22 @@
 package com.cleverpush;
 
-import java.util.Map;
-
 public class NotificationOpenedResult {
-   private Map data;
+    private Notification notification;
+    private Subscription subscription;
 
-   public Map getData() {
-      return data;
-   }
+    public Notification getNotification() {
+        return notification;
+    }
 
-   public void setData(Map data) {
-      this.data = data;
-   }
+    public void setNotification(Notification notification) {
+        this.notification = notification;
+    }
+
+    public Subscription getSubscription() {
+        return subscription;
+    }
+
+    public void setSubscription(Subscription subscription) {
+        this.subscription = subscription;
+    }
 }
