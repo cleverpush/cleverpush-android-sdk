@@ -69,8 +69,7 @@
       public void onCreate(Bundle savedInstanceState) {
           CleverPush.getInstance(this).init(new NotificationOpenedListener() {
               notificationOpened(NotificationOpenedResult result) {
-                 Map data = result.getData();
-                 System.out.println(data.get("url"));
+                 System.out.println("Opened CleverPush Notification with URL: " + result.getNotification().getUrl());
              };
           }, new SubscribedListener() {
                subscribed(String subscriptionId) {
