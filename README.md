@@ -79,3 +79,11 @@
       }
    }
    ```
+
+
+If you use ProGuard, you need to add these exceptions:
+
+```
+-keep class com.cleverpush.** { *; }
+-keep interface com.cleverpush.** { *; }
+```

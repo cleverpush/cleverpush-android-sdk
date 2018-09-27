@@ -22,7 +22,7 @@ import java.util.Date;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.3";
+    public static final String SDK_VERSION = "0.0.4";
 
     private static CleverPush instance;
 
@@ -111,11 +111,7 @@ public class CleverPush {
         if (notificationOpenedListener == null) {
             return;
         }
-        if (Looper.getMainLooper().getThread() == Thread.currentThread())
-            notificationOpenedListener.notificationOpened(openedResult);
-        else {
-            ((Activity) this.context).runOnUiThread(() -> notificationOpenedListener.notificationOpened(openedResult));
-        }
+        notificationOpenedListener.notificationOpened(openedResult);
     }
 
     public void removeNotificationOpenedListener() {
@@ -126,11 +122,7 @@ public class CleverPush {
         if (subscribedListener == null) {
             return;
         }
-        if (Looper.getMainLooper().getThread() == Thread.currentThread())
-            subscribedListener.subscribed(subscriptionId);
-        else {
-            ((Activity) this.context).runOnUiThread(() -> subscribedListener.subscribed(subscriptionId));
-        }
+        subscribedListener.subscribed(subscriptionId);
     }
 
     public void removeSubscribedListener() {
