@@ -17,12 +17,15 @@ import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerGCM;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.4";
+    public static final String SDK_VERSION = "0.0.5";
 
     private static CleverPush instance;
 
@@ -37,6 +40,10 @@ public class CleverPush {
 
     private NotificationOpenedListener notificationOpenedListener;
     private SubscribedListener subscribedListener;
+
+    private boolean subscriptionIdAvailable = false;
+    private String channelId;
+    private String subscriptionId;
 
     private CleverPush(@NonNull Context context) {
         if (context instanceof Application) {
@@ -79,6 +86,7 @@ public class CleverPush {
     }
 
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) throws Exception {
+        this.channelId = channelId;
         this.notificationOpenedListener = notificationOpenedListener;
         this.subscribedListener = subscribedListener;
 
@@ -97,6 +105,7 @@ public class CleverPush {
             subscriptionManager.subscribe(newSubscriptionId -> {
                 Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
                 this.fireSubscribedListener(newSubscriptionId);
+                this.setSubscriptionId(newSubscriptionId);
             });
         } else {
             Date nextSyncDate = new Date(nextSync*1000L);
@@ -104,7 +113,30 @@ public class CleverPush {
             String formattedDate = sdf.format(nextSyncDate);
             Log.d("CleverPush", "subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
             this.fireSubscribedListener(subscriptionId);
+            this.setSubscriptionId(subscriptionId);
         }
+    }
+
+    public synchronized String getSubscriptionId() {
+        while (!subscriptionIdAvailable) {
+            try {
+                wait();
+            } catch (InterruptedException e) { }
+        }
+        subscriptionIdAvailable = false;
+        notifyAll();
+        return subscriptionId;
+    }
+
+    public synchronized void setSubscriptionId(String value) {
+        while (subscriptionIdAvailable) {
+            try {
+                wait();
+            } catch (InterruptedException e) { }
+        }
+        subscriptionId = value;
+        subscriptionIdAvailable = true;
+        notifyAll();
     }
 
     public void fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
@@ -159,5 +191,54 @@ public class CleverPush {
         }
 
         return subscriptionManager;
+    }
+
+    public void addSubscriptionTag(String tagId) {
+        String subscriptionId = this.getSubscriptionId();
+        if (subscriptionId != null) {
+            JSONObject jsonBody = new JSONObject();
+            try {
+                jsonBody.put("channelId", this.channelId);
+                jsonBody.put("tagId", tagId);
+                jsonBody.put("subscriptionId", subscriptionId);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            CleverPushHttpClient.post("/subscription/tag", jsonBody, null);
+        }
+    }
+
+    public void removeSubscriptionTag(String tagId) {
+        String subscriptionId = this.getSubscriptionId();
+        if (subscriptionId != null) {
+            JSONObject jsonBody = new JSONObject();
+            try {
+                jsonBody.put("channelId", this.channelId);
+                jsonBody.put("tagId", tagId);
+                jsonBody.put("subscriptionId", subscriptionId);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            CleverPushHttpClient.post("/subscription/untag", jsonBody, null);
+        }
+    }
+
+    public void setSubscriptionAttribute(String attributeId, String value) {
+        String subscriptionId = this.getSubscriptionId();
+        if (subscriptionId != null) {
+            JSONObject jsonBody = new JSONObject();
+            try {
+                jsonBody.put("channelId", this.channelId);
+                jsonBody.put("attributeId", attributeId);
+                jsonBody.put("value", value);
+                jsonBody.put("subscriptionId", subscriptionId);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            CleverPushHttpClient.post("/subscription/attribute", jsonBody, null);
+        }
     }
 }
