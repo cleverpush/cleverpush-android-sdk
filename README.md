@@ -45,45 +45,63 @@
    ```
 
 
-   You can also add a `NotificationOpenedListener`
-
-
-   ```java
-   public class MainActivity extends Activity {
-       public void onCreate(Bundle savedInstanceState) {
-           CleverPush.getInstance(this).init(new NotificationOpenedListener() {
-               notificationOpened(NotificationOpenedResult result) {
-                  System.out.println("Opened CleverPush Notification with URL: " + result.getNotification().getUrl());
-              };
-           });
-       }
-   }
-   ```
-
-
-   And a `SubscribedListener`
-
-
-   ```java
-   public class MainActivity extends Activity {
-      public void onCreate(Bundle savedInstanceState) {
-          CleverPush.getInstance(this).init(new NotificationOpenedListener() {
-              notificationOpened(NotificationOpenedResult result) {
-                 System.out.println("Opened CleverPush Notification with URL: " + result.getNotification().getUrl());
-             };
-          }, new SubscribedListener() {
-               subscribed(String subscriptionId) {
-                  System.out.println("CleverPush Subscription ID: " + subscriptionId);
-              };
-           });
-      }
-   }
-   ```
-
-
-If you use ProGuard, you need to add these exceptions:
+If you use ProGuard, you may need to add these exceptions:
 
 ```
 -keep class com.cleverpush.** { *; }
 -keep interface com.cleverpush.** { *; }
 ```
+
+
+
+# Usage
+
+You can add a `NotificationOpenedListener`
+
+
+```java
+public class MainActivity extends Activity {
+   public void onCreate(Bundle savedInstanceState) {
+       CleverPush.getInstance(this).init(new NotificationOpenedListener() {
+           notificationOpened(NotificationOpenedResult result) {
+              System.out.println("Opened CleverPush Notification with URL: " + result.getNotification().getUrl());
+          };
+       });
+   }
+}
+```
+
+
+And a `SubscribedListener`
+
+
+```java
+public class MainActivity extends Activity {
+  public void onCreate(Bundle savedInstanceState) {
+      CleverPush.getInstance(this).init(new NotificationOpenedListener() {
+          notificationOpened(NotificationOpenedResult result) {
+             System.out.println("Opened CleverPush Notification with URL: " + result.getNotification().getUrl());
+         };
+      }, new SubscribedListener() {
+           subscribed(String subscriptionId) {
+              System.out.println("CleverPush Subscription ID: " + subscriptionId);
+          };
+       });
+  }
+}
+```
+
+
+Tagging and Attributes
+
+
+```java
+Set<ChannelTag> channelTags = CleverPush.getInstance(this).getAvailableTags();
+Set<CustomAttribute> customAttributes = CleverPush.getInstance(this).getAvailableAttributes();
+
+Set<String> subscribedTagIds = CleverPush.getInstance(this).getSubscriptionTags();
+Map<String, String> subscriptionAttributes = CleverPush.getInstance(this).getSubscriptionAttributes();
+boolean hasTag = CleverPush.getInstance(this).hasSubscriptionTag(channelTags.get(0).getId());
+String attributeValue = CleverPush.getInstance(this).getSubscriptionAttribute("user_id");
+```
+

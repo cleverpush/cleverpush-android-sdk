@@ -7,5 +7,7 @@ public class CleverPushPreferences {
     public static final String CHANNEL_ID = "channelId";
     public static final String SUBSCRIPTION_ID = "subscriptionId";
     public static final String SUBSCRIPTION_LAST_SYNC = "subscriptionLastSync";
+    public static final String SUBSCRIPTION_TAGS = "subscriptionTags";
+    public static final String SUBSCRIPTION_ATTRIBUTES = "subscriptionAttributes";
 
 }
