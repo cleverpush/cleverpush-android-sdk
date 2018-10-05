@@ -33,7 +33,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.6";
+    public static final String SDK_VERSION = "0.0.7";
 
     private static CleverPush instance;
 
@@ -328,7 +328,10 @@ public class CleverPush {
             CleverPushHttpClient.post("/subscription/tag", jsonBody, new CleverPushHttpClient.ResponseHandler() {
                 @Override
                 public void onSuccess(String response) {
-                    sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags).apply();
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
+                    editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
+                    editor.commit();
                 }
 
                 @Override
@@ -358,7 +361,10 @@ public class CleverPush {
             CleverPushHttpClient.post("/subscription/untag", jsonBody, new CleverPushHttpClient.ResponseHandler() {
                 @Override
                 public void onSuccess(String response) {
-                    sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags).apply();
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
+                    editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
+                    editor.commit();
                 }
 
                 @Override
