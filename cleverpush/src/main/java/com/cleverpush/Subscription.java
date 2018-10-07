@@ -2,7 +2,9 @@ package com.cleverpush;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Subscription {
+import java.io.Serializable;
+
+public class Subscription implements Serializable {
     @SerializedName("_id")
     String id;
 

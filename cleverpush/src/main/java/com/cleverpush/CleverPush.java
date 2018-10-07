@@ -1,10 +1,8 @@
 package com.cleverpush;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,18 +20,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.7";
+    public static final String SDK_VERSION = "0.0.8";
 
     private static CleverPush instance;
 
