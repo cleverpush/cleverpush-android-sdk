@@ -31,6 +31,10 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
     }
 
     void syncSubscription(String token, String senderId) {
+        syncSubscription(token, senderId, false);
+    }
+
+    void syncSubscription(String token, String senderId, boolean retry) {
         Log.d("CleverPush", "syncSubscription");
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
@@ -79,7 +83,14 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable t) {
-                Log.e("CleverPush", "Failed while sync subscription request", t);
+                if (statusCode == 404 || statusCode == 410) {
+                    if (!retry) {
+                        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
+                        syncSubscription(token, senderId, true);
+                        return;
+                    }
+                }
+                Log.e("CleverPush", "Failed while sync subscription request - " + statusCode + " - " + response, t);
             }
         });
     }

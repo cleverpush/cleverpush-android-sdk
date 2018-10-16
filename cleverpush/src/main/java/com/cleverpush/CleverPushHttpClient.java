@@ -62,7 +62,7 @@ public class CleverPushHttpClient {
 
             InputStream inputStream;
             Scanner scanner;
-            if (httpResponse == HttpURLConnection.HTTP_OK) {
+            if (httpResponse == HttpURLConnection.HTTP_OK || httpResponse == HttpURLConnection.HTTP_CREATED) {
                 inputStream = con.getInputStream();
                 scanner = new Scanner(inputStream, "UTF-8");
                 json = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
