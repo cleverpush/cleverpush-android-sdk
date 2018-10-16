@@ -3,6 +3,7 @@ package com.cleverpush;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -31,7 +32,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.9";
+    public static final String SDK_VERSION = "0.0.10";
 
     private static CleverPush instance;
 
@@ -133,13 +134,8 @@ public class CleverPush {
         int lastSync = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0);
         int nextSync = lastSync + threeDays;
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        if (subscriptionId == null && autoRegister || nextSync < currentTime) {
-            SubscriptionManager subscriptionManager = this.getSubscriptionManager();
-            subscriptionManager.subscribe(newSubscriptionId -> {
-                Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
-                this.fireSubscribedListener(newSubscriptionId);
-                this.setSubscriptionId(newSubscriptionId);
-            });
+        if (subscriptionId == null && autoRegister || subscriptionId != null && nextSync < currentTime) {
+            this.subscribe();
         } else {
             Date nextSyncDate = new Date(nextSync*1000L);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
@@ -147,6 +143,46 @@ public class CleverPush {
             Log.d("CleverPush", "subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
+        }
+    }
+
+    public void subscribe() {
+        SubscriptionManager subscriptionManager = this.getSubscriptionManager();
+        subscriptionManager.subscribe(newSubscriptionId -> {
+            Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
+            this.fireSubscribedListener(newSubscriptionId);
+            this.setSubscriptionId(newSubscriptionId);
+        });
+    }
+
+    public void unsubscribe() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        if (subscriptionId != null) {
+            JSONObject jsonBody = new JSONObject();
+            try {
+                jsonBody.put("channelId", this.channelId);
+                jsonBody.put("subscriptionId", subscriptionId);
+            } catch (JSONException e) {
+                Log.e("CleverPush", "Error", e);
+            }
+
+            CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+                @Override
+                public void onSuccess(String response) {
+                    try {
+                        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
+                        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC).apply();
+                    } catch (Throwable t) {
+                        Log.e("CleverPush", "Error", t);
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, String response, Throwable t) {
+                    Log.e("CleverPush", "Failed while unsubscribe request - " + statusCode + " - " + response, t);
+                }
+            });
         }
     }
 
