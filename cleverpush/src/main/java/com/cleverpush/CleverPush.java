@@ -32,7 +32,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.10";
+    public static final String SDK_VERSION = "0.0.11";
 
     private static CleverPush instance;
 
@@ -144,6 +144,11 @@ public class CleverPush {
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
         }
+    }
+
+    public boolean isSubscribed() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+        return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_ID);
     }
 
     public void subscribe() {
