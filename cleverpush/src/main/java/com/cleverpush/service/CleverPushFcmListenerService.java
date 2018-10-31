@@ -79,6 +79,7 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
         String title = notification.getTitle();
         String text = notification.getText();
         String iconUrl = notification.getIconUrl();
+        String mediaUrl = notification.getMediaUrl();
 
         if (title == null) {
             Log.e("CleverPush", "Notification title is empty");
@@ -134,6 +135,22 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
                 notificationBuilder = notificationBuilder.setLargeIcon(icon);
             }
         } catch (Exception ignored) {
+        }
+
+        if (mediaUrl != null) {
+            try {
+                Bitmap media = getBitmapFromUrl(mediaUrl);
+                if (media != null) {
+                    notificationBuilder = notificationBuilder.setStyle(
+                            new NotificationCompat.BigPictureStyle().bigPicture(media)
+                    );
+                }
+            } catch (Exception ignored) {
+            }
+        } else if (text != null && text.length() > 0) {
+            notificationBuilder.setStyle(
+                    new NotificationCompat.BigTextStyle().bigText(text)
+            );
         }
 
         NotificationManagerCompat.from(this).notify(requestCode, notificationBuilder.build());

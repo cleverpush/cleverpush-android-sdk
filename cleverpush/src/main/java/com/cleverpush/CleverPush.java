@@ -32,7 +32,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.11";
+    public static final String SDK_VERSION = "0.0.12";
 
     private static CleverPush instance;
 
