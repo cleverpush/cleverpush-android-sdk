@@ -43,7 +43,13 @@ public class CleverPushHttpClient {
 
             if (method != null) {
                 con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                con.setRequestProperty("Accept-Language", Locale.getDefault().getLanguage());
+
+                if (jsonBody != null && jsonBody.getString("language") != null) {
+                    con.setRequestProperty("Accept-Language", jsonBody.getString("language"));
+                } else {
+                    con.setRequestProperty("Accept-Language", Locale.getDefault().getLanguage());
+                }
+
                 con.setRequestProperty("User-Agent", "CleverPush Android SDK " + CleverPush.SDK_VERSION);
                 con.setRequestMethod(method);
                 con.setDoOutput(true);

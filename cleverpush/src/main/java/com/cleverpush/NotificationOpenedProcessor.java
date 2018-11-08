@@ -2,7 +2,6 @@ package com.cleverpush;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -12,6 +11,8 @@ import org.json.JSONObject;
 public class NotificationOpenedProcessor {
 
     public static void processIntent(Context context, Intent intent) {
+        CleverPush.setAppContext(context);
+
         Gson gson = new Gson();
         Notification notification = gson.fromJson(intent.getStringExtra("notification"), Notification.class);
         Subscription subscription = gson.fromJson(intent.getStringExtra("subscription"), Subscription.class);
@@ -42,5 +43,12 @@ public class NotificationOpenedProcessor {
         CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
 
         CleverPush.getInstance(context).fireNotificationOpenedListener(result);
+
+        // open launcher activity
+        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+        if (launchIntent != null) {
+            launchIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(launchIntent);
+        }
     }
 }

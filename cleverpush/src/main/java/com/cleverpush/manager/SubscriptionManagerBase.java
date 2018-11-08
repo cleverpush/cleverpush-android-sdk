@@ -46,6 +46,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             return;
         }
 
+        String language = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
+        String country = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
+
         JSONObject jsonBody = new JSONObject();
         try {
             if (this.getProviderName().equals("ADM")) {
@@ -59,6 +62,12 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             jsonBody.put("platformVersion", Build.VERSION.RELEASE);
             jsonBody.put("browserType", "SDK");
             jsonBody.put("browserVersion", CleverPush.SDK_VERSION);
+            if (language != null) {
+                jsonBody.put("language", language);
+            }
+            if (country != null) {
+                jsonBody.put("country", country);
+            }
         } catch (JSONException e) {
             Log.e("CleverPush", "Error", e);
         }

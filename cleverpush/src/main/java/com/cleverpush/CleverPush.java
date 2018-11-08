@@ -23,6 +23,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +34,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.12";
+    public static final String SDK_VERSION = "0.0.13";
 
     private static CleverPush instance;
 
@@ -43,20 +45,22 @@ public class CleverPush {
         return instance;
     }
 
-    private Context context;
+    static Context context;
 
     private NotificationOpenedListener notificationOpenedListener;
     private SubscribedListener subscribedListener;
+    private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
 
     private String channelId;
     private String subscriptionId = null;
     private JSONObject channelConfig = null;
+    private boolean subscriptionInProgress = false;
 
     private CleverPush(@NonNull Context context) {
         if (context instanceof Application) {
-            this.context = context;
+            CleverPush.context = context;
         } else {
-            this.context = context.getApplicationContext();
+            CleverPush.context = context.getApplicationContext();
         }
     }
 
@@ -69,7 +73,7 @@ public class CleverPush {
     }
 
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) throws Exception {
-        String channelId = MetaDataUtils.getChannelId(this.context);
+        String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         if (channelId == null) {
             throw new Exception("Please set up your CLEVERPUSH_CHANNEL_ID in AndroidManifest.xml or as first parameter");
         }
@@ -77,7 +81,7 @@ public class CleverPush {
     }
 
     public void init(@Nullable final SubscribedListener subscribedListener) throws Exception {
-        String channelId = MetaDataUtils.getChannelId(this.context);
+        String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         if (channelId == null) {
             throw new Exception("Please set up your CLEVERPUSH_CHANNEL_ID in AndroidManifest.xml or as first parameter");
         }
@@ -101,10 +105,10 @@ public class CleverPush {
         this.notificationOpenedListener = notificationOpenedListener;
         this.subscribedListener = subscribedListener;
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, channelId).apply();
 
-        SubscriptionManagerFCM.disableFirebaseInstanceIdService(this.context);
+        SubscriptionManagerFCM.disableFirebaseInstanceIdService(CleverPush.context);
 
         if (this.channelId == null) {
             throw new Exception("CleverPush channel ID not provided");
@@ -144,16 +148,29 @@ public class CleverPush {
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
         }
+
+        // fire listeners for unprocessed open notifications
+        if (this.notificationOpenedListener != null) {
+            for (NotificationOpenedResult result : unprocessedOpenedNotifications) {
+                fireNotificationOpenedListener(result);
+            }
+            unprocessedOpenedNotifications.clear();
+        }
     }
 
     public boolean isSubscribed() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_ID);
     }
 
     public void subscribe() {
+        if (this.subscriptionInProgress) {
+            return;
+        }
+        this.subscriptionInProgress = true;
         SubscriptionManager subscriptionManager = this.getSubscriptionManager();
         subscriptionManager.subscribe(newSubscriptionId -> {
+            this.subscriptionInProgress = false;
             Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
             this.fireSubscribedListener(newSubscriptionId);
             this.setSubscriptionId(newSubscriptionId);
@@ -161,7 +178,7 @@ public class CleverPush {
     }
 
     public void unsubscribe() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         if (subscriptionId != null) {
             JSONObject jsonBody = new JSONObject();
@@ -223,6 +240,7 @@ public class CleverPush {
 
     public void fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
         if (notificationOpenedListener == null) {
+            unprocessedOpenedNotifications.add(openedResult);
             return;
         }
         notificationOpenedListener.notificationOpened(openedResult);
@@ -265,24 +283,24 @@ public class CleverPush {
         }
 
         if (isAmazon) {
-            subscriptionManager = new SubscriptionManagerADM(this.context);
+            subscriptionManager = new SubscriptionManagerADM(CleverPush.context);
         } else if (isFcm) {
-            subscriptionManager = new SubscriptionManagerFCM(this.context);
+            subscriptionManager = new SubscriptionManagerFCM(CleverPush.context);
         } else {
-            subscriptionManager = new SubscriptionManagerGCM(this.context);
+            subscriptionManager = new SubscriptionManagerGCM(CleverPush.context);
         }
 
         return subscriptionManager;
     }
 
     public Set<String> getSubscriptionTags() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
     }
 
     public Map<String, String> getSubscriptionAttributes() {
         Map<String, String> outputMap = new HashMap<>();
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         try {
             if (sharedPreferences != null) {
                 String jsonString = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, (new JSONObject()).toString());
@@ -397,7 +415,7 @@ public class CleverPush {
 
                 Set<String> tags = this.getSubscriptionTags();
                 tags.add(tagId);
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
                 CleverPushHttpClient.post("/subscription/tag", jsonBody, new CleverPushHttpClient.ResponseHandler() {
                     @Override
@@ -430,7 +448,7 @@ public class CleverPush {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
 
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 Set<String> tags = this.getSubscriptionTags();
                 tags.remove(tagId);
 
@@ -466,7 +484,7 @@ public class CleverPush {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
 
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 Map<String, String> subscriptionAttributes = this.getSubscriptionAttributes();
                 subscriptionAttributes.put(attributeId, value);
 
@@ -494,5 +512,46 @@ public class CleverPush {
                 });
             }
         }).start();
+    }
+
+    public void trySubscriptionSync() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        int currentTime = (int) (System.currentTimeMillis() / 1000L);
+        int lastSync = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0);
+        int nextSync = lastSync + 5; // allow sync every 5s
+        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        if (!this.subscriptionInProgress && subscriptionId != null && nextSync < currentTime) {
+            this.subscribe();
+        }
+    }
+
+    public void setSubscriptionLanguage(String language) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        String currentLanguage = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
+        if (currentLanguage == null || language != null && !currentLanguage.equals(language)) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.remove(CleverPushPreferences.SUBSCRIPTION_LANGUAGE).apply();
+            editor.putString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, language);
+            editor.commit();
+
+            this.trySubscriptionSync();
+        }
+    }
+
+    public void setSubscriptionCountry(String country) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        String currentCountry = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
+        if (currentCountry == null || country != null && !currentCountry.equals(country)) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.remove(CleverPushPreferences.SUBSCRIPTION_COUNTRY).apply();
+            editor.putString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, country);
+            editor.commit();
+
+            this.trySubscriptionSync();
+        }
+    }
+
+    static void setAppContext(Context newAppContext) {
+        context = newAppContext.getApplicationContext();
     }
 }

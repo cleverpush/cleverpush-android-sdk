@@ -1,5 +1,9 @@
 ## Changelog
 
+== 0.0.13 ==
+* fix where launcher activity was not opened sometimes when cold-starting app from notification
+* added `setSubscriptionLanguage` and `setSubscriptionCountry`
+
 == 0.0.12 ==
 * support big text and big image notification styles
 

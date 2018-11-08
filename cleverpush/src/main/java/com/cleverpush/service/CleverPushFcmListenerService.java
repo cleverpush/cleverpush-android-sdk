@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -21,6 +22,7 @@ import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationOpenedActivity;
+import com.cleverpush.NotificationOpenedReceiver;
 import com.cleverpush.Subscription;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -76,6 +78,19 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
     }
 
     private void sendNotification(Notification notification, Map data) {
+        boolean isBroadcast = false;
+        Class<?> notificationOpenedClass;
+
+        PackageManager packageManager = this.getPackageManager();
+        Intent intent = new Intent(this, NotificationOpenedReceiver.class);
+        intent.setPackage(this.getPackageName());
+        if (packageManager.queryBroadcastReceivers(intent, 0).size() > 0) {
+            isBroadcast = true;
+            notificationOpenedClass = NotificationOpenedReceiver.class;
+        } else {
+            notificationOpenedClass = NotificationOpenedActivity.class;
+        }
+
         String title = notification.getTitle();
         String text = notification.getText();
         String iconUrl = notification.getIconUrl();
@@ -89,15 +104,22 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
 
-        Intent targetIntent = new Intent(this, NotificationOpenedActivity.class);
-        targetIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        Intent targetIntent = new Intent(this, notificationOpenedClass);
+        if (!isBroadcast) {
+            targetIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        }
 
         targetIntent.putExtra("notification", (String) data.get("notification"));
         targetIntent.putExtra("subscription", (String) data.get("subscription"));
 
         int requestCode = (int) System.currentTimeMillis();
 
-        PendingIntent contentIntent = PendingIntent.getActivity(this, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent;
+        if (isBroadcast) {
+            contentIntent = PendingIntent.getBroadcast(this, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        } else {
+            contentIntent = PendingIntent.getActivity(this, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
 
         int defaultSmallIcon = this.getResources().getIdentifier("default_notification_icon", "drawable", this.getPackageName());
 
@@ -105,7 +127,6 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
 
         NotificationCompat.Builder notificationBuilder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel("default", "Default", importance);
             channel.setDescription("default");
