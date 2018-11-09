@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.0.14 ==
+* timezone support
+
 == 0.0.13 ==
 * fix where launcher activity was not opened sometimes when cold-starting app from notification
 * added `setSubscriptionLanguage` and `setSubscriptionCountry`

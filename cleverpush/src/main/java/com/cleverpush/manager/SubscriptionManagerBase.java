@@ -13,6 +13,8 @@ import com.cleverpush.CleverPushPreferences;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.TimeZone;
+
 abstract class SubscriptionManagerBase implements SubscriptionManager {
     RegisteredHandler registeredHandler;
     Context context;
@@ -48,6 +50,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
         String language = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
         String country = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
+        TimeZone timeZone = TimeZone.getDefault();
 
         JSONObject jsonBody = new JSONObject();
         try {
@@ -57,7 +60,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                 jsonBody.put("fcmToken", token);
                 jsonBody.put("fcmId", senderId);
             }
-            jsonBody.put("subscriptionId", subscriptionId);
+            if (subscriptionId != null) {
+                jsonBody.put("subscriptionId", subscriptionId);
+            }
             jsonBody.put("platformName", "Android");
             jsonBody.put("platformVersion", Build.VERSION.RELEASE);
             jsonBody.put("browserType", "SDK");
@@ -67,6 +72,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             }
             if (country != null) {
                 jsonBody.put("country", country);
+            }
+            if (timeZone != null && timeZone.getID() != null) {
+                jsonBody.put("timezone", timeZone.getID());
             }
         } catch (JSONException e) {
             Log.e("CleverPush", "Error", e);
