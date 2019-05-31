@@ -13,8 +13,6 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
 
-    private static final String FCM_APP_NAME = "ONESIGNAL_SDK_FCM_APP_NAME";
-
     private FirebaseApp firebaseApp;
 
     public SubscriptionManagerFCM(Context context) {
@@ -66,6 +64,6 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
                         .setApplicationId("OMIT_ID")
                         .setApiKey("OMIT_KEY")
                         .build();
-        firebaseApp = FirebaseApp.initializeApp(this.context, firebaseOptions, FCM_APP_NAME);
+        firebaseApp = FirebaseApp.initializeApp(this.context, firebaseOptions, "CLEVERPUSH_SDK_APP_NAME");
     }
 }
