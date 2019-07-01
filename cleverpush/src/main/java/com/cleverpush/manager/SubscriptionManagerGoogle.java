@@ -55,7 +55,7 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-
+                Log.e("CleverPush", "Getting FCM Sender ID failed");
             }
         });
     }

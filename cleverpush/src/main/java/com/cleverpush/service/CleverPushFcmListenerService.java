@@ -1,5 +1,6 @@
 package com.cleverpush.service;
 
+import android.app.ActivityManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -18,11 +19,13 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationOpenedReceiver;
+import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.Subscription;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -35,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
 public class CleverPushFcmListenerService extends FirebaseMessagingService {
@@ -72,6 +76,17 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
             }
 
             CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
+
+            try {
+                if (this.applicationInForeground()) {
+                    NotificationOpenedResult result = new NotificationOpenedResult();
+                    result.setNotification(notification);
+                    result.setSubscription(subscription);
+                    CleverPush.getInstance(null).fireNotificationOpenedListener(result);
+                }
+            } catch (Exception e) {
+                Log.e("CleverPush", "Error checking if application is in foreground", e);
+            }
         } else {
             Log.e("CleverPush", "Notification data is empty");
         }
@@ -189,5 +204,18 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private boolean applicationInForeground() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> services = activityManager.getRunningAppProcesses();
+        boolean isActivityFound = false;
+
+        if (services.get(0).processName
+                .equalsIgnoreCase(getPackageName()) && services.get(0).importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+            isActivityFound = true;
+        }
+
+        return isActivityFound;
     }
 }

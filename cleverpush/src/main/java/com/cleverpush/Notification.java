@@ -17,6 +17,8 @@ public class Notification implements Serializable {
     String iconUrl;
     @SerializedName("mediaUrl")
     String mediaUrl;
+    @SerializedName("actions")
+    NotificationAction[] actions;
 
     public String getId() {
         return id;
@@ -40,5 +42,9 @@ public class Notification implements Serializable {
 
     public String getMediaUrl() {
         return mediaUrl;
+    }
+
+    public NotificationAction[] getActions() {
+        return actions;
     }
 }

@@ -1,12 +1,10 @@
 package com.cleverpush;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -33,13 +31,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.15";
+    public static final String SDK_VERSION = "0.0.17";
 
     private static CleverPush instance;
 
@@ -51,6 +48,7 @@ public class CleverPush {
     }
 
     static Context context;
+    static Context activity;
 
     private NotificationOpenedListener notificationOpenedListener;
     private SubscribedListener subscribedListener;
@@ -64,79 +62,120 @@ public class CleverPush {
     private CleverPush(@NonNull Context context) {
         if (context instanceof Application) {
             CleverPush.context = context;
+            CleverPush.activity = context;
         } else {
             CleverPush.context = context.getApplicationContext();
+            CleverPush.activity = context;
         }
     }
 
-    public void init() throws Exception {
+    public void init() {
         init(null, null, null);
     }
 
-    public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) throws Exception {
+    public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, notificationOpenedListener, subscribedListener);
     }
 
-    public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) throws Exception {
+    public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) {
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
-        if (channelId == null) {
-            throw new Exception("Please set up your CLEVERPUSH_CHANNEL_ID in AndroidManifest.xml or as first parameter");
-        }
         init(channelId, notificationOpenedListener);
     }
 
-    public void init(@Nullable final SubscribedListener subscribedListener) throws Exception {
+    public void init(@Nullable final SubscribedListener subscribedListener) {
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
-        if (channelId == null) {
-            throw new Exception("Please set up your CLEVERPUSH_CHANNEL_ID in AndroidManifest.xml or as first parameter");
-        }
         init(channelId, subscribedListener);
     }
 
-    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) throws Exception {
+    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) {
         init(channelId, notificationOpenedListener, null);
     }
 
-    public void init(String channelId, @Nullable final SubscribedListener subscribedListener) throws Exception {
+    public void init(String channelId, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, null, subscribedListener);
     }
 
-    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) throws Exception {
+    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationOpenedListener, subscribedListener, true);
     }
 
-    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) throws Exception {
+    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
         this.notificationOpenedListener = notificationOpenedListener;
         this.subscribedListener = subscribedListener;
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, channelId).apply();
-
         SubscriptionManagerFCM.disableFirebaseInstanceIdService(CleverPush.context);
 
+        // try to get cached Channel ID from Shared Preferences
         if (this.channelId == null) {
-            throw new Exception("CleverPush channel ID not provided");
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+            this.channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         }
 
-        // get channel config
-        CleverPush instance = this;
-        CleverPushHttpClient.get("/channel/" + this.channelId + "/config", new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-                try {
-                    JSONObject responseJson = new JSONObject(response);
-                    instance.setChannelConfig(responseJson);
-                } catch (Throwable ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+        if (this.channelId != null) {
+            Log.d("CleverPush", "Initializing with Channel ID: " + this.channelId);
+
+            // get channel config
+            CleverPush instance = this;
+            CleverPushHttpClient.get("/channel/" + this.channelId + "/config", new CleverPushHttpClient.ResponseHandler() {
+                @Override
+                public void onSuccess(String response) {
+                    try {
+                        JSONObject responseJson = new JSONObject(response);
+                        instance.setChannelConfig(responseJson);
+                    } catch (Throwable ex) {
+                        Log.e("CleverPush", ex.getMessage(), ex);
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
+                @Override
+                public void onFailure(int statusCode, String response, Throwable throwable) {
 
+                }
+            });
+
+            this.subscribeOrSync(autoRegister);
+        } else {
+            String bundleId = CleverPush.context.getPackageName();
+            Log.d("CleverPush", "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: " + bundleId);
+
+            // get channel config
+            CleverPush instance = this;
+            CleverPushHttpClient.get("/channel-config?bundleId=" + bundleId + "&platformName=Android", new CleverPushHttpClient.ResponseHandler() {
+                @Override
+                public void onSuccess(String response) {
+                    try {
+                        JSONObject responseJson = new JSONObject(response);
+                        instance.setChannelConfig(responseJson);
+                        instance.channelId = responseJson.getString("channelId");
+
+                        instance.subscribeOrSync(autoRegister);
+
+                        Log.d("CleverPush", "Got Channel ID via Package Name: " + instance.channelId);
+                    } catch (Throwable ex) {
+                        Log.e("CleverPush", ex.getMessage(), ex);
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, String response, Throwable throwable) {
+                    Log.e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?", throwable);
+                }
+            });
+        }
+
+        // fire listeners for unprocessed open notifications
+        if (this.notificationOpenedListener != null) {
+            for (NotificationOpenedResult result : unprocessedOpenedNotifications) {
+                fireNotificationOpenedListener(result);
             }
-        });
+            unprocessedOpenedNotifications.clear();
+        }
+    }
+
+    private void subscribeOrSync(boolean autoRegister) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, this.channelId).apply();
 
         int currentTime = (int) (System.currentTimeMillis() / 1000L);
         int threeDays = 3 * 60 * 60 * 24;
@@ -152,14 +191,6 @@ public class CleverPush {
             Log.d("CleverPush", "subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
-        }
-
-        // fire listeners for unprocessed open notifications
-        if (this.notificationOpenedListener != null) {
-            for (NotificationOpenedResult result : unprocessedOpenedNotifications) {
-                fireNotificationOpenedListener(result);
-            }
-            unprocessedOpenedNotifications.clear();
         }
     }
 
@@ -642,6 +673,9 @@ public class CleverPush {
         JSONObject channelConfig = this.getChannelConfig();
         try {
             JSONArray channelTopics = channelConfig.getJSONArray("channelTopics");
+            if (channelTopics.length() == 0) {
+                Log.w("CleverPush", "CleverPush: showTopicsDialog: No topics found. Create some first in the CleverPush channel settings.");
+            }
 
             boolean[] checkedTopics = new boolean[channelTopics.length()];
             String[] topicNames = new String[channelTopics.length()];
@@ -664,7 +698,7 @@ public class CleverPush {
                 }
             }
 
-            AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
+            AlertDialog.Builder alertBuilder = new AlertDialog.Builder(CleverPush.activity);
             alertBuilder.setMultiChoiceItems(topicNames, checkedTopics, new DialogInterface.OnMultiChoiceClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i, boolean b) {
