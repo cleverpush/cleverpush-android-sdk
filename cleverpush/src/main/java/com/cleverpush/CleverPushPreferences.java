@@ -13,5 +13,6 @@ public class CleverPushPreferences {
     public static final String SUBSCRIPTION_LANGUAGE = "subscriptionLanguage";
     public static final String SUBSCRIPTION_COUNTRY = "subscriptionCountry";
     public static final String SHOWN_APP_BANNERS = "shownAppBanners";
+    public static final String NOTIFICATIONS = "notifications";
 
 }

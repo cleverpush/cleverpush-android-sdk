@@ -18,6 +18,7 @@ import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerGCM;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +37,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.0.17";
+    public static final String SDK_VERSION = "0.1.0";
 
     private static CleverPush instance;
 
@@ -47,7 +48,7 @@ public class CleverPush {
         return instance;
     }
 
-    static Context context;
+    public static Context context;
     static Context activity;
 
     private NotificationOpenedListener notificationOpenedListener;
@@ -623,6 +624,18 @@ public class CleverPush {
 
             this.trySubscriptionSync();
         }
+    }
+
+    public Set<Notification> getNotifications() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        Set<String> encodedNotifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
+        Set<Notification> notifications = new HashSet<>();
+        Gson gson = new Gson();
+        for (String encodedNotification : encodedNotifications) {
+            Notification notification = gson.fromJson(encodedNotification, Notification.class);
+            notifications.add(notification);
+        }
+        return notifications;
     }
 
     public void showAppBanners(String tagId) {

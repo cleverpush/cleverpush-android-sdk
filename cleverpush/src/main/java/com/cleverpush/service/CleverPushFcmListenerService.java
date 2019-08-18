@@ -38,8 +38,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CleverPushFcmListenerService extends FirebaseMessagingService {
     @Override
@@ -86,6 +88,18 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
                 }
             } catch (Exception e) {
                 Log.e("CleverPush", "Error checking if application is in foreground", e);
+            }
+
+            try {
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                Set<String> notifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
+                notifications.add(gson.toJson(notification));
+                editor.remove(CleverPushPreferences.NOTIFICATIONS).apply();
+                editor.putStringSet(CleverPushPreferences.NOTIFICATIONS, notifications);
+                editor.commit();
+            } catch (Exception e) {
+                Log.e("CleverPush", "Error saving notification to shared preferences", e);
             }
         } else {
             Log.e("CleverPush", "Notification data is empty");
