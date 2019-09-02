@@ -67,7 +67,22 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
                 return;
             }
 
-            sendNotification(notification, data);
+            boolean foregroundWithOpenedListener = false;
+
+            try {
+                if (this.applicationInForeground()) {
+                    NotificationOpenedResult result = new NotificationOpenedResult();
+                    result.setNotification(notification);
+                    result.setSubscription(subscription);
+                    foregroundWithOpenedListener = CleverPush.getInstance(null).fireNotificationOpenedListener(result);
+                }
+            } catch (Exception e) {
+                Log.e("CleverPush", "Error checking if application is in foreground", e);
+            }
+
+            if (!foregroundWithOpenedListener) {
+                sendNotification(notification, data);
+            }
 
             JSONObject jsonBody = new JSONObject();
             try {
@@ -78,17 +93,6 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
             }
 
             CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
-
-            try {
-                if (this.applicationInForeground()) {
-                    NotificationOpenedResult result = new NotificationOpenedResult();
-                    result.setNotification(notification);
-                    result.setSubscription(subscription);
-                    CleverPush.getInstance(null).fireNotificationOpenedListener(result);
-                }
-            } catch (Exception e) {
-                Log.e("CleverPush", "Error checking if application is in foreground", e);
-            }
 
             try {
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);

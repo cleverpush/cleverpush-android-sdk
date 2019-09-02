@@ -37,7 +37,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.2";
+    public static final String SDK_VERSION = "0.1.3";
 
     private static CleverPush instance;
 
@@ -275,12 +275,13 @@ public class CleverPush {
         notifyAll();
     }
 
-    public void fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
+    public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
         if (notificationOpenedListener == null) {
             unprocessedOpenedNotifications.add(openedResult);
-            return;
+            return false;
         }
         notificationOpenedListener.notificationOpened(openedResult);
+        return true;
     }
 
     public void removeNotificationOpenedListener() {
