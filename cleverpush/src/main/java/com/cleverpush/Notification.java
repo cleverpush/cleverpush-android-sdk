@@ -3,6 +3,7 @@ package com.cleverpush;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public class Notification implements Serializable {
     @SerializedName("_id")
@@ -19,6 +20,8 @@ public class Notification implements Serializable {
     String mediaUrl;
     @SerializedName("actions")
     NotificationAction[] actions;
+    @SerializedName("customData")
+    Map customData;
 
     public String getId() {
         return id;
@@ -46,5 +49,9 @@ public class Notification implements Serializable {
 
     public NotificationAction[] getActions() {
         return actions;
+    }
+
+    public Map getCustomData() {
+        return customData;
     }
 }
