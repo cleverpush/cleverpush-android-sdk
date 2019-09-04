@@ -37,7 +37,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.3";
+    public static final String SDK_VERSION = "0.1.4";
 
     private static CleverPush instance;
 
@@ -519,8 +519,13 @@ public class CleverPush {
             if (subscriptionId != null) {
                 JSONObject jsonBody = new JSONObject();
                 try {
+                    JSONArray topicsArray = new JSONArray();
+                    for (String topicId : topicIds) {
+                        topicsArray.put(topicId);
+                    }
+
                     jsonBody.put("channelId", this.channelId);
-                    jsonBody.put("topics", topicIds);
+                    jsonBody.put("topics", topicsArray);
                     jsonBody.put("subscriptionId", subscriptionId);
                 } catch (JSONException ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
@@ -539,7 +544,7 @@ public class CleverPush {
 
                     @Override
                     public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error adding tag - HTTP " + statusCode);
+                        Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
                     }
                 });
             }
@@ -729,11 +734,7 @@ public class CleverPush {
                         }
                     }
 
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS).apply();
-                    editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, selectedTopicIds);
-                    editor.commit();
+                    CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
 
                     dialogInterface.dismiss();
                 }
