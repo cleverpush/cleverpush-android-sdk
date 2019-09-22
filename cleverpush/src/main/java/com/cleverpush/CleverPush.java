@@ -1,8 +1,10 @@
 package com.cleverpush;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -32,12 +34,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.4";
+    public static final String SDK_VERSION = "0.1.5";
 
     private static CleverPush instance;
 
@@ -63,10 +66,10 @@ public class CleverPush {
     private CleverPush(@NonNull Context context) {
         if (context instanceof Application) {
             CleverPush.context = context;
-            CleverPush.activity = context;
+            CleverPush.activity = this.getActivity(context);
         } else {
             CleverPush.context = context.getApplicationContext();
-            CleverPush.activity = context;
+            CleverPush.activity = this.getActivity(context);
         }
     }
 
@@ -114,7 +117,7 @@ public class CleverPush {
         }
 
         if (this.channelId != null) {
-            Log.d("CleverPush", "Initializing with Channel ID: " + this.channelId);
+            Log.d("CleverPush", "Initializing with Channel ID: " + this.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
 
             // get channel config
             CleverPush instance = this;
@@ -152,7 +155,7 @@ public class CleverPush {
 
                         instance.subscribeOrSync(autoRegister);
 
-                        Log.d("CleverPush", "Got Channel ID via Package Name: " + instance.channelId);
+                        Log.d("CleverPush", "Got Channel ID via Package Name: " + instance.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
                     } catch (Throwable ex) {
                         Log.e("CleverPush", ex.getMessage(), ex);
                     }
@@ -174,6 +177,19 @@ public class CleverPush {
         }
     }
 
+    private Activity getActivity(Context context) {
+        if (context == null) {
+            return null;
+        } else if (context instanceof ContextWrapper) {
+            if (context instanceof Activity) {
+                return (Activity) context;
+            } else {
+                return getActivity(((ContextWrapper) context).getBaseContext());
+            }
+        }
+        return null;
+    }
+
     private void subscribeOrSync(boolean autoRegister) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, this.channelId).apply();
@@ -184,10 +200,10 @@ public class CleverPush {
         int nextSync = lastSync + threeDays;
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         if (subscriptionId == null && autoRegister || subscriptionId != null && nextSync < currentTime) {
-            this.subscribe();
+            this.subscribe(subscriptionId == null);
         } else {
             Date nextSyncDate = new Date(nextSync*1000L);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault());
             String formattedDate = sdf.format(nextSyncDate);
             Log.d("CleverPush", "subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
             this.fireSubscribedListener(subscriptionId);
@@ -201,16 +217,48 @@ public class CleverPush {
     }
 
     public void subscribe() {
+        subscribe(false);
+    }
+
+    public void subscribe(boolean newSubscription) {
         if (this.subscriptionInProgress) {
             return;
         }
         this.subscriptionInProgress = true;
+
         SubscriptionManager subscriptionManager = this.getSubscriptionManager();
         subscriptionManager.subscribe(newSubscriptionId -> {
             this.subscriptionInProgress = false;
             Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
             this.fireSubscribedListener(newSubscriptionId);
             this.setSubscriptionId(newSubscriptionId);
+
+            if (newSubscriptionId != null && newSubscription) {
+                JSONObject config = this.getChannelConfig();
+                if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
+                    JSONArray channelTopics = config.optJSONArray("channelTopics");
+                    if (channelTopics != null && channelTopics.length() > 0) {
+                        Set<String> topics = this.getSubscriptionTopics();
+                        if (topics == null || topics.size() == 0) {
+                            Set<String> selectedTopicIds = new HashSet<>();
+                            for (int i = 0; i < channelTopics.length(); i++) {
+                                JSONObject channelTopic = channelTopics.optJSONObject(i);
+                                if (channelTopic != null && !channelTopic.optBoolean("defaultUnchecked")) {
+                                    String id = channelTopic.optString("_id");
+                                    if (id != null) {
+                                        selectedTopicIds.add(id);
+                                    }
+                                }
+                            }
+                            if (selectedTopicIds.size() > 0) {
+                                this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+                            }
+                        }
+
+                        CleverPush.instance.showTopicsDialog();
+                    }
+                }
+            }
         });
     }
 
@@ -602,7 +650,7 @@ public class CleverPush {
         int nextSync = lastSync + 5; // allow sync every 5s
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         if (!this.subscriptionInProgress && subscriptionId != null && nextSync < currentTime) {
-            this.subscribe();
+            this.subscribe(false);
         }
     }
 
@@ -690,6 +738,7 @@ public class CleverPush {
 
     public void showTopicsDialog() {
         JSONObject channelConfig = this.getChannelConfig();
+
         try {
             JSONArray channelTopics = channelConfig.getJSONArray("channelTopics");
             if (channelTopics.length() == 0) {
@@ -706,7 +755,7 @@ public class CleverPush {
                 if (topic != null) {
                     boolean defaultUnchecked = false;
                     try {
-                        defaultUnchecked = topic.getBoolean("defaultUnchecked");
+                        defaultUnchecked = topic.optBoolean("defaultUnchecked");
                     } catch (Exception ignored) {}
                     String id = topic.getString("_id");
                     topicIds[i] = id;
@@ -717,30 +766,36 @@ public class CleverPush {
                 }
             }
 
-            AlertDialog.Builder alertBuilder = new AlertDialog.Builder(CleverPush.activity);
-            alertBuilder.setMultiChoiceItems(topicNames, checkedTopics, new DialogInterface.OnMultiChoiceClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i, boolean b) {
-                    checkedTopics[i] = b;
-                }
-            });
-            alertBuilder.setPositiveButton("Speichern", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    Set<String> selectedTopicIds = new HashSet<>();
-                    for (int j = 0; j < topicIds.length; j++) {
-                        if (checkedTopics[j]) {
-                            selectedTopicIds.add(topicIds[j]);
-                        }
+            ((Activity) activity).runOnUiThread(() -> {
+                Log.d("CleverPush", "showTopicsDialog activity: " + activity.getClass().getCanonicalName());
+
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(activity);
+                alertBuilder.setMultiChoiceItems(topicNames, checkedTopics, new DialogInterface.OnMultiChoiceClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i, boolean b) {
+                        checkedTopics[i] = b;
                     }
+                });
+                alertBuilder.setPositiveButton("Speichern", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Set<String> selectedTopicIds = new HashSet<>();
+                        for (int j = 0; j < topicIds.length; j++) {
+                            if (checkedTopics[j]) {
+                                selectedTopicIds.add(topicIds[j]);
+                            }
+                        }
 
-                    CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+                        CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
 
-                    dialogInterface.dismiss();
-                }
+                        dialogInterface.dismiss();
+                    }
+                });
+
+                AlertDialog alert = alertBuilder.create();
+                alert.show();
             });
-            AlertDialog alert = alertBuilder.create();
-            alert.show();
+
         } catch (JSONException e) {
             Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
         }
