@@ -105,6 +105,10 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
             String registrationId = getToken(senderId);
             Log.i("CleverPush", "Device registered, push token = " + registrationId);
 
+            if (registrationId.equals("BLACKLISTED")) {
+                return false;
+            }
+
             this.syncSubscription(registrationId, senderId);
 
             return true;
