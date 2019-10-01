@@ -41,7 +41,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.6";
+    public static final String SDK_VERSION = "0.1.7";
 
     private static CleverPush instance;
 
@@ -755,7 +755,7 @@ public class CleverPush {
         return notifications;
     }
 
-    public void showAppBanners(String tagId) {
+    public void showAppBanners() {
         new Thread(() -> {
             CleverPushHttpClient.get("/channel/" +  this.channelId + "/app-banners", new CleverPushHttpClient.ResponseHandler() {
                 @Override
