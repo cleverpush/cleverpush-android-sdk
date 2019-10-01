@@ -15,6 +15,7 @@ import android.util.Log;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelTagsListener;
 import com.cleverpush.listener.NotificationOpenedListener;
+import com.cleverpush.listener.NotificationReceivedListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
@@ -40,7 +41,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.5";
+    public static final String SDK_VERSION = "0.1.6";
 
     private static CleverPush instance;
 
@@ -54,6 +55,7 @@ public class CleverPush {
     public static Context context;
     static Context activity;
 
+    private NotificationReceivedListener notificationReceivedListener;
     private NotificationOpenedListener notificationOpenedListener;
     private SubscribedListener subscribedListener;
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
@@ -74,11 +76,12 @@ public class CleverPush {
     }
 
     public void init() {
-        init(null, null, null);
+        init(null, null, null, null, true);
     }
 
-    public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
-        init(null, notificationOpenedListener, subscribedListener);
+    public void init(@Nullable final NotificationReceivedListener notificationReceivedListener) {
+        String channelId = MetaDataUtils.getChannelId(CleverPush.context);
+        init(channelId, notificationReceivedListener);
     }
 
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) {
@@ -91,20 +94,53 @@ public class CleverPush {
         init(channelId, subscribedListener);
     }
 
+    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener) {
+        init(channelId, notificationReceivedListener, null,null);
+    }
+
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) {
-        init(channelId, notificationOpenedListener, null);
+        init(channelId, null, notificationOpenedListener, null);
+    }
+
+    public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
+        init(null, null, notificationOpenedListener, subscribedListener);
+    }
+
+    public void init(@Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
+        init(null, notificationReceivedListener, null, subscribedListener);
+    }
+
+    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener) {
+        init(channelId, notificationReceivedListener, notificationOpenedListener, null);
     }
 
     public void init(String channelId, @Nullable final SubscribedListener subscribedListener) {
-        init(channelId, null, subscribedListener);
+        init(channelId, null, null, subscribedListener);
+    }
+
+    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
+        init(channelId, notificationReceivedListener, null, subscribedListener);
     }
 
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
-        init(channelId, notificationOpenedListener, subscribedListener, true);
+        init(channelId, null, notificationOpenedListener, subscribedListener);
+    }
+
+    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
+        init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, true);
     }
 
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
+        init(channelId, null, notificationOpenedListener, subscribedListener, autoRegister);
+    }
+
+    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
+        init(channelId, notificationReceivedListener, null, subscribedListener, autoRegister);
+    }
+
+    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
+        this.notificationReceivedListener = notificationReceivedListener;
         this.notificationOpenedListener = notificationOpenedListener;
         this.subscribedListener = subscribedListener;
 
@@ -127,6 +163,8 @@ public class CleverPush {
                     try {
                         JSONObject responseJson = new JSONObject(response);
                         instance.setChannelConfig(responseJson);
+
+                        instance.initAppReview();
                     } catch (Throwable ex) {
                         Log.e("CleverPush", ex.getMessage(), ex);
                     }
@@ -154,6 +192,8 @@ public class CleverPush {
                         instance.channelId = responseJson.getString("channelId");
 
                         instance.subscribeOrSync(autoRegister);
+
+                        instance.initAppReview();
 
                         Log.d("CleverPush", "Got Channel ID via Package Name: " + instance.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
                     } catch (Throwable ex) {
@@ -208,6 +248,17 @@ public class CleverPush {
             Log.d("CleverPush", "subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
+        }
+    }
+
+    private void initAppReview() {
+        JSONObject config = this.getChannelConfig();
+        if (config != null && config.optBoolean("appReviewEnabled")) {
+            FiveStarsDialog dialog = new FiveStarsDialog(CleverPush.context, config.optString("appReviewEmail"));
+            dialog.setRateText(config.optString("appReviewText"))
+                    .setTitle(config.optString("appReviewTitle"))
+                    .setForceMode(false)
+                    .showAfter(config.optInt("appOpens"));
         }
     }
 
@@ -321,6 +372,18 @@ public class CleverPush {
     public synchronized void setSubscriptionId(String value) {
         subscriptionId = value;
         notifyAll();
+    }
+
+    public boolean fireNotificationReceivedListener(final NotificationOpenedResult openedResult) {
+        if (notificationReceivedListener == null) {
+            return false;
+        }
+        notificationReceivedListener.notificationReceived(openedResult);
+        return true;
+    }
+
+    public void removeNotificationReceivedListener() {
+        notificationReceivedListener = null;
     }
 
     public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {

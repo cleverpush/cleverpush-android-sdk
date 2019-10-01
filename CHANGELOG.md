@@ -1,5 +1,9 @@
 ## Changelog
 
+== 0.1.6 ==
+* added new `NotificationReceivedListener` which will be called everytime a notification will be received (in foreground or background)
+* app review support
+
 == 0.0.14 ==
 * timezone support
 
