@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.cleverpush.listener.AppBannerUrlOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelTagsListener;
 import com.cleverpush.listener.NotificationOpenedListener;
@@ -41,7 +42,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.7";
+    public static final String SDK_VERSION = "0.1.8";
 
     private static CleverPush instance;
 
@@ -756,6 +757,10 @@ public class CleverPush {
     }
 
     public void showAppBanners() {
+        showAppBanners(null);
+    }
+
+    public void showAppBanners(AppBannerUrlOpenedListener urlOpenedListener) {
         new Thread(() -> {
             CleverPushHttpClient.get("/channel/" +  this.channelId + "/app-banners", new CleverPushHttpClient.ResponseHandler() {
                 @Override
@@ -772,10 +777,12 @@ public class CleverPush {
                                 if (banner != null && (banner.getString("frequency").equals("always")
                                         || banner.getString("frequency").equals("oncePerSession")
                                         || !shownAppBanners.contains(banner.getString("_id")))) {
-                                    AppBanner appBanner = new AppBanner(CleverPush.context,
+                                    AppBanner appBanner = new AppBanner(CleverPush.activity,
                                             banner.getString("_id"),
-                                            banner.getString("content"));
+                                            banner.getString("content"), urlOpenedListener);
+
                                     appBanner.show();
+
                                     shownAppBanners.add(appBanner.getId());
 
                                     SharedPreferences.Editor editor = sharedPreferences.edit();
