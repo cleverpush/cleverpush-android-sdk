@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -47,22 +48,26 @@ public class AppBanner {
 	@SuppressLint("SetJavaScriptEnabled")
 	public void show() {
         ((Activity) this.context).runOnUiThread(() -> {
-            dialog = new Dialog(this.context);
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            dialog.setContentView(R.layout.cleverpush_webview_dialog);
-            Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+			try {
+				dialog = new Dialog(this.context);
+				dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+				dialog.setContentView(R.layout.cleverpush_webview_dialog);
+				Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-            Button dialogButton = dialog.findViewById(R.id.btnClose);
-            dialogButton.setOnClickListener(v -> this.hide());
+				Button dialogButton = dialog.findViewById(R.id.btnClose);
+				dialogButton.setOnClickListener(v -> this.hide());
 
-            WebView webView = dialog.findViewById(R.id.webView);
-            webView.setWebViewClient(new AppBannerWebViewClient());
-            webView.getSettings().setLoadsImagesAutomatically(true);
-            webView.getSettings().setJavaScriptEnabled(true);
-            webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-            webView.loadData(this.content,"text/html", "UTF-8");
+				WebView webView = dialog.findViewById(R.id.webView);
+				webView.setWebViewClient(new AppBannerWebViewClient());
+				webView.getSettings().setLoadsImagesAutomatically(true);
+				webView.getSettings().setJavaScriptEnabled(true);
+				webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+				webView.loadData(this.content,"text/html", "UTF-8");
 
-            dialog.show();
+				dialog.show();
+			} catch (WindowManager.BadTokenException e) {
+				// ignored
+			}
         });
 	}
 
