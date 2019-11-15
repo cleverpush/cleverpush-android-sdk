@@ -2,6 +2,8 @@ package com.cleverpush.manager;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -52,6 +54,16 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         String country = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
         TimeZone timeZone = TimeZone.getDefault();
 
+        String appVersion = "";
+        if (this.context != null) {
+            try {
+                PackageInfo pInfo = this.context.getPackageManager().getPackageInfo(this.context.getPackageName(), 0);
+                appVersion = pInfo.versionName;
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
         JSONObject jsonBody = new JSONObject();
         try {
             if (this.getProviderName().equals("ADM")) {
@@ -67,6 +79,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             jsonBody.put("platformVersion", Build.VERSION.RELEASE);
             jsonBody.put("browserType", "SDK");
             jsonBody.put("browserVersion", CleverPush.SDK_VERSION);
+            jsonBody.put("appVersion", appVersion);
             if (language != null) {
                 jsonBody.put("language", language);
             }
