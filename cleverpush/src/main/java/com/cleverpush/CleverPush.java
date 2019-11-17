@@ -42,7 +42,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.10";
+    public static final String SDK_VERSION = "0.1.11";
 
     private static CleverPush instance;
 
@@ -255,11 +255,15 @@ public class CleverPush {
     private void initAppReview() {
         JSONObject config = this.getChannelConfig();
         if (config != null && config.optBoolean("appReviewEnabled")) {
-            FiveStarsDialog dialog = new FiveStarsDialog(CleverPush.context, config.optString("appReviewEmail"));
-            dialog.setRateText(config.optString("appReviewText"))
-                    .setTitle(config.optString("appReviewTitle"))
-                    .setForceMode(false)
-                    .showAfter(config.optInt("appOpens"));
+            try {
+                FiveStarsDialog dialog = new FiveStarsDialog(CleverPush.context, config.optString("appReviewEmail"));
+                dialog.setRateText(config.optString("appReviewText"))
+                        .setTitle(config.optString("appReviewTitle"))
+                        .setForceMode(false)
+                        .showAfter(config.optInt("appOpens"));
+            } catch (Exception ex) {
+
+            }
         }
     }
 
