@@ -1,5 +1,14 @@
 ## Changelog
 
+== 0.1.12 ==
+* optimized Topics Dialog
+
+== 0.1.11 ==
+* optimized ChatView
+
+== 0.1.10 ==
+* added ChatView
+
 == 0.1.9 ==
 * catch BadTokenException when showing AppBanner
 

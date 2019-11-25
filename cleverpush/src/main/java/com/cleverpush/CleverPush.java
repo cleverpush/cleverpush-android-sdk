@@ -42,7 +42,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.11";
+    public static final String SDK_VERSION = "0.1.12";
 
     private static CleverPush instance;
 
@@ -844,6 +844,15 @@ public class CleverPush {
                 Log.d("CleverPush", "showTopicsDialog activity: " + activity.getClass().getCanonicalName());
 
                 AlertDialog.Builder alertBuilder = new AlertDialog.Builder(activity);
+
+                String headerTitle = "Abonnierte Themen";
+                if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
+                    try {
+                        headerTitle = channelConfig.getString("confirmAlertSelectTopicsLaterTitle");
+                    } catch (Exception ignored) {}
+                }
+
+                alertBuilder.setTitle(headerTitle);
                 alertBuilder.setMultiChoiceItems(topicNames, checkedTopics, new DialogInterface.OnMultiChoiceClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i, boolean b) {
