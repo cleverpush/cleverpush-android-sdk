@@ -811,6 +811,10 @@ public class CleverPush {
     }
 
     public void showTopicsDialog() {
+        showTopicsDialog(activity);
+    }
+
+    public void showTopicsDialog(Context dialogActivity) {
         JSONObject channelConfig = this.getChannelConfig();
 
         try {
@@ -840,10 +844,10 @@ public class CleverPush {
                 }
             }
 
-            ((Activity) activity).runOnUiThread(() -> {
-                Log.d("CleverPush", "showTopicsDialog activity: " + activity.getClass().getCanonicalName());
+            ((Activity) dialogActivity).runOnUiThread(() -> {
+                Log.d("CleverPush", "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
 
-                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(activity);
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity);
 
                 String headerTitle = "Abonnierte Themen";
                 if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
