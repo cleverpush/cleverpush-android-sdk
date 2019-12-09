@@ -59,12 +59,12 @@ public class ChatView extends WebView {
                     "</head>\n" +
                     "<body>\n" +
                     "<div class='cleverpush-chat-target' style='height: 100%;'></div>\n" +
-                    "<script>" +
-                    "window.cleverpushHandleSubscribe = function() { window.cleverpushAppInterface.subscribe() }" +
-                    "var cleverpushConfig = " + configJson +";" +
-                    "cleverpushConfig.nativeApp = true;" +
-                    "cleverpushConfig.brandingColor = '" + brandingColorStr + "';" +
-                    "var cleverpushSubscriptionId = '" + subscriptionId + "';" +
+                    "<script>\n" +
+                    "window.cleverpushHandleSubscribe = function() { window.cleverpushAppInterface.subscribe() };\n" +
+                    "var cleverpushConfig = " + configJson +";\n" +
+                    "cleverpushConfig.nativeApp = true;\n" +
+                    "cleverpushConfig.brandingColor = '" + brandingColorStr + "';\n" +
+                    "var cleverpushSubscriptionId = '" + subscriptionId + "';\n" +
                     "</script>\n" +
                     "<script src='https://static.cleverpush.com/sdk/cleverpush-chat.js'></script>\n" +
                     "</body>\n" +
@@ -75,6 +75,7 @@ public class ChatView extends WebView {
     }
 
     void init() {
+
         this.getSettings().setJavaScriptEnabled(true) ;
         this.getSettings().setUseWideViewPort(true);
         this.getSettings().setLoadWithOverviewMode(true);
@@ -91,14 +92,16 @@ public class ChatView extends WebView {
         class JsInterface {
             @JavascriptInterface
             public void subscribe() {
-                ChatSubscribeListener subscribeListener = CleverPush.getInstance(context).getChatSubscribeListener();
-                if (subscribeListener != null) {
-                    subscribeListener.subscribe();
-                    return;
-                }
+                new Thread(() -> {
+                    ChatSubscribeListener subscribeListener = CleverPush.getInstance(context).getChatSubscribeListener();
+                    if (subscribeListener != null) {
+                        subscribeListener.subscribe();
+                        return;
+                    }
 
-                CleverPush.getInstance(context).subscribe();
-                chatView.loadChat();
+                    CleverPush.getInstance(context).subscribe();
+                    chatView.loadChat();
+                });
             }
         }
 
