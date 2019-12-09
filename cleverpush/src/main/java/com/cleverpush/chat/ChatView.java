@@ -1,14 +1,17 @@
 package com.cleverpush.chat;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.cleverpush.CleverPush;
+import com.cleverpush.listener.ChatSubscribeListener;
 
 public class ChatView extends WebView {
     public ChatView(Context context) {
@@ -23,9 +26,55 @@ public class ChatView extends WebView {
         this.init();
     }
 
-    void init() {
+    public void loadChat() {
+        loadChat(null);
+    }
 
-        System.out.println("CLEVERPUSH init ");
+    public void lockChat() {
+        loadChat("preview");
+    }
+
+    public void loadChat(String subscriptionIdParam) {
+        Context context = this.getContext();
+        WebView webView = this;
+
+        Handler handler = new Handler();
+
+        new Thread(() -> {
+            String subscriptionId = subscriptionIdParam != null ? subscriptionIdParam : CleverPush.getInstance(context).getSubscriptionId();
+            String configJson = CleverPush.getInstance(context).getChannelConfig().toString();
+            String brandingColorStr = "";
+            int brandingColor = CleverPush.getInstance(context).getBrandingColor();
+            if (brandingColor != 0) {
+                brandingColorStr = "#" + Integer.toHexString(brandingColor).substring(2);
+            }
+
+            String data = "<!DOCTYPE html>\n" +
+                    "<html>\n" +
+                    "<head>\n" +
+                    "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>\n" +
+                    "<style>\n" +
+                    "html, body { margin: 0; padding: 0; height: 100%; }\n" +
+                    "</style>\n" +
+                    "</head>\n" +
+                    "<body>\n" +
+                    "<div class='cleverpush-chat-target' style='height: 100%;'></div>\n" +
+                    "<script>" +
+                    "window.cleverpushHandleSubscribe = function() { window.cleverpushAppInterface.subscribe() }" +
+                    "var cleverpushConfig = " + configJson +";" +
+                    "cleverpushConfig.nativeApp = true;" +
+                    "cleverpushConfig.brandingColor = '" + brandingColorStr + "';" +
+                    "var cleverpushSubscriptionId = '" + subscriptionId + "';" +
+                    "</script>\n" +
+                    "<script src='https://static.cleverpush.com/sdk/cleverpush-chat.js'></script>\n" +
+                    "</body>\n" +
+                    "</html>";
+
+            handler.post(() -> webView.loadDataWithBaseURL("file:///android_asset/", data, "text/html", "UTF-8", null));
+        }).start();
+    }
+
+    void init() {
         this.getSettings().setJavaScriptEnabled(true) ;
         this.getSettings().setUseWideViewPort(true);
         this.getSettings().setLoadWithOverviewMode(true);
@@ -36,33 +85,26 @@ public class ChatView extends WebView {
         this.loadUrl("about:blank");
 
         Context context = this.getContext();
-        WebView webView = this;
 
-        Handler handler = new Handler();
+        ChatView chatView = this;
 
-        new Thread(() -> {
-            String subscriptionId = CleverPush.getInstance(context).getSubscriptionId();
-            String configJson = CleverPush.getInstance(context).getChannelConfig().toString();
+        class JsInterface {
+            @JavascriptInterface
+            public void subscribe() {
+                ChatSubscribeListener subscribeListener = CleverPush.getInstance(context).getChatSubscribeListener();
+                if (subscribeListener != null) {
+                    subscribeListener.subscribe();
+                    return;
+                }
 
-            String data = "<!DOCTYPE html>\n" +
-                    "            <html>\n" +
-                    "            <head>\n" +
-                    "            <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>\n" +
-                    "            <style>\n" +
-                    "            html, body { margin: 0; padding: 0; height: 100%; }\n" +
-                    "            </style>\n" +
-                    "            </head>\n" +
-                    "            <body>\n" +
-                    "            <div class='cleverpush-chat-target' style='height: 100%;'></div>\n" +
-                    "            <script>var cleverpushConfig = " + configJson +"; var cleverpushSubscriptionId = '" + subscriptionId + "';</script>\n" +
-                    "            <script src='https://static.cleverpush.com/sdk/cleverpush-chat.js'></script>\n" +
-                    "            </body>\n" +
-                    "            </html>";
+                CleverPush.getInstance(context).subscribe();
+                chatView.loadChat();
+            }
+        }
 
-            System.out.println("CLEVERPUSH DATA " + data);
+        this.loadChat();
 
-            handler.post(() -> webView.loadDataWithBaseURL("file:///android_asset/", data, "text/html", "UTF-8", null));
-        }).start();
+        this.addJavascriptInterface(new JsInterface(), "cleverpushAppInterface");
 
         this.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {

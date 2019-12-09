@@ -1,5 +1,13 @@
 ## Changelog
 
+== 0.2.0 ==
+* Added `lockChat` for ChatView
+* Optimizations in ChatView
+* Automatically call `subscribe` in `init` after getting channel config to prevent potential blocks
+
+== 0.1.13 ==
+* Added ability to provide custom activity for Topics Dialog
+
 == 0.1.12 ==
 * optimized Topics Dialog
 

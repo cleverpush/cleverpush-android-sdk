@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,6 +16,8 @@ import android.util.Log;
 import com.cleverpush.listener.AppBannerUrlOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelTagsListener;
+import com.cleverpush.listener.ChatSubscribeListener;
+import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedListener;
 import com.cleverpush.listener.SubscribedListener;
@@ -42,7 +45,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.1.12";
+    public static final String SDK_VERSION = "0.2.0";
 
     private static CleverPush instance;
 
@@ -59,12 +62,15 @@ public class CleverPush {
     private NotificationReceivedListener notificationReceivedListener;
     private NotificationOpenedListener notificationOpenedListener;
     private SubscribedListener subscribedListener;
+    private ChatUrlOpenedListener chatUrlOpenedListener;
+    private ChatSubscribeListener chatSubscribeListener;
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
 
     private String channelId;
     private String subscriptionId = null;
     private JSONObject channelConfig = null;
     private boolean subscriptionInProgress = false;
+    private int brandingColor;
 
     private CleverPush(@NonNull Context context) {
         if (context instanceof Application) {
@@ -165,6 +171,8 @@ public class CleverPush {
                         JSONObject responseJson = new JSONObject(response);
                         instance.setChannelConfig(responseJson);
 
+                        instance.subscribeOrSync(autoRegister);
+
                         instance.initAppReview();
                     } catch (Throwable ex) {
                         Log.e("CleverPush", ex.getMessage(), ex);
@@ -176,8 +184,6 @@ public class CleverPush {
 
                 }
             });
-
-            this.subscribeOrSync(autoRegister);
         } else {
             String bundleId = CleverPush.context.getPackageName();
             Log.d("CleverPush", "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: " + bundleId);
@@ -890,5 +896,29 @@ public class CleverPush {
 
     static void setAppContext(Context newAppContext) {
         context = newAppContext.getApplicationContext();
+    }
+
+    public void setBrandingColor(int color) {
+        brandingColor = color;
+    }
+
+    public int getBrandingColor() {
+        return brandingColor;
+    }
+
+    public void setChatUrlOpenedListener(ChatUrlOpenedListener listener) {
+        chatUrlOpenedListener = listener;
+    }
+
+    public ChatUrlOpenedListener getChatUrlOpenedListener() {
+        return chatUrlOpenedListener;
+    }
+
+    public void setChatSubscribeListener(ChatSubscribeListener listener) {
+        chatSubscribeListener = listener;
+    }
+
+    public ChatSubscribeListener getChatSubscribeListener() {
+        return chatSubscribeListener;
     }
 }
