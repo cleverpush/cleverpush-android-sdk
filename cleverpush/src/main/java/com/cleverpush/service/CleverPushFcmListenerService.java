@@ -157,8 +157,6 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
             contentIntent = PendingIntent.getActivity(this, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
 
-        int defaultSmallIcon = this.getResources().getIdentifier("default_notification_icon", "drawable", this.getPackageName());
-
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
         NotificationCompat.Builder notificationBuilder;
@@ -178,7 +176,7 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
                 .setContentIntent(contentIntent)
                 .setContentTitle(title)
                 .setContentText(text)
-                .setSmallIcon(defaultSmallIcon)
+                .setSmallIcon(getSmallIcon())
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri);
 
@@ -211,6 +209,18 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
         }
 
         NotificationManagerCompat.from(this).notify(requestCode, notificationBuilder.build());
+    }
+
+    private int getDrawableId(String name) {
+        return this.getResources().getIdentifier(name, "drawable", this.getPackageName());
+    }
+
+    private int getSmallIcon() {
+        int id = getDrawableId("cleverpush_notification_icon");
+        if (id != 0) {
+            return id;
+        }
+        return getDrawableId("default_notification_icon");
     }
 
     private Bitmap getBitmapFromUrl(String strURL) {

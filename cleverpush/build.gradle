@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply from: 'maven-push.gradle'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
     buildToolsVersion '27.0.3'
 
     defaultConfig {
@@ -33,12 +33,14 @@ android {
 dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 
-    compileOnly 'com.google.android.gms:play-services-gcm:12.0.1'
-    api 'com.google.firebase:firebase-messaging:12.0.1'
+    compileOnly 'com.google.android.gms:play-services-gcm:16.1.0'
 
-    implementation 'com.google.android.gms:play-services-base:12.0.1'
+    implementation 'com.google.android.gms:play-services-base:[10.2.1, 16.1.99]'
 
-    api 'com.android.support:support-v4:27.1.1'
+    api 'com.google.firebase:firebase-messaging:[10.2.1, 17.3.99]'
+
+    //noinspection GradleCompatible
+    api 'com.android.support:support-v4:[26.0.0, 27.99.99]'
 
     implementation 'com.google.code.gson:gson:2.8.5'
 }

@@ -1,5 +1,12 @@
 ## Changelog
 
+== 0.3.0 ==
+* Fixed ChatUrlOpenedListener
+* Added TopicsChangedListener
+* Deprecated sync `getChannelConfig` and `getSubscriptionId` methods
+* Added ActivityLifecycleListener and removed internal `activity` variable.
+* added `isInitialized` method
+
 == 0.2.0 ==
 * Added `lockChat` for ChatView
 * Optimizations in ChatView
