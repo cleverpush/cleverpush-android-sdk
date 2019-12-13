@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.3.1 ==
+* Optimized ChatView: Show error when there is no internet connection available
+
 == 0.3.0 ==
 * Fixed ChatUrlOpenedListener
 * Added TopicsChangedListener

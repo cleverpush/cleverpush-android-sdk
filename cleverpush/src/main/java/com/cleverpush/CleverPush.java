@@ -44,7 +44,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.3.0";
+    public static final String SDK_VERSION = "0.3.1";
 
     private static CleverPush instance;
 
@@ -71,6 +71,7 @@ public class CleverPush {
     private String subscriptionId = null;
     private JSONObject channelConfig = null;
     private boolean subscriptionInProgress = false;
+    private boolean initialized = false;
     private int brandingColor;
 
     private CleverPush(@NonNull Context context) {
@@ -168,6 +169,8 @@ public class CleverPush {
             CleverPushHttpClient.get("/channel/" + this.channelId + "/config", new CleverPushHttpClient.ResponseHandler() {
                 @Override
                 public void onSuccess(String response) {
+                    initialized = true;
+
                     try {
                         JSONObject responseJson = new JSONObject(response);
                         instance.setChannelConfig(responseJson);
@@ -182,7 +185,18 @@ public class CleverPush {
 
                 @Override
                 public void onFailure(int statusCode, String response, Throwable throwable) {
+                    initialized = true;
 
+                    Log.e("CleverPush", "Failed to fetch Channel Config", throwable);
+
+                    // trigger listeners
+                    if (channelConfig == null) {
+                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+                        instance.fireSubscribedListener(subscriptionId);
+                        instance.setSubscriptionId(subscriptionId);
+                        instance.setChannelConfig(null);
+                    }
                 }
             });
         } else {
@@ -194,6 +208,8 @@ public class CleverPush {
             CleverPushHttpClient.get("/channel-config?bundleId=" + bundleId + "&platformName=Android", new CleverPushHttpClient.ResponseHandler() {
                 @Override
                 public void onSuccess(String response) {
+                    initialized = true;
+
                     try {
                         JSONObject responseJson = new JSONObject(response);
                         instance.setChannelConfig(responseJson);
@@ -211,7 +227,18 @@ public class CleverPush {
 
                 @Override
                 public void onFailure(int statusCode, String response, Throwable throwable) {
+                    initialized = true;
+
                     Log.e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?", throwable);
+
+                    // trigger listeners
+                    if (channelConfig == null) {
+                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+                        instance.fireSubscribedListener(subscriptionId);
+                        instance.setSubscriptionId(subscriptionId);
+                        instance.setChannelConfig(null);
+                    }
                 }
             });
         }
@@ -365,7 +392,7 @@ public class CleverPush {
 
     public void getChannelConfig(ChannelConfigListener listener) {
         if (listener != null) {
-            if (subscriptionId == null) {
+            if (channelConfig == null && !initialized) {
                 getChannelConfigListeners.add(listener);
             } else {
                 listener.ready(channelConfig);
@@ -377,7 +404,7 @@ public class CleverPush {
         channelConfig = value;
         notifyAll();
 
-        if (channelConfig != null) {
+        if (channelConfig != null || initialized) {
             for (ChannelConfigListener listener : getChannelConfigListeners) {
                 listener.ready(channelConfig);
             }
@@ -872,6 +899,10 @@ public class CleverPush {
     public void showTopicsDialog(Context dialogActivity) {
         CleverPush instance = this;
         this.getChannelConfig(channelConfig -> {
+            if (channelConfig == null) {
+                return;
+            }
+
             try {
                 JSONArray channelTopics = channelConfig.getJSONArray("channelTopics");
                 if (channelTopics.length() == 0) {

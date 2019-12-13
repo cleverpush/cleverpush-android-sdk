@@ -15,6 +15,9 @@ import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 
 public class ChatView extends WebView {
+    private String lastSubscriptionId;
+    private Handler handler;
+
     public ChatView(Context context) {
         super(context);
 
@@ -39,20 +42,23 @@ public class ChatView extends WebView {
     }
 
     public void loadChat(String subscriptionId) {
+        lastSubscriptionId = subscriptionId;
+
         Context context = this.getContext();
         WebView webView = this;
 
-        Handler handler = new Handler();
+        if (this.handler == null) {
+            this.handler = new Handler();
+        }
 
         new Thread(() -> {
             CleverPush.getInstance(context).getChannelConfig(config -> {
-                String configJson = config.toString();
+                String configJson = config != null ? config.toString() : "null";
                 String brandingColorStr = "";
                 int brandingColor = CleverPush.getInstance(context).getBrandingColor();
                 if (brandingColor != 0) {
                     brandingColorStr = "#" + Integer.toHexString(brandingColor).substring(2);
                 }
-
 
                 String data = "<!DOCTYPE html>\n" +
                         "<html>\n" +
@@ -67,21 +73,63 @@ public class ChatView extends WebView {
                         "<script>\n" +
                         "window.cleverpushHandleSubscribe = function() { window.cleverpushAppInterface.subscribe() };\n" +
                         "var cleverpushConfig = " + configJson +";\n" +
-                        "cleverpushConfig.nativeApp = true;\n" +
-                        "cleverpushConfig.nativeAppPlatform = 'Android';\n" +
-                        "cleverpushConfig.brandingColor = '" + brandingColorStr + "';\n" +
+                        "(cleverpushConfig || {}).nativeApp = true;\n" +
+                        "(cleverpushConfig || {}).nativeAppPlatform = 'Android';\n" +
+                        "(cleverpushConfig || {}).brandingColor = '" + brandingColorStr + "';\n" +
                         "var cleverpushSubscriptionId = '" + subscriptionId + "';\n" +
                         "</script>\n" +
-                        "<script src='https://static.cleverpush.com/sdk/cleverpush-chat.js'></script>\n" +
+                        "<script>\n" +
+                        "      function showErrorView() {\n" +
+                        "        document.body.innerHTML = `\n" +
+                        "        <style>\n" +
+                        "        .cleverpush-chat-error {\n" +
+                        "          color: #555;\n" +
+                        "          text-align: center;\n" +
+                        "          font-family: sans-serif;\n" +
+                        "          padding: center;\n" +
+                        "          height: 100%%;\n" +
+                        "          display: flex;\n" +
+                        "          align-items: center;\n" +
+                        "          justify-content: center;\n" +
+                        "          flex-direction: column;\n" +
+                        "        }\n" +
+                        "        .cleverpush-chat-error h1 {\n" +
+                        "          font-size: 24px;\n" +
+                        "          font-weight: normal;\n" +
+                        "          margin-bottom: 25px;\n" +
+                        "        }\n" +
+                        "        .cleverpush-chat-error button {\n" +
+                        "          background-color: #555;\n" +
+                        "          color: #fff;\n" +
+                        "          border: none;\n" +
+                        "          font-weight: bold;\n" +
+                        "          display: block;\n" +
+                        "          font-size: 16px;\n" +
+                        "          border-radius: 200px;\n" +
+                        "          padding: 7.5px 15px;\n" +
+                        "          cursor: pointer;\n" +
+                        "          font-family: sans-serif;\n" +
+                        "        }\n" +
+                        "        </style>\n" +
+                        "        <div class='cleverpush-chat-error'>\n" +
+                        "        <h1>Laden fehlgeschlagen</h1>\n" +
+                        "        <button onclick='window.cleverpushAppInterface.reload()' type='button'>Erneut versuchen</button>\n" +
+                        "        </div>`;\n" +
+                        "      }\n" +
+                        "      if (!cleverpushConfig) { showErrorView() }\n" +
+                        "    </script>\n" +
+                        "<script onerror='showErrorView()' src='https://static.cleverpush.com/sdk/cleverpush-chat.js'></script>\n" +
                         "</body>\n" +
                         "</html>";
 
-                handler.post(() -> webView.loadDataWithBaseURL("file:///android_asset/", data, "text/html", "UTF-8", null));
+                this.handler.post(() -> webView.loadDataWithBaseURL("file:///android_asset/", data, "text/html", "UTF-8", null));
             });
         }).start();
     }
 
     void init() {
+        this.handler = new Handler();
+
         this.getSettings().setJavaScriptEnabled(true) ;
         this.getSettings().setUseWideViewPort(true);
         this.getSettings().setLoadWithOverviewMode(true);
@@ -109,6 +157,17 @@ public class ChatView extends WebView {
                     chatView.loadChat();
                 });
             }
+
+            @JavascriptInterface
+            public void reload() {
+                new Thread(() -> {
+                    if (lastSubscriptionId != null) {
+                        chatView.loadChat(lastSubscriptionId);
+                    } else {
+                        chatView.loadChat();
+                    }
+                });
+            }
         }
 
         this.loadChat();
@@ -122,7 +181,7 @@ public class ChatView extends WebView {
 
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url.equals("about:blank")) {
-                    return false;
+                    return super.shouldOverrideUrlLoading(view, url);
                 }
                 ChatUrlOpenedListener urlOpenedListener = CleverPush.getInstance(context).getChatUrlOpenedListener();
                 if (urlOpenedListener != null) {
