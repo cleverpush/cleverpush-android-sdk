@@ -12,9 +12,11 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Set;
 import java.util.TimeZone;
 
 abstract class SubscriptionManagerBase implements SubscriptionManager {
@@ -54,6 +56,11 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         String country = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
         TimeZone timeZone = TimeZone.getDefault();
 
+        Set<String> topics = null;
+        if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS)) {
+            topics = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, null);
+        }
+
         String appVersion = "";
         if (this.context != null) {
             try {
@@ -88,6 +95,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             }
             if (timeZone != null && timeZone.getID() != null) {
                 jsonBody.put("timezone", timeZone.getID());
+            }
+            if (topics != null) {
+                jsonBody.put("topics", new JSONArray(topics));
             }
         } catch (JSONException e) {
             Log.e("CleverPush", "Error", e);

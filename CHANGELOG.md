@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.3.2 ==
+* Topics dialog optimizations
+
 == 0.3.1 ==
 * Optimized ChatView: Show error when there is no internet connection available
 

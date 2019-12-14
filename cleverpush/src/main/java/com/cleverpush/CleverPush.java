@@ -44,7 +44,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.3.1";
+    public static final String SDK_VERSION = "0.3.2";
 
     private static CleverPush instance;
 
@@ -332,9 +332,7 @@ public class CleverPush {
                                         }
                                     }
                                 }
-                                if (selectedTopicIds.size() > 0) {
-                                    this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
-                                }
+                                this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
                             }
 
                             CleverPush.instance.showTopicsDialog();
@@ -526,6 +524,11 @@ public class CleverPush {
         return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>());
     }
 
+    public boolean hasSubscriptionTopics() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS);
+    }
+
     public Map<String, String> getSubscriptionAttributes() {
         Map<String, String> outputMap = new HashMap<>();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
@@ -715,6 +718,8 @@ public class CleverPush {
                     } catch (JSONException ex) {
                         Log.e("CleverPush", ex.getMessage(), ex);
                     }
+
+                    Log.d("CleverPush", "setSubscriptionTopics: " + topicIds.toString());
 
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
@@ -924,7 +929,7 @@ public class CleverPush {
                         String id = topic.getString("_id");
                         topicIds[i] = id;
                         topicNames[i] = topic.getString("name");
-                        checkedTopics[i] = (selectedTopics.size() == 0 && !defaultUnchecked) || selectedTopics.contains(id);
+                        checkedTopics[i] = (selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id);
                     } else {
                         Log.e("CleverPush", "topic is null");
                     }
@@ -944,6 +949,7 @@ public class CleverPush {
 
                     alertBuilder.setTitle(headerTitle);
                     alertBuilder.setMultiChoiceItems(topicNames, checkedTopics, (dialogInterface, i, b) -> checkedTopics[i] = b);
+                    alertBuilder.setNegativeButton("Abbrechen", (dialogInterface, i) -> {});
                     alertBuilder.setPositiveButton("Speichern", (dialogInterface, i) -> {
                         Set<String> selectedTopicIds = new HashSet<>();
                         for (int j = 0; j < topicIds.length; j++) {
