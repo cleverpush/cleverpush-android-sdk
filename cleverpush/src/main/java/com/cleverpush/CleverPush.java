@@ -14,6 +14,7 @@ import com.cleverpush.listener.AppBannerUrlOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
 import com.cleverpush.listener.ChannelTagsListener;
+import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.NotificationOpenedListener;
@@ -44,7 +45,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.3.2";
+    public static final String SDK_VERSION = "0.3.3";
 
     private static CleverPush instance;
 
@@ -627,6 +628,33 @@ public class CleverPush {
         this.getChannelConfig(channelConfig -> {
             listener.ready(this.getAvailableAttributesFromConfig(channelConfig));
         });
+    }
+
+    public void getAvailableTopics(ChannelTopicsListener listener) {
+        this.getChannelConfig(channelConfig -> {
+            listener.ready(this.getAvailableTopicsFromConfig(channelConfig));
+        });
+    }
+
+    private Set<ChannelTopic> getAvailableTopicsFromConfig(JSONObject channelConfig) {
+        Set<ChannelTopic> topics = new HashSet<>();
+        if (channelConfig != null && channelConfig.has("channelTopics")) {
+            try {
+                JSONArray topicsArray = channelConfig.getJSONArray("channelTopics");
+                if (topicsArray != null) {
+                    for (int i = 0; i < topicsArray.length(); i++) {
+                        JSONObject topicObject = topicsArray.getJSONObject(i);
+                        if (topicObject != null) {
+                            ChannelTopic topic = new ChannelTopic(topicObject.getString("_id"), topicObject.getString("name"));
+                            topics.add(topic);
+                        }
+                    }
+                }
+            } catch (JSONException ex) {
+                Log.d("CleverPush", ex.getMessage(), ex);
+            }
+        }
+        return topics;
     }
 
     public void addSubscriptionTag(String tagId) {

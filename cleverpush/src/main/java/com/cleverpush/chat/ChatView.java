@@ -1,17 +1,14 @@
 package com.cleverpush.chat;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.cleverpush.CleverPush;
-import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 
 public class ChatView extends WebView {
@@ -72,7 +69,7 @@ public class ChatView extends WebView {
                         "<div class='cleverpush-chat-target' style='height: 100%;'></div>\n" +
                         "<script>\n" +
                         "window.cleverpushHandleSubscribe = function() { window.cleverpushAppInterface.subscribe() };\n" +
-                        "var cleverpushConfig = " + configJson +";\n" +
+                        "var cleverpushConfig = " + configJson + ";\n" +
                         "(cleverpushConfig || {}).nativeApp = true;\n" +
                         "(cleverpushConfig || {}).nativeAppPlatform = 'Android';\n" +
                         "(cleverpushConfig || {}).brandingColor = '" + brandingColorStr + "';\n" +
@@ -87,7 +84,7 @@ public class ChatView extends WebView {
                         "          text-align: center;\n" +
                         "          font-family: sans-serif;\n" +
                         "          padding: center;\n" +
-                        "          height: 100%%;\n" +
+                        "          height: 100%;\n" +
                         "          display: flex;\n" +
                         "          align-items: center;\n" +
                         "          justify-content: center;\n" +
@@ -129,6 +126,7 @@ public class ChatView extends WebView {
 
     void init() {
         this.handler = new Handler();
+        Context context = this.getContext();
 
         this.getSettings().setJavaScriptEnabled(true) ;
         this.getSettings().setUseWideViewPort(true);
@@ -137,42 +135,10 @@ public class ChatView extends WebView {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             this.setWebContentsDebuggingEnabled(true);
         }
+
+        this.addJavascriptInterface(new ChatJavascriptInterface(context, this), "cleverpushAppInterface");
+
         this.loadUrl("about:blank");
-
-        Context context = this.getContext();
-
-        ChatView chatView = this;
-
-        class JsInterface {
-            @JavascriptInterface
-            public void subscribe() {
-                new Thread(() -> {
-                    ChatSubscribeListener subscribeListener = CleverPush.getInstance(context).getChatSubscribeListener();
-                    if (subscribeListener != null) {
-                        subscribeListener.subscribe();
-                        return;
-                    }
-
-                    CleverPush.getInstance(context).subscribe();
-                    chatView.loadChat();
-                });
-            }
-
-            @JavascriptInterface
-            public void reload() {
-                new Thread(() -> {
-                    if (lastSubscriptionId != null) {
-                        chatView.loadChat(lastSubscriptionId);
-                    } else {
-                        chatView.loadChat();
-                    }
-                });
-            }
-        }
-
-        this.loadChat();
-
-        this.addJavascriptInterface(new JsInterface(), "cleverpushAppInterface");
 
         this.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
@@ -190,6 +156,11 @@ public class ChatView extends WebView {
                 return true;
             }
         });
+
+        this.loadChat();
     }
 
+    public String getLastSubscriptionId() {
+        return lastSubscriptionId;
+    }
 }

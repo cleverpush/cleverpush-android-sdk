@@ -1,5 +1,9 @@
 ## Changelog
 
+== 0.3.3 ==
+* Added `getAvailableTopics`
+* Fixed `ChatSubscribeListener`
+
 == 0.3.2 ==
 * Topics dialog optimizations
 
