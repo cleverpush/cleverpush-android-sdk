@@ -22,6 +22,8 @@ public class Notification implements Serializable {
     NotificationAction[] actions;
     @SerializedName("customData")
     Map customData;
+    @SerializedName("chatNotification")
+    Boolean chatNotification;
 
     public String getId() {
         return id;
@@ -53,5 +55,9 @@ public class Notification implements Serializable {
 
     public Map getCustomData() {
         return customData;
+    }
+
+    public Boolean isChatNotification() {
+        return chatNotification;
     }
 }
