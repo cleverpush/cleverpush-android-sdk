@@ -45,7 +45,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.3.4";
+    public static final String SDK_VERSION = "0.4.0";
 
     private static CleverPush instance;
 
@@ -862,12 +862,72 @@ public class CleverPush {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         Set<String> encodedNotifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
         Set<Notification> notifications = new HashSet<>();
-        Gson gson = new Gson();
-        for (String encodedNotification : encodedNotifications) {
-            Notification notification = gson.fromJson(encodedNotification, Notification.class);
-            notifications.add(notification);
+        if (encodedNotifications != null) {
+            Gson gson = new Gson();
+            for (String encodedNotification : encodedNotifications) {
+                Notification notification = gson.fromJson(encodedNotification, Notification.class);
+                notifications.add(notification);
+            }
         }
         return notifications;
+    }
+
+    public void trackEvent(String eventName) {
+        this.trackEvent(eventName, null);
+    }
+
+    public void trackEvent(String eventName, Float amount) {
+        this.getChannelConfig(channelConfig -> {
+            if (channelConfig == null) {
+                return;
+            }
+
+            try {
+                JSONArray channelEvents = channelConfig.getJSONArray("channelTopics");
+                JSONObject event = null;
+                for (int i = 0; i < channelEvents.length(); i++) {
+                    JSONObject tryEvent = channelEvents.getJSONObject(i);
+                    if (tryEvent != null && tryEvent.getString("name").equals(eventName)) {
+                        event = tryEvent;
+                        break;
+                    }
+                }
+
+                if (event == null) {
+                    Log.e("CleverPush", "Event not found");
+                    return;
+                }
+
+                this.getSubscriptionId(subscriptionId -> {
+                    if (subscriptionId != null) {
+                        JSONObject jsonBody = new JSONObject();
+                        try {
+                            jsonBody.put("channelId", this.channelId);
+                            jsonBody.put("eventName", eventName);
+                            jsonBody.put("amount", amount);
+                            jsonBody.put("subscriptionId", subscriptionId);
+                        } catch (JSONException ex) {
+                            Log.e("CleverPush", ex.getMessage(), ex);
+                        }
+
+                        CleverPushHttpClient.post("/subscription/conversion", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+                            @Override
+                            public void onSuccess(String response) {
+                                Log.d("CleverPush", "Event successfully tracked: " + eventName);
+                            }
+
+                            @Override
+                            public void onFailure(int statusCode, String response, Throwable throwable) {
+                                Log.e("CleverPush", "Error tracking event - HTTP " + statusCode);
+                            }
+                        });
+                    }
+                });
+
+            } catch (Exception ex) {
+                Log.e("CleverPush", ex.getMessage());
+            }
+        });
     }
 
     public void showAppBanners() {

@@ -24,6 +24,10 @@ public class Notification implements Serializable {
     Map customData;
     @SerializedName("chatNotification")
     Boolean chatNotification;
+    @SerializedName("carouselEnabled")
+    Boolean carouselEnabled;
+    @SerializedName("carouselItems")
+    NotificationCarouselItem[] carouselItems;
 
     public String getId() {
         return id;
@@ -50,6 +54,9 @@ public class Notification implements Serializable {
     }
 
     public NotificationAction[] getActions() {
+        if (actions == null) {
+            return new NotificationAction[0];
+        }
         return actions;
     }
 
@@ -58,6 +65,52 @@ public class Notification implements Serializable {
     }
 
     public Boolean isChatNotification() {
-        return chatNotification;
+        return chatNotification != null && chatNotification;
+    }
+
+    public Boolean isCarouselEnabled() {
+        return carouselEnabled != null && carouselEnabled;
+    }
+
+    public NotificationCarouselItem[] getCarouselItems() {
+        if (carouselItems == null) {
+            return new NotificationCarouselItem[0];
+        }
+        return carouselItems;
+    }
+
+    public int getCarouselLength() {
+        int length = 0;
+
+        if (carouselItems != null) {
+            length = carouselItems.length;
+        }
+
+        return length;
+    }
+
+    public int getNextCarouselIndex(int currentIndex) {
+        int index = currentIndex;
+        int maxValue = getCarouselLength() - 1;
+
+        if (index >= maxValue) {
+            index = 0;
+        } else {
+            index++;
+        }
+
+        return index;
+    }
+
+    public int getPreviousCarouselIndex(int currentIndex) {
+        int index = currentIndex;
+
+        if (index <= 0) {
+            index = getCarouselLength() - 1;
+        } else {
+            index--;
+        }
+
+        return index;
     }
 }

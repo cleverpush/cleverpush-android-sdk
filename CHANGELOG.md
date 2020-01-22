@@ -1,5 +1,9 @@
 ## Changelog
 
+== 0.4.0 ==
+* Added `trackEvent`
+* Added Carousel Notifications
+
 == 0.3.3 ==
 * Added `getAvailableTopics`
 * Fixed `ChatSubscribeListener`

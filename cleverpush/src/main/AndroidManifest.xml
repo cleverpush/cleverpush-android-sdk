@@ -10,6 +10,8 @@
         -->
 
         <activity android:name="com.cleverpush.NotificationOpenedActivity" android:exported="true" />
+
+        <service android:name="com.cleverpush.service.CarouselNotificationIntentService" android:exported="false" />
     </application>
 
 </manifest>

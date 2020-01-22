@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="notification">
+
+    </style>
+
+    <style name="notificationTitle">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="notificationTime" parent="" />
+
+    <style name="notificationLine2" parent="" />
+
+    <style name="notificationInfo" parent="" />
+
+</resources>
