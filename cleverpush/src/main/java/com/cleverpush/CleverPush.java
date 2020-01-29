@@ -18,7 +18,8 @@ import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.NotificationOpenedListener;
-import com.cleverpush.listener.NotificationReceivedListener;
+import com.cleverpush.listener.NotificationReceivedCallbackListener;
+import com.cleverpush.listener.NotificationReceivedListenerBase;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.manager.SubscriptionManager;
@@ -45,7 +46,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.4.0";
+    public static final String SDK_VERSION = "0.4.1";
 
     private static CleverPush instance;
 
@@ -58,7 +59,7 @@ public class CleverPush {
 
     public static Context context;
 
-    private NotificationReceivedListener notificationReceivedListener;
+    private NotificationReceivedListenerBase notificationReceivedListener;
     private NotificationOpenedListener notificationOpenedListener;
     private SubscribedListener subscribedListener;
     private ChatUrlOpenedListener chatUrlOpenedListener;
@@ -89,7 +90,7 @@ public class CleverPush {
         init(null, null, null, null, true);
     }
 
-    public void init(@Nullable final NotificationReceivedListener notificationReceivedListener) {
+    public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, notificationReceivedListener);
     }
@@ -104,7 +105,7 @@ public class CleverPush {
         init(channelId, subscribedListener);
     }
 
-    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener) {
+    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
         init(channelId, notificationReceivedListener, null,null);
     }
 
@@ -116,11 +117,11 @@ public class CleverPush {
         init(null, null, notificationOpenedListener, subscribedListener);
     }
 
-    public void init(@Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
+    public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, notificationReceivedListener, null, subscribedListener);
     }
 
-    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener) {
+    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, null);
     }
 
@@ -128,7 +129,7 @@ public class CleverPush {
         init(channelId, null, null, subscribedListener);
     }
 
-    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
+    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, null, subscribedListener);
     }
 
@@ -136,7 +137,7 @@ public class CleverPush {
         init(channelId, null, notificationOpenedListener, subscribedListener);
     }
 
-    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
+    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, true);
     }
 
@@ -144,11 +145,11 @@ public class CleverPush {
         init(channelId, null, notificationOpenedListener, subscribedListener, autoRegister);
     }
 
-    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
+    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         init(channelId, notificationReceivedListener, null, subscribedListener, autoRegister);
     }
 
-    public void init(String channelId, @Nullable final NotificationReceivedListener notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
+    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
         this.notificationReceivedListener = notificationReceivedListener;
         this.notificationOpenedListener = notificationOpenedListener;
@@ -447,12 +448,23 @@ public class CleverPush {
         }
     }
 
+    public boolean isNotificationReceivedListenerCallback() {
+        return notificationReceivedListener != null && notificationReceivedListener instanceof NotificationReceivedCallbackListener;
+    }
+
     public boolean fireNotificationReceivedListener(final NotificationOpenedResult openedResult) {
         if (notificationReceivedListener == null) {
             return false;
         }
         notificationReceivedListener.notificationReceived(openedResult);
         return true;
+    }
+
+    public boolean fireNotificationReceivedCallbackListener(final NotificationOpenedResult openedResult) {
+        if (notificationReceivedListener == null || !(notificationReceivedListener instanceof NotificationReceivedCallbackListener)) {
+            return false;
+        }
+        return ((NotificationReceivedCallbackListener) notificationReceivedListener).notificationReceivedCallback(openedResult);
     }
 
     public void removeNotificationReceivedListener() {

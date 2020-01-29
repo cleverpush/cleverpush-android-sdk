@@ -2,6 +2,6 @@ package com.cleverpush.listener;
 
 import com.cleverpush.NotificationOpenedResult;
 
-public interface NotificationReceivedListener extends NotificationReceivedListenerBase {
+public interface NotificationReceivedListenerBase {
     void notificationReceived(NotificationOpenedResult result);
 }

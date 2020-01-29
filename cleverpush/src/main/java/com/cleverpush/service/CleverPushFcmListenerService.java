@@ -47,23 +47,32 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
                 return;
             }
 
-            boolean foregroundWithReceivedListener = false;
+            CleverPush cleverPush = CleverPush.getInstance(null);
+
+            boolean dontShowNotification = false;
 
             try {
+                boolean callbackReceivedListener = cleverPush.isNotificationReceivedListenerCallback();
+
                 NotificationOpenedResult result = new NotificationOpenedResult();
                 result.setNotification(notification);
                 result.setSubscription(subscription);
 
-                if (NotificationService.getInstance().applicationInForeground(this)) {
-                    foregroundWithReceivedListener = CleverPush.getInstance(null).fireNotificationReceivedListener(result);
+                if (callbackReceivedListener) {
+                    dontShowNotification = !cleverPush.fireNotificationReceivedCallbackListener(result);
                 } else {
-                    CleverPush.getInstance(null).fireNotificationReceivedListener(result);
+                    if (NotificationService.getInstance().applicationInForeground(this)) {
+                        dontShowNotification = cleverPush.fireNotificationReceivedListener(result);
+                    } else {
+                        cleverPush.fireNotificationReceivedListener(result);
+                    }
                 }
+
             } catch (Exception e) {
                 Log.e("CleverPush", "Error checking if application is in foreground", e);
             }
 
-            if (!foregroundWithReceivedListener) {
+            if (!dontShowNotification) {
                 if (notification.getCarouselLength() > 0 && notification.isCarouselEnabled()) {
                     NotificationService.getInstance().createAndShowCarousel(this, notification, data);
                 } else {

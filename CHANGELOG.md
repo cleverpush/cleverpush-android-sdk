@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.4.1 ==
+* Added `NotificationReceivedCallbackListener` with ability to set if notification should be shown
+
 == 0.4.0 ==
 * Added `trackEvent`
 * Added Carousel Notifications
