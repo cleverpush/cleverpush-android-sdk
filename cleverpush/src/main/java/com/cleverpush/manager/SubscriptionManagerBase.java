@@ -16,6 +16,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -61,6 +64,8 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             topics = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, null);
         }
 
+        int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
+
         String appVersion = "";
         if (this.context != null) {
             try {
@@ -98,6 +103,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             }
             if (topics != null) {
                 jsonBody.put("topics", new JSONArray(topics));
+                jsonBody.put("topicsVersion", topicsVersion);
             }
         } catch (JSONException e) {
             Log.e("CleverPush", "Error", e);
@@ -107,6 +113,8 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             @Override
             public void onSuccess(String response) {
                 try {
+                    System.out.printf("CleverPush: sync response " + response);
+
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.has("id")) {
                         String newSubscriptionId = responseJson.getString("id");
@@ -115,6 +123,26 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                         sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L)).apply();
 
                         registeredHandler.complete(newSubscriptionId);
+                    }
+                    if (responseJson.has("topics")) {
+                        JSONArray topicsArray = responseJson.getJSONArray("topics");
+                        List<String> topicIds = new ArrayList<>();
+                        if (topicsArray != null) {
+                            for (int i = 0; i < topicsArray.length(); i++) {
+                                String topicId = topicsArray.getString(i);
+                                if (topicId != null) {
+                                    topicIds.add(topicId);
+                                }
+                            }
+                        }
+                        sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(topicIds)).apply();
+
+                        if (responseJson.has("topicsVersion")) {
+                            int topicsVersion = responseJson.getInt("topicsVersion");
+                            if (topicsVersion > 0) {
+                                sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion).apply();
+                            }
+                        }
                     }
                 } catch (Throwable t) {
                     Log.e("CleverPush", "Error", t);

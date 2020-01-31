@@ -13,8 +13,16 @@ import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.FcmSenderIdListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 
 public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdService {
 
@@ -87,6 +95,26 @@ public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdServi
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.has("id")) {
                         sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, responseJson.getString("id")).apply();
+                    }
+                    if (responseJson.has("topics")) {
+                        JSONArray topicsArray = responseJson.getJSONArray("topics");
+                        List<String> topicIds = new ArrayList<>();
+                        if (topicsArray != null) {
+                            for (int i = 0; i < topicsArray.length(); i++) {
+                                String topicId = topicsArray.getString(i);
+                                if (topicId != null) {
+                                    topicIds.add(topicId);
+                                }
+                            }
+                        }
+                        sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(topicIds)).apply();
+
+                        if (responseJson.has("topicsVersion")) {
+                            int topicsVersion = responseJson.getInt("topicsVersion");
+                            if (topicsVersion > 0) {
+                                sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion).apply();
+                            }
+                        }
                     }
                 } catch (Throwable t) {
                     t.printStackTrace();

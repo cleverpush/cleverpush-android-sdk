@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.4.2 ==
+* Sync subscribed topics from API to Client
+
 == 0.4.1 ==
 * Added `NotificationReceivedCallbackListener` with ability to set if notification should be shown
 

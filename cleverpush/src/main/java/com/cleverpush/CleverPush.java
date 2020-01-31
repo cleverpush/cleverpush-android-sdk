@@ -46,7 +46,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.4.1";
+    public static final String SDK_VERSION = "0.4.2";
 
     private static CleverPush instance;
 
@@ -743,6 +743,17 @@ public class CleverPush {
 
     public void setSubscriptionTopics(String[] topicIds) {
         new Thread(() -> {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+
+            final int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
+
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS).apply();
+            editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(Arrays.asList(topicIds)));
+            editor.putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion);
+            editor.commit();
+
+
             this.getSubscriptionId(subscriptionId -> {
                 if (subscriptionId != null) {
                     JSONObject jsonBody = new JSONObject();
@@ -754,6 +765,7 @@ public class CleverPush {
 
                         jsonBody.put("channelId", this.channelId);
                         jsonBody.put("topics", topicsArray);
+                        jsonBody.put("topicsVersion", topicsVersion);
                         jsonBody.put("subscriptionId", subscriptionId);
                     } catch (JSONException ex) {
                         Log.e("CleverPush", ex.getMessage(), ex);
@@ -761,17 +773,11 @@ public class CleverPush {
 
                     Log.d("CleverPush", "setSubscriptionTopics: " + topicIds.toString());
 
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
                     CleverPush instance = this;
                     CleverPushHttpClient.post("/subscription/sync/" + this.channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
                         @Override
                         public void onSuccess(String response) {
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS).apply();
-                            editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(Arrays.asList(topicIds)));
-                            editor.commit();
-
                             TopicsChangedListener topicsChangedListener = instance.getTopicsChangedListener();
                             if (topicsChangedListener != null) {
                                 topicsChangedListener.changed(new HashSet<>(Arrays.asList(topicIds)));
