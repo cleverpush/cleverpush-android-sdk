@@ -22,6 +22,7 @@ import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
+import com.cleverpush.listener.TopicsDialogListener;
 import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
@@ -46,7 +47,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.4.2";
+    public static final String SDK_VERSION = "0.4.3";
 
     private static CleverPush instance;
 
@@ -1008,9 +1009,16 @@ public class CleverPush {
     }
 
     public void showTopicsDialog(Context dialogActivity) {
+        showTopicsDialog(ActivityLifecycleListener.currentActivity, null);
+    }
+
+    public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener) {
         CleverPush instance = this;
         this.getChannelConfig(channelConfig -> {
             if (channelConfig == null) {
+                if (topicsDialogListener != null) {
+                    topicsDialogListener.callback(false);
+                }
                 return;
             }
 
@@ -1055,7 +1063,11 @@ public class CleverPush {
 
                     alertBuilder.setTitle(headerTitle);
                     alertBuilder.setMultiChoiceItems(topicNames, checkedTopics, (dialogInterface, i, b) -> checkedTopics[i] = b);
-                    alertBuilder.setNegativeButton("Abbrechen", (dialogInterface, i) -> {});
+                    alertBuilder.setNegativeButton("Abbrechen", (dialogInterface, i) -> {
+                        if (topicsDialogListener != null) {
+                            topicsDialogListener.callback(false);
+                        }
+                    });
                     alertBuilder.setPositiveButton("Speichern", (dialogInterface, i) -> {
                         Set<String> selectedTopicIds = new HashSet<>();
                         for (int j = 0; j < topicIds.length; j++) {
@@ -1067,6 +1079,10 @@ public class CleverPush {
                         CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
 
                         dialogInterface.dismiss();
+
+                        if (topicsDialogListener != null) {
+                            topicsDialogListener.callback(true);
+                        }
                     });
 
                     AlertDialog alert = alertBuilder.create();

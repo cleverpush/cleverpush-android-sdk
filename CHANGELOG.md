@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.4.3 ==
+* Added `TopicsDialogListener`
+
 == 0.4.2 ==
 * Sync subscribed topics from API to Client
 
