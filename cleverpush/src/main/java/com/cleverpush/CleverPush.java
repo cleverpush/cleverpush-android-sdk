@@ -1009,7 +1009,7 @@ public class CleverPush {
     }
 
     public void showTopicsDialog(Context dialogActivity) {
-        showTopicsDialog(ActivityLifecycleListener.currentActivity, null);
+        showTopicsDialog(dialogActivity, null);
     }
 
     public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener) {
