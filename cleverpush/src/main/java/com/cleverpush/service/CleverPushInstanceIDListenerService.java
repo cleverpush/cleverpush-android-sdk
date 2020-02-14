@@ -1,12 +1,12 @@
 package com.cleverpush.service;
 
 import android.content.Intent;
-
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
@@ -18,9 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -41,6 +39,8 @@ public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdServi
         getFcmSenderId(channelId, fcmSenderId -> {
             try {
                 String token = FirebaseInstanceId.getInstance().getToken("FCM", fcmSenderId);
+
+                sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
 
                 sendRegistrationToServer(sharedPreferences, channelId, subscriptionId, token);
 

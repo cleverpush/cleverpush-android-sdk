@@ -48,6 +48,8 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
 
+        sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
+
         String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         if (channelId == null) {

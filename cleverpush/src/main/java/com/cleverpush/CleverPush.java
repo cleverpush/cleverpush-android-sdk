@@ -1,13 +1,19 @@
 package com.cleverpush;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.cleverpush.listener.AppBannerUrlOpenedListener;
@@ -20,6 +26,7 @@ import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
+import com.cleverpush.listener.SessionListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.listener.TopicsDialogListener;
@@ -27,6 +34,11 @@ import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerGCM;
+import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -47,7 +59,7 @@ import java.util.Set;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "0.4.3";
+    public static final String SDK_VERSION = "0.5.0";
 
     private static CleverPush instance;
 
@@ -69,6 +81,8 @@ public class CleverPush {
     private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
     private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
+    private SessionListener sessionListener;
+    private GoogleApiClient googleApiClient;
 
     private String channelId;
     private String subscriptionId = null;
@@ -77,6 +91,9 @@ public class CleverPush {
     private boolean initialized = false;
     private int brandingColor;
 
+    private int sessionVisits = 0;
+    private long sessionStartedTimestamp = 0;
+
     private CleverPush(@NonNull Context context) {
         if (context instanceof Application) {
             CleverPush.context = context;
@@ -84,7 +101,15 @@ public class CleverPush {
             CleverPush.context = context.getApplicationContext();
         }
 
-        ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) CleverPush.context);
+        sessionListener = open -> {
+            if (open) {
+                this.trackSessionStart();
+            } else {
+                this.trackSessionEnd();
+            }
+        };
+
+        ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) CleverPush.context, sessionListener);
     }
 
     public void init() {
@@ -180,7 +205,8 @@ public class CleverPush {
 
                         instance.subscribeOrSync(autoRegister);
 
-                        instance.initAppReview();
+                        instance.initFeatures();
+
                     } catch (Throwable ex) {
                         Log.e("CleverPush", ex.getMessage(), ex);
                     }
@@ -220,7 +246,7 @@ public class CleverPush {
 
                         instance.subscribeOrSync(autoRegister);
 
-                        instance.initAppReview();
+                        instance.initFeatures();
 
                         Log.d("CleverPush", "Got Channel ID via Package Name: " + instance.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
                     } catch (Throwable ex) {
@@ -280,6 +306,11 @@ public class CleverPush {
         }
     }
 
+    private void initFeatures() {
+        this.initAppReview();
+        this.initGeoFences();
+    }
+
     private void initAppReview() {
         this.getChannelConfig(config -> {
             if (config != null && config.optBoolean("appReviewEnabled")) {
@@ -290,9 +321,166 @@ public class CleverPush {
                             .setForceMode(false)
                             .showAfter(config.optInt("appOpens"));
                 } catch (Exception ex) {
-
+                    Log.d("CleverPush", ex.getMessage());
                 }
             }
+        });
+    }
+
+    public void requestLocationPermission() {
+        if (this.hasLocationPermission()) {
+            return;
+        }
+        ActivityCompat.requestPermissions(ActivityLifecycleListener.currentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 10);
+    }
+
+    public boolean hasLocationPermission() {
+        /*
+        if (android.os.Build.VERSION.SDK_INT >= 29 && ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+        */
+        return ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
+
+    }
+
+    private void initGeoFences() {
+        if (hasLocationPermission()) {
+            googleApiClient = new GoogleApiClient.Builder(CleverPush.context)
+                    .addApi(LocationServices.API)
+                    .build();
+
+            this.getChannelConfig(config -> {
+                if (config != null) {
+                    try {
+                        ArrayList<Geofence> geofenceList = new ArrayList<>();
+
+                        JSONArray geoFenceArray = config.getJSONArray("geoFences");
+                        if (geoFenceArray != null) {
+                            for (int i = 0; i < geoFenceArray.length(); i++) {
+                                JSONObject geoFence = geoFenceArray.getJSONObject(i);
+                                if (geoFence != null) {
+                                    geofenceList.add(new Geofence.Builder()
+                                            .setRequestId(geoFence.getString("_id"))
+                                            .setCircularRegion(
+                                                    geoFence.getDouble("latitude"),
+                                                    geoFence.getDouble("longitude"),
+                                                    geoFence.getLong("radius")
+                                            )
+                                            .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
+                                            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                                            .build());
+                                }
+                            }
+
+                            if (geofenceList.size() > 0) {
+                                GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+                                builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+                                builder.addGeofences(geofenceList);
+                                GeofencingRequest geofenceRequest = builder.build();
+
+                                Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
+                                // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
+                                PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                                try {
+                                    LocationServices.GeofencingApi.addGeofences(
+                                            googleApiClient,
+                                            geofenceRequest,
+                                            geofencePendingIntent
+                                    );
+                                } catch (SecurityException securityException) {
+                                    // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        Log.d("CleverPush", ex.getMessage());
+                    }
+                }
+            });
+        }
+    }
+
+    private void trackSessionStart() {
+        // reset
+        this.sessionVisits = 0;
+        this.sessionStartedTimestamp = System.currentTimeMillis() / 1000L;
+
+        this.getChannelConfig(config -> {
+            if (config != null && config.optBoolean("trackAppStatistics")) {
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
+
+                JSONObject jsonBody = new JSONObject();
+                try {
+                    jsonBody.put("channelId", this.channelId);
+                    jsonBody.put("subscriptionId", subscriptionId);
+                    jsonBody.put("fcmToken", fcmToken);
+                } catch (JSONException ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
+
+                CleverPushHttpClient.post("/subscription/session/start", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Log.d("CleverPush", "Session started");
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, String response, Throwable throwable) {
+                        Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
+                    }
+                });
+            }
+        });
+    }
+
+    public void increaseSessionVisits() {
+        this.sessionVisits += 1;
+    }
+
+    private void trackSessionEnd() {
+        if (sessionStartedTimestamp == 0) {
+            Log.e("CleverPush", "Error tracking session end - session started timestamp is 0");
+            return;
+        }
+
+        long sessionEndedTimestamp = System.currentTimeMillis() / 1000L;
+        long sessionDuration = sessionEndedTimestamp - sessionStartedTimestamp;
+
+        this.getChannelConfig(config -> {
+            if (config != null && config.optBoolean("trackAppStatistics")) {
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
+
+                JSONObject jsonBody = new JSONObject();
+                try {
+                    jsonBody.put("channelId", this.channelId);
+                    jsonBody.put("subscriptionId", subscriptionId);
+                    jsonBody.put("fcmToken", fcmToken);
+                    jsonBody.put("visits", sessionVisits);
+                    jsonBody.put("duration", sessionDuration);
+                } catch (JSONException ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
+
+                CleverPushHttpClient.post("/subscription/session/end", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Log.d("CleverPush", "Session ended");
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, String response, Throwable throwable) {
+                        Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
+                    }
+                });
+            }
+
+            // reset
+            this.sessionStartedTimestamp = 0;
+            this.sessionVisits = 0;
         });
     }
 

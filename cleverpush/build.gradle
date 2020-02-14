@@ -35,6 +35,8 @@ dependencies {
 
     compileOnly 'com.google.android.gms:play-services-gcm:16.1.0'
 
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
+
     implementation 'com.google.android.gms:play-services-base:[10.2.1, 16.1.99]'
 
     api 'com.google.firebase:firebase-messaging:[10.2.1, 17.3.99]'

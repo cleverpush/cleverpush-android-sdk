@@ -4,20 +4,30 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.cleverpush.listener.SessionListener;
 
 class ActivityLifecycleListener implements Application.ActivityLifecycleCallbacks {
 
     @SuppressLint("StaticFieldLeak")
     static Activity currentActivity;
 
+    private int counter = 0;
+    private SessionListener sessionListener;
+
+    public ActivityLifecycleListener(SessionListener sessionListener) {
+        this.sessionListener = sessionListener;
+    }
+
     @Nullable
     private static ActivityLifecycleListener instance;
 
-    static void registerActivityLifecycleCallbacks(@NonNull final Application application) {
+    static void registerActivityLifecycleCallbacks(@NonNull final Application application, SessionListener sessionListener) {
         if (instance == null) {
-            instance = new ActivityLifecycleListener();
+            instance = new ActivityLifecycleListener(sessionListener);
             application.registerActivityLifecycleCallbacks(instance);
         }
     }
@@ -35,12 +45,29 @@ class ActivityLifecycleListener implements Application.ActivityLifecycleCallback
     @Override
     public void onActivityResumed(Activity activity) {
         currentActivity = activity;
+
+        if (counter == 0 && sessionListener != null) {
+            sessionListener.stateChanged(true);
+        }
+        counter++;
     }
 
     @Override
     public void onActivityPaused(Activity activity) {
         if (activity == currentActivity) {
             currentActivity = null;
+        }
+
+        counter--;
+        if (counter == 0 && sessionListener != null) {
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                public void run() {
+                    if (counter == 0 && sessionListener != null) {
+                        sessionListener.stateChanged(false);
+                    }
+                }
+            }, 1000);
         }
     }
 

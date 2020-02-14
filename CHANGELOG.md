@@ -3,6 +3,9 @@
 == 0.4.3 ==
 * Added `TopicsDialogListener`
 
+== 0.5.0 ==
+* Added Geo Fences
+
 == 0.4.2 ==
 * Sync subscribed topics from API to Client
 
