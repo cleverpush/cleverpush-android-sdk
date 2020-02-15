@@ -34,12 +34,13 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 			return;
 		}
 
-		Log.d(TAG, "Geofence Transition Details: " + getGeofenceTransitionDetails(event));
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 		String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
 		String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
 		String transitionState = event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? "enter": "exit";
+
+		Log.d(TAG, "Geofence Transition Details: " + getGeofenceTransitionDetails(event) + " " + transitionState + " subscription: " + subscriptionId + " channel " + channelId);
 
 		if (channelId != null && subscriptionId != null) {
 			for (Geofence geofence : event.getTriggeringGeofences()) {

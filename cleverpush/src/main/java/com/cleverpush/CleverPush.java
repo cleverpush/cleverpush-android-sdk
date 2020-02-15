@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -35,6 +36,7 @@ import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerGCM;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
@@ -57,9 +59,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-public class CleverPush {
+public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.5.0";
+    public static final String SDK_VERSION = "0.5.1";
 
     private static CleverPush instance;
 
@@ -83,6 +85,7 @@ public class CleverPush {
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
     private SessionListener sessionListener;
     private GoogleApiClient googleApiClient;
+    private ArrayList<Geofence> geofenceList = new ArrayList<>();
 
     private String channelId;
     private String subscriptionId = null;
@@ -90,9 +93,11 @@ public class CleverPush {
     private boolean subscriptionInProgress = false;
     private boolean initialized = false;
     private int brandingColor;
+    private boolean pendingRequestLocationPermissionCall = false;
 
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
+    private int locationPermissionRequestCode = 101;
 
     private CleverPush(@NonNull Context context) {
         if (context instanceof Application) {
@@ -104,6 +109,10 @@ public class CleverPush {
         sessionListener = open -> {
             if (open) {
                 this.trackSessionStart();
+
+                if (pendingRequestLocationPermissionCall) {
+                    this.requestLocationPermission();
+                }
             } else {
                 this.trackSessionEnd();
             }
@@ -331,7 +340,12 @@ public class CleverPush {
         if (this.hasLocationPermission()) {
             return;
         }
-        ActivityCompat.requestPermissions(ActivityLifecycleListener.currentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 10);
+        if (ActivityLifecycleListener.currentActivity == null) {
+            this.pendingRequestLocationPermissionCall = true;
+            return;
+        }
+        this.pendingRequestLocationPermissionCall = false;
+        ActivityCompat.requestPermissions(ActivityLifecycleListener.currentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionRequestCode);
     }
 
     public boolean hasLocationPermission() {
@@ -340,21 +354,21 @@ public class CleverPush {
             return false;
         }
         */
-        return ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
+        return ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
     }
 
     private void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = new GoogleApiClient.Builder(CleverPush.context)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
 
             this.getChannelConfig(config -> {
                 if (config != null) {
                     try {
-                        ArrayList<Geofence> geofenceList = new ArrayList<>();
-
                         JSONArray geoFenceArray = config.getJSONArray("geoFences");
                         if (geoFenceArray != null) {
                             for (int i = 0; i < geoFenceArray.length(); i++) {
@@ -372,33 +386,16 @@ public class CleverPush {
                                             .build());
                                 }
                             }
-
-                            if (geofenceList.size() > 0) {
-                                GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-                                builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-                                builder.addGeofences(geofenceList);
-                                GeofencingRequest geofenceRequest = builder.build();
-
-                                Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
-                                // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
-                                PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                                try {
-                                    LocationServices.GeofencingApi.addGeofences(
-                                            googleApiClient,
-                                            geofenceRequest,
-                                            geofencePendingIntent
-                                    );
-                                } catch (SecurityException securityException) {
-                                    // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-                                }
-                            }
                         }
                     } catch (Exception ex) {
                         Log.d("CleverPush", ex.getMessage());
                     }
                 }
             });
+
+            if (geofenceList.size() > 0) {
+                googleApiClient.connect();
+            }
         }
     }
 
@@ -1317,5 +1314,50 @@ public class CleverPush {
 
     public TopicsChangedListener getTopicsChangedListener() {
         return topicsChangedListener;
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d("CleverPush", "GoogleApiClient onConnected");
+
+        if (geofenceList.size() > 0) {
+            Log.d("CleverPush", "initing geofences " + geofenceList.toString());
+
+            GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+            builder.addGeofences(geofenceList);
+            GeofencingRequest geofenceRequest = builder.build();
+
+            Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
+            // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
+            PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            try {
+                LocationServices.GeofencingApi.addGeofences(
+                        googleApiClient,
+                        geofenceRequest,
+                        geofencePendingIntent
+                );
+            } catch (SecurityException securityException) {
+                // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
+            }
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d("CleverPush", "GoogleApiClient onConnectionFailed");
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.d("CleverPush", "GoogleApiClient onConnectionSuspended");
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == locationPermissionRequestCode && (geofenceList == null || geofenceList.size() == 0)) {
+            this.initGeoFences();
+        }
     }
 }
