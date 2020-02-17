@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.5.2 ==
+* Crash Fixes in Fcm Listener
+
 == 0.5.1 ==
 * Geo Fence Fixes
 

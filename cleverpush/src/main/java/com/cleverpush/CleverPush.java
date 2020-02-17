@@ -61,7 +61,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.5.1";
+    public static final String SDK_VERSION = "0.5.2";
 
     private static CleverPush instance;
 
@@ -100,6 +100,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private int locationPermissionRequestCode = 101;
 
     private CleverPush(@NonNull Context context) {
+        if (context == null) {
+            return;
+        }
+
         if (context instanceof Application) {
             CleverPush.context = context;
         } else {

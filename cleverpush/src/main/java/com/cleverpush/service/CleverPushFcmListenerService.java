@@ -2,8 +2,6 @@ package com.cleverpush.service;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.cleverpush.CleverPush;
@@ -47,7 +45,10 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
                 return;
             }
 
-            CleverPush cleverPush = CleverPush.getInstance(null);
+            if (CleverPush.context == null) {
+                CleverPush.context = this;
+            }
+            CleverPush cleverPush = CleverPush.getInstance(CleverPush.context);
 
             boolean dontShowNotification = false;
 
