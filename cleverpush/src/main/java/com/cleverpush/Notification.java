@@ -28,6 +28,8 @@ public class Notification implements Serializable {
     Boolean carouselEnabled;
     @SerializedName("carouselItems")
     NotificationCarouselItem[] carouselItems;
+    String createdAt;
+    @SerializedName("createdAt")
 
     public String getId() {
         return id;
@@ -70,6 +72,10 @@ public class Notification implements Serializable {
 
     public Boolean isCarouselEnabled() {
         return carouselEnabled != null && carouselEnabled;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
     }
 
     public NotificationCarouselItem[] getCarouselItems() {

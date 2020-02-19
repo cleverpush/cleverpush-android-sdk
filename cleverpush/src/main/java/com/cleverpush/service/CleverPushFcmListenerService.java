@@ -45,10 +45,7 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
                 return;
             }
 
-            if (CleverPush.context == null) {
-                CleverPush.context = this;
-            }
-            CleverPush cleverPush = CleverPush.getInstance(CleverPush.context);
+            CleverPush cleverPush = CleverPush.getInstance(this);
 
             boolean dontShowNotification = false;
 

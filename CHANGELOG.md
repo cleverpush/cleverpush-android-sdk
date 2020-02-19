@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.5.3 ==
+* Added createdAt property for Notifications
+
 == 0.5.2 ==
 * Crash Fixes in Fcm Listener
 
