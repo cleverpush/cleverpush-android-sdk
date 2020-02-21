@@ -61,7 +61,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.5.3";
+    public static final String SDK_VERSION = "0.5.4";
 
     private static CleverPush instance;
 
@@ -1091,7 +1091,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             }
 
             try {
-                JSONArray channelEvents = channelConfig.getJSONArray("channelTopics");
+                JSONArray channelEvents = channelConfig.getJSONArray("channelEvents");
                 JSONObject event = null;
                 for (int i = 0; i < channelEvents.length(); i++) {
                     JSONObject tryEvent = channelEvents.getJSONObject(i);

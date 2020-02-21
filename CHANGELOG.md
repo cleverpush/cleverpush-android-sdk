@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.5.4 ==
+* Event Tracking fix
+
 == 0.5.3 ==
 * Added createdAt property for Notifications
 
