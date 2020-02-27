@@ -61,7 +61,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.5.5";
+    public static final String SDK_VERSION = "0.5.6";
 
     private static CleverPush instance;
 
@@ -409,7 +409,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         this.sessionStartedTimestamp = System.currentTimeMillis() / 1000L;
 
         this.getChannelConfig(config -> {
-            if (config != null && config.optBoolean("trackAppStatistics")) {
+            if (config != null && config.optBoolean("trackAppStatistics") || subscriptionId != null) {
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
                 String lastNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null);
@@ -453,7 +453,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         long sessionDuration = sessionEndedTimestamp - sessionStartedTimestamp;
 
         this.getChannelConfig(config -> {
-            if (config != null && config.optBoolean("trackAppStatistics")) {
+            if (config != null && config.optBoolean("trackAppStatistics") || subscriptionId != null) {
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
 

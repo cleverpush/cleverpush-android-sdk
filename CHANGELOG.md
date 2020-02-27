@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.5.6 ==
+* Minor fix
+
 == 0.5.5 ==
 * Transmit last received notification
 
