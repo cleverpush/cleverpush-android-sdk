@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.5.5 ==
+* Transmit last received notification
+
 == 0.5.4 ==
 * Event Tracking fix
 

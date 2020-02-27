@@ -61,7 +61,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.5.4";
+    public static final String SDK_VERSION = "0.5.5";
 
     private static CleverPush instance;
 
@@ -412,12 +412,14 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             if (config != null && config.optBoolean("trackAppStatistics")) {
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
+                String lastNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null);
 
                 JSONObject jsonBody = new JSONObject();
                 try {
                     jsonBody.put("channelId", this.channelId);
                     jsonBody.put("subscriptionId", subscriptionId);
                     jsonBody.put("fcmToken", fcmToken);
+                    jsonBody.put("lastNotificationId", lastNotificationId);
                 } catch (JSONException ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }

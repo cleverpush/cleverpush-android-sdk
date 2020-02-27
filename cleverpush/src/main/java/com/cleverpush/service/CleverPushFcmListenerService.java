@@ -95,6 +95,7 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
                 notifications.add(gson.toJson(notification));
                 editor.remove(CleverPushPreferences.NOTIFICATIONS).apply();
                 editor.putStringSet(CleverPushPreferences.NOTIFICATIONS, notifications);
+                editor.putString(CleverPushPreferences.LAST_NOTIFICATION_ID, notificationId);
                 editor.commit();
             } catch (Exception e) {
                 Log.e("CleverPush", "Error saving notification to shared preferences", e);
