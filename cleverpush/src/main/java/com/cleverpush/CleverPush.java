@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -61,7 +62,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.5.6";
+    public static final String SDK_VERSION = "0.5.7";
 
     private static CleverPush instance;
 
@@ -292,6 +293,13 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             }
             unprocessedOpenedNotifications.clear();
         }
+
+        // increment app opens
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        int appOpens = sharedPreferences.getInt(CleverPushPreferences.APP_OPENS, 0) + 1;
+        editor.putInt(CleverPushPreferences.APP_OPENS, appOpens);
+        editor.apply();
     }
 
     public boolean isInitialized() {
@@ -320,6 +328,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     private void initFeatures() {
+        this.showPendingTopicsDialog();
         this.initAppReview();
         this.initGeoFences();
     }
@@ -328,11 +337,20 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         this.getChannelConfig(config -> {
             if (config != null && config.optBoolean("appReviewEnabled")) {
                 try {
-                    FiveStarsDialog dialog = new FiveStarsDialog(CleverPush.context, config.optString("appReviewEmail"));
-                    dialog.setRateText(config.optString("appReviewText"))
-                            .setTitle(config.optString("appReviewTitle"))
-                            .setForceMode(false)
-                            .showAfter(config.optInt("appOpens"));
+                    int appReviewSeconds = config.optInt("appReviewSeconds", 0);
+                    int appReviewOpens = config.optInt("appReviewOpens", 0);
+                    int appReviewDays = config.optInt("appReviewDays", 0);
+
+                    new Handler().postDelayed(() -> {
+                        FiveStarsDialog dialog = new FiveStarsDialog(
+                                CleverPush.context,
+                                config.optString("appReviewEmail")
+                        );
+                        dialog.setRateText(config.optString("appReviewText"))
+                                .setTitle(config.optString("appReviewTitle"))
+                                .setForceMode(false)
+                                .showAfter(appReviewOpens);
+                    }, appReviewSeconds * 1000);
                 } catch (Exception ex) {
                     Log.d("CleverPush", ex.getMessage());
                 }
@@ -529,7 +547,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                                 this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
                             }
 
-                            CleverPush.instance.showTopicsDialog();
+                            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, true);
+                            editor.commit();
+
+                            CleverPush.instance.showPendingTopicsDialog();
                         }
                     }
                 });
@@ -1193,6 +1216,39 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                 }
             });
         }).start();
+    }
+
+    private void showPendingTopicsDialog() {
+        this.getChannelConfig(config -> {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+            try {
+                if (config != null && sharedPreferences.getBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, false)) {
+                    final int topicsDialogSeconds = config.optInt("topicsDialogMinimumSeconds", 0);
+                    int topicsDialogSessions = config.optInt("topicsDialogMinimumSessions", 0);
+                    int topicsDialogDays = config.optInt("topicsDialogMinimumDays", 0);
+
+                    long currentUnixTime = System.currentTimeMillis() / 1000L;
+                    long allowedUnixTime = sharedPreferences.getLong(CleverPushPreferences.SUBSCRIPTION_CREATED_AT, 0) + (topicsDialogDays * 60 * 60 * 24);
+                    int appOpens = sharedPreferences.getInt(CleverPushPreferences.APP_OPENS, 1);
+
+                    if (currentUnixTime >= allowedUnixTime && appOpens >= topicsDialogSessions) {
+                        (ActivityLifecycleListener.currentActivity).runOnUiThread(() -> {
+                            new Handler().postDelayed(() -> {
+                                if (sharedPreferences.getBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, false)) {
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, false);
+                                    editor.commit();
+
+                                    this.showTopicsDialog();
+                                }
+                            }, topicsDialogSeconds * 1000);
+                        });
+                    }
+                }
+            } catch (Exception ex) {
+                Log.d("CleverPush", ex.getMessage());
+            }
+        });
     }
 
     public void showTopicsDialog() {

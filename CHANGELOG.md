@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.5.7 ==
+* Add ability to delay topics dialog by opens / days / seconds
+
 == 0.5.6 ==
 * Minor fix
 

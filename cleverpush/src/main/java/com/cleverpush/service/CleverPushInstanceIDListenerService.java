@@ -95,6 +95,7 @@ public class CleverPushInstanceIDListenerService extends FirebaseInstanceIdServi
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.has("id")) {
                         sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, responseJson.getString("id")).apply();
+                        sharedPreferences.edit().putLong(CleverPushPreferences.SUBSCRIPTION_CREATED_AT, System.currentTimeMillis() / 1000L).apply();
                     }
                     if (responseJson.has("topics")) {
                         JSONArray topicsArray = responseJson.getJSONArray("topics");
