@@ -62,7 +62,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.5.7";
+    public static final String SDK_VERSION = "0.5.9";
 
     private static CleverPush instance;
 
@@ -143,6 +143,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     public void init(@Nullable final SubscribedListener subscribedListener) {
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, subscribedListener);
+    }
+
+    public void init(String channelId) {
+        init(channelId, null, null, null);
     }
 
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener) {

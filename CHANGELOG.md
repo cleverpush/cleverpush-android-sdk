@@ -1,5 +1,11 @@
 ## Changelog
 
+== 0.5.9 ==
+* Added `init` method only with channel ID parameter
+
+== 0.5.8 ==
+* Improved App Review dialog
+
 == 0.5.7 ==
 * Add ability to delay topics dialog by opens / days / seconds
 
