@@ -19,6 +19,7 @@ public class CleverPushPreferences {
     public static final String NOTIFICATIONS = "notifications";
     public static final String LAST_NOTIFICATION_ID = "lastNotificationId";
     public static final String APP_OPENS = "appOpens";
+    public static final String APP_REVIEW_SHOWN = "appReviewShownAt";
     public static final String PENDING_TOPICS_DIALOG = "pendingTopicsDialog";
 
 }

@@ -337,20 +337,41 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         this.getChannelConfig(config -> {
             if (config != null && config.optBoolean("appReviewEnabled")) {
                 try {
-                    int appReviewSeconds = config.optInt("appReviewSeconds", 0);
-                    int appReviewOpens = config.optInt("appReviewOpens", 0);
-                    int appReviewDays = config.optInt("appReviewDays", 0);
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
-                    new Handler().postDelayed(() -> {
-                        FiveStarsDialog dialog = new FiveStarsDialog(
-                                CleverPush.context,
-                                config.optString("appReviewEmail")
-                        );
-                        dialog.setRateText(config.optString("appReviewText"))
-                                .setTitle(config.optString("appReviewTitle"))
-                                .setForceMode(false)
-                                .showAfter(appReviewOpens);
-                    }, appReviewSeconds * 1000);
+                    if (sharedPreferences.getLong(CleverPushPreferences.APP_REVIEW_SHOWN, 0) == 0) {
+                        int appReviewSeconds = config.optInt("appReviewSeconds", 0);
+                        int appReviewOpens = config.optInt("appReviewOpens", 0);
+                        int appReviewDays = config.optInt("appReviewDays", 0);
+
+                        long currentUnixTime = System.currentTimeMillis() / 1000L;
+                        long allowedUnixTime = sharedPreferences.getLong(CleverPushPreferences.SUBSCRIPTION_CREATED_AT, 0) + (appReviewDays * 60 * 60 * 24);
+                        int appOpens = sharedPreferences.getInt(CleverPushPreferences.APP_OPENS, 1);
+
+                        if (currentUnixTime >= allowedUnixTime && appOpens >= appReviewOpens) {
+                            (ActivityLifecycleListener.currentActivity).runOnUiThread(() -> {
+                                new Handler().postDelayed(() -> {
+                                    if (sharedPreferences.getLong(CleverPushPreferences.APP_REVIEW_SHOWN, 0) == 0) {
+                                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                                        editor.putLong(CleverPushPreferences.APP_REVIEW_SHOWN, System.currentTimeMillis() / 1000L);
+                                        editor.apply();
+
+                                        FiveStarsDialog dialog = new FiveStarsDialog(
+                                                ActivityLifecycleListener.currentActivity,
+                                                config.optString("appReviewEmail")
+                                        );
+                                        dialog.setRateText(config.optString("appReviewText"))
+                                                .setTitle(config.optString("appReviewTitle"))
+                                                .setPositiveButtonText(config.optString("appReviewYes"))
+                                                .setNegativeButtonText(config.optString("appReviewLater"))
+                                                .setNeverButtonText(config.optString("appReviewNo"))
+                                                .setForceMode(false)
+                                                .show();
+                                    }
+                                }, appReviewSeconds * 1000);
+                            });
+                        }
+                    }
                 } catch (Exception ex) {
                     Log.d("CleverPush", ex.getMessage());
                 }

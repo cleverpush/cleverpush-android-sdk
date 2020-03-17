@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
@@ -21,12 +20,9 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
     private final static String DEFAULT_POSITIVE = "Ok";
     private final static String DEFAULT_NEGATIVE = "Not Now";
     private final static String DEFAULT_NEVER = "Never";
-    private final static String SP_NUM_OF_ACCESS = "numOfAccess";
-    private static final String SP_DISABLED = "disabled";
     private static final String TAG = FiveStarsDialog.class.getSimpleName();
     private final Context context;
     private boolean isForceMode = false;
-    private final SharedPreferences sharedPrefs;
     private String supportEmail;
     private TextView contentTextView;
     private RatingBar ratingBar;
@@ -44,7 +40,6 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
 
     public FiveStarsDialog(Context context, String supportEmail) {
         this.context = context;
-        sharedPrefs = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
         this.supportEmail = supportEmail;
     }
 
@@ -83,13 +78,6 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
                 .create();
     }
 
-    private void disable() {
-        SharedPreferences shared = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = shared.edit();
-        editor.putBoolean(SP_DISABLED, true);
-        editor.apply();
-    }
-
     private void openMarket() {
         final String appPackageName = context.getPackageName();
         try {
@@ -108,23 +96,9 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         context.startActivity(Intent.createChooser(emailIntent, "Send mail..."));
     }
 
-    private void show() {
-        boolean disabled = sharedPrefs.getBoolean(SP_DISABLED, false);
-        if (!disabled) {
-            build();
-            alertDialog.show();
-        }
-    }
-
-    public void showAfter(int numberOfAccess) {
-        build();
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        int numOfAccess = sharedPrefs.getInt(SP_NUM_OF_ACCESS, 0);
-        editor.putInt(SP_NUM_OF_ACCESS, numOfAccess + 1);
-        editor.apply();
-        if (numOfAccess + 1 >= numberOfAccess) {
-            show();
-        }
+    public void show() {
+        this.build();
+        alertDialog.show();
     }
 
 
@@ -141,17 +115,14 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
             } else if (!isForceMode) {
                 openMarket();
             }
-            disable();
             if (reviewListener != null)
                 reviewListener.onReview((int) ratingBar.getRating());
         }
         if (i == DialogInterface.BUTTON_NEUTRAL) {
-            disable();
+
         }
         if (i == DialogInterface.BUTTON_NEGATIVE) {
-            SharedPreferences.Editor editor = sharedPrefs.edit();
-            editor.putInt(SP_NUM_OF_ACCESS, 0);
-            editor.apply();
+
         }
         alertDialog.hide();
     }
