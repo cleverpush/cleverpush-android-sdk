@@ -1,5 +1,8 @@
 ## Changelog
 
+== 0.6.0
+* Updated google services + gradle
+
 == 0.5.9 ==
 * Added `init` method only with channel ID parameter
 

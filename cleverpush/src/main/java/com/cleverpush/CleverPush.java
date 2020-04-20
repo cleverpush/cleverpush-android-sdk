@@ -62,7 +62,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.5.9";
+    public static final String SDK_VERSION = "0.6.0";
 
     private static CleverPush instance;
 
