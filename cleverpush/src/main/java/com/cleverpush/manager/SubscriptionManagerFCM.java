@@ -6,9 +6,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.FirebaseInstanceIdService;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
@@ -27,16 +25,13 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
             senderId = resources.getString(bodyResId);
         }
 
-        int componentState =
-                senderId == null ?
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED :
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+        int componentState = senderId == null ? PackageManager.COMPONENT_ENABLED_STATE_DISABLED : PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
 
         PackageManager pm = context.getPackageManager();
         try {
-            ComponentName componentName = new ComponentName(context, FirebaseInstanceIdService.class);
+            ComponentName componentName = new ComponentName(context, Class.forName("com.google.firebase.iid.FirebaseInstanceIdService"));
             pm.setComponentEnabledSetting(componentName, componentState, PackageManager.DONT_KILL_APP);
-        } catch (NoClassDefFoundError ignored) {
+        } catch (Exception ignored) {
 
         }
     }
@@ -58,12 +53,6 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
             return;
         }
 
-        FirebaseOptions firebaseOptions =
-                new FirebaseOptions.Builder()
-                        .setGcmSenderId(senderId)
-                        .setApplicationId("OMIT_ID")
-                        .setApiKey("OMIT_KEY")
-                        .build();
-        firebaseApp = FirebaseApp.initializeApp(this.context, firebaseOptions, "CLEVERPUSH_SDK_APP_NAME");
+        firebaseApp = FirebaseApp.getInstance();
     }
 }

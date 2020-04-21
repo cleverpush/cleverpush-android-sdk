@@ -1,5 +1,14 @@
 ## Changelog
 
+== 1.0.0 ==
+* Breaking Change: Migrated to AndroidX
+* Breaking Change: Set minSdkVersion to 16
+* Updated Gradle Plugin to 3.5.3
+* Updated Google Services Plugin to 4.3.3
+* Updated Gson to 2.8.6
+* Deprecated CleverPushInstanceIDListenerService
+* Compatible with newest Firebase libraries
+
 == 0.6.0
 * Updated google services + gradle
 

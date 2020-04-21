@@ -12,10 +12,10 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.util.Log;
 
 import com.cleverpush.listener.AppBannerUrlOpenedListener;
@@ -35,7 +35,6 @@ import com.cleverpush.listener.TopicsDialogListener;
 import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
-import com.cleverpush.manager.SubscriptionManagerGCM;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -62,7 +61,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "0.6.0";
+    public static final String SDK_VERSION = "1.0.0";
 
     private static CleverPush instance;
 
@@ -325,7 +324,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             Date nextSyncDate = new Date(nextSync*1000L);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault());
             String formattedDate = sdf.format(nextSyncDate);
-            Log.d("CleverPush", "subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
+            Log.d("CleverPush", "Subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
         }
@@ -748,20 +747,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         } catch (ClassNotFoundException ignored) {
         }
 
-        boolean isFcm = false;
-        try {
-            if (com.google.firebase.messaging.FirebaseMessaging.class != null) {
-                isFcm = true;
-            }
-        } catch (Throwable ignored) {
-        }
-
         if (isAmazon) {
             subscriptionManager = new SubscriptionManagerADM(CleverPush.context);
-        } else if (isFcm) {
-            subscriptionManager = new SubscriptionManagerFCM(CleverPush.context);
         } else {
-            subscriptionManager = new SubscriptionManagerGCM(CleverPush.context);
+            subscriptionManager = new SubscriptionManagerFCM(CleverPush.context);
         }
 
         return subscriptionManager;

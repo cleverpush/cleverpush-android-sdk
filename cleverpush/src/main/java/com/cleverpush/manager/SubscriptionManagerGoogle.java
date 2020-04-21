@@ -102,14 +102,14 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
 
     private boolean attemptRegistration(String senderId, int currentRetry) {
         try {
-            String registrationId = getToken(senderId);
-            Log.i("CleverPush", "Device registered, push token = " + registrationId);
+            String token = getToken(senderId);
+            Log.i("CleverPush", "Device registered, push token: " + token);
 
-            if (registrationId.equals("BLACKLISTED")) {
+            if (token.equals("BLACKLISTED")) {
                 return false;
             }
 
-            this.syncSubscription(registrationId, senderId);
+            this.syncSubscription(token, senderId);
 
             return true;
         } catch (IOException e) {
@@ -150,7 +150,7 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
         }
 
         if (!isProjectNumberValidFormat) {
-            Log.e("CleverPush", "Missing Google Project number!\nPlease enter a Google Project number / Sender ID on under App Settings > Android > Configuration on the CleverPush dashboard.");
+            Log.e("CleverPush", "Missing FCM Sender ID");
             callback.complete(null);
             return false;
         }
