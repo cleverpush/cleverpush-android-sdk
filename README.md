@@ -2,4 +2,4 @@
 
 ## Documentation
 
-https://developers.cleverpush.com/sdks/android/
+https://developers.cleverpush.com/
