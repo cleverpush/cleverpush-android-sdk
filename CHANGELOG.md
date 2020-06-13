@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.1.0 ==
+* Support for HMS (Huawei Mobile Services)
+
 == 1.0.0 ==
 * Breaking Change: Migrated to AndroidX
 * Breaking Change: Set minSdkVersion to 16
