@@ -1,25 +1,14 @@
 package com.cleverpush.service;
 
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.cleverpush.CleverPush;
-import com.cleverpush.CleverPushHttpClient;
-import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
-import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.Subscription;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class CleverPushFcmListenerService extends FirebaseMessagingService {
     @Override

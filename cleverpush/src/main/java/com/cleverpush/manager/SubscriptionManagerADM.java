@@ -29,6 +29,11 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
     }
 
     @Override
+    public void tokenCallback(String token) {
+
+    }
+
+    @Override
     public String getProviderName() {
         return "ADM";
     }

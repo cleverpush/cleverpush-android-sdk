@@ -4,6 +4,8 @@ public class CleverPushPreferences {
 
     public static final String SENT_TOKEN_TO_SERVER = "sentTokenToServer";
     public static final String FCM_TOKEN = "fcmToken";
+    public static final String HMS_TOKEN = "hmsToken";
+    public static final String ADM_TOKEN = "admToken";
     public static final String REGISTRATION_COMPLETE = "registrationComplete";
     public static final String CHANNEL_ID = "channelId";
     public static final String SUBSCRIPTION_ID = "subscriptionId";

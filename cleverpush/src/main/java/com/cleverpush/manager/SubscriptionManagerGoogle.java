@@ -103,7 +103,7 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
     private boolean attemptRegistration(String senderId, int currentRetry) {
         try {
             String token = getToken(senderId);
-            Log.i("CleverPush", "Device registered, push token: " + token);
+            Log.i("CleverPush", "Device registered (FCM), push token: " + token);
 
             if (token.equals("BLACKLISTED")) {
                 return false;

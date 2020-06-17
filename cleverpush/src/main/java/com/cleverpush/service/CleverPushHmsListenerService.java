@@ -2,10 +2,10 @@ package com.cleverpush.service;
 
 import android.util.Log;
 
+import com.cleverpush.CleverPush;
 import com.cleverpush.Notification;
 import com.cleverpush.RemoteMessageData;
 import com.cleverpush.Subscription;
-import com.cleverpush.manager.SubscriptionManagerHMS;
 import com.google.gson.Gson;
 import com.huawei.hms.push.HmsMessageService;
 import com.huawei.hms.push.RemoteMessage;
@@ -14,7 +14,7 @@ public class CleverPushHmsListenerService extends HmsMessageService {
     @Override
     public void onNewToken(String token) {
         Log.d("CleverPush", "CleverPushHmsListenerService onNewToken: " + token);
-        SubscriptionManagerHMS.fireCallback(token);
+        CleverPush.getInstance(this).getSubscriptionManager().tokenCallback(token);
     }
 
     @Override

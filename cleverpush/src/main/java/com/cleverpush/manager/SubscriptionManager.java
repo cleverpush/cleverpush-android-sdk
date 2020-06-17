@@ -10,5 +10,7 @@ public interface SubscriptionManager {
 
    void subscribe(RegisteredHandler callback);
 
+   void tokenCallback(String token);
+
    String getProviderName();
 }

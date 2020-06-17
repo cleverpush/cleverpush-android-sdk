@@ -98,6 +98,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private boolean initialized = false;
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
+    private boolean pendingInitFeaturesCall = false;
 
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
@@ -120,6 +121,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
                 if (pendingRequestLocationPermissionCall) {
                     this.requestLocationPermission();
+                }
+                if (pendingInitFeaturesCall) {
+                    this.initFeatures();
                 }
             } else {
                 this.trackSessionEnd();
@@ -335,6 +339,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     private void initFeatures() {
+        if (ActivityLifecycleListener.currentActivity == null) {
+            this.pendingInitFeaturesCall = true;
+            return;
+        }
+        this.pendingInitFeaturesCall = false;
+
         this.showPendingTopicsDialog();
         this.initAppReview();
         this.initGeoFences();
@@ -739,7 +749,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     private SubscriptionManager subscriptionManager;
-    private SubscriptionManager getSubscriptionManager() {
+    public SubscriptionManager getSubscriptionManager() {
         if (subscriptionManager != null) {
             return subscriptionManager;
         }
@@ -758,18 +768,18 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     static boolean hasFCMLibrary() {
         try {
-            // noinspection ConstantConditions
-            return com.google.firebase.messaging.FirebaseMessaging.class != null;
-        } catch (Throwable e) {
+            Class.forName("com.google.firebase.messaging.FirebaseMessaging");
+            return true;
+        } catch (ClassNotFoundException e) {
             return false;
         }
     }
 
     private static boolean hasGCMLibrary() {
         try {
-            // noinspection ConstantConditions
-            return com.google.android.gms.gcm.GoogleCloudMessaging.class != null;
-        } catch (Throwable e) {
+            Class.forName("com.google.android.gms.gcm.GoogleCloudMessaging");
+            return true;
+        } catch (ClassNotFoundException e) {
             return false;
         }
     }
@@ -786,34 +796,32 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     private static boolean hasHMSAvailabilityLibrary() {
         try {
-            // noinspection ConstantConditions
-            return com.huawei.hms.api.HuaweiApiAvailability.class != null;
-        } catch (NoClassDefFoundError e) {
+            Class.forName("com.huawei.hms.api.HuaweiApiAvailability");
+            return true;
+        } catch (ClassNotFoundException e) {
             return false;
         }
     }
 
     private static boolean hasHMSPushKitLibrary() {
         try {
-            // noinspection ConstantConditions
-            return com.huawei.hms.aaid.HmsInstanceId.class != null;
-        } catch (NoClassDefFoundError e) {
+            Class.forName("com.huawei.hms.aaid.HmsInstanceId");
+            return true;
+        } catch (ClassNotFoundException e) {
             return false;
         }
     }
 
     private static boolean hasHMSAGConnectLibrary() {
         try {
-            // noinspection ConstantConditions
-            return com.huawei.agconnect.config.AGConnectServicesConfig.class != null;
-        } catch (NoClassDefFoundError e) {
+            Class.forName("com.huawei.agconnect.config.AGConnectServicesConfig");
+            return true;
+        } catch (ClassNotFoundException e) {
             return false;
         }
     }
 
     static boolean hasAllHMSLibrariesForPushKit() {
-        // NOTE: hasHMSAvailabilityLibrary technically is not required,
-        //   just used as recommend way to detect if "HMS Core" app exists and is enabled
         return hasHMSAGConnectLibrary() && hasHMSPushKitLibrary();
     }
 
