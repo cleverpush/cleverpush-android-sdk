@@ -61,7 +61,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 
 	private static String getGeofenceTransitionDetails(GeofencingEvent event) {
 		String transitionString = GeofenceStatusCodes.getStatusCodeString(event.getGeofenceTransition());
-		List triggeringIDs = new ArrayList();
+		List<String> triggeringIDs = new ArrayList<>();
 		for (Geofence geofence : event.getTriggeringGeofences()) {
 			triggeringIDs.add(geofence.getRequestId());
 		}
