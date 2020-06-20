@@ -37,6 +37,11 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
     }
 
     @Override
+    public void tokenCallback(String token) {
+
+    }
+
+    @Override
     public String getProviderName() {
         return "FCM";
     }

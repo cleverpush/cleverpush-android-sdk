@@ -48,7 +48,13 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
 
-        sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
+        if (this.getProviderName().equals("ADM")) {
+            sharedPreferences.edit().putString(CleverPushPreferences.ADM_TOKEN, token).apply();
+        } else if (this.getProviderName().equals("HMS")) {
+            sharedPreferences.edit().putString(CleverPushPreferences.HMS_TOKEN, token).apply();
+        } else {
+            sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
+        }
 
         String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
@@ -82,6 +88,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         try {
             if (this.getProviderName().equals("ADM")) {
                 jsonBody.put("admToken", token);
+            } else if (this.getProviderName().equals("HMS")) {
+                jsonBody.put("hmsToken", token);
+                jsonBody.put("hmsId", senderId);
             } else {
                 jsonBody.put("fcmToken", token);
                 jsonBody.put("fcmId", senderId);

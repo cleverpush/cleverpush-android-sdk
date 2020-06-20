@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,13 +36,16 @@ import com.cleverpush.listener.TopicsDialogListener;
 import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
+import com.cleverpush.manager.SubscriptionManagerHMS;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
+import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,7 +65,7 @@ import java.util.Set;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.0.0";
+    public static final String SDK_VERSION = "1.1.0";
 
     private static CleverPush instance;
 
@@ -94,6 +98,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private boolean initialized = false;
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
+    private boolean pendingInitFeaturesCall = false;
 
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
@@ -116,6 +121,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
                 if (pendingRequestLocationPermissionCall) {
                     this.requestLocationPermission();
+                }
+                if (pendingInitFeaturesCall) {
+                    this.initFeatures();
                 }
             } else {
                 this.trackSessionEnd();
@@ -331,6 +339,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     private void initFeatures() {
+        if (ActivityLifecycleListener.currentActivity == null) {
+            this.pendingInitFeaturesCall = true;
+            return;
+        }
+        this.pendingInitFeaturesCall = false;
+
         this.showPendingTopicsDialog();
         this.initAppReview();
         this.initGeoFences();
@@ -735,25 +749,101 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     private SubscriptionManager subscriptionManager;
-    private SubscriptionManager getSubscriptionManager() {
+    public SubscriptionManager getSubscriptionManager() {
         if (subscriptionManager != null) {
             return subscriptionManager;
         }
-
-        boolean isAmazon = false;
-        try {
-            Class.forName("com.amazon.device.messaging.ADM");
-            isAmazon = true;
-        } catch (ClassNotFoundException ignored) {
-        }
-
-        if (isAmazon) {
+        if (supportsADM()) {
             subscriptionManager = new SubscriptionManagerADM(CleverPush.context);
+        } else if ((hasFCMLibrary() || hasGCMLibrary()) && isGMSInstalledAndEnabled()) {
+            subscriptionManager = new SubscriptionManagerFCM(CleverPush.context);
+        } else if (supportsHMS()) {
+            subscriptionManager = new SubscriptionManagerHMS(CleverPush.context);
         } else {
             subscriptionManager = new SubscriptionManagerFCM(CleverPush.context);
         }
 
         return subscriptionManager;
+    }
+
+    static boolean hasFCMLibrary() {
+        try {
+            Class.forName("com.google.firebase.messaging.FirebaseMessaging");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    private static boolean hasGCMLibrary() {
+        try {
+            Class.forName("com.google.android.gms.gcm.GoogleCloudMessaging");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    static boolean isGMSInstalledAndEnabled() {
+        try {
+            PackageManager pm = CleverPush.context.getPackageManager();
+            PackageInfo info = pm.getPackageInfo(GoogleApiAvailability.GOOGLE_PLAY_SERVICES_PACKAGE, PackageManager.GET_META_DATA);
+            return info.applicationInfo.enabled;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private static boolean hasHMSAvailabilityLibrary() {
+        try {
+            Class.forName("com.huawei.hms.api.HuaweiApiAvailability");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    private static boolean hasHMSPushKitLibrary() {
+        try {
+            Class.forName("com.huawei.hms.aaid.HmsInstanceId");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    private static boolean hasHMSAGConnectLibrary() {
+        try {
+            Class.forName("com.huawei.agconnect.config.AGConnectServicesConfig");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    static boolean hasAllHMSLibrariesForPushKit() {
+        return hasHMSAGConnectLibrary() && hasHMSPushKitLibrary();
+    }
+
+    private static boolean isHMSCoreInstalledAndEnabled() {
+        HuaweiApiAvailability availability = HuaweiApiAvailability.getInstance();
+        return availability.isHuaweiMobileServicesAvailable(CleverPush.context) == 0;
+    }
+
+    private boolean supportsADM() {
+        try {
+            Class.forName("com.amazon.device.messaging.ADM");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    private boolean supportsHMS() {
+        if (!hasHMSAvailabilityLibrary() || !hasAllHMSLibrariesForPushKit()) {
+            return false;
+        }
+        return isHMSCoreInstalledAndEnabled();
     }
 
     public Set<String> getSubscriptionTags() {

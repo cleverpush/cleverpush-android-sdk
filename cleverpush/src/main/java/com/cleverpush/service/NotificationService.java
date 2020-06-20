@@ -98,7 +98,7 @@ public class NotificationService {
         return isActivityFound;
     }
 
-    private NotificationCompat.Builder createBasicNotification(Context context, Map data, Notification notification, int requestCode) {
+    private NotificationCompat.Builder createBasicNotification(Context context, String notificationStr, String subscriptionStr, Notification notification, int requestCode) {
         boolean isBroadcast = false;
         Class<?> notificationOpenedClass;
 
@@ -130,8 +130,8 @@ public class NotificationService {
             targetIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         }
 
-        targetIntent.putExtra("notification", (String) data.get("notification"));
-        targetIntent.putExtra("subscription", (String) data.get("subscription"));
+        targetIntent.putExtra("notification", notificationStr);
+        targetIntent.putExtra("subscription", subscriptionStr);
 
         PendingIntent contentIntent;
         if (isBroadcast) {
@@ -194,30 +194,30 @@ public class NotificationService {
         return notificationBuilder;
     }
 
-    void sendNotification(Context context, Notification notification, Map data) {
+    void sendNotification(Context context, Notification notification, String notificationStr, String subscriptionStr) {
         int requestCode = (int) System.currentTimeMillis();
-        NotificationCompat.Builder notificationBuilder = NotificationService.getInstance().createBasicNotification(context, data, notification, requestCode);
+        NotificationCompat.Builder notificationBuilder = NotificationService.getInstance().createBasicNotification(context, notificationStr, subscriptionStr, notification, requestCode);
         if (notificationBuilder != null) {
             NotificationManagerCompat.from(context).notify(requestCode, notificationBuilder.build());
         }
     }
 
-    void createAndShowCarousel(Context context, Notification message, Map data) {
+    void createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr) {
         int requestId = (int) System.currentTimeMillis();
-        createAndShowCarousel(context, message, data, 0, requestId);
+        createAndShowCarousel(context, message, notificationStr, subscriptionStr, 0, requestId);
     }
 
-    void createAndShowCarousel(Context context, Notification message, Map data, int targetIndex, int requestId) {
+    void createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr, int targetIndex, int requestId) {
         Log.i("CleverPush", "NotificationService: createAndShowCarousel");
-        NotificationCompat.Builder builder = createBasicNotification(context, data, message, requestId);
+        NotificationCompat.Builder builder = createBasicNotification(context, notificationStr, subscriptionStr, message, requestId);
         if (builder != null) {
             android.app.Notification notification = builder.build();
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                notification.bigContentView = getCarouselImage(context, message, data, targetIndex, requestId);
+                notification.bigContentView = getCarouselImage(context, message, notificationStr, subscriptionStr, targetIndex, requestId);
             }
 
-            builder.setDeleteIntent(getNotificationDeleteIntent(context, message, data));
+            builder.setDeleteIntent(getNotificationDeleteIntent(context, message, notificationStr, subscriptionStr));
 
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
@@ -226,19 +226,21 @@ public class NotificationService {
         }
     }
 
-    private PendingIntent getNotificationDeleteIntent(Context context, Notification message, Map data) {
+    private PendingIntent getNotificationDeleteIntent(Context context, Notification message, String notificationStr, String subscriptionStr) {
         Intent delIntent = new Intent(context, CarouselNotificationIntentService.class);
         delIntent.setAction(CarouselNotificationIntentService.ACTION_NOTIFICATION_DELETE);
 
+        HashMap<String, String> data = new HashMap<>();
+        data.put("notification", notificationStr);
+        data.put("subscription", subscriptionStr);
+
         delIntent.putExtra("notification", message);
-        delIntent.putExtra("data", (data instanceof HashMap)
-                ? (HashMap) data
-                : new HashMap<String, String>(data));
+        delIntent.putExtra("data", data);
 
         return PendingIntent.getService(context, (int) System.currentTimeMillis(), delIntent, PendingIntent.FLAG_ONE_SHOT);
     }
 
-    private RemoteViews getCarouselImage(Context context, Notification message, Map data, int currentIndex, int requestId) {
+    private RemoteViews getCarouselImage(Context context, Notification message, String notificationStr, String subscriptionStr, int currentIndex, int requestId) {
         RemoteViews contentView = null;
 
         contentView = new RemoteViews(context.getPackageName(), R.layout.notification_carousel_layout);
@@ -271,17 +273,17 @@ public class NotificationService {
 
                 contentView.setOnClickPendingIntent(
                         R.id.big_picture,
-                        getCarouselImageClickPendingIntent(context, message, data, item, requestId)
+                        getCarouselImageClickPendingIntent(context, message, notificationStr, subscriptionStr, item, requestId)
                 );
 
                 contentView.setOnClickPendingIntent(
                         R.id.next_button,
-                        getNavigationPendingIntent(context, message, data, message.getNextCarouselIndex(currentIndex), requestId)
+                        getNavigationPendingIntent(context, message, notificationStr, subscriptionStr, message.getNextCarouselIndex(currentIndex), requestId)
                 );
 
                 contentView.setOnClickPendingIntent(
                         R.id.prev_button,
-                        getNavigationPendingIntent(context, message, data, message.getPreviousCarouselIndex(currentIndex), requestId)
+                        getNavigationPendingIntent(context, message, notificationStr, subscriptionStr, message.getPreviousCarouselIndex(currentIndex), requestId)
                 );
             }
         }
@@ -289,7 +291,7 @@ public class NotificationService {
         return contentView;
     }
 
-    private PendingIntent getNavigationPendingIntent(Context context, Notification message, Map data, int targetIndex, int requestId) {
+    private PendingIntent getNavigationPendingIntent(Context context, Notification message, String notificationStr, String subscriptionStr, int targetIndex, int requestId) {
         Log.i("CleverPush", "NotificationService: getNavigationPendingIntent");
 
         Intent intent = new Intent(context, CarouselNotificationIntentService.class);
@@ -298,14 +300,16 @@ public class NotificationService {
         intent.putExtra("carouselIndex", targetIndex);
         intent.putExtra("notificationId", requestId);
         intent.putExtra("notification", message);
-        intent.putExtra("data", (data instanceof HashMap)
-                ? (HashMap) data
-                : new HashMap<String, String>(data));
+
+        HashMap<String, String> data = new HashMap<>();
+        data.put("notification", notificationStr);
+        data.put("subscription", subscriptionStr);
+        intent.putExtra("data", data);
 
         return PendingIntent.getService(context, requestId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    private PendingIntent getCarouselImageClickPendingIntent(Context context, Notification message, Map data, NotificationCarouselItem element, int requestId) {
+    private PendingIntent getCarouselImageClickPendingIntent(Context context, Notification message, String notificationStr, String subscriptionStr, NotificationCarouselItem element, int requestId) {
         Bundle bundle = new Bundle();
         bundle.putInt("notificationId", requestId);
         bundle.putSerializable("notification", message);
@@ -328,8 +332,8 @@ public class NotificationService {
             targetIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         }
 
-        targetIntent.putExtra("notification", (String) data.get("notification"));
-        targetIntent.putExtra("subscription", (String) data.get("subscription"));
+        targetIntent.putExtra("notification", notificationStr);
+        targetIntent.putExtra("subscription", subscriptionStr);
 
         int requestCode = (int) System.currentTimeMillis();
 

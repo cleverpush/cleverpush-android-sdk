@@ -37,9 +37,9 @@ public class CarouselNotificationIntentService extends IntentService {
         } catch (Exception ignore) {
         }
 
-        Map data = null;
+        Map<?, ?> data = null;
         try {
-            data = (Map) intent.getSerializableExtra("data");
+            data = (Map<?, ?>) intent.getSerializableExtra("data");
         } catch (Exception ignore) {
         }
 
@@ -52,7 +52,7 @@ public class CarouselNotificationIntentService extends IntentService {
                 int targetIndex = intent.getIntExtra("carouselIndex", 0);
                 int notificationId = intent.getIntExtra("notificationId", 0);
 
-                updateCarouselNotification(this, message, data, targetIndex, notificationId);
+                updateCarouselNotification(this, message, (String) data.get("notification"), (String) data.get("subscription"), targetIndex, notificationId);
 
                 break;
 
@@ -72,8 +72,8 @@ public class CarouselNotificationIntentService extends IntentService {
         }
     }
 
-    private void updateCarouselNotification(Context context, Notification message, Map data, int newIndex, int notificationId) {
+    private void updateCarouselNotification(Context context, Notification message, String notificationStr, String subscriptionStr, int newIndex, int notificationId) {
         NotificationService.getInstance()
-                .createAndShowCarousel(context, message, data, newIndex, notificationId);
+                .createAndShowCarousel(context, message, notificationStr, subscriptionStr, newIndex, notificationId);
     }
 }
