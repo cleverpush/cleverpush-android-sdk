@@ -8,6 +8,8 @@ import java.util.Map;
 public class Notification implements Serializable {
     @SerializedName("_id")
     String id;
+    @SerializedName("tag")
+    String tag;
     @SerializedName("title")
     String title;
     @SerializedName("text")
@@ -28,11 +30,17 @@ public class Notification implements Serializable {
     Boolean carouselEnabled;
     @SerializedName("carouselItems")
     NotificationCarouselItem[] carouselItems;
-    String createdAt;
+    @SerializedName("category")
+    NotificationCategory category;
     @SerializedName("createdAt")
+    String createdAt;
 
     public String getId() {
         return id;
+    }
+
+    public String getTag() {
+        return tag;
     }
 
     public String getTitle() {
@@ -53,6 +61,10 @@ public class Notification implements Serializable {
 
     public String getMediaUrl() {
         return mediaUrl;
+    }
+
+    public NotificationCategory getCategory() {
+        return category;
     }
 
     public NotificationAction[] getActions() {
