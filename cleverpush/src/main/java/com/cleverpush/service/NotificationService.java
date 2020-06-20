@@ -2,6 +2,7 @@ package com.cleverpush.service;
 
 import android.app.ActivityManager;
 import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -29,6 +30,8 @@ import android.widget.RemoteViews;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationCarouselItem;
+import com.cleverpush.NotificationCategory;
+import com.cleverpush.NotificationCategoryGroup;
 import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationOpenedReceiver;
 import com.cleverpush.R;
@@ -122,9 +125,6 @@ public class NotificationService {
             return null;
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
-
         Intent targetIntent = new Intent(context, notificationOpenedClass);
         if (!isBroadcast) {
             targetIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -144,11 +144,28 @@ public class NotificationService {
 
         NotificationCompat.Builder notificationBuilder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("default", "Default", importance);
-            channel.setDescription("default");
-            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+            if (notification.getCategory() != null) {
+                NotificationCategory category = notification.getCategory();
+
+                int importance = NotificationManager.IMPORTANCE_DEFAULT;
+                NotificationChannel channel = new NotificationChannel(category.getId(), category.getName(), importance);
+                channel.setDescription(category.getDescription());
+
+                NotificationCategoryGroup categoryGroup = category.getGroup();
+                if (categoryGroup != null) {
+                    NotificationChannelGroup group = new NotificationChannelGroup(categoryGroup.getId(), categoryGroup.getName());
+                    channel.setGroup(group.getId());
+                }
+
+                NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+                notificationManager.createNotificationChannel(channel);
+            } else {
+                int importance = NotificationManager.IMPORTANCE_DEFAULT;
+                NotificationChannel channel = new NotificationChannel("default", "Default", importance);
+                channel.setDescription("default");
+                NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+                notificationManager.createNotificationChannel(channel);
+            }
 
             notificationBuilder = new NotificationCompat.Builder(context, "default");
         } else {
