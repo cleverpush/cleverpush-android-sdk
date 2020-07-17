@@ -10,10 +10,10 @@ import androidx.annotation.Nullable;
 
 import com.cleverpush.listener.SessionListener;
 
-class ActivityLifecycleListener implements Application.ActivityLifecycleCallbacks {
+public class ActivityLifecycleListener implements Application.ActivityLifecycleCallbacks {
 
     @SuppressLint("StaticFieldLeak")
-    static Activity currentActivity;
+    public static Activity currentActivity;
 
     private int counter = 0;
     private SessionListener sessionListener;

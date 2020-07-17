@@ -1,6 +1,7 @@
 package com.cleverpush;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
@@ -38,6 +39,7 @@ import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerHMS;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
+import com.cleverpush.service.TagsMatcher;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -51,9 +53,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -62,10 +67,12 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.2.0";
+    public static final String SDK_VERSION = "1.3.0";
 
     private static CleverPush instance;
 
@@ -90,6 +97,8 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private SessionListener sessionListener;
     private GoogleApiClient googleApiClient;
     private ArrayList<Geofence> geofenceList = new ArrayList<>();
+    private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
+    private String currentPageUrl;
 
     private String channelId;
     private String subscriptionId = null;
@@ -99,6 +108,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
     private boolean pendingInitFeaturesCall = false;
+    private ArrayList<PageView> pendingPageViews = new ArrayList<>();
 
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
@@ -124,6 +134,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                 }
                 if (pendingInitFeaturesCall) {
                     this.initFeatures();
+                }
+                if (pendingPageViews.size() > 0) {
+                    for (PageView pageView : pendingPageViews) {
+                        this.trackPageView(pageView.getUrl(), pageView.getParams());
+                    }
+                    pendingPageViews = new ArrayList<>();
                 }
             } else {
                 this.trackSessionEnd();
@@ -415,7 +431,196 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
         */
         return ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
 
+    private void savePreferencesMap(String mapKey, Map<String, Integer> inputMap) {
+        Log.d("CleverPush", "savePreferencesMap: " + mapKey + " - " + inputMap.toString());
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        JSONObject jsonObject = new JSONObject(inputMap);
+        String jsonString = jsonObject.toString();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(mapKey).apply();
+        editor.putString(mapKey, jsonString).apply();
+    }
+
+    private Map<String, Integer> loadPreferencesMap(String mapKey) {
+        Map<String, Integer> outputMap = new HashMap<>();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        try {
+            String jsonString = sharedPreferences.getString(mapKey, (new JSONObject()).toString());
+            JSONObject jsonObject = new JSONObject(jsonString);
+            Iterator<String> keysItr = jsonObject.keys();
+            while (keysItr.hasNext()) {
+                String key = keysItr.next();
+                Integer value = jsonObject.getInt(key);
+                outputMap.put(key, value);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Log.d("CleverPush", "loadPreferencesMap: " + mapKey + " - " + outputMap.toString());
+        return outputMap;
+    }
+
+    private void checkTags(String urlStr, Map<String, ?> params) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+
+        try {
+            URL url = new URL(urlStr);
+            String pathname = url.getPath();
+            Log.d("CleverPush", "checkTags: " + pathname);
+
+            this.getAvailableTags(tags -> {
+                if (tags != null) {
+                    CleverPush self = this;
+                    for (ChannelTag tag : tags) {
+                        TagsMatcher.autoAssignTagMatches(tag, pathname, params, matches -> {
+                            if (matches) {
+                                Log.d("CleverPush", "checkTag: matches: YES - " + tag.getName());
+
+                                String visitsStorageKey = "cleverpush-tag-autoAssignVisits-" + tag.getId();
+                                String sessionsStorageKey = "cleverpush-tag-autoAssignSessions-" + tag.getId();
+
+                                int visitsNeeded = Math.max(tag.getAutoAssignVisits(), 0);
+
+                                SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd", Locale.US);
+                                String dateKey = dateFormat.format(Calendar.getInstance().getTime());
+                                Date dateAfter = null;
+                                if (tag.getAutoAssignDays() > 0) {
+                                    dateAfter = new Date();
+                                    dateAfter.setDate(dateAfter.getDate() - tag.autoAssignDays);
+                                }
+
+                                int visits = 0;
+                                Map<String, Integer> dailyVisits = new HashMap<>();
+                                if (tag.getAutoAssignDays() > 0 && dateAfter != null) {
+                                    try {
+                                        dailyVisits = self.loadPreferencesMap(visitsStorageKey);
+
+                                        for (Map.Entry<String, Integer> entry : dailyVisits.entrySet()) {
+                                            String curDateKey = entry.getKey();
+                                            Integer value = entry.getValue();
+                                            Date curDate = dateFormat.parse(curDateKey);
+                                            if (curDate.equals(dateAfter) || curDate.after(dateAfter)) {
+                                                visits += value;
+                                            } else {
+                                                dailyVisits.remove(curDateKey);
+                                            }
+                                        }
+                                    } catch (Exception err) {
+                                        dailyVisits = new HashMap<>();
+                                    }
+                                } else {
+                                    visits = sharedPreferences.getInt(visitsStorageKey, 0);
+                                }
+
+                                int sessionsNeeded = Math.max(tag.getAutoAssignSessions(), 0);
+
+
+                                int sessions = 0;
+                                Map<String, Integer> dailySessions = new HashMap<>();
+                                if (tag.getAutoAssignDays() > 0 && dateAfter != null) {
+                                    try {
+                                        dailySessions = self.loadPreferencesMap(sessionsStorageKey);
+
+                                        for (Map.Entry<String, Integer> entry : dailySessions.entrySet()) {
+                                            String curDateKey = entry.getKey();
+                                            Integer value = entry.getValue();
+                                            Date curDate = dateFormat.parse(curDateKey);
+                                            if (curDate.equals(dateAfter) || curDate.after(dateAfter)) {
+                                                sessions += value;
+                                            } else {
+                                                dailySessions.remove(curDateKey);
+                                            }
+                                        }
+                                    } catch (Exception err) {
+                                        dailySessions = new HashMap<>();
+                                    }
+                                } else {
+                                    sessions = sharedPreferences.getInt(sessionsStorageKey, 0);
+                                }
+
+                                if (sessions >= sessionsNeeded) {
+                                    if (visits >= visitsNeeded) {
+                                        if (tag.getAutoAssignSeconds() > 0) {
+                                            new Timer().schedule(new TimerTask() {
+                                                @Override
+                                                public void run() {
+                                                    if (self.currentPageUrl.equals(urlStr)) {
+                                                        self.addSubscriptionTag(tag.getId());
+                                                    }
+                                                }
+                                            }, tag.getAutoAssignSeconds() * 1000L);
+                                        } else {
+                                            self.addSubscriptionTag(tag.getId());
+                                        }
+                                    } else {
+                                        if (tag.getAutoAssignDays() > 0) {
+                                            int dateVisits = 0;
+                                            Integer currVisits = dailyVisits.get(dateKey);
+                                            if (currVisits != null) {
+                                                dateVisits = currVisits;
+                                            }
+                                            dateVisits += 1;
+                                            dailyVisits.put(dateKey, dateVisits);
+
+                                            self.savePreferencesMap(visitsStorageKey, dailyVisits);
+                                        } else {
+                                            visits += 1;
+                                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                                            editor.remove(visitsStorageKey).apply();
+                                            editor.putInt(visitsStorageKey, visits).apply();
+                                        }
+                                    }
+                                } else {
+                                    if (tag.getAutoAssignDays() > 0) {
+                                        int dateVisits = 0;
+                                        Integer currVisits = dailyVisits.get(dateKey);
+                                        if (currVisits != null) {
+                                            dateVisits = currVisits;
+                                        }
+                                        dateVisits += 1;
+                                        dailyVisits.put(dateKey, dateVisits);
+
+                                        self.savePreferencesMap(visitsStorageKey, dailyVisits);
+
+                                        if (!autoAssignSessionsCounted.containsKey(tag.getId())) {
+                                            int dateSessions = 0;
+                                            Integer currSessions = dailySessions.get(dateKey);
+                                            if (currSessions != null) {
+                                                dateSessions = currSessions;
+                                            }
+                                            dateSessions += 1;
+                                            dailySessions.put(dateKey, dateSessions);
+
+                                            autoAssignSessionsCounted.put(tag.getId(), true);
+                                            self.savePreferencesMap(sessionsStorageKey, dailySessions);
+                                        }
+                                    } else {
+                                        visits += 1;
+                                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                                        editor.remove(visitsStorageKey).apply();
+                                        editor.putInt(visitsStorageKey, visits).apply();
+
+                                        if (!autoAssignSessionsCounted.containsKey(tag.getId())) {
+                                            sessions += 1;
+                                            editor.remove(sessionsStorageKey).apply();
+                                            editor.putInt(sessionsStorageKey, sessions).apply();
+
+                                            autoAssignSessionsCounted.put(tag.getId(), true);
+                                        }
+                                    }
+                                }
+                            } else {
+                                Log.d("CleverPush", "checkTag: matches: NO - " + tag.getName());
+                            }
+                        });
+                    }
+                }
+            });
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        };
     }
 
     private void initGeoFences() {
@@ -457,6 +662,21 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                 googleApiClient.connect();
             }
         }
+    }
+
+    public void trackPageView(String url) {
+        this.trackPageView(url, null);
+    }
+
+    public void trackPageView(String url, Map<String, ?> params) {
+        if (ActivityLifecycleListener.currentActivity == null) {
+            this.pendingPageViews.add(new PageView(url, params));
+            return;
+        }
+
+        this.currentPageUrl = url;
+
+        this.checkTags(url, params);
     }
 
     private void trackSessionStart() {
@@ -892,13 +1112,14 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private Set<ChannelTag> getAvailableTagsFromConfig(JSONObject channelConfig) {
         Set<ChannelTag> tags = new HashSet<>();
         if (channelConfig != null && channelConfig.has("channelTags")) {
+            Gson gson = new Gson();
             try {
                 JSONArray tagsArray = channelConfig.getJSONArray("channelTags");
                 if (tagsArray != null) {
                     for (int i = 0; i < tagsArray.length(); i++) {
                         JSONObject tagObject = tagsArray.getJSONObject(i);
                         if (tagObject != null) {
-                            ChannelTag tag = new ChannelTag(tagObject.getString("_id"), tagObject.getString("name"));
+                            ChannelTag tag = gson.fromJson(tagObject.toString(), ChannelTag.class);
                             tags.add(tag);
                         }
                     }
@@ -989,9 +1210,16 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     public void addSubscriptionTag(String tagId) {
+        Log.d("CleverPush", "addSubscriptionTag: " + tagId);
         new Thread(() -> {
             this.getSubscriptionId(subscriptionId -> {
                 if (subscriptionId != null) {
+                    Set<String> tags = this.getSubscriptionTags();
+                    if (tags.contains(tagId)) {
+                        Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
+                        return;
+                    }
+
                     JSONObject jsonBody = new JSONObject();
                     try {
                         jsonBody.put("channelId", this.channelId);
@@ -1001,7 +1229,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                         Log.e("CleverPush", ex.getMessage(), ex);
                     }
 
-                    Set<String> tags = this.getSubscriptionTags();
                     tags.add(tagId);
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
@@ -1482,6 +1709,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return topicsChangedListener;
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d("CleverPush", "GoogleApiClient onConnected");

@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.3.0 ==
+* Easier tagging support
+
 == 1.2.0 ==
 * Support for Android Notification Channels
 
