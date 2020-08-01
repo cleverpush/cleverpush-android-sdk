@@ -5,10 +5,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -17,9 +18,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -27,7 +25,9 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.RemoteViews;
 
-import com.cleverpush.CleverPushPreferences;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
@@ -45,7 +45,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class NotificationService {
     private static NotificationService sInstance;
@@ -140,7 +139,7 @@ public class NotificationService {
             contentIntent = PendingIntent.getActivity(context, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
 
-        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
         NotificationCompat.Builder notificationBuilder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -172,13 +171,25 @@ public class NotificationService {
             notificationBuilder = new NotificationCompat.Builder(context);
         }
 
+        if (notification.getSoundFilename() != null) {
+            Resources resources = context.getResources();
+            String packageName = context.getPackageName();
+            int soundId = resources.getIdentifier(notification.getSoundFilename(), "raw", packageName);
+            if (soundId != 0) {
+                Uri trySoundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + soundId);
+                if (trySoundUri != null) {
+                    soundUri = trySoundUri;
+                }
+            }
+        }
+
         notificationBuilder = notificationBuilder
                 .setContentIntent(contentIntent)
                 .setContentTitle(title)
                 .setContentText(text)
                 .setSmallIcon(getSmallIcon(context))
                 .setAutoCancel(true)
-                .setSound(defaultSoundUri);
+                .setSound(soundUri);
 
         if (iconUrl == null) {
             iconUrl = "https://static.cleverpush.com/app/images/default-icon.png";

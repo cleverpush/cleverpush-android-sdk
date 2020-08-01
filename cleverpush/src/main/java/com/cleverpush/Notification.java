@@ -32,6 +32,8 @@ public class Notification implements Serializable {
     NotificationCarouselItem[] carouselItems;
     @SerializedName("category")
     NotificationCategory category;
+    @SerializedName("soundFilename")
+    String soundFilename;
     @SerializedName("createdAt")
     String createdAt;
 
@@ -65,6 +67,10 @@ public class Notification implements Serializable {
 
     public NotificationCategory getCategory() {
         return category;
+    }
+
+    public String getSoundFilename() {
+        return soundFilename;
     }
 
     public NotificationAction[] getActions() {

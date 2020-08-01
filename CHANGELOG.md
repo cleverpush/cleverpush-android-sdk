@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.4.0 ==
+* Custom sound support
+
 == 1.3.0 ==
 * Easier tagging support
 
