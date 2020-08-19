@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.4.1 ==
+* Fix for Notification Channel sounds
+
 == 1.4.0 ==
 * Custom sound support
 

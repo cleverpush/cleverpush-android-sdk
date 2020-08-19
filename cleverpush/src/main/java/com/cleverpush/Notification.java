@@ -70,7 +70,13 @@ public class Notification implements Serializable {
     }
 
     public String getSoundFilename() {
-        return soundFilename;
+        if (soundFilename != null && !soundFilename.isEmpty()) {
+            return soundFilename;
+        }
+        if (this.getCategory() != null && this.getCategory().getSound() != null && !this.getCategory().getSound().isEmpty()) {
+            return this.getCategory().getSound();
+        }
+        return null;
     }
 
     public NotificationAction[] getActions() {

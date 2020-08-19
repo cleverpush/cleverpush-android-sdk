@@ -11,6 +11,8 @@ public class NotificationCategory implements Serializable {
     String name;
     @SerializedName("description")
     String description;
+    @SerializedName("sound")
+    String sound;
     @SerializedName("group")
     NotificationCategoryGroup group;
 
@@ -24,6 +26,10 @@ public class NotificationCategory implements Serializable {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getSound() {
+        return sound;
     }
 
     public NotificationCategoryGroup getGroup() {
