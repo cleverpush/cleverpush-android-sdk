@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.5.0 ==
+* Support custom `NotificationExtenderService` (see docs)
+
 == 1.4.1 ==
 * Fix for Notification Channel sounds
 

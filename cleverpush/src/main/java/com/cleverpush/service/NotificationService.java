@@ -35,6 +35,7 @@ import com.cleverpush.NotificationCategoryGroup;
 import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationOpenedReceiver;
 import com.cleverpush.R;
+import com.cleverpush.Subscription;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -219,20 +220,37 @@ public class NotificationService {
             );
         }
 
+        // from NotificationExtenderService
+        if (notification.getExtender() != null) {
+			notificationBuilder.extend(notification.getExtender());
+		}
+
         return notificationBuilder;
     }
 
-    void sendNotification(Context context, Notification notification, String notificationStr, String subscriptionStr) {
-        int requestCode = (int) System.currentTimeMillis();
-        NotificationCompat.Builder notificationBuilder = NotificationService.getInstance().createBasicNotification(context, notificationStr, subscriptionStr, notification, requestCode);
+    int showNotification(Context context, Notification notification, Subscription subscription) {
+    	String notificationStr = notification.getRawPayload();
+    	String subscriptionStr = subscription.getRawPayload();
+		if (notification.getCarouselLength() > 0 && notification.isCarouselEnabled()) {
+			return NotificationService.getInstance().createAndShowCarousel(context, notification, notificationStr, subscriptionStr);
+		} else {
+			return NotificationService.getInstance().sendNotification(context, notification, notificationStr, subscriptionStr);
+		}
+	}
+
+    int sendNotification(Context context, Notification notification, String notificationStr, String subscriptionStr) {
+        int requestId = (int) System.currentTimeMillis();
+        NotificationCompat.Builder notificationBuilder = NotificationService.getInstance().createBasicNotification(context, notificationStr, subscriptionStr, notification, requestId);
         if (notificationBuilder != null) {
-            NotificationManagerCompat.from(context).notify(requestCode, notificationBuilder.build());
+            NotificationManagerCompat.from(context).notify(requestId, notificationBuilder.build());
         }
+        return requestId;
     }
 
-    void createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr) {
+    int createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr) {
         int requestId = (int) System.currentTimeMillis();
         createAndShowCarousel(context, message, notificationStr, subscriptionStr, 0, requestId);
+        return requestId;
     }
 
     void createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr, int targetIndex, int requestId) {

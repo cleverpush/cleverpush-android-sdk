@@ -1,5 +1,7 @@
 package com.cleverpush;
 
+import androidx.core.app.NotificationCompat;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
@@ -36,6 +38,9 @@ public class Notification implements Serializable {
     String soundFilename;
     @SerializedName("createdAt")
     String createdAt;
+
+	NotificationCompat.Extender extender;
+	String rawPayload;
 
     public String getId() {
         return id;
@@ -143,4 +148,20 @@ public class Notification implements Serializable {
 
         return index;
     }
+
+    public NotificationCompat.Extender getExtender() {
+    	return extender;
+	}
+
+	public void setExtender(NotificationCompat.Extender extender) {
+		this.extender = extender;
+	}
+
+	public String getRawPayload() {
+		return rawPayload;
+	}
+
+	public void setRawPayload(String rawPayload) {
+    	this.rawPayload = rawPayload;
+	}
 }

@@ -24,12 +24,15 @@ public class CleverPushHmsListenerService extends HmsMessageService {
         Gson gson = new Gson();
         RemoteMessageData messageData = gson.fromJson(dataStr, RemoteMessageData.class);
 
-        Notification notification = messageData.getNotification();
-        Subscription subscription = messageData.getSubscription();
+		Notification notification = messageData.getNotification();
+		String notificationStr = gson.toJson(notification);
 
-        String notificationStr = gson.toJson(notification);
-        String subscriptionStr = gson.toJson(subscription);
+		Subscription subscription = messageData.getSubscription();
+		String subscriptionStr = gson.toJson(subscription);
 
-        NotificationDataProcessor.process(this, notificationStr, notification, subscriptionStr, subscription);
+		notification.setRawPayload(notificationStr);
+		subscription.setRawPayload(subscriptionStr);
+
+        NotificationDataProcessor.process(this, notification, subscription);
     }
 }

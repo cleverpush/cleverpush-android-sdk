@@ -1,7 +1,9 @@
 package com.cleverpush.service;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -18,8 +20,10 @@ import org.json.JSONObject;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.cleverpush.service.NotificationExtenderService.EXTENDER_SERVICE_JOB_ID;
+
 public class NotificationDataProcessor {
-    public static void process(Context context, String notificationStr, Notification notification, String subscriptionStr, Subscription subscription) {
+    public static void process(Context context, Notification notification, Subscription subscription) {
         if (notification == null || subscription == null) {
             return;
         }
@@ -35,6 +39,10 @@ public class NotificationDataProcessor {
 
         boolean dontShowNotification = false;
 
+        // default behaviour: do not show notification if application is in the foreground
+		// ways to bypass this:
+		// - use NotificationReceivedCallbackListener and return false
+		// - use NotificationExtenderService (here you can also modify the NotificationBuilder)
         try {
             boolean callbackReceivedListener = cleverPush.isNotificationReceivedListenerCallback();
 
@@ -56,12 +64,13 @@ public class NotificationDataProcessor {
             Log.e("CleverPush", "Error checking if application is in foreground", e);
         }
 
+        boolean hasExtenderService = startExtenderService(context, notification, subscription);
+        if (hasExtenderService) {
+        	dontShowNotification = true;
+		}
+
         if (!dontShowNotification) {
-            if (notification.getCarouselLength() > 0 && notification.isCarouselEnabled()) {
-                NotificationService.getInstance().createAndShowCarousel(context, notification, notificationStr, subscriptionStr);
-            } else {
-                NotificationService.getInstance().sendNotification(context, notification, notificationStr, subscriptionStr);
-            }
+			NotificationService.getInstance().showNotification(context, notification, subscription);
         }
 
         JSONObject jsonBody = new JSONObject();
@@ -79,7 +88,7 @@ public class NotificationDataProcessor {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             Set<String> notifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
             if (notifications != null) {
-                notifications.add(notificationStr);
+                notifications.add(notification.getRawPayload());
             }
             editor.remove(CleverPushPreferences.NOTIFICATIONS).apply();
             editor.putStringSet(CleverPushPreferences.NOTIFICATIONS, notifications);
@@ -89,4 +98,27 @@ public class NotificationDataProcessor {
             Log.e("CleverPush", "Error saving notification to shared preferences", e);
         }
     }
+
+    private static boolean startExtenderService(Context context, Notification notification, Subscription subscription) {
+		Intent intent = NotificationExtenderService.getIntent(context);
+		if (intent == null) {
+			return false;
+		}
+
+		intent.putExtra("notification", notification);
+		intent.putExtra("subscription", subscription);
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			NotificationExtenderService.enqueueWork(
+				context,
+				intent.getComponent(),
+				EXTENDER_SERVICE_JOB_ID,
+				intent
+			);
+		} else {
+			context.startService(intent);
+		}
+
+		return true;
+	}
 }
