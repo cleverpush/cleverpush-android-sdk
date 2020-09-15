@@ -1,5 +1,11 @@
 ## Changelog
 
+== 1.6.1 ==
+* Modified `setTrackingConsent` behaviour: If called with `false` no more future tracking calls will be queued and all recent queued calls will be removed
+
+== 1.6.0 ==
+* Added `TrackingConsentListener`
+
 == 1.5.0 ==
 * Support custom `NotificationExtenderService` (see docs)
 

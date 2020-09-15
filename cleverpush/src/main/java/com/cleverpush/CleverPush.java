@@ -73,7 +73,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.6.0";
+    public static final String SDK_VERSION = "1.6.1";
 
     private static CleverPush instance;
 
@@ -117,6 +117,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     private boolean trackingConsentRequired = false;
     private boolean hasTrackingConsent = false;
+    private boolean hasTrackingConsentCalled = false;
 	private Collection<TrackingConsentListener> trackingConsentListeners = new ArrayList<>();
 
     private CleverPush(@NonNull Context context) {
@@ -861,7 +862,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 	public void waitForTrackingConsent(TrackingConsentListener listener) {
 		if (listener != null) {
 			if (trackingConsentRequired && !hasTrackingConsent) {
-				trackingConsentListeners.add(listener);
+			    if (!hasTrackingConsentCalled) {
+                    trackingConsentListeners.add(listener);
+                }
 			} else {
 				listener.ready();
 			}
@@ -869,14 +872,15 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 	}
 
 	public void setTrackingConsent(Boolean consent) {
+        hasTrackingConsentCalled = true;
 		hasTrackingConsent = consent;
 
 		if (hasTrackingConsent) {
 			for (TrackingConsentListener listener : trackingConsentListeners) {
 				listener.ready();
 			}
-			trackingConsentListeners = new ArrayList<>();
 		}
+        trackingConsentListeners = new ArrayList<>();
 	}
 
     /**
