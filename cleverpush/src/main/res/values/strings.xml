@@ -6,4 +6,8 @@
     <string name="big_picture">Big picture</string>
     <string name="carousel_image">Carousel image</string>
     <string name="dot">&#8226;</string>
+
+	<string name="cancel">Cancel</string>
+	<string name="save">Save</string>
+	<string name="topics_dialog_title">Subscribed Topics</string>
 </resources>

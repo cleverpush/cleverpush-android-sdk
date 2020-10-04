@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply from: 'maven-push.gradle'
 
 android {
@@ -46,4 +47,9 @@ dependencies {
 
     // Huawei
     compileOnly 'com.huawei.hms:push:4.0.3.301'
+    implementation "androidx.core:core-ktx:+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }
