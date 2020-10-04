@@ -1351,7 +1351,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                         Log.e("CleverPush", ex.getMessage(), ex);
                     }
 
-                    Log.d("CleverPush", "setSubscriptionTopics: " + topicIds.toString());
+                    Log.d("CleverPush", "setSubscriptionTopics: " + Arrays.toString(topicIds));
 
 
                     CleverPush instance = this;
@@ -1679,9 +1679,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 								topicIds[i] = id;
 
 								CheckBox checkbox = new CheckBox(CleverPush.context);
-								checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-									checkedTopics[parentIndex] = isChecked;
-								});
 								checkbox.setText(topic.optString("name"));
 								checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
 
@@ -1698,12 +1695,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 									JSONObject childTopic = channelTopics.getJSONObject(j);
 									if (childTopic != null && childTopic.optString("parentTopic").equals(id)) {
 										String childId = childTopic.getString("_id");
+										boolean childDefaultUnchecked = false;
+										try {
+											childDefaultUnchecked = topic.optBoolean("defaultUnchecked");
+										} catch (Exception ignored) {}
 
 										addedChildren++;
-
-										checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-											childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-										});
 
 										LinearLayout.LayoutParams childLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 										childLayoutParams.setMargins(65, 0, 0, 20);
@@ -1714,14 +1711,25 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 										checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
 											checkedTopics[childIndex] = isChecked;
 										});
+										checkedTopics[childIndex] = checkbox.isChecked();
+
 										checkboxChild.setText(childTopic.optString("name"));
-										checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(childId));
+										checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
 
 										childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
 
 										childLayout.addView(checkboxChild);
 									}
 								}
+
+								checkedTopics[parentIndex] = checkbox.isChecked();
+								final boolean hasChildren = addedChildren > 0;
+								checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+									checkedTopics[parentIndex] = isChecked;
+									if (hasChildren) {
+										childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+									}
+								});
 
 								if (addedChildren > 0) {
 									parentLayout.addView(childLayout);
