@@ -39,7 +39,7 @@ public class Notification implements Serializable {
     @SerializedName("createdAt")
     String createdAt;
 
-	NotificationCompat.Extender extender;
+    transient NotificationCompat.Extender extender;
 	String rawPayload;
 
     public String getId() {

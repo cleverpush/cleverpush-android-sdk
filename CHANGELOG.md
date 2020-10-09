@@ -3,6 +3,12 @@
 == 1.6.2 ==
 * Support child topics
 
+== 1.6.3 ==
+* Fixed ExtenderService with Carousel Notifications
+
+== 1.6.2 ==
+* Support child topics
+
 == 1.6.1 ==
 * Modified `setTrackingConsent` behaviour: If called with `false` no more future tracking calls will be queued and all recent queued calls will be removed
 
