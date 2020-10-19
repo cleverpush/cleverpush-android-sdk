@@ -1,7 +1,7 @@
 ## Changelog
 
-== 1.6.2 ==
-* Support child topics
+== 1.6.4 ==
+* Added various Notification Category features
 
 == 1.6.3 ==
 * Fixed ExtenderService with Carousel Notifications
