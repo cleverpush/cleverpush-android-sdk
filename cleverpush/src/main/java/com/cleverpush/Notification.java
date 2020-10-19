@@ -78,8 +78,8 @@ public class Notification implements Serializable {
         if (soundFilename != null && !soundFilename.isEmpty()) {
             return soundFilename;
         }
-        if (this.getCategory() != null && this.getCategory().getSound() != null && !this.getCategory().getSound().isEmpty()) {
-            return this.getCategory().getSound();
+        if (this.getCategory() != null && this.getCategory().getSoundFilename() != null && !this.getCategory().getSoundFilename().isEmpty()) {
+            return this.getCategory().getSoundFilename();
         }
         return null;
     }

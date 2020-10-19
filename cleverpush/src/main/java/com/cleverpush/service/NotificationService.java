@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.media.RingtoneManager;
@@ -23,7 +24,9 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -46,6 +49,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NotificationService {
     private static NotificationService sInstance;
@@ -144,30 +149,90 @@ public class NotificationService {
 
         NotificationCompat.Builder notificationBuilder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
             if (notification.getCategory() != null) {
                 NotificationCategory category = notification.getCategory();
 
-                int importance = NotificationManager.IMPORTANCE_DEFAULT;
-                NotificationChannel channel = new NotificationChannel(category.getId(), category.getName(), importance);
-                channel.setDescription(category.getDescription());
+                NotificationChannel channel = new NotificationChannel(category.getId(), category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
 
-                NotificationCategoryGroup categoryGroup = category.getGroup();
-                if (categoryGroup != null) {
-                    NotificationChannelGroup group = new NotificationChannelGroup(categoryGroup.getId(), categoryGroup.getName());
-                    channel.setGroup(group.getId());
-                }
+                String description = category.getDescription();
+                if (description != null) {
+					channel.setDescription(description);
+				}
+
+				String importance = category.getImportance();
+                if (importance != null) {
+                	if (importance.equalsIgnoreCase("URGENT")) {
+						channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
+					} else if (importance.equalsIgnoreCase("HIGH")) {
+						channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
+					} else if (importance.equalsIgnoreCase("MEDIUM")) {
+						channel.setImportance(NotificationManager.IMPORTANCE_DEFAULT);
+					} else if (importance.equalsIgnoreCase("LOW")) {
+						channel.setImportance(NotificationManager.IMPORTANCE_LOW);
+					}
+				}
+
+                String lockScreen = category.getLockScreen();
+                if (lockScreen != null) {
+					if (lockScreen.equalsIgnoreCase("PUBLIC")) {
+						channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+					} else if (lockScreen.equalsIgnoreCase("PRIVATE")) {
+						channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
+					} else if (lockScreen.equalsIgnoreCase("SECRET")) {
+						channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_SECRET);
+					}
+				}
+
+				String ledColor = category.getLedColor();
+				if (category.getLedColorEnabled() && ledColor != null) {
+					int parsedLedColor = parseColor(ledColor);
+					if (parsedLedColor > 0) {
+						channel.setLightColor(parsedLedColor);
+					}
+				}
 
                 NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+
+				NotificationCategoryGroup categoryGroup = category.getGroup();
+				if (categoryGroup != null) {
+					NotificationChannelGroup group = new NotificationChannelGroup(categoryGroup.getId(), categoryGroup.getName());
+					notificationManager.createNotificationChannelGroup(group);
+					channel.setGroup(group.getId());
+				}
+
                 notificationManager.createNotificationChannel(channel);
+
+				notificationBuilder = new NotificationCompat.Builder(context, category.getId());
+
+				String backgroundColor = category.getBackgroundColor();
+				if (backgroundColor != null) {
+					int parsedBackgroundColor = parseColor(backgroundColor);
+					if (parsedBackgroundColor != 0) {
+						notificationBuilder.setPriority(NotificationCompat.PRIORITY_HIGH).setColorized(true).setColor(Color.RED);
+					}
+				}
+
+				/*
+				String foregroundColor = category.getForegroundColor();
+				if (foregroundColor != null) {
+					int parsedForegroundColor = parseColor(foregroundColor);
+					if (parsedForegroundColor > 0) {
+						notificationBuilder.setColorized(true).setColor(parsedForegroundColor);
+					}
+				}
+				 */
+
             } else {
                 int importance = NotificationManager.IMPORTANCE_DEFAULT;
                 NotificationChannel channel = new NotificationChannel("default", "Default", importance);
                 channel.setDescription("default");
                 NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
                 notificationManager.createNotificationChannel(channel);
+
+				notificationBuilder = new NotificationCompat.Builder(context,"default");
             }
 
-            notificationBuilder = new NotificationCompat.Builder(context, "default");
         } else {
             notificationBuilder = new NotificationCompat.Builder(context);
         }
@@ -227,6 +292,37 @@ public class NotificationService {
 
         return notificationBuilder;
     }
+
+	private static void applyTextColorToRemoteViews(RemoteViews remoteViews, View view, int color) {
+		if (view instanceof ViewGroup) {
+			ViewGroup vg = (ViewGroup) view;
+			for (int i = 0, count = vg.getChildCount(); i < count; i++) {
+				applyTextColorToRemoteViews(remoteViews, vg.getChildAt(i), color);
+			}
+		} else if (view instanceof TextView) {
+			remoteViews.setTextColor(view.getId(), color);
+		}
+	}
+
+    int parseColor(String hexStr) {
+    	if (hexStr == null) {
+    		return 0;
+		}
+
+		if (hexStr.startsWith("rgb(")) {
+			Pattern c = Pattern.compile("rgb *\\( *([0-9]+), *([0-9]+), *([0-9]+) *\\)");
+			Matcher m = c.matcher(hexStr);
+			if (m.matches()) {
+				hexStr = String.format("#%02x%02x%02x",  Integer.parseInt(m.group(1)),  Integer.parseInt(m.group(2)),  Integer.parseInt(m.group(3)));
+			}
+		}
+
+    	if (hexStr.charAt(0) != '#') {
+			hexStr = "#" + hexStr;
+		}
+
+    	return Color.parseColor(hexStr);
+	}
 
     int showNotification(Context context, Notification notification, Subscription subscription) {
     	String notificationStr = notification.getRawPayload();
@@ -291,7 +387,7 @@ public class NotificationService {
 
         contentView = new RemoteViews(context.getPackageName(), R.layout.notification_carousel_layout);
 
-        setBasicNotificationData(context, message, contentView, true);
+        setBasicNotificationData(context, message, contentView);
 
         if (message != null && message.getCarouselLength() > 0) {
             contentView.setViewVisibility(R.id.big_picture, View.VISIBLE);
@@ -393,7 +489,7 @@ public class NotificationService {
         return contentIntent;
     }
 
-    private void setBasicNotificationData(Context context, Notification message, RemoteViews contentView, boolean isExpanded) {
+    private void setBasicNotificationData(Context context, Notification message, RemoteViews contentView) {
         if (message != null && contentView != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 contentView.setViewVisibility(R.id.icon_group, View.GONE);
