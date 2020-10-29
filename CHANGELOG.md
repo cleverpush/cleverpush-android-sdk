@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.6.5 ==
+* Update ChannelTopic object
+
 == 1.6.4 ==
 * Added various Notification Category features
 
