@@ -23,13 +23,15 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
             String notificationStr = (String) data.get("notification");
             String subscriptionStr = (String) data.get("subscription");
 
-            Gson gson = new Gson();
-            Notification notification = gson.fromJson(notificationStr, Notification.class);
-			notification.setRawPayload(notificationStr);
-            Subscription subscription = gson.fromJson(subscriptionStr, Subscription.class);
-			subscription.setRawPayload(subscriptionStr);
+            if (notificationStr != null && subscriptionStr != null) {
+                Gson gson = new Gson();
+                Notification notification = gson.fromJson(notificationStr, Notification.class);
+                notification.setRawPayload(notificationStr);
+                Subscription subscription = gson.fromJson(subscriptionStr, Subscription.class);
+                subscription.setRawPayload(subscriptionStr);
+                NotificationDataProcessor.process(this, notification, subscription);
+            }
 
-            NotificationDataProcessor.process(this, notification, subscription);
         } else {
             Log.e("CleverPush", "Notification data is empty");
         }

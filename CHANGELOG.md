@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.6.6 ==
+* Handle empty FCM notification data
+
 == 1.6.5 ==
 * Update ChannelTopic object
 
