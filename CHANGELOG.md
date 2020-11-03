@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.6.7 ==
+* Fixed JSONException inside `getAvailableTopicsFromConfig`
+
 == 1.6.6 ==
 * Handle empty FCM notification data
 
