@@ -42,7 +42,9 @@ public class NotificationOpenedProcessor {
 
         CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
 
-        CleverPush.getInstance(context).fireNotificationOpenedListener(result);
+        CleverPush cleverPush = CleverPush.getInstance(context);
+
+        cleverPush.fireNotificationOpenedListener(result);
 
         // open launcher activity
         Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
@@ -50,5 +52,7 @@ public class NotificationOpenedProcessor {
             launchIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT/* | Intent.FLAG_ACTIVITY_NEW_TASK*/);
             context.startActivity(launchIntent);
         }
+
+		BadgeHelper.update(context, cleverPush.getIncrementBadge());
     }
 }

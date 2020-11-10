@@ -251,22 +251,21 @@ public class NotificationService {
 
         notificationBuilder = notificationBuilder
                 .setContentIntent(contentIntent)
+				.setDeleteIntent(this.getNotificationDeleteIntent(context))
                 .setContentTitle(title)
                 .setContentText(text)
                 .setSmallIcon(getSmallIcon(context))
                 .setAutoCancel(true)
                 .setSound(soundUri);
 
-        if (iconUrl == null) {
-            iconUrl = "https://static.cleverpush.com/app/images/default-icon.png";
-        }
-
-        try {
-            Bitmap icon = getBitmapFromUrl(iconUrl);
-            if (icon != null) {
-                notificationBuilder = notificationBuilder.setLargeIcon(icon);
-            }
-        } catch (Exception ignored) {
+        if (iconUrl != null) {
+			try {
+				Bitmap icon = getBitmapFromUrl(iconUrl);
+				if (icon != null) {
+					notificationBuilder = notificationBuilder.setLargeIcon(icon);
+				}
+			} catch (Exception ignored) {
+			}
         }
 
         if (mediaUrl != null) {
@@ -274,7 +273,7 @@ public class NotificationService {
                 Bitmap media = getBitmapFromUrl(mediaUrl);
                 if (media != null) {
                     notificationBuilder = notificationBuilder.setStyle(
-                            new NotificationCompat.BigPictureStyle().bigPicture(media)
+						new NotificationCompat.BigPictureStyle().bigPicture(media)
                     );
                 }
             } catch (Exception ignored) {
@@ -355,11 +354,9 @@ public class NotificationService {
         if (builder != null) {
             android.app.Notification notification = builder.build();
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                notification.bigContentView = getCarouselImage(context, message, notificationStr, subscriptionStr, targetIndex, requestId);
-            }
+			notification.bigContentView = getCarouselImage(context, message, notificationStr, subscriptionStr, targetIndex, requestId);
 
-            builder.setDeleteIntent(getNotificationDeleteIntent(context, message, notificationStr, subscriptionStr));
+			builder.setDeleteIntent(getCarouselNotificationDeleteIntent(context, message, notificationStr, subscriptionStr));
 
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
@@ -368,7 +365,12 @@ public class NotificationService {
         }
     }
 
-    private PendingIntent getNotificationDeleteIntent(Context context, Notification message, String notificationStr, String subscriptionStr) {
+	private PendingIntent getNotificationDeleteIntent(Context context) {
+		Intent delIntent = new Intent(context, NotificationDismissIntentService.class);
+		return PendingIntent.getService(context, (int) System.currentTimeMillis(), delIntent, PendingIntent.FLAG_ONE_SHOT);
+	}
+
+    private PendingIntent getCarouselNotificationDeleteIntent(Context context, Notification message, String notificationStr, String subscriptionStr) {
         Intent delIntent = new Intent(context, CarouselNotificationIntentService.class);
         delIntent.setAction(CarouselNotificationIntentService.ACTION_NOTIFICATION_DELETE);
 
@@ -504,16 +506,14 @@ public class NotificationService {
             contentView.setTextViewText(R.id.notification_content_title, message.getTitle());
             contentView.setTextViewText(R.id.notification_content_text, message.getText());
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    contentView.setTextViewTextSize(R.id.notification_content_title, TypedValue.COMPLEX_UNIT_SP, 14);
-                    contentView.setTextViewTextSize(R.id.notification_content_text, TypedValue.COMPLEX_UNIT_SP, 14);
-                } else {
-                    contentView.setTextViewTextSize(R.id.notification_content_title, TypedValue.COMPLEX_UNIT_SP, 14);
-                    contentView.setTextViewTextSize(R.id.notification_content_text, TypedValue.COMPLEX_UNIT_SP, 14);
-                }
-            }
-        }
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+				contentView.setTextViewTextSize(R.id.notification_content_title, TypedValue.COMPLEX_UNIT_SP, 14);
+				contentView.setTextViewTextSize(R.id.notification_content_text, TypedValue.COMPLEX_UNIT_SP, 14);
+			} else {
+				contentView.setTextViewTextSize(R.id.notification_content_title, TypedValue.COMPLEX_UNIT_SP, 14);
+				contentView.setTextViewTextSize(R.id.notification_content_text, TypedValue.COMPLEX_UNIT_SP, 14);
+			}
+		}
     }
 
     private static String getImageFileName(String url) {
@@ -564,7 +564,6 @@ public class NotificationService {
                             int ivWidth = displayMetrics.widthPixels;
                             int currentBitmapWidth = bitmap.getWidth();
                             int currentBitmapHeight = bitmap.getHeight();
-                            int newHeight = (int) Math.floor((double) currentBitmapHeight * ((double) ivWidth / (double) currentBitmapWidth));
 
                             bitmap = scaleBitmapAndKeepRation(bitmap, ivWidth, 90);
 

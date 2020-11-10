@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.7.0 ==
+* New Badge Support
+
 == 1.6.7 ==
 * Fixed JSONException inside `getAvailableTopicsFromConfig`
 

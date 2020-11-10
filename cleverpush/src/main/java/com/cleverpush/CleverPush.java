@@ -1782,6 +1782,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         });
     }
 
+    public void setApiEndpoint(String apiEndpoint) {
+    	CleverPushHttpClient.BASE_URL = apiEndpoint;
+	}
+
     static void setAppContext(Context newAppContext) {
         context = newAppContext.getApplicationContext();
     }
@@ -1868,7 +1872,15 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         this.autoClearBadge = autoClearBadge;
     }
 
+	public boolean getAutoClearBadge() {
+		return autoClearBadge;
+	}
+
     public void setIncrementBadge(boolean incrementBadge) {
         this.incrementBadge = incrementBadge;
     }
+
+    public boolean getIncrementBadge() {
+    	return incrementBadge;
+	}
 }

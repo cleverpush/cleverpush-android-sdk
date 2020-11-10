@@ -15,7 +15,7 @@ public class CleverPushHttpClient {
         void onFailure(int statusCode, String response, Throwable throwable);
     }
 
-    private static final String BASE_URL = "https://api.cleverpush.com";
+    public static String BASE_URL = "https://api.cleverpush.com";
     private static final int TIMEOUT = 120000;
 
     public static void post(final String url, final JSONObject jsonBody, final ResponseHandler responseHandler) {

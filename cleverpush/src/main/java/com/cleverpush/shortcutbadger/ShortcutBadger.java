@@ -15,19 +15,19 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.onesignal.shortcutbadger.impl.AdwHomeBadger;
-import com.onesignal.shortcutbadger.impl.ApexHomeBadger;
-import com.onesignal.shortcutbadger.impl.AsusHomeBadger;
-import com.onesignal.shortcutbadger.impl.DefaultBadger;
-import com.onesignal.shortcutbadger.impl.EverythingMeHomeBadger;
-import com.onesignal.shortcutbadger.impl.HuaweiHomeBadger;
-import com.onesignal.shortcutbadger.impl.NewHtcHomeBadger;
-import com.onesignal.shortcutbadger.impl.NovaHomeBadger;
-import com.onesignal.shortcutbadger.impl.OPPOHomeBader;
-import com.onesignal.shortcutbadger.impl.SamsungHomeBadger;
-import com.onesignal.shortcutbadger.impl.SonyHomeBadger;
-import com.onesignal.shortcutbadger.impl.VivoHomeBadger;
-import com.onesignal.shortcutbadger.impl.ZukHomeBadger;
+import com.cleverpush.shortcutbadger.impl.AdwHomeBadger;
+import com.cleverpush.shortcutbadger.impl.ApexHomeBadger;
+import com.cleverpush.shortcutbadger.impl.AsusHomeBadger;
+import com.cleverpush.shortcutbadger.impl.DefaultBadger;
+import com.cleverpush.shortcutbadger.impl.EverythingMeHomeBadger;
+import com.cleverpush.shortcutbadger.impl.HuaweiHomeBadger;
+import com.cleverpush.shortcutbadger.impl.NewHtcHomeBadger;
+import com.cleverpush.shortcutbadger.impl.NovaHomeBadger;
+import com.cleverpush.shortcutbadger.impl.OPPOHomeBader;
+import com.cleverpush.shortcutbadger.impl.SamsungHomeBadger;
+import com.cleverpush.shortcutbadger.impl.SonyHomeBadger;
+import com.cleverpush.shortcutbadger.impl.VivoHomeBadger;
+import com.cleverpush.shortcutbadger.impl.ZukHomeBadger;
 
 
 /**

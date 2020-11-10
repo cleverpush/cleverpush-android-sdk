@@ -32,6 +32,7 @@ import com.cleverpush.shortcutbadger.util.CloseHelper;
  * Version number 6 applies only to chat-type apps
  */
 
+@SuppressWarnings("unchecked")
 public class OPPOHomeBader implements Badger {
 
     private static final String PROVIDER_CONTENT_URI = "content://com.android.badge/badge";

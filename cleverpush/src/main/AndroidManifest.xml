@@ -9,6 +9,8 @@
 
         <service android:name="com.cleverpush.service.CarouselNotificationIntentService" android:exported="false" />
 
+		<service android:name="com.cleverpush.service.NotificationDismissIntentService" android:exported="false" />
+
         <service android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService" android:exported="false" />
 
         <service android:name="com.cleverpush.service.CleverPushFcmListenerService" android:exported="false">
