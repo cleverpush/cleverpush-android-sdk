@@ -77,7 +77,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.6.7";
+    public static final String SDK_VERSION = "1.7.0";
 
     private static CleverPush instance;
 
@@ -123,6 +123,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private boolean hasTrackingConsent = false;
     private boolean hasTrackingConsentCalled = false;
 	private Collection<TrackingConsentListener> trackingConsentListeners = new ArrayList<>();
+
+    private boolean incrementBadge = false;
+    private boolean autoClearBadge = false;
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -1859,5 +1862,13 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         if (requestCode == locationPermissionRequestCode && (geofenceList == null || geofenceList.size() == 0)) {
             this.initGeoFences();
         }
+    }
+
+    public void setAutoClearBadge(boolean autoClearBadge) {
+        this.autoClearBadge = autoClearBadge;
+    }
+
+    public void setIncrementBadge(boolean incrementBadge) {
+        this.incrementBadge = incrementBadge;
     }
 }
