@@ -1,17 +1,11 @@
 package com.cleverpush.service;
 
 import android.app.IntentService;
-import android.content.Context;
 import android.content.Intent;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.cleverpush.BadgeHelper;
 import com.cleverpush.CleverPush;
-import com.cleverpush.Notification;
-import com.cleverpush.NotificationCarouselItem;
-
-import java.util.Map;
 
 public class NotificationDismissIntentService extends IntentService {
 	public NotificationDismissIntentService(String name) {
