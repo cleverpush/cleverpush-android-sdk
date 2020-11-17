@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.7.1
+* Fixed empty FCM ID when calling subscribe before init has finished
+
 == 1.7.0 ==
 * New Badge Support
 

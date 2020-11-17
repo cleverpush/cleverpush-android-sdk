@@ -1,6 +1,6 @@
 package com.cleverpush.manager;
 
-import android.content.Context;
+import org.json.JSONObject;
 
 public interface SubscriptionManager {
 
@@ -8,7 +8,7 @@ public interface SubscriptionManager {
       void complete(String id);
    }
 
-   void subscribe(RegisteredHandler callback);
+   void subscribe(JSONObject channelConfig, RegisteredHandler callback);
 
    void tokenCallback(String token);
 

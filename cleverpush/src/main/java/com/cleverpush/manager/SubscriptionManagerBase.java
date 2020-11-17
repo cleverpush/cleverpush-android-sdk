@@ -25,14 +25,16 @@ import java.util.TimeZone;
 abstract class SubscriptionManagerBase implements SubscriptionManager {
     RegisteredHandler registeredHandler;
     Context context;
+    JSONObject channelConfig;
 
     SubscriptionManagerBase(Context context) {
         this.context = context;
     }
 
     @Override
-    public void subscribe(RegisteredHandler callback) {
+    public void subscribe(JSONObject channelConfig, RegisteredHandler callback) {
         this.registeredHandler = callback;
+        this.channelConfig = channelConfig;
     }
 
     void syncSubscription(String token) {

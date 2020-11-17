@@ -246,6 +246,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         if (this.channelId != null) {
             Log.d("CleverPush", "Initializing with Channel ID: " + this.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
 
+			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+			sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, this.channelId).apply();
+
             // get channel config
             CleverPush instance = this;
             CleverPushHttpClient.get("/channel/" + this.channelId + "/config", new CleverPushHttpClient.ResponseHandler() {
@@ -791,44 +794,44 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
         this.subscriptionInProgress = true;
 
-        SubscriptionManager subscriptionManager = this.getSubscriptionManager();
-        subscriptionManager.subscribe(newSubscriptionId -> {
-            this.subscriptionInProgress = false;
-            Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
-            this.fireSubscribedListener(newSubscriptionId);
-            this.setSubscriptionId(newSubscriptionId);
+		this.getChannelConfig(config -> {
+			SubscriptionManager subscriptionManager = this.getSubscriptionManager();
+			subscriptionManager.subscribe(config, newSubscriptionId -> {
+				this.subscriptionInProgress = false;
+				Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
+				this.fireSubscribedListener(newSubscriptionId);
+				this.setSubscriptionId(newSubscriptionId);
 
-            if (newSubscriptionId != null && newSubscription) {
-                this.getChannelConfig(config -> {
-                    if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
-                        JSONArray channelTopics = config.optJSONArray("channelTopics");
-                        if (channelTopics != null && channelTopics.length() > 0) {
-                            Set<String> topics = this.getSubscriptionTopics();
-                            if (topics == null || topics.size() == 0) {
-                                Set<String> selectedTopicIds = new HashSet<>();
-                                for (int i = 0; i < channelTopics.length(); i++) {
-                                    JSONObject channelTopic = channelTopics.optJSONObject(i);
-                                    if (channelTopic != null && !channelTopic.optBoolean("defaultUnchecked")) {
-                                        String id = channelTopic.optString("_id");
-                                        if (id != null) {
-                                            selectedTopicIds.add(id);
-                                        }
-                                    }
-                                }
-                                this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
-                            }
+				if (newSubscriptionId != null && newSubscription) {
+					if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
+						JSONArray channelTopics = config.optJSONArray("channelTopics");
+						if (channelTopics != null && channelTopics.length() > 0) {
+							Set<String> topics = this.getSubscriptionTopics();
+							if (topics == null || topics.size() == 0) {
+								Set<String> selectedTopicIds = new HashSet<>();
+								for (int i = 0; i < channelTopics.length(); i++) {
+									JSONObject channelTopic = channelTopics.optJSONObject(i);
+									if (channelTopic != null && !channelTopic.optBoolean("defaultUnchecked")) {
+										String id = channelTopic.optString("_id");
+										if (id != null) {
+											selectedTopicIds.add(id);
+										}
+									}
+								}
+								this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+							}
 
-                            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, true);
-                            editor.commit();
+							SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+							SharedPreferences.Editor editor = sharedPreferences.edit();
+							editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, true);
+							editor.commit();
 
-                            CleverPush.instance.showPendingTopicsDialog();
-                        }
-                    }
-                });
-            }
-        });
+							CleverPush.instance.showPendingTopicsDialog();
+						}
+					}
+				}
+			});
+		});
     }
 
     public void unsubscribe() {

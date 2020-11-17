@@ -1,7 +1,6 @@
 package com.cleverpush.service;
 
 import android.util.Log;
-import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
 import com.cleverpush.ActivityLifecycleListener;
@@ -12,7 +11,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

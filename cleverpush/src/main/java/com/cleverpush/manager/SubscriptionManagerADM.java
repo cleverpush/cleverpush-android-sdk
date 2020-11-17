@@ -5,6 +5,8 @@ import android.util.Log;
 
 import com.amazon.device.messaging.ADM;
 
+import org.json.JSONObject;
+
 public class SubscriptionManagerADM extends SubscriptionManagerBase {
 
     public SubscriptionManagerADM(Context context) {
@@ -12,8 +14,8 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
     }
 
     @Override
-    public void subscribe(final RegisteredHandler callback) {
-        super.subscribe(callback);
+    public void subscribe(JSONObject channelConfig, final RegisteredHandler callback) {
+        super.subscribe(channelConfig, callback);
 
         Context context = this.context;
         new Thread(() -> {

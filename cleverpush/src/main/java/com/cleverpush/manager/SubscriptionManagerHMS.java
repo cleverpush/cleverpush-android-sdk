@@ -5,12 +5,13 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.common.ApiException;
 import com.huawei.hms.push.HmsMessaging;
+
+import org.json.JSONObject;
 
 public class SubscriptionManagerHMS extends SubscriptionManagerBase {
 
@@ -31,8 +32,8 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
     private static boolean callbackSuccessful;
 
     @Override
-    public void subscribe(RegisteredHandler callback) {
-        super.subscribe(callback);
+    public void subscribe(JSONObject channelConfig, RegisteredHandler callback) {
+        super.subscribe(channelConfig, callback);
 
         new Thread(() -> {
             try {

@@ -1,13 +1,7 @@
 package com.cleverpush.manager;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
-
-import com.cleverpush.CleverPushHttpClient;
-import com.cleverpush.CleverPushPreferences;
-import com.cleverpush.listener.FcmSenderIdListener;
 
 import org.json.JSONObject;
 
@@ -26,38 +20,19 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
     abstract String getToken(String senderId) throws Throwable;
 
     @Override
-    public void subscribe(RegisteredHandler callback) {
-        super.subscribe(callback);
+    public void subscribe(JSONObject channelConfig, RegisteredHandler callback) {
+        super.subscribe(channelConfig, callback);
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
-        String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
-
-        getFcmSenderId(channelId, fcmSenderId -> {
-            if (isValidProjectNumber(fcmSenderId, callback)) {
-                internalSubscribe(fcmSenderId);
-            }
-        });
-    }
-
-    protected static void getFcmSenderId(String channelId, FcmSenderIdListener listener) {
-        CleverPushHttpClient.get("/channel/" + channelId + "/fcm-params", new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-                try {
-                    JSONObject responseJson = new JSONObject(response);
-                    if (responseJson.has("fcmSenderId")) {
-                        listener.complete(responseJson.getString("fcmSenderId"));
-                    }
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Getting FCM Sender ID failed");
-            }
-        });
+		if (channelConfig != null) {
+			String fcmId = channelConfig.optString("fcmId");
+			if (fcmId != null && !fcmId.isEmpty() && isValidProjectNumber(fcmId, callback)) {
+				internalSubscribe(fcmId);
+			} else {
+				Log.e("CleverPush", "SubscriptionManager: Getting FCM Sender ID failed");
+			}
+		} else {
+			Log.e("CleverPush", "SubscriptionManager: Getting Channel Config failed");
+		}
     }
 
     private void internalSubscribe(String senderId) {
@@ -80,21 +55,19 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
         if (registerThread != null && registerThread.isAlive())
             return;
 
-        registerThread = new Thread(new Runnable() {
-            public void run() {
-                for (int currentRetry = 0; currentRetry < REGISTRATION_RETRY_COUNT; currentRetry++) {
-                    boolean finished = attemptRegistration(senderId, currentRetry);
-                    if (finished) {
-                        return;
-                    }
-                    try {
-                        Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
+        registerThread = new Thread(() -> {
+			for (int currentRetry = 0; currentRetry < REGISTRATION_RETRY_COUNT; currentRetry++) {
+				boolean finished = attemptRegistration(senderId, currentRetry);
+				if (finished) {
+					return;
+				}
+				try {
+					Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		});
         registerThread.start();
     }
 
