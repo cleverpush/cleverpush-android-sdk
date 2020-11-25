@@ -1,6 +1,9 @@
 ## Changelog
 
-== 1.7.1
+== 1.7.2 ==
+* Fixed sorting of getAvailableTopics result
+
+== 1.7.1 ==
 * Fixed empty FCM ID when calling subscribe before init has finished
 
 == 1.7.0 ==

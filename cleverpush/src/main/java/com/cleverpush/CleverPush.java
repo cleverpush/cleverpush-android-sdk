@@ -69,6 +69,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -77,7 +78,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.7.1";
+    public static final String SDK_VERSION = "1.7.2";
 
     private static CleverPush instance;
 
@@ -1233,7 +1234,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     private Set<ChannelTopic> getAvailableTopicsFromConfig(JSONObject channelConfig) {
-        Set<ChannelTopic> topics = new HashSet<>();
+        Set<ChannelTopic> topics = new LinkedHashSet<>();
         if (channelConfig != null && channelConfig.has("channelTopics")) {
             try {
                 JSONArray topicsArray = channelConfig.getJSONArray("channelTopics");
@@ -1241,7 +1242,13 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                     for (int i = 0; i < topicsArray.length(); i++) {
                         JSONObject topicObject = topicsArray.getJSONObject(i);
                         if (topicObject != null) {
-                            ChannelTopic topic = new ChannelTopic(topicObject.getString("_id"), topicObject.optString("name"), topicObject.optString("parentTopic", null));
+                            ChannelTopic topic = new ChannelTopic(
+                                topicObject.getString("_id"),
+                                topicObject.optString("name"),
+                                topicObject.optString("parentTopic", null),
+                                topicObject.optBoolean("defaultUnchecked", false),
+                                topicObject.optString("fcmBroadcastTopic", null)
+                            );
                             topics.add(topic);
                         }
                     }
