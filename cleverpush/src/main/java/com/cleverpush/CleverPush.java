@@ -128,6 +128,8 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private boolean incrementBadge = false;
     private boolean autoClearBadge = false;
 
+    private boolean developmentMode = false;
+
     private CleverPush(@NonNull Context context) {
         if (context == null) {
             return;
@@ -252,7 +254,11 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
             // get channel config
             CleverPush instance = this;
-            CleverPushHttpClient.get("/channel/" + this.channelId + "/config", new CleverPushHttpClient.ResponseHandler() {
+            String configPath = "/channel/" + this.channelId + "/config";
+            if (developmentMode) {
+				configPath = "/channel/" + this.channelId + "/config?t=" + System.currentTimeMillis();
+			}
+            CleverPushHttpClient.get(configPath, new CleverPushHttpClient.ResponseHandler() {
                 @Override
                 public void onSuccess(String response) {
                     initialized = true;
@@ -1030,6 +1036,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
         return subscriptionManager;
     }
+
+    public void setSubscriptionManager(SubscriptionManager subscriptionManager) {
+    	this.subscriptionManager = subscriptionManager;
+	}
 
     static boolean hasFCMLibrary() {
         try {
@@ -1893,4 +1903,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     public boolean getIncrementBadge() {
     	return incrementBadge;
 	}
+
+	public void enableDevelopmentMode() {
+		this.developmentMode = true;
+	}
+
 }
