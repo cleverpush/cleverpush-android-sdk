@@ -78,7 +78,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.7.3";
+    public static final String SDK_VERSION = "1.7.4";
 
     private static CleverPush instance;
 
@@ -237,6 +237,8 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         this.notificationReceivedListener = notificationReceivedListener;
         this.notificationOpenedListener = notificationOpenedListener;
         this.subscribedListener = subscribedListener;
+
+		channelConfig = null;
 
         SubscriptionManagerFCM.disableFirebaseInstanceIdService(CleverPush.context);
 

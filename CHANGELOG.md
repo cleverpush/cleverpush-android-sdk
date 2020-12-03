@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.7.4 ==
+* Reset Channel Config when Channel ID changes in `init`
+
 == 1.7.3 ==
 * Added `enableDevelopmentMode` to bypass config cache
 * Automatically re-subscribe when Channel ID changes
