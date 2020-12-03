@@ -1,5 +1,9 @@
 ## Changelog
 
+== 1.7.3 ==
+* Added `enableDevelopmentMode` to bypass config cache
+* Automatically re-subscribe when Channel ID changes
+
 == 1.7.2 ==
 * Fixed sorting of getAvailableTopics result
 

@@ -78,7 +78,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.7.2";
+    public static final String SDK_VERSION = "1.7.3";
 
     private static CleverPush instance;
 
@@ -250,6 +250,22 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             Log.d("CleverPush", "Initializing with Channel ID: " + this.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
 
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+
+			String storedChannelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
+			String storedSubscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+
+            // Check if the channel id changed. Remove the Subscription ID in this case.
+			// Maybe the user switched from Dev to Live environment.
+            boolean channelIdChanged = storedSubscriptionId != null && storedChannelId != null && !this.channelId.equals(storedChannelId);
+            if (channelIdChanged) {
+				try {
+					sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
+					sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC).apply();
+				} catch (Throwable t) {
+					Log.e("CleverPush", "Error", t);
+				}
+			}
+
 			sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, this.channelId).apply();
 
             // get channel config
@@ -267,7 +283,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                         JSONObject responseJson = new JSONObject(response);
                         instance.setChannelConfig(responseJson);
 
-                        instance.subscribeOrSync(autoRegister);
+                        instance.subscribeOrSync(autoRegister || channelIdChanged);
 
                         instance.initFeatures();
 
@@ -1905,6 +1921,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 	}
 
 	public void enableDevelopmentMode() {
+    	Log.w("CleverPush", "CleverPush SDK is running in development mode. Only use this for testing!");
 		this.developmentMode = true;
 	}
 
