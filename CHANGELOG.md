@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.7.5 ==
+* Added `externalId` to ChannelTopics
+
 == 1.7.4 ==
 * Reset Channel Config when Channel ID changes in `init`
 

@@ -6,13 +6,15 @@ public class ChannelTopic {
     private String parentTopicId;
     private Boolean defaultUnchecked;
     private String fcmBroadcastTopic;
+	private String externalId;
 
-    public ChannelTopic(String id, String name, String parentTopicId, Boolean defaultUnchecked, String fcmBroadcastTopic) {
+    public ChannelTopic(String id, String name, String parentTopicId, Boolean defaultUnchecked, String fcmBroadcastTopic, String externalId) {
         this.id = id;
         this.name = name;
         this.parentTopicId = parentTopicId;
         this.defaultUnchecked = defaultUnchecked;
-        this.fcmBroadcastTopic = fcmBroadcastTopic;
+		this.fcmBroadcastTopic = fcmBroadcastTopic;
+		this.externalId = externalId;
     }
 
     public String getId() {
@@ -34,6 +36,10 @@ public class ChannelTopic {
     public String getFcmBroadcastTopic() {
         return this.fcmBroadcastTopic;
     }
+
+	public String getExternalId() {
+		return this.externalId;
+	}
 
     public String toString() {
         return this.getId();
