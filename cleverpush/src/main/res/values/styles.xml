@@ -15,4 +15,9 @@
 
     <style name="notificationInfo" parent="" />
 
+    <style name="banner_animation">
+        <item name="android:windowEnterAnimation">@anim/banner_in_anim</item>
+        <item name="android:windowExitAnimation">@anim/banner_out_anim</item>
+    </style>
+
 </resources>

@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.AppBannerUrlOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
@@ -405,6 +406,8 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         this.showPendingTopicsDialog();
         this.initAppReview();
         this.initGeoFences();
+
+        AppBannerModule.init(ActivityLifecycleListener.currentActivity, channelId, false);
     }
 
     private void initAppReview() {
