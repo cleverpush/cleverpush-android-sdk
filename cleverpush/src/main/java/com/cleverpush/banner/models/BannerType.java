@@ -1,7 +1,5 @@
 package com.cleverpush.banner.models;
 
-import com.cleverpush.banner.models.blocks.Alignment;
-
 import java.util.HashMap;
 import java.util.Map;
 

@@ -16,7 +16,7 @@ public enum BannerBlockType {
     }
 
     public static BannerBlockType fromString(String raw) {
-        if(typeMap.containsKey(raw)) {
+        if (typeMap.containsKey(raw)) {
             return typeMap.get(raw);
         } else {
             throw new IllegalArgumentException("Unknown banner type: " + raw);

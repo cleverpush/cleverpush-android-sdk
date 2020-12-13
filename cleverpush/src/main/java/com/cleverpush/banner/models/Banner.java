@@ -29,9 +29,13 @@ public class Banner {
     private BannerDismissType dismissType;
     private int dismissTimeout;
     private BannerStopAtType stopAtType;
+	private BannerTriggerType triggerType;
+	private List<BannerTrigger> triggers;
     private Date stopAt;
     private BannerFrequency frequency;
     private Date createdAt;
+    private int delaySeconds;
+    private boolean scheduled;
 
     private Banner() {}
 
@@ -55,13 +59,25 @@ public class Banner {
 
     public int getDismissTimeout() { return dismissTimeout; }
 
+	public int getDelaySeconds() { return delaySeconds; }
+
+	public void setDelaySeconds(int delaySeconds) { this.delaySeconds = delaySeconds; }
+
     public BannerStopAtType getStopAtType() { return stopAtType; }
+
+	public BannerTriggerType getTriggerType() { return triggerType; }
+
+	public List<BannerTrigger> getTriggers() { return triggers; }
 
     public Date getStopAt() { return stopAt; }
 
     public BannerFrequency getFrequency() { return frequency; }
 
     public Date getCreatedAt() { return createdAt; }
+
+	public void setScheduled() { scheduled = true; }
+
+	public boolean isScheduled() { return scheduled; }
 
     public static Banner create(JSONObject json) throws JSONException {
         Banner banner = new Banner();
@@ -74,7 +90,7 @@ public class Banner {
         banner.blocks = new LinkedList<>();
 
         JSONArray blockArray = json.getJSONArray("blocks");
-        for(int i = 0; i < blockArray.length(); ++i) {
+        for (int i = 0; i < blockArray.length(); ++i) {
             banner.blocks.add(BannerBlock.create(blockArray.getJSONObject(i)));
         }
 
@@ -90,6 +106,14 @@ public class Banner {
         banner.dismissType = BannerDismissType.fromString(json.getString("dismissType"));
         banner.dismissTimeout = json.getInt("dismissTimeout");
         banner.stopAtType = BannerStopAtType.fromString(json.getString("stopAtType"));
+
+		banner.triggerType = BannerTriggerType.fromString(json.getString("triggerType"));
+
+		banner.triggers = new LinkedList<>();
+		JSONArray triggersArray = json.getJSONArray("triggers");
+		for (int i = 0; i < triggersArray.length(); ++i) {
+			banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
+		}
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);

@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.8.0 ==
+* New App Banners
+
 == 1.7.5 ==
 * Added `externalId` to ChannelTopics
 

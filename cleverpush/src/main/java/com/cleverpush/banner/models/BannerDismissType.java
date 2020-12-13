@@ -9,7 +9,7 @@ public enum BannerDismissType {
 
     private static Map<String, BannerDismissType> mapDismissType = new HashMap<>();
     static {
-        mapDismissType.put("til_dismissed", BannerDismissType.TillDismissed);
+        mapDismissType.put("till_dismissed", BannerDismissType.TillDismissed);
         mapDismissType.put("timeout", BannerDismissType.Timeout);
     }
 

@@ -31,6 +31,7 @@ import com.cleverpush.banner.models.blocks.BannerButtonBlock;
 import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
 import com.cleverpush.banner.tasks.DownloadImageTask;
+import com.cleverpush.listener.AppBannerOpenedListener;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +60,13 @@ public class AppBannerPopup {
     private PopupWindow popup;
     private View popupRoot;
 
+    private AppBannerOpenedListener openedListener;
+
     private boolean isInitialized = false;
+
+    public void setOpenedListener(AppBannerOpenedListener openedListener) {
+    	this.openedListener = openedListener;
+	}
 
     private boolean isRootReady() {
         return activity.getWindow().getDecorView().isShown();
@@ -93,14 +100,14 @@ public class AppBannerPopup {
     }
 
     public void init() {
-        if(isInitialized) { return; }
+        if (isInitialized) { return; }
 
         popupRoot = createLayout();
         LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
 
         composeBackground(body);
 
-        for(BannerBlock bannerBlock: data.getBlocks()) {
+        for (BannerBlock bannerBlock : data.getBlocks()) {
             switch (bannerBlock.getType()) {
                 case Text:
                     composeTextBlock(body, (BannerTextBlock)bannerBlock);
@@ -167,7 +174,7 @@ public class AppBannerPopup {
         GradientDrawable drawableBG = new GradientDrawable();
         drawableBG.setShape(GradientDrawable.RECTANGLE);
         drawableBG.setCornerRadius(10 * getPXScale());
-        drawableBG.setColor(Color.parseColor(bg.getColor()));
+        drawableBG.setColor(this.parseColor(bg.getColor()));
 
         body.setBackground(drawableBG);
     }
@@ -176,36 +183,41 @@ public class AppBannerPopup {
         Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
         button.setText(block.getText());
         button.setTextSize(TypedValue.COMPLEX_UNIT_PX, block.getSize() * getFontScale());
-        button.setTextColor(Color.parseColor(block.getColor()));
-
+        button.setTextColor(this.parseColor(block.getColor()));
         Integer alignment = alignmentMap.get(block.getAlignment());
         button.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
 
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.RECTANGLE);
         bg.setCornerRadius(block.getRadius() * getPXScale());
-        bg.setColor(Color.parseColor(block.getBackground()));
+        bg.setColor(this.parseColor(block.getBackground()));
         button.setBackground(bg);
 
-        if(block.dismissOnClick()) {
-            button.setOnClickListener(view -> dismiss());
-            button.setOnTouchListener((view, motionEvent) -> {
-                int action = motionEvent.getAction();
-                if (action == MotionEvent.ACTION_DOWN) {
-                    view.animate().cancel();
-                    view.animate().scaleX(0.98f).setDuration(200).start();
-                    view.animate().scaleY(0.98f).setDuration(200).start();
-                    return false;
-                } else if (action == MotionEvent.ACTION_UP) {
-                    view.animate().cancel();
-                    view.animate().scaleX(1f).setDuration(200).start();
-                    view.animate().scaleY(1f).setDuration(200).start();
-                    return false;
-                }
+		button.setOnClickListener(view -> {
+			if (block.getAction().getDismiss()) {
+				dismiss();
+			}
 
-                return false;
-            });
-        }
+			if (this.openedListener != null) {
+				this.openedListener.opened((block.getAction()));
+			}
+		});
+		button.setOnTouchListener((view, motionEvent) -> {
+			int action = motionEvent.getAction();
+			if (action == MotionEvent.ACTION_DOWN) {
+				view.animate().cancel();
+				view.animate().scaleX(0.98f).setDuration(200).start();
+				view.animate().scaleY(0.98f).setDuration(200).start();
+				return false;
+			} else if (action == MotionEvent.ACTION_UP) {
+				view.animate().cancel();
+				view.animate().scaleX(1f).setDuration(200).start();
+				view.animate().scaleY(1f).setDuration(200).start();
+				return false;
+			}
+
+			return false;
+		});
 
         body.addView(button);
     }
@@ -214,7 +226,7 @@ public class AppBannerPopup {
         TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
         textView.setText(block.getText());
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, block.getSize() * getFontScale());
-        textView.setTextColor(Color.parseColor(block.getColor()));
+        textView.setTextColor(this.parseColor(block.getColor()));
 
         Integer alignment = alignmentMap.get(block.getAlignment());
         textView.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
@@ -257,4 +269,17 @@ public class AppBannerPopup {
             mainHandler.postDelayed(runnable, delay);
         }
     }
+
+    private int parseColor(String colorStr) {
+		if (colorStr.charAt(0) == '#' && colorStr.length() == 4) {
+			colorStr = "#" + colorStr.charAt(1) + colorStr.charAt(1) + colorStr.charAt(2) + colorStr.charAt(2) + colorStr.charAt(3) + colorStr.charAt(3);
+		}
+		int color = Color.BLACK;
+		try {
+			color = Color.parseColor(colorStr);
+		} catch (Exception ex) {
+
+		}
+		return color;
+	}
 }

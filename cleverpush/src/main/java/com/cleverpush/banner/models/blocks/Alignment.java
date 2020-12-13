@@ -16,7 +16,7 @@ public enum Alignment {
     }
 
     public static Alignment fromString(String raw) {
-        if(mapAlignment.containsKey(raw)) {
+        if (mapAlignment.containsKey(raw)) {
             return mapAlignment.get(raw);
         } else {
             throw new IllegalArgumentException("Unknown alignment: " + raw);

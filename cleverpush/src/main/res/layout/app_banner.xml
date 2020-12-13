@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_alignWithParentIfMissing="false"
-    android:background="@color/bannerBackground">
+    android:layout_alignWithParentIfMissing="false">
 
     <LinearLayout
         android:id="@+id/bannerBody"
@@ -13,7 +12,8 @@
         style="@style/banner_body"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_layout"
+        android:background="@drawable/cp_appbanner_layout"
+		android:elevation="4dp"
         android:clickable="true"
         android:orientation="vertical"
         android:paddingLeft="10dp"
