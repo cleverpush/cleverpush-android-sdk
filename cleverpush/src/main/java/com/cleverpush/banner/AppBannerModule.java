@@ -3,7 +3,6 @@ package com.cleverpush.banner;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.nfc.Tag;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.preference.PreferenceManager;
@@ -330,7 +329,6 @@ public class AppBannerModule {
     		for (Banner banner : banners) {
     			if (banner.getId().equals(bannerId)) {
     				AppBannerPopup popup = new AppBannerPopup(activity, banner);
-					popups.add(popup);
 					handler.post(() -> showBanner(popup));
     				break;
 				}

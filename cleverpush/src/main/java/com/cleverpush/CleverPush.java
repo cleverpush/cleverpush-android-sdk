@@ -72,7 +72,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -425,10 +424,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 			for (Map.Entry<String, String> entry : pendingAppBannerEvents.entrySet()) {
 				appBannerModule.triggerEvent(entry.getKey(), entry.getValue());
 			}
+			pendingAppBannerEvents = null;
 		}
 
 		if (pendingShowAppBannerId != null) {
 			appBannerModule.showBannerById(pendingShowAppBannerId);
+			pendingShowAppBannerId = null;
 		}
 
 		appBannerModule.initSession(channelId);
