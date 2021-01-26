@@ -2,6 +2,8 @@ package com.cleverpush.banner;
 
 import android.app.Activity;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
@@ -30,9 +32,10 @@ import com.cleverpush.banner.models.blocks.BannerBlock;
 import com.cleverpush.banner.models.blocks.BannerButtonBlock;
 import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
-import com.cleverpush.banner.tasks.DownloadImageTask;
 import com.cleverpush.listener.AppBannerOpenedListener;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -245,7 +248,18 @@ public class AppBannerPopup {
         imgConstraints.applyTo(imageLayout);
 
         body.addView(imageLayout);
-        DownloadImageTask.execute(img, block.getImageUrl());
+
+        new Thread(() -> {
+            try {
+                InputStream in = new URL(block.getImageUrl()).openStream();
+                Bitmap bitmap = BitmapFactory.decodeStream(in);
+                if (bitmap != null) {
+                    img.setImageBitmap(bitmap);
+                }
+            } catch (Exception ignored) {
+
+            }
+        }).start();
     }
 
     private void animateBody(float from, float to) {
