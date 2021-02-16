@@ -19,6 +19,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -28,9 +29,11 @@ import android.view.ViewGroup;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.cleverpush.BadgeHelper;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
@@ -323,6 +326,27 @@ public class NotificationService {
     	return Color.parseColor(hexStr);
 	}
 
+	int getRequestId(Context context, Notification notification) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                StatusBarNotification[] activeNotifs = BadgeHelper.getActiveNotifications(context);
+                for (StatusBarNotification activeNotif : activeNotifs) {
+                    if (activeNotif.getTag() != null && notification.getTag() != null && activeNotif.getTag().equals(notification.getTag())) {
+                        return activeNotif.getId();
+                    }
+                }
+            }
+        } catch (Exception ex) {
+
+        }
+
+        if (notification.getCreatedAtTime() > 0) {
+            return notification.getCreatedAtTime();
+        }
+
+        return (int) System.currentTimeMillis();
+    }
+
     int showNotification(Context context, Notification notification, Subscription subscription) {
     	String notificationStr = notification.getRawPayload();
     	String subscriptionStr = subscription.getRawPayload();
@@ -334,16 +358,16 @@ public class NotificationService {
 	}
 
     int sendNotification(Context context, Notification notification, String notificationStr, String subscriptionStr) {
-        int requestId = (int) System.currentTimeMillis();
+        int requestId = getRequestId(context, notification);
         NotificationCompat.Builder notificationBuilder = NotificationService.getInstance().createBasicNotification(context, notificationStr, subscriptionStr, notification, requestId);
         if (notificationBuilder != null) {
-            NotificationManagerCompat.from(context).notify(requestId, notificationBuilder.build());
+            NotificationManagerCompat.from(context).notify(notification.getTag(), requestId, notificationBuilder.build());
         }
         return requestId;
     }
 
     int createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr) {
-        int requestId = (int) System.currentTimeMillis();
+        int requestId = getRequestId(context, message);
         createAndShowCarousel(context, message, notificationStr, subscriptionStr, 0, requestId);
         return requestId;
     }
@@ -360,7 +384,7 @@ public class NotificationService {
 
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
-                manager.notify(requestId, notification);
+                manager.notify(message.getTag(), requestId, notification);
             }
         }
     }

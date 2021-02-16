@@ -5,6 +5,9 @@ import androidx.core.app.NotificationCompat;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 public class Notification implements Serializable {
@@ -47,6 +50,9 @@ public class Notification implements Serializable {
     }
 
     public String getTag() {
+        if (tag == null) {
+            return id;
+        }
         return tag;
     }
 
@@ -105,6 +111,18 @@ public class Notification implements Serializable {
 
     public String getCreatedAt() {
         return createdAt;
+    }
+
+    public int getCreatedAtTime() {
+        if (this.getCreatedAt() != null) {
+            try {
+                Date date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).parse(this.getCreatedAt());
+                return (int) (date.getTime() / 1000);
+            } catch (Exception err) {
+
+            }
+        }
+        return 0;
     }
 
     public NotificationCarouselItem[] getCarouselItems() {

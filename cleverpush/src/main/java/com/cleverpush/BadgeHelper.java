@@ -34,7 +34,7 @@ public class BadgeHelper {
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.M)
-	static StatusBarNotification[] getActiveNotifications(Context context) {
+	public static StatusBarNotification[] getActiveNotifications(Context context) {
 		StatusBarNotification[] statusBarNotifications = new StatusBarNotification[]{};
 		try {
 			statusBarNotifications = getNotificationManager(context).getActiveNotifications();
