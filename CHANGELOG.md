@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.8.1 ==
+* Fixes for App Banner Images
+
 == 1.8.0 ==
 * New App Banners
 
