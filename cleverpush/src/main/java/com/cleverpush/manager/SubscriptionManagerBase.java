@@ -126,7 +126,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             @Override
             public void onSuccess(String response) {
                 try {
-                    System.out.printf("CleverPush: sync response " + response);
+                    Log.d("CleverPush", "sync response: " + response);
 
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.has("id")) {

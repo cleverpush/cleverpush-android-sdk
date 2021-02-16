@@ -80,7 +80,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.8.2";
+    public static final String SDK_VERSION = "1.8.3";
 
     private static CleverPush instance;
 
@@ -273,8 +273,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             boolean channelIdChanged = storedSubscriptionId != null && storedChannelId != null && !this.channelId.equals(storedChannelId);
             if (channelIdChanged) {
 				try {
-					sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
-					sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC).apply();
+					this.clearSubscriptionData();
 				} catch (Throwable t) {
 					Log.e("CleverPush", "Error", t);
 				}
@@ -899,12 +898,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                 Log.e("CleverPush", "Error", e);
             }
 
+            CleverPush self = this;
             CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody, new CleverPushHttpClient.ResponseHandler() {
                 @Override
                 public void onSuccess(String response) {
                     try {
-                        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
-                        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC).apply();
+                        self.clearSubscriptionData();
                     } catch (Throwable t) {
                         Log.e("CleverPush", "Error", t);
                     }
@@ -1948,4 +1947,15 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 	public boolean isDevelopmentModeEnabled() {
     	return this.developmentMode;
 	}
+
+	private void clearSubscriptionData() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
+        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC).apply();
+        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT).apply();
+        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_TOPICS).apply();
+        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION).apply();
+        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
+        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+    }
 }

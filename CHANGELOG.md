@@ -1,5 +1,11 @@
 ## Changelog
 
+== 1.8.3 ==
+* Clear subscription data incl. Topics, Tags and Attributes when changing Channel ID
+
+== 1.8.2 ==
+* Allow automatic automatic replacing of active Notifications in status bar when the same Tag / ID is used.
+
 == 1.8.1 ==
 * Fixes for App Banner Images
 
