@@ -33,22 +33,28 @@ public abstract class NotificationExtenderService extends JobIntentService {
 			return;
 		}
 
-		Notification notification = (Notification) bundle.getSerializable("notification");
-		Subscription subscription = (Subscription) bundle.getSerializable("subscription");
-		if (notification == null || subscription == null) {
-			Log.e("CleverPush", "notification extra is missing in NotificationExtenderService: " + bundle);
-			return;
-		}
-
-		boolean developerProcessed = false;
 		try {
-			developerProcessed = onNotificationProcessing(notification);
-		} catch (Throwable t) {
-			Log.e("CleverPush", "onNotificationProcessing exception", t);
-		}
+			Notification notification = (Notification) bundle.getSerializable("notification");
+			Subscription subscription = (Subscription) bundle.getSerializable("subscription");
 
-		if (!developerProcessed) {
-			NotificationService.getInstance().showNotification(this, notification, subscription);
+			if (notification == null || subscription == null) {
+				Log.e("CleverPush", "notification extra is missing in NotificationExtenderService: " + bundle);
+				return;
+			}
+
+			boolean developerProcessed = false;
+			try {
+				developerProcessed = onNotificationProcessing(notification);
+			} catch (Throwable t) {
+				Log.e("CleverPush", "Exception in NotificationExtenderService: onNotificationProcessing", t);
+			}
+
+			if (!developerProcessed) {
+				NotificationService.getInstance().showNotification(this, notification, subscription);
+			}
+
+		} catch (Exception ex) {
+			Log.e("CleverPush", "Exception in NotificationExtenderService", ex);
 		}
 	}
 

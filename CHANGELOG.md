@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.8.4 ==
+* Add try-catch black inside NotificationExtenderService
+
 == 1.8.3 ==
 * Clear subscription data incl. Topics, Tags and Attributes when changing Channel ID
 
