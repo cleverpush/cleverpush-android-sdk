@@ -91,9 +91,9 @@ public class AppBannerModule {
     }
 
     private void loadBanners() {
-    	String bannersPath = "/channel/" + channel + "/app-banners";
+    	String bannersPath = "/channel/" + channel + "/app-banners?platformName=Android";
 		if (CleverPush.getInstance(activity).isDevelopmentModeEnabled()) {
-			bannersPath += "?t=" + System.currentTimeMillis();
+			bannersPath += "&t=" + System.currentTimeMillis();
 		}
         CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
             @Override

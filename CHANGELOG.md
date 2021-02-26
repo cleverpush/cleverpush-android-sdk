@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.8.5 ==
+* Added platform name to App Banner path to make filtering by platform possible in the backend.
+
 == 1.8.4 ==
 * Add try-catch black inside NotificationExtenderService
 
