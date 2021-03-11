@@ -80,7 +80,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.8.5";
+    public static final String SDK_VERSION = "1.8.6";
 
     private static CleverPush instance;
 

@@ -53,6 +53,9 @@ public class NotificationCategory implements Serializable {
     }
 
     public Boolean getSoundEnabled() {
+		if (soundEnabled == null) {
+			return false;
+		}
         return soundEnabled;
     }
 
@@ -61,6 +64,9 @@ public class NotificationCategory implements Serializable {
 	}
 
 	public Boolean getVibrationEnabled() {
+		if (vibrationEnabled == null) {
+			return false;
+		}
 		return vibrationEnabled;
 	}
 
@@ -69,6 +75,9 @@ public class NotificationCategory implements Serializable {
 	}
 
 	public Boolean getLedColorEnabled() {
+    	if (ledColorEnabled == null) {
+    		return false;
+		}
 		return ledColorEnabled;
 	}
 
@@ -85,6 +94,9 @@ public class NotificationCategory implements Serializable {
 	}
 
 	public Boolean getBadgesEnabled() {
+		if (badgesEnabled == null) {
+			return false;
+		}
 		return badgesEnabled;
 	}
 
