@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.8.7 ==
+* Use AlertDialog from AndroidX
+
 == 1.8.6 ==
 * Fixed Exception in NotificationCategory class
 
