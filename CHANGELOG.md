@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.8.9
+* Fixed Notification colors
+
 == 1.8.8 ==
 * Added ability to specify a Theme ID (`R.style.Theme_…`) for the Topics Dialog
 

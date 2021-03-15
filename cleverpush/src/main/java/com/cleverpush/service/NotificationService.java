@@ -29,7 +29,6 @@ import android.view.ViewGroup;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -208,23 +207,13 @@ public class NotificationService {
 
 				notificationBuilder = new NotificationCompat.Builder(context, category.getId());
 
-				String backgroundColor = category.getBackgroundColor();
-				if (backgroundColor != null) {
-					int parsedBackgroundColor = parseColor(backgroundColor);
-					if (parsedBackgroundColor != 0) {
-						notificationBuilder.setPriority(NotificationCompat.PRIORITY_HIGH).setColorized(true).setColor(Color.RED);
-					}
-				}
-
-				/*
 				String foregroundColor = category.getForegroundColor();
 				if (foregroundColor != null) {
 					int parsedForegroundColor = parseColor(foregroundColor);
-					if (parsedForegroundColor > 0) {
-						notificationBuilder.setColorized(true).setColor(parsedForegroundColor);
+					if (parsedForegroundColor != 0) {
+						notificationBuilder.setColor(parsedForegroundColor);
 					}
 				}
-				 */
 
             } else {
                 int importance = NotificationManager.IMPORTANCE_DEFAULT;
@@ -319,7 +308,7 @@ public class NotificationService {
 			}
 		}
 
-    	if (hexStr.charAt(0) != '#') {
+    	if (!hexStr.startsWith("#")) {
 			hexStr = "#" + hexStr;
 		}
 
