@@ -20,6 +20,7 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -80,7 +81,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.8.7";
+    public static final String SDK_VERSION = "1.8.8";
 
     private static CleverPush instance;
 
@@ -1672,7 +1673,15 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         showTopicsDialog(dialogActivity, null);
     }
 
-    public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener) {
+	public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener) {
+		try {
+			showTopicsDialog(dialogActivity, topicsDialogListener, 0);
+		} catch (IllegalStateException ex) {
+			showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Light_Dialog_Alert);
+		}
+	}
+
+    public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener, @StyleRes int themeResId) {
         CleverPush instance = this;
         this.getChannelConfig(channelConfig -> {
             if (channelConfig == null) {
@@ -1691,7 +1700,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                 ((Activity) dialogActivity).runOnUiThread(() -> {
                     Log.d("CleverPush", "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
 
-                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity);
+                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity, themeResId);
 
                     String headerTitle = CleverPush.context.getResources().getString(R.string.topics_dialog_title);
                     if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
