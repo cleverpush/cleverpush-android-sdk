@@ -1,5 +1,11 @@
 ## Changelog
 
+== 1.8.11 ==
+* Custom Data support for Topics
+
+== 1.8.10 ==
+* Fixed translation
+
 == 1.8.9
 * Fixed Notification colors
 

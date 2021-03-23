@@ -81,7 +81,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.8.10";
+    public static final String SDK_VERSION = "1.8.11";
 
     private static CleverPush instance;
 
@@ -1298,13 +1298,22 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                     for (int i = 0; i < topicsArray.length(); i++) {
                         JSONObject topicObject = topicsArray.getJSONObject(i);
                         if (topicObject != null) {
+                        	Map<String, String> customData = null;
+							try {
+								JSONObject customDataObject = topicObject.optJSONObject("customData");
+								if (customDataObject != null) {
+									customData = new Gson().fromJson(customDataObject.toString(), HashMap.class);
+								}
+							} catch (Exception ignored) {}
+
                             ChannelTopic topic = new ChannelTopic(
                                 topicObject.getString("_id"),
                                 topicObject.optString("name"),
                                 topicObject.optString("parentTopic", null),
                                 topicObject.optBoolean("defaultUnchecked", false),
                                 topicObject.optString("fcmBroadcastTopic", null),
-								topicObject.optString("externalId", null)
+								topicObject.optString("externalId", null),
+								customData
                             );
                             topics.add(topic);
                         }
