@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.8.12 ==
+* Allow notifications with empty titles
+
 == 1.8.11 ==
 * Custom Data support for Topics
 

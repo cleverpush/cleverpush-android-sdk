@@ -127,11 +127,6 @@ public class NotificationService {
         String iconUrl = notification.getIconUrl();
         String mediaUrl = notification.getMediaUrl();
 
-        if (title == null) {
-            Log.e("CleverPush", "Notification title is empty");
-            return null;
-        }
-
         Intent targetIntent = new Intent(context, notificationOpenedClass);
         if (!isBroadcast) {
             targetIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
