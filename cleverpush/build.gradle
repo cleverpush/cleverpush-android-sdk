@@ -42,9 +42,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
 
     // Google & Firebase
-    implementation 'com.google.android.gms:play-services-base:[10.2.1, 17.2.99]'
-    implementation 'com.google.android.gms:play-services-location:[16.0.0, 17.0.99]'
-    api 'com.google.firebase:firebase-messaging:[10.2.1, 20.1.99]'
+    implementation 'com.google.android.gms:play-services-base:17.6.0'
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
+    api 'com.google.firebase:firebase-messaging:21.0.1'
 
     // Huawei
     compileOnly 'com.huawei.hms:push:4.0.3.301'
