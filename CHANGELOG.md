@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.9.0
+* Added extra null check for subscription_id (#4)
+
 == 1.8.12 ==
 * Allow notifications with empty titles
 
