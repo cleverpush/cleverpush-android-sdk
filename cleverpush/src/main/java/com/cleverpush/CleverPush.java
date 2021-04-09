@@ -1055,7 +1055,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     public void fireSubscribedListener(final String subscriptionId) {
-        if (subscribedListener == null) {
+        if (subscribedListener == null ||  subscriptionId == null) {
             return;
         }
         subscribedListener.subscribed(subscriptionId);
