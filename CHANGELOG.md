@@ -1,6 +1,9 @@
 ## Changelog
 
-== 1.9.0
+== 1.9.1 ==
+* Resolved a race condition where the NotificationOpenedHandler might yield the wrong notification for multiple notification received at the exact same time.
+
+== 1.9.0 ==
 * Added extra null check for subscription_id (#4)
 
 == 1.8.12 ==
