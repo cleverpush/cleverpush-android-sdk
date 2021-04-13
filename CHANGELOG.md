@@ -1,5 +1,9 @@
 ## Changelog
 
+== 1.10.0
+* Provide new methods for tracking deliveries and clicks when using the `NotificationExtenderService` with own Notifications
+* Updated to latest Firebase dependencies
+
 == 1.9.1 ==
 * Resolved a race condition where the NotificationOpenedHandler might yield the wrong notification for multiple notification received at the exact same time.
 

@@ -58,6 +58,8 @@ public abstract class NotificationExtenderService extends JobIntentService {
 		}
 	}
 
+
+
 	static Intent getIntent(Context context) {
 		PackageManager packageManager = context.getPackageManager();
 		Intent intent = new Intent().setAction("com.cleverpush.service.NotificationExtender").setPackage(context.getPackageName());

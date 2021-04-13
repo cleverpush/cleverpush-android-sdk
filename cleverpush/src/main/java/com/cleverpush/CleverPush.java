@@ -81,7 +81,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.9.1";
+    public static final String SDK_VERSION = "1.10.0";
 
     private static CleverPush instance;
 
@@ -1604,6 +1604,38 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             }
         });
     }
+
+	public void trackNotificationDelivered(String notificationId) {
+		this.getSubscriptionId(subscriptionId -> this.trackNotificationDelivered(notificationId, subscriptionId));
+	}
+
+	public void trackNotificationDelivered(String notificationId, String subscriptionId) {
+		JSONObject jsonBody = new JSONObject();
+		try {
+			jsonBody.put("notificationId", notificationId);
+			jsonBody.put("subscriptionId", subscriptionId);
+		} catch (JSONException e) {
+			Log.e("CleverPush", "Error generating delivered json", e);
+		}
+
+		CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
+	}
+
+	public void trackNotificationClicked(String notificationId) {
+    	this.getSubscriptionId(subscriptionId -> this.trackNotificationClicked(notificationId, subscriptionId));
+	}
+
+    public void trackNotificationClicked(String notificationId, String subscriptionId) {
+		JSONObject jsonBody = new JSONObject();
+		try {
+			jsonBody.put("notificationId", notificationId);
+			jsonBody.put("subscriptionId", subscriptionId);
+		} catch (JSONException e) {
+			Log.e("CleverPush", "Error generating clicked json", e);
+		}
+
+		CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
+	}
 
 	public void triggerAppBannerEvent(String key, String value) {
     	if (this.appBannerModule == null) {

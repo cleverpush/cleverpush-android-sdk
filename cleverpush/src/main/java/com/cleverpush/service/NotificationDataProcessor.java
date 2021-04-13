@@ -74,15 +74,7 @@ public class NotificationDataProcessor {
 			NotificationService.getInstance().showNotification(context, notification, subscription);
         }
 
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("notificationId", notificationId);
-            jsonBody.put("subscriptionId", subscriptionId);
-        } catch (JSONException e) {
-            Log.e("CleverPush", "Error generating delivered json", e);
-        }
-
-        CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
+        cleverPush.trackNotificationDelivered(notificationId, subscriptionId);
 
         try {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
