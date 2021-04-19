@@ -6,11 +6,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Handler;
+import android.util.Base64;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -18,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.dynamicanimation.animation.DynamicAnimation;
@@ -40,6 +45,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AppBannerPopup {
+    private static final String CONTENT_TYPE_BLOCKS = "block";
+    private static final String CONTENT_TYPE_HTML = "html";
+
     private static SpringForce getDefaultForce(float finalValue) {
         SpringForce force = new SpringForce(finalValue);
         force.setDampingRatio(SpringForce.DAMPING_RATIO_LOW_BOUNCY);
@@ -109,21 +117,26 @@ public class AppBannerPopup {
         LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
 
         composeBackground(body);
-
-        for (BannerBlock bannerBlock : data.getBlocks()) {
-            switch (bannerBlock.getType()) {
-                case Text:
-                    composeTextBlock(body, (BannerTextBlock)bannerBlock);
-                    break;
-                case Image:
-                    composeImageBlock(body, (BannerImageBlock)bannerBlock);
-                    break;
-                case Button:
-                    composeButtonBlock(body, (BannerButtonBlock)bannerBlock);
-                    break;
-                default:
-                    throw new RuntimeException("Not implemented");
+        if (data.getContentType().equalsIgnoreCase(CONTENT_TYPE_BLOCKS)) {
+            for (BannerBlock bannerBlock : data.getBlocks()) {
+                switch (bannerBlock.getType()) {
+                    case Text:
+                        composeTextBlock(body, (BannerTextBlock) bannerBlock);
+                        break;
+                    case Image:
+                        composeImageBlock(body, (BannerImageBlock) bannerBlock);
+                        break;
+                    case Button:
+                        composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
+                        break;
+                    default:
+                        throw new RuntimeException("Not implemented");
+                }
             }
+        } else if (data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+            composeHtmlBanner(body, data.getContent());
+        } else {
+            throw new RuntimeException("Not implemented");
         }
 
         popup = new PopupWindow(
@@ -261,7 +274,27 @@ public class AppBannerPopup {
             }
         }).start();
     }
-
+    /**
+     * Will compose and add HTML Banner to the body of banner layout.
+     * @author Hardik Lakum
+     * @version 1.0
+     * @param  body  parent layout to add HTML view
+     * @param  htmlContent html content which will be displayed in banner
+     */
+    private void composeHtmlBanner(LinearLayout body, String htmlContent) {
+        activity.runOnUiThread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void run() {
+                ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
+                WebView webView = webLayout.findViewById(R.id.webView);
+                webView.getSettings().setJavaScriptEnabled(true);
+                String encodedHtml = Base64.encodeToString(htmlContent.getBytes(), Base64.CRLF);
+                webView.loadData(encodedHtml , "text/html", "base64");
+                body.addView(webLayout);
+            }
+        });
+    }
     private void animateBody(float from, float to) {
         View bannerBody = popup.getContentView().findViewById(R.id.bannerBody);
         bannerBody.setTranslationY(from);

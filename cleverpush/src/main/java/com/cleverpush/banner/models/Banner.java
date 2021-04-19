@@ -36,6 +36,8 @@ public class Banner {
     private Date createdAt;
     private int delaySeconds;
     private boolean scheduled;
+    private String content;
+    private String contentType ;
 
     private Banner() {}
 
@@ -79,6 +81,22 @@ public class Banner {
 
 	public boolean isScheduled() { return scheduled; }
 
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
     public static Banner create(JSONObject json) throws JSONException {
         Banner banner = new Banner();
 
@@ -88,6 +106,8 @@ public class Banner {
         banner.type = BannerType.fromString(json.getString("type"));
         banner.status = BannerStatus.fromString(json.getString("status"));
         banner.blocks = new LinkedList<>();
+        banner.content =json.getString("content");
+        banner.contentType =json.getString("contentType");
 
         JSONArray blockArray = json.getJSONArray("blocks");
         for (int i = 0; i < blockArray.length(); ++i) {
