@@ -39,6 +39,8 @@ public class Notification implements Serializable {
     NotificationCategory category;
     @SerializedName("soundFilename")
     String soundFilename;
+	@SerializedName("silent")
+	Boolean silent;
     @SerializedName("createdAt")
     String createdAt;
 
@@ -166,6 +168,10 @@ public class Notification implements Serializable {
 
         return index;
     }
+
+	public Boolean isSilent() {
+		return silent != null && silent;
+	}
 
     public NotificationCompat.Extender getExtender() {
     	return extender;

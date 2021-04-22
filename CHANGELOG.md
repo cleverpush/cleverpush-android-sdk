@@ -1,6 +1,9 @@
 ## Changelog
 
-== 1.10.0
+== 1.11.0 ==
+* Added support for silent push notifications
+
+== 1.10.0 ==
 * Provide new methods for tracking deliveries and clicks when using the `NotificationExtenderService` with own Notifications
 * Updated to latest Firebase dependencies
 
