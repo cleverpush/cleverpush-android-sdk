@@ -1733,83 +1733,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 					parentLayout.setLayoutParams(parentLayoutParams);
 					parentLayout.setOrientation(LinearLayout.VERTICAL);
 
-					try {
-						Set<String> selectedTopics = instance.getSubscriptionTopics();
-						for (int i = 0; i < channelTopics.length(); i++) {
-							final int parentIndex = i;
-							JSONObject topic = channelTopics.getJSONObject(i);
-							if (topic != null) {
-								boolean defaultUnchecked = false;
-								try {
-									defaultUnchecked = topic.optBoolean("defaultUnchecked");
-								} catch (Exception ignored) {}
-								String id = topic.getString("_id");
-								topicIds[i] = id;
+                    CheckBox checkboxDeSelectAll = new CheckBox(CleverPush.context);
+                    checkboxDeSelectAll.setText(context.getText(R.string.deselect_all));
 
-								CheckBox checkbox = new CheckBox(CleverPush.context);
-								checkbox.setText(topic.optString("name"));
-								checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
-
-								if (topic.has("parentTopic") && topic.optString("parentTopic").length() > 0) {
-									continue;
-								}
-
-								parentLayout.addView(checkbox);
-
-								int addedChildren = 0;
-								final LinearLayout childLayout = new LinearLayout(context);
-								for (int j = 0; j < channelTopics.length(); j++) {
-									final int childIndex = j;
-									JSONObject childTopic = channelTopics.getJSONObject(j);
-									if (childTopic != null && childTopic.optString("parentTopic").equals(id)) {
-										String childId = childTopic.getString("_id");
-										boolean childDefaultUnchecked = false;
-										try {
-											childDefaultUnchecked = topic.optBoolean("defaultUnchecked");
-										} catch (Exception ignored) {}
-
-										addedChildren++;
-
-										LinearLayout.LayoutParams childLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-										childLayoutParams.setMargins(65, 0, 0, 20);
-										childLayout.setLayoutParams(childLayoutParams);
-										childLayout.setOrientation(LinearLayout.VERTICAL);
-
-										CheckBox checkboxChild = new CheckBox(CleverPush.context);
-										checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
-											checkedTopics[childIndex] = isChecked;
-										});
-										checkedTopics[childIndex] = checkbox.isChecked();
-
-										checkboxChild.setText(childTopic.optString("name"));
-										checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
-
-										childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
-
-										childLayout.addView(checkboxChild);
-									}
-								}
-
-								checkedTopics[parentIndex] = checkbox.isChecked();
-								final boolean hasChildren = addedChildren > 0;
-								checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-									checkedTopics[parentIndex] = isChecked;
-									if (hasChildren) {
-										childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-									}
-								});
-
-								if (addedChildren > 0) {
-									parentLayout.addView(childLayout);
-								}
-
-							} else {
-								Log.e("CleverPush", "topic is null");
-							}
-						}
-					} catch (JSONException e) {
-						Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
-					}
+                    setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false,channelConfig.optBoolean("topicsDialogShowUnsubscribe"));
 
 					checkboxLayout.addView(parentLayout);
 
@@ -1845,6 +1772,124 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                 Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
             }
         });
+    }
+
+    /**
+     * Will create list of checkbox for the topics.
+     * @author Hardik Lakum
+     * @version 1.0
+     * @param  parentLayout  parent layout to add checkboxes
+     * @param  checkboxDeSelectAll checkBox to deselect all the topis
+     * @param  channelTopics topics from the channel
+     * @param  checkedTopics userSelectedTopics
+     * @param  isDeselectAll is deselectall checkbox is checked or not
+     * @param  isShowUnsubscribe should display deselectall checkbox or not
+     */
+    private void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean isDeselectAll,boolean isShowUnsubscribe ) {
+        try {
+            parentLayout.removeAllViews();
+            Set<String> selectedTopics = instance.getSubscriptionTopics();
+
+            if(isShowUnsubscribe){
+                checkboxDeSelectAll.setChecked(isDeselectAll);
+                parentLayout.addView(checkboxDeSelectAll);
+                checkboxDeSelectAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if (isChecked) {
+                        for (int i = 0; i < channelTopics.length(); i++) {
+                            try {
+                                JSONObject channelTopic = (JSONObject) channelTopics.get(i);
+                                channelTopic.put("defaultUnchecked", true);
+                                selectedTopics.clear();
+                                checkedTopics[i] = false;
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true,isShowUnsubscribe);
+                    }
+                });
+            }
+
+            for (int i = 0; i < channelTopics.length(); i++) {
+                final int parentIndex = i;
+                JSONObject topic = channelTopics.getJSONObject(i);
+                if (topic != null) {
+                    boolean defaultUnchecked = false;
+                    try {
+                        defaultUnchecked = topic.optBoolean("defaultUnchecked");
+                    } catch (Exception ignored) {
+                    }
+                    String id = topic.getString("_id");
+                    topicIds[i] = id;
+
+                    CheckBox checkbox = new CheckBox(CleverPush.context);
+                    checkbox.setText(topic.optString("name"));
+                    checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
+
+                    if (topic.has("parentTopic") && topic.optString("parentTopic").length() > 0) {
+                        continue;
+                    }
+
+                    parentLayout.addView(checkbox);
+
+                    int addedChildren = 0;
+                    final LinearLayout childLayout = new LinearLayout(context);
+                    for (int j = 0; j < channelTopics.length(); j++) {
+                        final int childIndex = j;
+                        JSONObject childTopic = channelTopics.getJSONObject(j);
+                        if (childTopic != null && childTopic.optString("parentTopic").equals(id)) {
+                            String childId = childTopic.getString("_id");
+                            boolean childDefaultUnchecked = false;
+                            try {
+                                childDefaultUnchecked = topic.optBoolean("defaultUnchecked");
+                            } catch (Exception ignored) {
+                            }
+
+                            addedChildren++;
+
+                            LinearLayout.LayoutParams childLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                            childLayoutParams.setMargins(65, 0, 0, 20);
+                            childLayout.setLayoutParams(childLayoutParams);
+                            childLayout.setOrientation(LinearLayout.VERTICAL);
+
+                            CheckBox checkboxChild = new CheckBox(CleverPush.context);
+                            checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                                checkedTopics[childIndex] = isChecked;
+                                checkboxDeSelectAll.setChecked(false);
+                            });
+                            checkedTopics[childIndex] = checkbox.isChecked();
+
+                            checkboxChild.setText(childTopic.optString("name"));
+                            checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
+
+                            childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
+
+                            childLayout.addView(checkboxChild);
+                        }
+                    }
+
+                    checkedTopics[parentIndex] = checkbox.isChecked();
+                    final boolean hasChildren = addedChildren > 0;
+                    checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                        checkboxDeSelectAll.setChecked(false);
+                        checkedTopics[parentIndex] = isChecked;
+                        if (hasChildren) {
+                            childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                        }
+                    });
+
+                    if (addedChildren > 0) {
+                        parentLayout.addView(childLayout);
+                    }
+
+                } else {
+                    Log.e("CleverPush", "topic is null");
+                }
+            }
+        } catch (JSONException e) {
+            Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
+        }
+
     }
 
     public void setApiEndpoint(String apiEndpoint) {
