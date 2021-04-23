@@ -9,14 +9,10 @@ import android.util.Log;
 
 import com.cleverpush.BadgeHelper;
 import com.cleverpush.CleverPush;
-import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.Subscription;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -64,6 +60,11 @@ public class NotificationDataProcessor {
         } catch (Exception e) {
             Log.e("CleverPush", "Error checking if application is in foreground", e);
         }
+
+		// do not show silent notifications
+		if (notification.isSilent()) {
+			dontShowNotification = true;
+		}
 
         boolean hasExtenderService = startExtenderService(context, notification, subscription);
         if (hasExtenderService) {

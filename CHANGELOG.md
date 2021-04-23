@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.11.1 ==
+* Optimized silent notifications
+
 == 1.11.0 ==
 * Added support for silent push notifications
 

@@ -49,7 +49,7 @@ public abstract class NotificationExtenderService extends JobIntentService {
 				Log.e("CleverPush", "Exception in NotificationExtenderService: onNotificationProcessing", t);
 			}
 
-			if (!developerProcessed) {
+			if (!developerProcessed && !notification.isSilent()) {
 				NotificationService.getInstance().showNotification(this, notification, subscription);
 			}
 
