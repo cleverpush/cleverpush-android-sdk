@@ -14,6 +14,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -277,19 +278,57 @@ public class AppBannerPopup {
     /**
      * Will compose and add HTML Banner to the body of banner layout.
      * @author Hardik Lakum
-     * @version 1.0
+     * @version 1.1
      * @param  body  parent layout to add HTML view
      * @param  htmlContent html content which will be displayed in banner
      */
-    private void composeHtmlBanner(LinearLayout body, String htmlContent) {
+    private void composeHtmlBanner(LinearLayout body,  String htmlContent) {
         activity.runOnUiThread(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
+                if(htmlContent.endsWith("</body></html>")){
+                    htmlContent.replace("</body></html>","");
+                }
+                String htmlWithJAVAScript=htmlContent.concat("<script type=\"text/javascript\">\n" +
+                        "\t// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" +
+                        "\tconst keyword = 'close';\n" +
+                        "\tconst closeTagsIDAtStart = document.querySelectorAll(`[id^=\"${keyword}\"]`);\n" +
+                        "\tconst closeTagsIDAtEnd = document.querySelectorAll(`[id$=\"${keyword}\"]`);\n" +
+                        "\tconst closeTagsClassAtStart = document.querySelectorAll(`[class^=\"${keyword}\"]`);\n" +
+                        "\tconst closeTagsClassAtEnd = document.querySelectorAll(`[class$=\"${keyword}\"]`);\n" +
+                        "\tfunction onCloseClick() {\n" +
+                        "\t\ttry {\n" +
+                        "\t\t\thtmlBannerInterface.close();\n" +
+                        "\t\t} catch (error) {\n" +
+                        "\t\t\tconsole.log('Caught error on closeBTN click', error);\n" +
+                        "\t\t}\n" +
+                        "\t}\n" +
+                        "\tcloseTagsIDAtStart.forEach(function(item) {\n" +
+                        "\t\tconsole.log('atStart',item)\n" +
+                        "\t\titem.addEventListener('click',onCloseClick);\n" +
+                        "\t})\n" +
+                        "\tcloseTagsIDAtEnd.forEach(function(item) {\n" +
+                        "\t\tconsole.log('atEnd',item)\n" +
+                        "\t\titem.addEventListener('click',onCloseClick);\n" +
+                        "\t})\n" +
+                        "\tcloseTagsClassAtStart.forEach(function(item) {\n" +
+                        "\t\tconsole.log('atEnd',item)\n" +
+                        "\t\titem.addEventListener('click',onCloseClick);\n" +
+                        "\t})\n" +
+                        "\tcloseTagsClassAtEnd.forEach(function(item) {\n" +
+                        "\t\tconsole.log('atEnd',item)\n" +
+                        "\t\titem.addEventListener('click',onCloseClick);\n" +
+                        "\t})\n" +
+                        "</script\n" +
+                        "\n" +
+                        "</body>\n" +
+                        "</html>");
                 ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
                 WebView webView = webLayout.findViewById(R.id.webView);
                 webView.getSettings().setJavaScriptEnabled(true);
-                String encodedHtml = Base64.encodeToString(htmlContent.getBytes(), Base64.CRLF);
+                webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
+                String encodedHtml = Base64.encodeToString(htmlWithJAVAScript.getBytes(), Base64.CRLF);
                 webView.loadData(encodedHtml , "text/html", "base64");
                 body.addView(webLayout);
             }
@@ -329,4 +368,16 @@ public class AppBannerPopup {
 		}
 		return color;
 	}
+
+    /**
+     * Will provide javascript bridge to perform close button click in HTML.
+     * @author Hardik Lakum
+     * @version 1.0
+     */
+    public class HtmlBannerJavascriptInterface {
+        @JavascriptInterface
+        public void close() {
+            dismiss();
+        }
+    }
 }
