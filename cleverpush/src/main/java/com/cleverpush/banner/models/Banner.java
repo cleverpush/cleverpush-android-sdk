@@ -29,55 +29,114 @@ public class Banner {
     private BannerDismissType dismissType;
     private int dismissTimeout;
     private BannerStopAtType stopAtType;
-	private BannerTriggerType triggerType;
-	private List<BannerTrigger> triggers;
+    private BannerTriggerType triggerType;
+    private List<BannerTrigger> triggers;
     private Date stopAt;
     private BannerFrequency frequency;
     private Date createdAt;
     private int delaySeconds;
     private boolean scheduled;
+    private String content;
+    private String contentType;
 
-    private Banner() {}
+    private Banner() {
+    }
 
-    public String getId() { return id; }
+    public String getId() {
+        return id;
+    }
 
-    public String getChannel() { return channel; }
+    public String getChannel() {
+        return channel;
+    }
 
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
-    public BannerType getType() { return type; }
+    public BannerType getType() {
+        return type;
+    }
 
-    public BannerStatus getStatus() { return status; }
+    public BannerStatus getStatus() {
+        return status;
+    }
 
-    public List<BannerBlock> getBlocks() { return blocks; }
+    public List<BannerBlock> getBlocks() {
+        return blocks;
+    }
 
-    public BannerBackground getBackground() { return background; }
+    public BannerBackground getBackground() {
+        return background;
+    }
 
-    public Date getStartAt() { return startAt; }
+    public Date getStartAt() {
+        return startAt;
+    }
 
-    public BannerDismissType getDismissType() { return dismissType; }
+    public BannerDismissType getDismissType() {
+        return dismissType;
+    }
 
-    public int getDismissTimeout() { return dismissTimeout; }
+    public int getDismissTimeout() {
+        return dismissTimeout;
+    }
 
-	public int getDelaySeconds() { return delaySeconds; }
+    public int getDelaySeconds() {
+        return delaySeconds;
+    }
 
-	public void setDelaySeconds(int delaySeconds) { this.delaySeconds = delaySeconds; }
+    public void setDelaySeconds(int delaySeconds) {
+        this.delaySeconds = delaySeconds;
+    }
 
-    public BannerStopAtType getStopAtType() { return stopAtType; }
+    public BannerStopAtType getStopAtType() {
+        return stopAtType;
+    }
 
-	public BannerTriggerType getTriggerType() { return triggerType; }
+    public BannerTriggerType getTriggerType() {
+        return triggerType;
+    }
 
-	public List<BannerTrigger> getTriggers() { return triggers; }
+    public List<BannerTrigger> getTriggers() {
+        return triggers;
+    }
 
-    public Date getStopAt() { return stopAt; }
+    public Date getStopAt() {
+        return stopAt;
+    }
 
-    public BannerFrequency getFrequency() { return frequency; }
+    public BannerFrequency getFrequency() {
+        return frequency;
+    }
 
-    public Date getCreatedAt() { return createdAt; }
+    public Date getCreatedAt() {
+        return createdAt;
+    }
 
-	public void setScheduled() { scheduled = true; }
+    public void setScheduled() {
+        scheduled = true;
+    }
 
-	public boolean isScheduled() { return scheduled; }
+    public boolean isScheduled() {
+        return scheduled;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
 
     public static Banner create(JSONObject json) throws JSONException {
         Banner banner = new Banner();
@@ -88,6 +147,8 @@ public class Banner {
         banner.type = BannerType.fromString(json.getString("type"));
         banner.status = BannerStatus.fromString(json.getString("status"));
         banner.blocks = new LinkedList<>();
+        banner.content = json.getString("content");
+        banner.contentType = json.getString("contentType");
 
         JSONArray blockArray = json.getJSONArray("blocks");
         for (int i = 0; i < blockArray.length(); ++i) {
@@ -107,13 +168,13 @@ public class Banner {
         banner.dismissTimeout = json.getInt("dismissTimeout");
         banner.stopAtType = BannerStopAtType.fromString(json.getString("stopAtType"));
 
-		banner.triggerType = BannerTriggerType.fromString(json.getString("triggerType"));
+        banner.triggerType = BannerTriggerType.fromString(json.getString("triggerType"));
 
-		banner.triggers = new LinkedList<>();
-		JSONArray triggersArray = json.getJSONArray("triggers");
-		for (int i = 0; i < triggersArray.length(); ++i) {
-			banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
-		}
+        banner.triggers = new LinkedList<>();
+        JSONArray triggersArray = json.getJSONArray("triggers");
+        for (int i = 0; i < triggersArray.length(); ++i) {
+            banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
+        }
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
