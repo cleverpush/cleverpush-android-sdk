@@ -34,6 +34,7 @@ import com.cleverpush.listener.ChannelTagsListener;
 import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
+import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
@@ -101,6 +102,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private ChatSubscribeListener chatSubscribeListener;
     private TopicsChangedListener topicsChangedListener;
 	private AppBannerOpenedListener appBannerOpenedListener;
+    private CompletionListener completionListener;
     private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
     private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
@@ -1399,8 +1401,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 			}
 		})).start());
     }
-
     public void setSubscriptionTopics(String[] topicIds) {
+        setSubscriptionTopics(topicIds,null);
+    }
+
+    public void setSubscriptionTopics(String[] topicIds, CompletionListener completionListener) {
+        this.completionListener = completionListener;
         new Thread(() -> {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
@@ -1440,6 +1446,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                             TopicsChangedListener topicsChangedListener = instance.getTopicsChangedListener();
                             if (topicsChangedListener != null) {
                                 topicsChangedListener.changed(new HashSet<>(Arrays.asList(topicIds)));
+                            }
+                            if (completionListener != null) {
+                                completionListener.onComplete();
                             }
                         }
 
