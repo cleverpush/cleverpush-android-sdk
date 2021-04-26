@@ -1720,8 +1720,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                     if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
                         try {
                             headerTitle = channelConfig.getString("confirmAlertSelectTopicsLaterTitle");
-                        } catch (Exception ignored) {
-                        }
+                        } catch (Exception ignored) {}
                     }
 
                     alertBuilder.setTitle(headerTitle);
@@ -1742,7 +1741,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                     CheckBox checkboxDeSelectAll = new CheckBox(CleverPush.context);
                     checkboxDeSelectAll.setText(context.getText(R.string.deselect_all));
 
-                    setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false, channelConfig.optBoolean("topicsDialogShowUnsubscribe"));
+                    setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false);
 
                     checkboxLayout.addView(parentLayout);
 
@@ -1785,22 +1784,20 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      * Will create list of checkbox for the topics.
-     *
      * @param parentLayout        parent layout to add checkboxes
      * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
      * @param checkedTopics       userSelectedTopics
      * @param isDeselectAll       is deselectall checkbox is checked or not
-     * @param isShowUnsubscribe   should display deselectall checkbox or not
      * @author Hardik Lakum
      * @version 1.0
      */
-    private void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean isDeselectAll, boolean isShowUnsubscribe) {
+    private void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean isDeselectAll) {
         try {
             parentLayout.removeAllViews();
             Set<String> selectedTopics = instance.getSubscriptionTopics();
 
-            if (isShowUnsubscribe) {
+            if (channelConfig.optBoolean("topicsDialogShowUnsubscribe",false)) {
                 checkboxDeSelectAll.setChecked(isDeselectAll);
                 parentLayout.addView(checkboxDeSelectAll);
                 checkboxDeSelectAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -1815,7 +1812,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                                 e.printStackTrace();
                             }
                         }
-                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true, isShowUnsubscribe);
+                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true);
                     }
                 });
             }
