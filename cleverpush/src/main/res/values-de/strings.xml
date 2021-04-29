@@ -10,5 +10,5 @@
 	<string name="cancel">Abbrechen</string>
 	<string name="save">Speichern</string>
 	<string name="topics_dialog_title">Abonnierte Themen</string>
-	<string name="deselect_all">"Alles abwählen"</string>
+	<string name="deselect_all">Alles abwählen</string>
 </resources>
