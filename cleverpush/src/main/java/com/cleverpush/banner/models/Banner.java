@@ -144,11 +144,11 @@ public class Banner {
         banner.id = json.getString("_id");
         banner.channel = json.getString("channel");
         banner.name = json.getString("name");
-        banner.type = BannerType.fromString(json.getString("type"));
-        banner.status = BannerStatus.fromString(json.getString("status"));
+        banner.type = BannerType.fromString(json.optString("type"));
+        banner.status = BannerStatus.fromString(json.optString("status"));
         banner.blocks = new LinkedList<>();
-        banner.content = json.getString("content");
-        banner.contentType = json.getString("contentType");
+        banner.content = json.optString("content");
+        banner.contentType = json.optString("contentType");
 
         JSONArray blockArray = json.getJSONArray("blocks");
         for (int i = 0; i < blockArray.length(); ++i) {
@@ -159,16 +159,16 @@ public class Banner {
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
-            banner.startAt = format.parse(json.getString("startAt"));
+            banner.startAt = format.parse(json.optString("startAt"));
         } catch (ParseException e) {
             banner.startAt = new Date();
         }
 
-        banner.dismissType = BannerDismissType.fromString(json.getString("dismissType"));
+        banner.dismissType = BannerDismissType.fromString(json.optString("dismissType"));
         banner.dismissTimeout = json.getInt("dismissTimeout");
-        banner.stopAtType = BannerStopAtType.fromString(json.getString("stopAtType"));
+        banner.stopAtType = BannerStopAtType.fromString(json.optString("stopAtType"));
 
-        banner.triggerType = BannerTriggerType.fromString(json.getString("triggerType"));
+        banner.triggerType = BannerTriggerType.fromString(json.optString("triggerType"));
 
         banner.triggers = new LinkedList<>();
         JSONArray triggersArray = json.getJSONArray("triggers");
@@ -178,19 +178,19 @@ public class Banner {
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
-            banner.stopAt = json.isNull("stopAt") ? null : format.parse(json.getString("stopAt"));
+            banner.stopAt = json.isNull("stopAt") ? null : format.parse(json.optString("stopAt"));
         } catch (ParseException e) {
             banner.stopAt = null;
         }
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
-            banner.createdAt = json.isNull("createdAt") ? null : format.parse(json.getString("createdAt"));
+            banner.createdAt = json.isNull("createdAt") ? null : format.parse(json.optString("createdAt"));
         } catch (ParseException e) {
             banner.createdAt = null;
         }
 
-        banner.frequency = BannerFrequency.fromString(json.getString("frequency"));
+        banner.frequency = BannerFrequency.fromString(json.optString("frequency"));
 
         return banner;
     }

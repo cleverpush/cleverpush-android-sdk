@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.12.0 ==
+* Support app banners with HTML content
+
 == 1.11.1 ==
 * Optimized silent notifications
 
