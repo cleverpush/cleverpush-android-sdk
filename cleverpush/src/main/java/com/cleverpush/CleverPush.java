@@ -1400,8 +1400,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 			}
 		})).start());
     }
+
     public void setSubscriptionTopics(String[] topicIds) {
-        setSubscriptionTopics(topicIds,null);
+        setSubscriptionTopics(topicIds, null);
     }
 
     public void setSubscriptionTopics(String[] topicIds, CompletionListener completionListener) {
