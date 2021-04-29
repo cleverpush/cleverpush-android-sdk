@@ -34,6 +34,7 @@ import com.cleverpush.listener.ChannelTagsListener;
 import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
+import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
@@ -100,7 +101,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private ChatUrlOpenedListener chatUrlOpenedListener;
     private ChatSubscribeListener chatSubscribeListener;
     private TopicsChangedListener topicsChangedListener;
-	private AppBannerOpenedListener appBannerOpenedListener;
+    private AppBannerOpenedListener appBannerOpenedListener;
     private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
     private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
@@ -108,8 +109,8 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private GoogleApiClient googleApiClient;
     private ArrayList<Geofence> geofenceList = new ArrayList<>();
     private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
-	private Map<String, String> pendingAppBannerEvents = new HashMap<>();
-	private String pendingShowAppBannerId = null;
+    private Map<String, String> pendingAppBannerEvents = new HashMap<>();
+    private String pendingShowAppBannerId = null;
     private String currentPageUrl;
     private AppBannerModule appBannerModule;
 
@@ -130,7 +131,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private boolean trackingConsentRequired = false;
     private boolean hasTrackingConsent = false;
     private boolean hasTrackingConsentCalled = false;
-	private Collection<TrackingConsentListener> trackingConsentListeners = new ArrayList<>();
+    private Collection<TrackingConsentListener> trackingConsentListeners = new ArrayList<>();
 
     private boolean incrementBadge = false;
     private boolean autoClearBadge = false;
@@ -1401,6 +1402,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     public void setSubscriptionTopics(String[] topicIds) {
+        setSubscriptionTopics(topicIds, null);
+    }
+
+    public void setSubscriptionTopics(String[] topicIds, CompletionListener completionListener) {
         new Thread(() -> {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
@@ -1440,6 +1445,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                             TopicsChangedListener topicsChangedListener = instance.getTopicsChangedListener();
                             if (topicsChangedListener != null) {
                                 topicsChangedListener.changed(new HashSet<>(Arrays.asList(topicIds)));
+                            }
+                            if (completionListener != null) {
+                                completionListener.onComplete();
                             }
                         }
 
