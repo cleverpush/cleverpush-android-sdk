@@ -49,8 +49,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -311,6 +313,7 @@ public class NotificationService {
 	}
 
 	int getRequestId(Context context, Notification notification) {
+    	// check for existing notifications which have the same tag and should be replaced. If found, use their request code.
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 StatusBarNotification[] activeNotifs = BadgeHelper.getActiveNotifications(context);
@@ -324,11 +327,9 @@ public class NotificationService {
 
         }
 
-        if (notification.getCreatedAtTime() > 0) {
-            return notification.getCreatedAtTime();
-        }
-
-        return (int) System.currentTimeMillis();
+        // We'll generate a random int and use it as the notification's request code.
+		Random random = new SecureRandom();
+        return random.nextInt();
     }
 
     int showNotification(Context context, Notification notification, Subscription subscription) {

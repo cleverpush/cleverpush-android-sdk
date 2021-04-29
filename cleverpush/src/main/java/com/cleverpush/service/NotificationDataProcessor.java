@@ -9,14 +9,10 @@ import android.util.Log;
 
 import com.cleverpush.BadgeHelper;
 import com.cleverpush.CleverPush;
-import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.Subscription;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -65,6 +61,11 @@ public class NotificationDataProcessor {
             Log.e("CleverPush", "Error checking if application is in foreground", e);
         }
 
+		// do not show silent notifications
+		if (notification.isSilent()) {
+			dontShowNotification = true;
+		}
+
         boolean hasExtenderService = startExtenderService(context, notification, subscription);
         if (hasExtenderService) {
         	dontShowNotification = true;
@@ -74,15 +75,7 @@ public class NotificationDataProcessor {
 			NotificationService.getInstance().showNotification(context, notification, subscription);
         }
 
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("notificationId", notificationId);
-            jsonBody.put("subscriptionId", subscriptionId);
-        } catch (JSONException e) {
-            Log.e("CleverPush", "Error generating delivered json", e);
-        }
-
-        CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
+        cleverPush.trackNotificationDelivered(notificationId, subscriptionId);
 
         try {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);

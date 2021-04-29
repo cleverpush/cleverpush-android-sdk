@@ -34,6 +34,7 @@ import com.cleverpush.listener.ChannelTagsListener;
 import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
+import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
@@ -81,7 +82,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.8.12";
+    public static final String SDK_VERSION = "1.11.1";
 
     private static CleverPush instance;
 
@@ -1058,7 +1059,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     public void fireSubscribedListener(final String subscriptionId) {
-        if (subscribedListener == null) {
+        if (subscribedListener == null ||  subscriptionId == null) {
             return;
         }
         subscribedListener.subscribed(subscriptionId);
@@ -1406,6 +1407,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     public void setSubscriptionTopics(String[] topicIds) {
+        setSubscriptionTopics(topicIds, null);
+    }
+
+    public void setSubscriptionTopics(String[] topicIds, CompletionListener completionListener) {
         new Thread(() -> {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
@@ -1445,6 +1450,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                             TopicsChangedListener topicsChangedListener = instance.getTopicsChangedListener();
                             if (topicsChangedListener != null) {
                                 topicsChangedListener.changed(new HashSet<>(Arrays.asList(topicIds)));
+                            }
+                            if (completionListener != null) {
+                                completionListener.onComplete();
                             }
                         }
 
@@ -1610,13 +1618,45 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         });
     }
 
-    public void triggerAppBannerEvent(String key, String value) {
-        if (this.appBannerModule == null) {
-            pendingAppBannerEvents.put(key, value);
-            return;
-        }
-        this.appBannerModule.triggerEvent(key, value);
-    }
+	public void trackNotificationDelivered(String notificationId) {
+		this.getSubscriptionId(subscriptionId -> this.trackNotificationDelivered(notificationId, subscriptionId));
+	}
+
+	public void trackNotificationDelivered(String notificationId, String subscriptionId) {
+		JSONObject jsonBody = new JSONObject();
+		try {
+			jsonBody.put("notificationId", notificationId);
+			jsonBody.put("subscriptionId", subscriptionId);
+		} catch (JSONException e) {
+			Log.e("CleverPush", "Error generating delivered json", e);
+		}
+
+		CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
+	}
+
+	public void trackNotificationClicked(String notificationId) {
+    	this.getSubscriptionId(subscriptionId -> this.trackNotificationClicked(notificationId, subscriptionId));
+	}
+
+    public void trackNotificationClicked(String notificationId, String subscriptionId) {
+		JSONObject jsonBody = new JSONObject();
+		try {
+			jsonBody.put("notificationId", notificationId);
+			jsonBody.put("subscriptionId", subscriptionId);
+		} catch (JSONException e) {
+			Log.e("CleverPush", "Error generating clicked json", e);
+		}
+
+		CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
+	}
+
+	public void triggerAppBannerEvent(String key, String value) {
+    	if (this.appBannerModule == null) {
+			pendingAppBannerEvents.put(key, value);
+    		return;
+		}
+		this.appBannerModule.triggerEvent(key, value);
+	}
 
     @Deprecated
     public void showAppBanners() {

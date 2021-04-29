@@ -32,18 +32,9 @@ public class NotificationOpenedProcessor {
         result.setNotification(notification);
         result.setSubscription(subscription);
 
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("notificationId", notificationId);
-            jsonBody.put("subscriptionId", subscriptionId);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
-
         CleverPush cleverPush = CleverPush.getInstance(context);
 
+        cleverPush.trackNotificationClicked(notificationId, subscriptionId);
         cleverPush.fireNotificationOpenedListener(result);
 
         // open launcher activity
