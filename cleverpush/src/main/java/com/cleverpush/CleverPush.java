@@ -1829,8 +1829,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
      * @param channelTopics       topics from the channel
      * @param checkedTopics       userSelectedTopics
      * @param isDeselectAll       is deselectall checkbox is checked or not
-     * @author Hardik Lakum
-     * @version 1.0
      */
     private void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean isDeselectAll) {
         try {
