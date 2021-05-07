@@ -33,6 +33,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.cleverpush.BadgeHelper;
+import com.cleverpush.CleverPush;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
@@ -335,11 +336,17 @@ public class NotificationService {
     int showNotification(Context context, Notification notification, Subscription subscription) {
     	String notificationStr = notification.getRawPayload();
     	String subscriptionStr = subscription.getRawPayload();
+
+    	int requestId;
 		if (notification.getCarouselLength() > 0 && notification.isCarouselEnabled()) {
-			return NotificationService.getInstance().createAndShowCarousel(context, notification, notificationStr, subscriptionStr);
+			requestId = NotificationService.getInstance().createAndShowCarousel(context, notification, notificationStr, subscriptionStr);
 		} else {
-			return NotificationService.getInstance().sendNotification(context, notification, notificationStr, subscriptionStr);
+			requestId = NotificationService.getInstance().sendNotification(context, notification, notificationStr, subscriptionStr);
 		}
+
+		BadgeHelper.update(context, CleverPush.getInstance(context).getIncrementBadge());
+
+		return requestId;
 	}
 
     int sendNotification(Context context, Notification notification, String notificationStr, String subscriptionStr) {

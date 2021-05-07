@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.12.1 ==
+* Improved behaviour of automatic incrementing of badge count
+
 == 1.12.0 ==
 * Introduced optional 'Deselect all' checkbox in TopicsDialog (can be enabled in your CleverPush topic settings).
 * Support app banners with HTML content

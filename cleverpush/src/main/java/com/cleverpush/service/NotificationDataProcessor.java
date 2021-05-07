@@ -7,7 +7,6 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.cleverpush.BadgeHelper;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
@@ -91,8 +90,6 @@ public class NotificationDataProcessor {
         } catch (Exception e) {
             Log.e("CleverPush", "Error saving notification to shared preferences", e);
         }
-
-		BadgeHelper.update(context, cleverPush.getIncrementBadge(), 1);
     }
 
     private static boolean startExtenderService(Context context, Notification notification, Subscription subscription) {
