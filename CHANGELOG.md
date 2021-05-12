@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.x.x ==
+* Improved App Banner Conditions
+
 == 1.12.1 ==
 * Improved behaviour of automatic incrementing of badge count
 

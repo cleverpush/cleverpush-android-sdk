@@ -254,6 +254,7 @@ public class AppBannerModule {
             			if (condition.getType() != null) {
 							if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
 								banner.setDelaySeconds(condition.getSeconds());
+								conditionTrue = true;
 							}
 							if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
 								if (condition.getRelation().equals("lt")) {
