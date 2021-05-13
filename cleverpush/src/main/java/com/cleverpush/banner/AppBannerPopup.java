@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
@@ -22,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.dynamicanimation.animation.DynamicAnimation;
@@ -117,9 +119,9 @@ public class AppBannerPopup {
         LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
 
         composeBackground(body);
-		if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
-			composeHtmlBanner(body, data.getContent());
-		} else {
+        if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+            composeHtmlBanner(body, data.getContent());
+        } else {
             for (BannerBlock bannerBlock : data.getBlocks()) {
                 switch (bannerBlock.getType()) {
                     case Text:
@@ -272,7 +274,6 @@ public class AppBannerPopup {
             }
         }).start();
     }
-
     /**
      * Will compose and add HTML Banner to the body of banner layout.
      * @param  body  parent layout to add HTML view
@@ -280,38 +281,38 @@ public class AppBannerPopup {
      */
     private void composeHtmlBanner(LinearLayout body, String htmlContent) {
         activity.runOnUiThread(() -> {
-			String htmlWithJs = htmlContent.replace("</body>","" +
-			"<script type=\"text/javascript\">\n" +
-			"// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" +
-			"var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" +
-			"function onCloseClick() {\n" +
-			"  try {\n" +
-			"    htmlBannerInterface.close();\n" +
-			"  } catch (error) {\n" +
-			"    console.log('Caught error on closeBtn click', error);\n" +
-			"  }\n" +
-			"}\n" +
-			"for (var i = 0; i < closeBtns.length; i++) {\n" +
-			"  closeBtns[i].addEventListener('click', onCloseClick);\n" +
-			"}\n" +
-			"</script>\n" +
-			"</body>");
-			ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
-			WebView webView = webLayout.findViewById(R.id.webView);
-			webView.getSettings().setJavaScriptEnabled(true);
-			webView.getSettings().setLoadsImagesAutomatically(true);
-			webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
+		String htmlWithJs = htmlContent.replace("</body>","" +
+		"<script type=\"text/javascript\">\n" +
+		"// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" +
+		"var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" +
+		"function onCloseClick() {\n" +
+		"  try {\n" +
+		"    htmlBannerInterface.close();\n" +
+		"  } catch (error) {\n" +
+		"    console.log('Caught error on closeBtn click', error);\n" +
+		"  }\n" +
+		"}\n" +
+		"for (var i = 0; i < closeBtns.length; i++) {\n" +
+		"  closeBtns[i].addEventListener('click', onCloseClick);\n" +
+		"}\n" +
+		"</script>\n" +
+		"</body>");
+		ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
+		WebView webView = webLayout.findViewById(R.id.webView);
+		webView.getSettings().setJavaScriptEnabled(true);
+		webView.getSettings().setLoadsImagesAutomatically(true);
+		webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
 
-			String encodedHtml = null;
-			try {
-				encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-			webView.loadData(encodedHtml , "text/html; charset=utf-8", "UTF-8");
+		String encodedHtml = null;
+		try {
+			encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		webView.loadData(encodedHtml , "text/html; charset=utf-8", "UTF-8");
 
-			body.addView(webLayout);
-		});
+		body.addView(webLayout);
+	});
     }
 
     private void animateBody(float from, float to) {
@@ -351,8 +352,6 @@ public class AppBannerPopup {
 
     /**
      * Will provide javascript bridge to perform close button click in HTML.
-     * @author Hardik Lakum
-     * @version 1.0
      */
     public class HtmlBannerJavascriptInterface {
         @JavascriptInterface
