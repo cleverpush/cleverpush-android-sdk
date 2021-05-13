@@ -1350,9 +1350,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return tags;
     }
 
-    /**savePreferencesMap
-     * @deprecated use this method with ChannelTagsListener
-     */
+
     @Deprecated
     public Set<ChannelTag> getAvailableTags() {
         JSONObject channelConfig = this.getChannelConfig();

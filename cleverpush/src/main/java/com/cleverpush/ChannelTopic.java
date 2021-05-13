@@ -2,7 +2,7 @@ package com.cleverpush;
 
 import java.util.Map;
 
-public class  ChannelTopic {
+public class ChannelTopic {
     private String id;
     private String name;
     private String parentTopicId;

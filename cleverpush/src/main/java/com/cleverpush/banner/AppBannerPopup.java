@@ -119,7 +119,9 @@ public class AppBannerPopup {
         LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
 
         composeBackground(body);
-        if (data.getContentType().equalsIgnoreCase(CONTENT_TYPE_BLOCKS)) {
+        if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+            composeHtmlBanner(body, data.getContent());
+        }else if (data.getContentType().equalsIgnoreCase(CONTENT_TYPE_BLOCKS)) {
             for (BannerBlock bannerBlock : data.getBlocks()) {
                 switch (bannerBlock.getType()) {
                     case Text:
@@ -135,8 +137,6 @@ public class AppBannerPopup {
                         throw new RuntimeException("Not implemented");
                 }
             }
-        } else if (data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
-            composeHtmlBanner(body, data.getContent());
         } else {
             throw new RuntimeException("Not implemented");
         }
@@ -281,40 +281,57 @@ public class AppBannerPopup {
      * @param  body  parent layout to add HTML view
      * @param  htmlContent html content which will be displayed in banner
      */
-    private void composeHtmlBanner(LinearLayout body, String htmlContent) {
-        activity.runOnUiThread(() -> {
-			String htmlWithJs = htmlContent.replace("</body>","" +
-			"<script type=\"text/javascript\">\n" +
-			"// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" +
-			"var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" +
-			"function onCloseClick() {\n" +
-			"  try {\n" +
-			"    htmlBannerInterface.close();\n" +
-			"  } catch (error) {\n" +
-			"    console.log('Caught error on closeBtn click', error);\n" +
-			"  }\n" +
-			"}\n" +
-			"for (var i = 0; i < closeBtns.length; i++) {\n" +
-			"  closeBtns[i].addEventListener('click', onCloseClick);\n" +
-			"}\n" +
-			"</script>\n" +
-			"</body>");
-			ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
-			WebView webView = webLayout.findViewById(R.id.webView);
-			webView.getSettings().setJavaScriptEnabled(true);
-			webView.getSettings().setLoadsImagesAutomatically(true);
-			webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
-
-			String encodedHtml = null;
-			try {
-				encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-			webView.loadData(encodedHtml , "text/html; charset=utf-8", "UTF-8");
-
-			body.addView(webLayout);
-		});
+    private void composeHtmlBanner(LinearLayout body,  String htmlContent) {
+        activity.runOnUiThread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void run() {
+                if(htmlContent.endsWith("</body></html>")){
+                    htmlContent.replace("</body></html>","");
+                }
+                String htmlWithJAVAScript=htmlContent.concat("<script type=\"text/javascript\">\n" +
+                        "\t// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" +
+                        "\tconst keyword = 'close';\n" +
+                        "\tconst closeTagsIDAtStart = document.querySelectorAll(`[id^=\"${keyword}\"]`);\n" +
+                        "\tconst closeTagsIDAtEnd = document.querySelectorAll(`[id$=\"${keyword}\"]`);\n" +
+                        "\tconst closeTagsClassAtStart = document.querySelectorAll(`[class^=\"${keyword}\"]`);\n" +
+                        "\tconst closeTagsClassAtEnd = document.querySelectorAll(`[class$=\"${keyword}\"]`);\n" +
+                        "\tfunction onCloseClick() {\n" +
+                        "\t\ttry {\n" +
+                        "\t\t\thtmlBannerInterface.close();\n" +
+                        "\t\t} catch (error) {\n" +
+                        "\t\t\tconsole.log('Caught error on closeBTN click', error);\n" +
+                        "\t\t}\n" +
+                        "\t}\n" +
+                        "\tcloseTagsIDAtStart.forEach(function(item) {\n" +
+                        "\t\tconsole.log('atStart',item)\n" +
+                        "\t\titem.addEventListener('click',onCloseClick);\n" +
+                        "\t})\n" +
+                        "\tcloseTagsIDAtEnd.forEach(function(item) {\n" +
+                        "\t\tconsole.log('atEnd',item)\n" +
+                        "\t\titem.addEventListener('click',onCloseClick);\n" +
+                        "\t})\n" +
+                        "\tcloseTagsClassAtStart.forEach(function(item) {\n" +
+                        "\t\tconsole.log('atEnd',item)\n" +
+                        "\t\titem.addEventListener('click',onCloseClick);\n" +
+                        "\t})\n" +
+                        "\tcloseTagsClassAtEnd.forEach(function(item) {\n" +
+                        "\t\tconsole.log('atEnd',item)\n" +
+                        "\t\titem.addEventListener('click',onCloseClick);\n" +
+                        "\t})\n" +
+                        "</script\n" +
+                        "\n" +
+                        "</body>\n" +
+                        "</html>");
+                ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
+                WebView webView = webLayout.findViewById(R.id.webView);
+                webView.getSettings().setJavaScriptEnabled(true);
+                webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
+                String encodedHtml = Base64.encodeToString(htmlWithJAVAScript.getBytes(), Base64.CRLF);
+                webView.loadData(encodedHtml , "text/html", "base64");
+                body.addView(webLayout);
+            }
+        });
     }
 
     private void animateBody(float from, float to) {
