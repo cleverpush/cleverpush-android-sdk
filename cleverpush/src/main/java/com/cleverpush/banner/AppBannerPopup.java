@@ -121,7 +121,7 @@ public class AppBannerPopup {
         composeBackground(body);
         if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
             composeHtmlBanner(body, data.getContent());
-        }else if (data.getContentType().equalsIgnoreCase(CONTENT_TYPE_BLOCKS)) {
+        }else{
             for (BannerBlock bannerBlock : data.getBlocks()) {
                 switch (bannerBlock.getType()) {
                     case Text:
@@ -137,8 +137,6 @@ public class AppBannerPopup {
                         throw new RuntimeException("Not implemented");
                 }
             }
-        } else {
-            throw new RuntimeException("Not implemented");
         }
 
         popup = new PopupWindow(
