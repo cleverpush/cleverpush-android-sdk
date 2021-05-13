@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
@@ -22,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.dynamicanimation.animation.DynamicAnimation;
@@ -117,9 +119,7 @@ public class AppBannerPopup {
         LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
 
         composeBackground(body);
-		if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
-			composeHtmlBanner(body, data.getContent());
-		} else {
+        if (data.getContentType().equalsIgnoreCase(CONTENT_TYPE_BLOCKS)) {
             for (BannerBlock bannerBlock : data.getBlocks()) {
                 switch (bannerBlock.getType()) {
                     case Text:
@@ -135,6 +135,10 @@ public class AppBannerPopup {
                         throw new RuntimeException("Not implemented");
                 }
             }
+        } else if (data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+            composeHtmlBanner(body, data.getContent());
+        } else {
+            throw new RuntimeException("Not implemented");
         }
 
         popup = new PopupWindow(
@@ -272,7 +276,6 @@ public class AppBannerPopup {
             }
         }).start();
     }
-
     /**
      * Will compose and add HTML Banner to the body of banner layout.
      * @param  body  parent layout to add HTML view
@@ -351,8 +354,6 @@ public class AppBannerPopup {
 
     /**
      * Will provide javascript bridge to perform close button click in HTML.
-     * @author Hardik Lakum
-     * @version 1.0
      */
     public class HtmlBannerJavascriptInterface {
         @JavascriptInterface
