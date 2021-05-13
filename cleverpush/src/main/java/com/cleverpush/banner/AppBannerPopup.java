@@ -121,7 +121,7 @@ public class AppBannerPopup {
         composeBackground(body);
         if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
             composeHtmlBanner(body, data.getContent());
-        }else{
+        } else {
             for (BannerBlock bannerBlock : data.getBlocks()) {
                 switch (bannerBlock.getType()) {
                     case Text:
