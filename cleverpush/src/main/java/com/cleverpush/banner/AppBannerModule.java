@@ -90,6 +90,11 @@ public class AppBannerModule {
 		handler = new Handler(handlerThread.getLooper());
     }
 
+	public List<Banner> storeBanners() {
+		loadBanners();
+		return banners;
+	}
+
     private void loadBanners() {
     	String bannersPath = "/channel/" + channel + "/app-banners?platformName=Android";
 		if (CleverPush.getInstance(activity).isDevelopmentModeEnabled()) {

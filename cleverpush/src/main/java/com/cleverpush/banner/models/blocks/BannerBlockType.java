@@ -6,13 +6,15 @@ import java.util.Map;
 public enum BannerBlockType {
     Text,
     Image,
-    Button;
+    Button,
+    HTML;
 
     private static final Map<String, BannerBlockType> typeMap = new HashMap<>();
     static {
         typeMap.put("text", BannerBlockType.Text);
         typeMap.put("image", BannerBlockType.Image);
         typeMap.put("button", BannerBlockType.Button);
+        typeMap.put("html", BannerBlockType.HTML);
     }
 
     public static BannerBlockType fromString(String raw) {

@@ -1,11 +1,13 @@
-package com.cleverpush.banner;
+ package com.cleverpush.banner;
 
 import android.app.Activity;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
@@ -13,6 +15,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -22,6 +25,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.dynamicanimation.animation.DynamicAnimation;
@@ -34,6 +38,7 @@ import com.cleverpush.banner.models.blocks.Alignment;
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.banner.models.blocks.BannerBlock;
 import com.cleverpush.banner.models.blocks.BannerButtonBlock;
+import com.cleverpush.banner.models.blocks.BannerHTMLBlock;
 import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
 import com.cleverpush.listener.AppBannerOpenedListener;
@@ -47,6 +52,8 @@ import java.util.Map;
 public class AppBannerPopup {
     private static final String CONTENT_TYPE_BLOCKS = "block";
     private static final String CONTENT_TYPE_HTML = "html";
+
+    private static final String TAG = "CleverPush/AppBanner";
 
     private static SpringForce getDefaultForce(float finalValue) {
         SpringForce force = new SpringForce(finalValue);
@@ -130,6 +137,9 @@ public class AppBannerPopup {
                         break;
                     case Button:
                         composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
+                        break;
+                    case HTML:
+                        composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
                         break;
                     default:
                         throw new RuntimeException("Not implemented");
@@ -242,6 +252,16 @@ public class AppBannerPopup {
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, block.getSize() * getFontScale());
         textView.setTextColor(this.parseColor(block.getColor()));
 
+        if(block.getFamily() != null){
+            try {
+                Typeface font = Typeface.createFromAsset(activity.getAssets(), block.getFamily()+".ttf");
+                textView.setTypeface(font);
+            }catch (Exception ex) {
+                Log.e(TAG, ex.getMessage(), ex);
+            }
+
+        }
+
         Integer alignment = alignmentMap.get(block.getAlignment());
         textView.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
 
@@ -272,7 +292,25 @@ public class AppBannerPopup {
             }
         }).start();
     }
+    private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
+        activity.runOnUiThread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void run() {
+                LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
+                body.addView(webLayout);
+               WebView webView = webLayout.findViewById(R.id.webView);
+                webView.getSettings().setJavaScriptEnabled(true);
+                webView.loadUrl(block.getUrl());
+                webView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, pxToDp(Integer.parseInt(block.getHeight()))));
 
+            }
+        });
+    }
+
+    public static int pxToDp(int px) {
+        return (int) (px * Resources.getSystem().getDisplayMetrics().density);
+    }
     /**
      * Will compose and add HTML Banner to the body of banner layout.
      * @param  body  parent layout to add HTML view
@@ -352,7 +390,6 @@ public class AppBannerPopup {
     /**
      * Will provide javascript bridge to perform close button click in HTML.
      * @author Hardik Lakum
-     * @version 1.0
      */
     public class HtmlBannerJavascriptInterface {
         @JavascriptInterface

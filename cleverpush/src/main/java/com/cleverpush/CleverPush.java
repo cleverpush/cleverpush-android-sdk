@@ -26,6 +26,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.banner.models.Banner;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannerUrlOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
@@ -74,6 +75,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -138,6 +140,8 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     private boolean developmentMode = false;
 
+    private List<Banner> banners = null;
+
     private CleverPush(@NonNull Context context) {
         if (context == null) {
             return;
@@ -149,7 +153,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             CleverPush.context = context.getApplicationContext();
         }
 
-        sessionListener = open -> {
+          sessionListener = open -> {
             if (open) {
                 this.trackSessionStart();
 
@@ -1051,6 +1055,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             return false;
         }
         notificationOpenedListener.notificationOpened(openedResult);
+        if(openedResult.getNotification().getAppBanner() != null){
+            showAppBanner(openedResult.getNotification().getAppBanner());
+        }
         return true;
     }
 
@@ -2065,5 +2072,19 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION).apply();
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+    }
+
+    public void enableAppBanners() {
+        for (Banner banner : banners) {
+            showAppBanner(banner.getId());
+        }
+    }
+
+    public void disableAppBanners() {
+        if (!isInitialized()) {
+            appBannerModule = AppBannerModule.init(ActivityLifecycleListener.currentActivity, channelId, this.developmentMode);
+        }
+        banners = appBannerModule.storeBanners();
+
     }
 }
