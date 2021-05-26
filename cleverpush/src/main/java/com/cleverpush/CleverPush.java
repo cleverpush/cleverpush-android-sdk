@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -183,73 +184,162 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) CleverPush.context, sessionListener);
     }
 
+    /**
+     *initialize Cleverpush SDK
+     */
     public void init() {
         init(null, null, null, null, true);
     }
 
+    /**
+     *initialize Cleverpush SDK with notification received callback
+     * @param notificationReceivedListener callback for the notification received
+     */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, notificationReceivedListener);
     }
 
+    /**
+     *initialize Cleverpush SDK with notification opened callback
+     * @param notificationOpenedListener callback for the notification opened
+     */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) {
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, notificationOpenedListener);
     }
+    /**
+     *initialize Cleverpush SDK with subscribed callback
+     * @param subscribedListener callback for subscription
+     */
 
     public void init(@Nullable final SubscribedListener subscribedListener) {
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, subscribedListener);
     }
-
+    /**
+     *initialize Cleverpush SDK for channel
+     * @param channelId channelID of the channel
+     */
     public void init(String channelId) {
         init(channelId, null, null, null);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with notification received callback
+     * @param channelId channelID of the channel
+     * @param notificationReceivedListener callback for the notification received
+     */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
         init(channelId, notificationReceivedListener, null, null);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with notification opened callback
+     * @param channelId channelID of the channel
+     * @param notificationOpenedListener callback for the notification opened
+     */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) {
         init(channelId, null, notificationOpenedListener, null);
     }
 
+    /**
+     *initialize Cleverpush SDK with notification opened callback and subscribed callback
+     * @param notificationOpenedListener callback for the notification opened
+     * @param subscribedListener callback for subscription
+     */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, null, notificationOpenedListener, subscribedListener);
     }
 
+    /**
+     *initialize Cleverpush SDK with notification received callback and subscribed callback
+     * @param notificationReceivedListener callback for the notification received
+     * @param subscribedListener callback for subscription
+     */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, notificationReceivedListener, null, subscribedListener);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with notification received callback and notification opened callback
+     * @param channelId channelID of the channel
+     * @param notificationReceivedListener callback for the notification received
+     * @param notificationOpenedListener callback for the notification opened
+     */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, null);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with subscribed callback
+     * @param channelId channelID of the channel
+     * @param subscribedListener callback for subscription
+     */
     public void init(String channelId, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, null, null, subscribedListener);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with notification received callback and subscribed callback
+     * @param channelId channelID of the channel
+     * @param notificationReceivedListener callback for the notification received
+     * @param subscribedListener callback for subscription
+     */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, null, subscribedListener);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with notification opened callback and subscribed callback
+     * @param channelId channelID of the channel
+     * @param notificationOpenedListener callback for the notification opened
+     * @param subscribedListener callback for subscription
+     */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, null, notificationOpenedListener, subscribedListener);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with notification received, notification opened callback and subscribed callback
+     * @param channelId channelID of the channel
+     * @param notificationReceivedListener callback for the notification received
+     * @param notificationOpenedListener callback for the notification opened
+     * @param subscribedListener callback for subscription
+     */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, true);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with notification opened callback and subscribed callback and if there is autoRegister
+     * @param channelId channelID of the channel
+     * @param notificationOpenedListener callback for the notification opened
+     * @param subscribedListener callback for subscription
+     * @param autoRegister boolean for auto register
+     */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         init(channelId, null, notificationOpenedListener, subscribedListener, autoRegister);
     }
 
+    /**
+     *initialize Cleverpush SDK for channel with notification received callback and subscribed callback and if there is autoRegister
+     * @param channelId channelID of the channel
+     * @param notificationReceivedListener callback for the notification received
+     * @param subscribedListener callback for subscription
+     * @param autoRegister boolean for auto register
+     */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         init(channelId, notificationReceivedListener, null, subscribedListener, autoRegister);
     }
-
+    /**
+     *initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
+     * @param channelId channelID of the channel
+     * @param notificationReceivedListener callback for the notification received
+     * @param notificationOpenedListener callback for the notification opened
+     * @param subscribedListener callback for subscription
+     * @param autoRegister boolean for auto register
+     */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
         this.notificationReceivedListener = notificationReceivedListener;
@@ -387,10 +477,17 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         editor.apply();
     }
 
+    /**
+     * check if initialized
+     */
     public boolean isInitialized() {
         return this.channelId != null && this.channelConfig != null;
     }
 
+    /**
+     * subscribe or sync subscription
+     * @param autoRegister boolean for auto register
+     */
     private void subscribeOrSync(boolean autoRegister) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, this.channelId).apply();
@@ -412,6 +509,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * initialize the features
+     */
     private void initFeatures() {
         if (ActivityLifecycleListener.currentActivity == null) {
             this.pendingInitFeaturesCall = true;
@@ -440,6 +540,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         appBannerModule.initSession(channelId);
     }
 
+    /**
+     * initialize the App review
+     */
     private void initAppReview() {
         this.getChannelConfig(config -> {
             if (config != null && config.optBoolean("appReviewEnabled")) {
@@ -486,6 +589,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         });
     }
 
+    /**
+     * request for location permission
+     */
     public void requestLocationPermission() {
         if (this.hasLocationPermission()) {
             return;
@@ -498,6 +604,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         ActivityCompat.requestPermissions(ActivityLifecycleListener.currentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionRequestCode);
     }
 
+    /**
+     * to check if app has location permission
+     */
     public boolean hasLocationPermission() {
         /*
         if (android.os.Build.VERSION.SDK_INT >= 29 && ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -506,6 +615,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         */
         return ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
 
     private void savePreferencesMap(String mapKey, Map<String, Integer> inputMap) {
         Log.d("CleverPush", "savePreferencesMap: " + mapKey + " - " + inputMap.toString());
@@ -698,6 +808,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         ;
     }
 
+    /**
+     * initialize Geo Fences
+     */
     private void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = new GoogleApiClient.Builder(CleverPush.context)
@@ -1244,9 +1357,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return tags;
     }
 
-    /**
-     * @deprecated use this method with ChannelTagsListener
-     */
+
     @Deprecated
     public Set<ChannelTag> getAvailableTags() {
         JSONObject channelConfig = this.getChannelConfig();
@@ -1736,9 +1847,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener) {
         try {
-            showTopicsDialog(dialogActivity, topicsDialogListener, 0);
+            if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
+                showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
+            else
+                showTopicsDialog(dialogActivity, topicsDialogListener, 0);
         } catch (IllegalStateException ex) {
-            showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Light_Dialog_Alert);
+            showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
         }
     }
 
