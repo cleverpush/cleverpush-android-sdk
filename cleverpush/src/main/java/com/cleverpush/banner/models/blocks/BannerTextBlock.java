@@ -28,12 +28,12 @@ public final class BannerTextBlock extends BannerBlock {
         BannerTextBlock textBlock = new BannerTextBlock();
 
         textBlock.type = BannerBlockType.Text;
-        textBlock.text = json.getString("text");
-        textBlock.color = json.getString("color");
+        textBlock.text = json.optString("text");
+        textBlock.color = json.optString("color");
         textBlock.size = json.getInt("size");
         textBlock.alignment = Alignment.fromString(json.getString("alignment"));
-        if (json.has("family")) {
-            textBlock.family = json.getString("family");
+        if (json.has("family") && !json.optString("family").isEmpty()) {
+            textBlock.family = json.optString("family");
         }
         return textBlock;
     }

@@ -4,17 +4,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public final class BannerHTMLBlock extends BannerBlock {
-    private String html;
     private String url ;
     private String height ;
 
     private BannerHTMLBlock() { }
-
-
-
-    public String getHtml() {
-        return html;
-    }
 
     public String getUrl() {
         return url;
@@ -24,12 +17,11 @@ public final class BannerHTMLBlock extends BannerBlock {
         return height;
     }
 
-    public static BannerHTMLBlock createHTMLBlock(JSONObject json) throws JSONException {
+    public static BannerHTMLBlock createHTMLBlock(JSONObject json) {
         BannerHTMLBlock htmlBlock = new BannerHTMLBlock();
         htmlBlock.type = BannerBlockType.HTML;
-        htmlBlock.html = json.getString("html");
-        htmlBlock.url = json.getString("url");
-        htmlBlock.height = json.getString("height");
+        htmlBlock.url = json.optString("url");
+        htmlBlock.height = json.optString("height");
         return htmlBlock;
     }
 }

@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_alignWithParentIfMissing="false">
+    android:layout_alignWithParentIfMissing="false"
+	android:background="#26000000">
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="wrap_content"

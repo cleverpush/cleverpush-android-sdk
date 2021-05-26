@@ -128,22 +128,26 @@ public class AppBannerPopup {
             composeHtmlBanner(body, data.getContent());
         } else {
             for (BannerBlock bannerBlock : data.getBlocks()) {
-                switch (bannerBlock.getType()) {
-                    case Text:
-                        composeTextBlock(body, (BannerTextBlock) bannerBlock);
-                        break;
-                    case Image:
-                        composeImageBlock(body, (BannerImageBlock) bannerBlock);
-                        break;
-                    case Button:
-                        composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
-                        break;
-                    case HTML:
-                        composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
-                        break;
-                    default:
-                        throw new RuntimeException("Not implemented");
-                }
+				activity.runOnUiThread(new Runnable() {
+				   @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+				   @Override
+				   public void run() {
+					   switch (bannerBlock.getType()) {
+						   case Text:
+							   composeTextBlock(body, (BannerTextBlock) bannerBlock);
+							   break;
+						   case Image:
+							   composeImageBlock(body, (BannerImageBlock) bannerBlock);
+							   break;
+						   case Button:
+							   composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
+							   break;
+						   case HTML:
+							   composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
+							   break;
+					   }
+				   }
+			    });
             }
         }
 
@@ -292,21 +296,16 @@ public class AppBannerPopup {
             }
         }).start();
     }
-	
-    private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
-        activity.runOnUiThread(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void run() {
-                LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
-                body.addView(webLayout);
-               WebView webView = webLayout.findViewById(R.id.webView);
-                webView.getSettings().setJavaScriptEnabled(true);
-                webView.loadUrl(block.getUrl());
-                webView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, pxToDp(Integer.parseInt(block.getHeight()))));
 
-            }
-        });
+    private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
+		LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
+		WebView webView = webLayout.findViewById(R.id.webView);
+		webView.getSettings().setJavaScriptEnabled(true);
+		webView.setVerticalScrollBarEnabled(false);
+		webView.setHorizontalScrollBarEnabled(false);
+		webView.loadUrl(block.getUrl());
+		webView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, pxToDp(Integer.parseInt(block.getHeight()))));
+		body.addView(webLayout);
     }
 
     public static int pxToDp(int px) {
