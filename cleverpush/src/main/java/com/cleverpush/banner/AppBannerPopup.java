@@ -292,6 +292,7 @@ public class AppBannerPopup {
             }
         }).start();
     }
+	
     private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
         activity.runOnUiThread(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -389,7 +390,6 @@ public class AppBannerPopup {
 
     /**
      * Will provide javascript bridge to perform close button click in HTML.
-     * @author Hardik Lakum
      */
     public class HtmlBannerJavascriptInterface {
         @JavascriptInterface
