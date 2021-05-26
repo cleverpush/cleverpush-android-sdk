@@ -8,6 +8,7 @@ public final class BannerTextBlock extends BannerBlock {
     private String color;
     private int size;
     private Alignment alignment;
+    private String family = null;
 
     private BannerTextBlock() { }
 
@@ -19,6 +20,10 @@ public final class BannerTextBlock extends BannerBlock {
 
     public Alignment getAlignment() { return alignment; }
 
+    public String getFamily() {
+        return family;
+    }
+
     public static BannerTextBlock createTextBlock(JSONObject json) throws JSONException {
         BannerTextBlock textBlock = new BannerTextBlock();
 
@@ -27,7 +32,9 @@ public final class BannerTextBlock extends BannerBlock {
         textBlock.color = json.getString("color");
         textBlock.size = json.getInt("size");
         textBlock.alignment = Alignment.fromString(json.getString("alignment"));
-
+        if (json.has("family")) {
+            textBlock.family = json.getString("family");
+        }
         return textBlock;
     }
 }

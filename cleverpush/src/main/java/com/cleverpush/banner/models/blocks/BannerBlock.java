@@ -20,6 +20,8 @@ public class BannerBlock {
                 return BannerImageBlock.createImageBlock(json);
             case Button:
                 return BannerButtonBlock.createButtonBlock(json);
+            case HTML:
+                return BannerHTMLBlock.createHTMLBlock(json);
             default:
                 throw new RuntimeException("Not implemented");
         }

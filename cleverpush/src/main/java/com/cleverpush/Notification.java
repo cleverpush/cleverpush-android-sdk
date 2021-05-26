@@ -43,6 +43,8 @@ public class Notification implements Serializable {
 	Boolean silent;
     @SerializedName("createdAt")
     String createdAt;
+    @SerializedName("appBanner")
+    String appBanner;
 
     transient NotificationCompat.Extender extender;
 	String rawPayload;
@@ -188,4 +190,8 @@ public class Notification implements Serializable {
 	public void setRawPayload(String rawPayload) {
     	this.rawPayload = rawPayload;
 	}
+
+    public String getAppBanner() {
+        return appBanner;
+    }
 }
