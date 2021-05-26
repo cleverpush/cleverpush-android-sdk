@@ -17,7 +17,7 @@ public enum BannerTriggerType {
         if (mapTriggerType.containsKey(raw)) {
             return mapTriggerType.get(raw);
         } else {
-            throw new IllegalArgumentException("Unknown banner trigger type: " + raw);
+            return AppOpen;
         }
     }
 }

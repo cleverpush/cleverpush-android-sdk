@@ -155,7 +155,7 @@ public class Banner {
             banner.blocks.add(BannerBlock.create(blockArray.getJSONObject(i)));
         }
 
-        banner.background = BannerBackground.create(json.getJSONObject("background"));
+        banner.background = BannerBackground.create(json.optJSONObject("background"));
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
@@ -171,10 +171,12 @@ public class Banner {
         banner.triggerType = BannerTriggerType.fromString(json.optString("triggerType"));
 
         banner.triggers = new LinkedList<>();
-        JSONArray triggersArray = json.getJSONArray("triggers");
-        for (int i = 0; i < triggersArray.length(); ++i) {
-            banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
-        }
+        JSONArray triggersArray = json.optJSONArray("triggers");
+        if (triggersArray != null) {
+			for (int i = 0; i < triggersArray.length(); ++i) {
+				banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
+			}
+		}
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);

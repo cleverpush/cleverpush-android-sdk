@@ -21,7 +21,7 @@ public enum BannerBlockType {
         if (typeMap.containsKey(raw)) {
             return typeMap.get(raw);
         } else {
-            throw new IllegalArgumentException("Unknown banner type: " + raw);
+            throw new IllegalArgumentException("Unknown banner block type: " + raw);
         }
     }
 }

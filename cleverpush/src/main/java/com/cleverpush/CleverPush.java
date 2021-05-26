@@ -114,6 +114,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
     private Map<String, String> pendingAppBannerEvents = new HashMap<>();
     private String pendingShowAppBannerId = null;
+	private String pendingShowAppBannerNotificationId = null;
     private String currentPageUrl;
     private AppBannerModule appBannerModule;
 
@@ -533,8 +534,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
 
         if (pendingShowAppBannerId != null) {
-            appBannerModule.showBannerById(pendingShowAppBannerId);
+            appBannerModule.showBannerById(pendingShowAppBannerId, pendingShowAppBannerNotificationId);
             pendingShowAppBannerId = null;
+			pendingShowAppBannerNotificationId = null;
         }
 
         appBannerModule.initSession(channelId);
@@ -1168,9 +1170,11 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             return false;
         }
         notificationOpenedListener.notificationOpened(openedResult);
-        if(openedResult.getNotification().getAppBanner() != null){
-            showAppBanner(openedResult.getNotification().getAppBanner());
+
+        if (openedResult.getNotification().getAppBanner() != null) {
+            showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
         }
+
         return true;
     }
 
@@ -1797,12 +1801,17 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     public void showAppBanner(String bannerId) {
-        if (appBannerModule == null) {
-            pendingShowAppBannerId = bannerId;
-            return;
-        }
-        appBannerModule.showBannerById(bannerId);
+		showAppBanner(bannerId, null);
     }
+
+	public void showAppBanner(String bannerId, String notificationId) {
+		if (appBannerModule == null) {
+			pendingShowAppBannerId = bannerId;
+			pendingShowAppBannerNotificationId = notificationId;
+			return;
+		}
+		appBannerModule.showBannerById(bannerId, notificationId);
+	}
 
     private void showPendingTopicsDialog() {
         this.getChannelConfig(config -> {

@@ -1,7 +1,10 @@
 ## Changelog
 
-== 1.x.x ==
+== 1.13.0 ==
 * Improved App Banner Conditions
+* New App Banner block type: HTML
+* Support custom fonts in App Banner
+* Open App Banner via Notification
 
 == 1.12.1 ==
 * Improved behaviour of automatic incrementing of badge count

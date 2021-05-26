@@ -18,10 +18,10 @@ public enum BannerType {
     }
 
     public static BannerType fromString(String raw) {
-        if(mapType.containsKey(raw)) {
+        if (mapType.containsKey(raw)) {
             return mapType.get(raw);
         } else {
-            throw new IllegalArgumentException("Unknown banner type: " + raw);
+            return Center;
         }
     }
 }

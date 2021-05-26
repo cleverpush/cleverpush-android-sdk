@@ -66,6 +66,7 @@ public class AppBannerModule {
     private boolean showDrafts;
     private long lastSessionTimestamp;
     private int sessions;
+    private boolean loading = false;
 
     private List<AppBannerPopup> popups = new ArrayList<>();
 	private List<Banner> banners = null;
@@ -95,14 +96,32 @@ public class AppBannerModule {
 		return banners;
 	}
 
-    private void loadBanners() {
+	private void loadBanners() {
+    	loadBanners(null);
+	}
+
+    private void loadBanners(String notificationId) {
+    	if (loading) {
+    		return;
+		}
+		loading = true;
+
     	String bannersPath = "/channel/" + channel + "/app-banners?platformName=Android";
+
 		if (CleverPush.getInstance(activity).isDevelopmentModeEnabled()) {
 			bannersPath += "&t=" + System.currentTimeMillis();
 		}
+
+		if (notificationId != null && !notificationId.isEmpty()) {
+			bannersPath += "&notificationId=" + notificationId;
+		}
+
+		Log.d("CleverPush/AppBanner", "Loading banners: " + bannersPath);
+
         CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
+				loading = false;
                 banners = new LinkedList<>();
                 try {
                     JSONObject responseJson = new JSONObject(response);
@@ -126,6 +145,7 @@ public class AppBannerModule {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
+				loading = false;
                 Log.e(TAG, "Something went wrong when loading banners." +
                         "\nStatus code: " + statusCode +
                         "\nResponse: " + response
@@ -214,11 +234,23 @@ public class AppBannerModule {
 	}
 
 	public void getBanners(AppBannersListener listener) {
+		this.getBanners(listener, null);
+	}
+
+	public void getBanners(AppBannersListener listener, String notificationId) {
 		if (listener != null) {
-			if (banners == null) {
+			if (notificationId != null) {
+				// reload banners because the banner might have been created just seconds ago
 				getBannersListeners.add(listener);
+				handler.post(() -> {
+					this.loadBanners(notificationId);
+				});
 			} else {
-				listener.ready(banners);
+				if (banners == null) {
+					getBannersListeners.add(listener);
+				} else {
+					listener.ready(banners);
+				}
 			}
 		}
 	}
@@ -330,16 +362,21 @@ public class AppBannerModule {
         }
     }
 
-    public void showBannerById(String bannerId) {
+	public void showBannerById(String bannerId) {
+		showBannerById(bannerId, null);
+	}
+
+    public void showBannerById(String bannerId, String notificationId) {
+    	Log.d("CleverPush/AppBanner", "showBannerById: " + bannerId);
     	this.getBanners(banners -> {
-    		for (Banner banner : banners) {
-    			if (banner.getId().equals(bannerId)) {
-    				AppBannerPopup popup = new AppBannerPopup(activity, banner);
+			for (Banner banner : banners) {
+				if (banner.getId().equals(bannerId)) {
+					AppBannerPopup popup = new AppBannerPopup(activity, banner);
 					handler.post(() -> showBanner(popup));
-    				break;
+					break;
 				}
 			}
-		});
+		}, notificationId);
 	}
 
     private void showBanner(AppBannerPopup bannerPopup) {
