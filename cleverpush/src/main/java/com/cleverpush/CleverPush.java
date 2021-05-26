@@ -1307,6 +1307,18 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS);
     }
 
+    public boolean hasDeSelectAll() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        return sharedPreferences.getBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL,false);
+    }
+
+    public void setDeSelectAll(Boolean isDeSelectAll) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, isDeSelectAll);
+        editor.commit();
+    }
+
     public Map<String, String> getSubscriptionAttributes() {
         Map<String, String> outputMap = new HashMap<>();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
@@ -1902,7 +1914,11 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                     CheckBox checkboxDeSelectAll = new CheckBox(CleverPush.context);
                     checkboxDeSelectAll.setText(context.getText(R.string.deselect_all));
 
-                    setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false);
+                    if (hasDeSelectAll()) {
+                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true);
+                    }else {
+                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false);
+                    }
 
                     checkboxLayout.addView(parentLayout);
 
@@ -1916,6 +1932,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                     alertBuilder.setPositiveButton(CleverPush.context.getResources().getString(R.string.save), (dialogInterface, i) -> {
                         if (checkboxDeSelectAll.isChecked()) {
                             unsubscribe();
+                            setDeSelectAll(true);
                         } else {
                             Set<String> selectedTopicIds = new HashSet<>();
                             for (int j = 0; j < topicIds.length; j++) {
@@ -1990,7 +2007,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
                     CheckBox checkbox = new CheckBox(CleverPush.context);
                     checkbox.setText(topic.optString("name"));
-                    checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
+
+                    if (!hasDeSelectAll()) {
+                        checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
+                    }
 
                     if (topic.has("parentTopic") && topic.optString("parentTopic").length() > 0) {
                         continue;
@@ -2022,11 +2042,15 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                             checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
                                 checkedTopics[childIndex] = isChecked;
                                 checkboxDeSelectAll.setChecked(false);
+                                setDeSelectAll(false);
                             });
                             checkedTopics[childIndex] = checkbox.isChecked();
 
                             checkboxChild.setText(childTopic.optString("name"));
-                            checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
+
+                            if (!hasDeSelectAll()) {
+                                checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
+                            }
 
                             childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
 
@@ -2042,6 +2066,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                         if (hasChildren) {
                             childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
                         }
+                        setDeSelectAll(false);
                     });
 
                     if (addedChildren > 0) {
