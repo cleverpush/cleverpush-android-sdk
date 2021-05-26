@@ -2189,8 +2189,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
     public void enableAppBanners() {
-        for (Banner banner : banners) {
-            showAppBanner(banner.getId());
+        if(banners != null){
+            for (Banner banner : banners) {
+                showAppBanner(banner.getId());
+            }
         }
     }
 
@@ -2199,6 +2201,5 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
             appBannerModule = AppBannerModule.init(ActivityLifecycleListener.currentActivity, channelId, this.developmentMode);
         }
         banners = appBannerModule.storeBanners();
-
     }
 }
