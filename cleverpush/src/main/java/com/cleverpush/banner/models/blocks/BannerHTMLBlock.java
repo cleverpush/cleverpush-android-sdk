@@ -23,7 +23,7 @@ public final class BannerHTMLBlock extends BannerBlock {
         htmlBlock.url = json.optString("url");
         if (json.optString("height").equalsIgnoreCase("")) {
             htmlBlock.height = "50";
-        }else {
+        } else {
             htmlBlock.height = json.optString("height");
         }
         return htmlBlock;
