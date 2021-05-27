@@ -1309,7 +1309,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     public boolean hasDeSelectAll() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        return sharedPreferences.getBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL,false);
+        return sharedPreferences.getBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, false);
     }
 
     public void setDeSelectAll(Boolean isDeSelectAll) {
