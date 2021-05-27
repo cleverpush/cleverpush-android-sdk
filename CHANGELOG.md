@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.13.1 ==
+* Improved App Banner Layout for tablets
+
 == 1.13.0 ==
 * Improved App Banner Conditions
 * New App Banner block type: HTML
