@@ -210,7 +210,7 @@ public class AppBannerPopup {
     private void composeButtonBlock(LinearLayout body, BannerButtonBlock block) {
         Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
         button.setText(block.getText());
-        button.setTextSize(TypedValue.COMPLEX_UNIT_SP,  block.getSize() * 4/3);
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4/3);
         button.setTextColor(this.parseColor(block.getColor()));
         Integer alignment = alignmentMap.get(block.getAlignment());
         button.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
@@ -253,7 +253,7 @@ public class AppBannerPopup {
     private void composeTextBlock(LinearLayout body, BannerTextBlock block) {
         TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
         textView.setText(block.getText());
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP,  block.getSize() * 4/3);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4/3);
         textView.setTextColor(this.parseColor(block.getColor()));
 
         if(block.getFamily() != null){
