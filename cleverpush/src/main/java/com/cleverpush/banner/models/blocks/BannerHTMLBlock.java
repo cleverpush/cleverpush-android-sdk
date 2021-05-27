@@ -21,7 +21,11 @@ public final class BannerHTMLBlock extends BannerBlock {
         BannerHTMLBlock htmlBlock = new BannerHTMLBlock();
         htmlBlock.type = BannerBlockType.HTML;
         htmlBlock.url = json.optString("url");
-        htmlBlock.height = json.optString("height");
+        if (json.optString("height").equalsIgnoreCase("")) {
+            htmlBlock.height = "50";
+        } else {
+            htmlBlock.height = json.optString("height");
+        }
         return htmlBlock;
     }
 }
