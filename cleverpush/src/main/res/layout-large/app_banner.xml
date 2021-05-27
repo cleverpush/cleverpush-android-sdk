@@ -18,7 +18,7 @@
         app:layout_constraintHeight_percent="0.9"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.6">
+        app:layout_constraintWidth_percent="0.5">
         <LinearLayout
             android:id="@+id/bannerBody"
             style="@style/banner_body"
