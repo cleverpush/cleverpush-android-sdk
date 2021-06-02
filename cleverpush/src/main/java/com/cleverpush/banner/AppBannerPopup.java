@@ -54,7 +54,7 @@ public class AppBannerPopup {
     private static final String CONTENT_TYPE_BLOCKS = "block";
     private static final String CONTENT_TYPE_HTML = "html";
 
-    private static final String POSITION_TYPE_TOP = "Top";
+    private static final String POSITION_TYPE_TOP = "top";
     private static final String POSITION_TYPE_BOTTOM = "bottom";
     private static final String POSITION_TYPE_CENTER = "center";
 
@@ -138,12 +138,12 @@ public class AppBannerPopup {
             case POSITION_TYPE_TOP:
                 set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 20);
                 break;
-            case POSITION_TYPE_CENTER:
-                set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 0);
-                set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 0);
-                break;
             case POSITION_TYPE_BOTTOM:
                 set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 20);
+                break;
+	    case default:
+                set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 0);
+                set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 0);
                 break;
         }
 
