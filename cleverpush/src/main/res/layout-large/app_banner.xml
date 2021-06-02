@@ -6,18 +6,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_alignWithParentIfMissing="false"
-	android:background="#26000000">
+    android:id="@+id/parent"
+    android:background="#26000000">
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:id="@+id/scrollView"
         android:elevation="4dp"
         android:orientation="vertical"
         app:layout_constrainedWidth="true"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.9"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent="0.5">
         <LinearLayout
             android:id="@+id/bannerBody"
