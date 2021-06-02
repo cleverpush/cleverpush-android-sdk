@@ -24,5 +24,6 @@ public class CleverPushPreferences {
     public static final String APP_REVIEW_SHOWN = "appReviewShownAt";
     public static final String PENDING_TOPICS_DIALOG = "pendingTopicsDialog";
 	public static final String APP_BANNER_SESSIONS = "appBannerSessions";
+    public static final String SUBSCRIPTION_TOPICS_DESELECT_ALL = "subscriptionTopicsDeselectAll";
 
 }
