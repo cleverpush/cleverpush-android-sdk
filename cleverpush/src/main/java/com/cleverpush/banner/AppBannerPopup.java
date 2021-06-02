@@ -23,6 +23,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
@@ -52,6 +53,10 @@ import java.util.Map;
 public class AppBannerPopup {
     private static final String CONTENT_TYPE_BLOCKS = "block";
     private static final String CONTENT_TYPE_HTML = "html";
+
+    private static final String POSITION_TYPE_TOP = "top";
+    private static final String POSITION_TYPE_BOTTOM = "bottom";
+    private static final String POSITION_TYPE_CENTER = "center";
 
     private static final String TAG = "CleverPush/AppBanner";
 
@@ -122,6 +127,27 @@ public class AppBannerPopup {
 
         popupRoot = createLayout();
         LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
+
+        ConstraintLayout mConstraintLayout  = (ConstraintLayout)popupRoot.findViewById(R.id.parent);
+        ScrollView scrollView =  popupRoot.findViewById(R.id.scrollView);
+
+        ConstraintSet set = new ConstraintSet();
+        set.clone(mConstraintLayout);
+
+        switch (data.getPositionType()){
+            case POSITION_TYPE_TOP:
+                set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 20);
+                break;
+            case POSITION_TYPE_BOTTOM:
+                set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 20);
+                break;
+	    case default:
+                set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 0);
+                set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 0);
+                break;
+        }
+
+        set.applyTo(mConstraintLayout);
 
         composeBackground(body);
         if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {

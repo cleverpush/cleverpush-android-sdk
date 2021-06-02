@@ -38,6 +38,7 @@ public class Banner {
     private boolean scheduled;
     private String content;
     private String contentType;
+    private String positionType;
 
     private Banner() {
     }
@@ -138,6 +139,14 @@ public class Banner {
         this.contentType = contentType;
     }
 
+    public String getPositionType() {
+        return positionType;
+    }
+
+    public void setPositionType(String positionType) {
+        this.positionType = positionType;
+    }
+
     public static Banner create(JSONObject json) throws JSONException {
         Banner banner = new Banner();
 
@@ -193,6 +202,7 @@ public class Banner {
         }
 
         banner.frequency = BannerFrequency.fromString(json.optString("frequency"));
+        banner.positionType = json.optString("type");
 
         return banner;
     }
