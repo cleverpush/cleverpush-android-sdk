@@ -1934,6 +1934,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                             unsubscribe();
                             setDeSelectAll(true);
                         } else {
+                            setDeSelectAll(false);
                             Set<String> selectedTopicIds = new HashSet<>();
                             for (int j = 0; j < topicIds.length; j++) {
                                 if (checkedTopics[j]) {
@@ -2042,7 +2043,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                             checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
                                 checkedTopics[childIndex] = isChecked;
                                 checkboxDeSelectAll.setChecked(false);
-                                setDeSelectAll(false);
                             });
                             checkedTopics[childIndex] = checkbox.isChecked();
 
@@ -2066,7 +2066,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                         if (hasChildren) {
                             childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
                         }
-                        setDeSelectAll(false);
                     });
 
                     if (addedChildren > 0) {
