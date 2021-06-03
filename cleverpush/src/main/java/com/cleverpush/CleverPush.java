@@ -140,6 +140,8 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
     private boolean developmentMode = false;
 
+    private boolean showingTopicsDialog = false;
+
     private CleverPush(@NonNull Context context) {
         if (context == null) {
             return;
@@ -1059,6 +1061,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                 @Override
                 public void onSuccess(String response) {
                     try {
+                    	Log.d("CleverPush", "unsubscribe success");
                         self.clearSubscriptionData();
                     } catch (Throwable t) {
                         Log.e("CleverPush", "Error", t);
@@ -1892,12 +1895,18 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener, @StyleRes int themeResId) {
-        CleverPush instance = this;
+    	// Ensure it will only be shown once at a time
+    	if (showingTopicsDialog) {
+    		return;
+		}
+        showingTopicsDialog = true;
+
         this.getChannelConfig(channelConfig -> {
             if (channelConfig == null) {
                 if (topicsDialogListener != null) {
                     topicsDialogListener.callback(false);
                 }
+				showingTopicsDialog = false;
                 return;
             }
 
@@ -1939,7 +1948,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
                     if (hasDeSelectAll()) {
                         setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true);
-                    }else {
+                    } else {
                         setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false);
                     }
 
@@ -1951,6 +1960,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                         if (topicsDialogListener != null) {
                             topicsDialogListener.callback(false);
                         }
+						showingTopicsDialog = false;
                     });
                     alertBuilder.setPositiveButton(CleverPush.context.getResources().getString(R.string.save), (dialogInterface, i) -> {
                         if (checkboxDeSelectAll.isChecked()) {
@@ -1972,6 +1982,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                         if (topicsDialogListener != null) {
                             topicsDialogListener.callback(true);
                         }
+						showingTopicsDialog = false;
                     });
 
                     AlertDialog alert = alertBuilder.create();
@@ -1979,6 +1990,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                 });
 
             } catch (JSONException e) {
+				showingTopicsDialog = false;
                 Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
             }
         });
