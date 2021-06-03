@@ -44,7 +44,7 @@ dependencies {
     // Google & Firebase
     implementation 'com.google.android.gms:play-services-base:[10.2.1, 17.6.99]'
     implementation 'com.google.android.gms:play-services-location:[16.0.0, 18.0.99]'
-    api 'com.google.firebase:firebase-messaging:[10.2.1, 21.0.99]'
+    api 'com.google.firebase:firebase-messaging:[10.2.1, 22.0.99]'
 
     // Huawei
     compileOnly 'com.huawei.hms:push:4.0.3.301'

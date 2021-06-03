@@ -9,9 +9,8 @@ import android.util.Log;
 import androidx.annotation.WorkerThread;
 
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -113,7 +112,8 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
             Object instanceId = getInstanceMethod.invoke(null, null);
             Method getTokenMethod = FirebaseInstanceIdClass.getMethod("getToken");
             Object token = getTokenMethod.invoke(instanceId, null);
-            return String.valueOf(((Task<String>) token).getResult());
+            Task<String> tokenTask = (Task<String>) getTokenMethod.invoke(instanceId, null);
+            return Tasks.await(tokenTask);
         } catch (ClassNotFoundException e) {
             exception = e ;
         } catch (NoSuchMethodException e) {

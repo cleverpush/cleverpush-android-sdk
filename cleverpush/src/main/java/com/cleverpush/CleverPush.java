@@ -80,7 +80,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
+public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCallback {
 
     public static final String SDK_VERSION = "1.14.0";
 
@@ -812,8 +812,46 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = new GoogleApiClient.Builder(CleverPush.context)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
+                    .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                        @Override
+                        public void onConnected(@Nullable Bundle bundle) {
+                            Log.d("CleverPush", "GoogleApiClient onConnected");
+
+                            if (geofenceList.size() > 0) {
+                                Log.d("CleverPush", "initing geofences " + geofenceList.toString());
+
+                                GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+                                builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+                                builder.addGeofences(geofenceList);
+                                GeofencingRequest geofenceRequest = builder.build();
+
+                                Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
+                                // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
+                                PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                                try {
+                                    LocationServices.GeofencingApi.addGeofences(
+                                            googleApiClient,
+                                            geofenceRequest,
+                                            geofencePendingIntent
+                                    );
+                                } catch (SecurityException securityException) {
+                                    // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onConnectionSuspended(int i) {
+                            Log.d("CleverPush", "GoogleApiClient onConnectionSuspended");
+                        }
+                    })
+                    .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                        @Override
+                        public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                            Log.d("CleverPush", "GoogleApiClient onConnectionFailed");
+                        }
+                    })
                     .addApi(LocationServices.API)
                     .build();
 
@@ -2115,44 +2153,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return topicsChangedListener;
     }
 
-    @SuppressLint("MissingPermission")
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d("CleverPush", "GoogleApiClient onConnected");
-
-        if (geofenceList.size() > 0) {
-            Log.d("CleverPush", "initing geofences " + geofenceList.toString());
-
-            GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-            builder.addGeofences(geofenceList);
-            GeofencingRequest geofenceRequest = builder.build();
-
-            Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
-            // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
-            PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            try {
-                LocationServices.GeofencingApi.addGeofences(
-                        googleApiClient,
-                        geofenceRequest,
-                        geofencePendingIntent
-                );
-            } catch (SecurityException securityException) {
-                // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-            }
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d("CleverPush", "GoogleApiClient onConnectionFailed");
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.d("CleverPush", "GoogleApiClient onConnectionSuspended");
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
