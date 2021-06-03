@@ -27,9 +27,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
-import com.cleverpush.banner.models.Banner;
 import com.cleverpush.listener.AppBannerOpenedListener;
-import com.cleverpush.listener.AppBannerUrlOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
 import com.cleverpush.listener.ChannelTagsListener;
@@ -76,7 +74,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -85,7 +82,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.13.1";
+    public static final String SDK_VERSION = "1.14.0";
 
     private static CleverPush instance;
 
@@ -117,6 +114,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 	private String pendingShowAppBannerNotificationId = null;
     private String currentPageUrl;
     private AppBannerModule appBannerModule;
+	private boolean appBannersDisabled = false;
 
     private String channelId;
     private String subscriptionId = null;
@@ -141,8 +139,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private boolean autoClearBadge = false;
 
     private boolean developmentMode = false;
-
-    private List<Banner> banners = null;
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -1792,26 +1788,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 		this.appBannerModule.triggerEvent(key, value);
 	}
 
-    @Deprecated
-    public void showAppBanners() {
-
-    }
-
-    @Deprecated
-    public void showAppBanners(Activity activity) {
-        showAppBanners(activity, null);
-    }
-
-    @Deprecated
-    public void showAppBanners(AppBannerUrlOpenedListener urlOpenedListener) {
-
-    }
-
-    @Deprecated
-    public void showAppBanners(Activity activity, AppBannerUrlOpenedListener urlOpenedListener) {
-
-    }
-
     public void showAppBanner(String bannerId) {
 		showAppBanner(bannerId, null);
     }
@@ -2221,18 +2197,23 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
     }
 
+	public boolean areAppBannersDisabled() {
+    	return appBannersDisabled;
+	}
+
     public void enableAppBanners() {
-        if(banners != null){
-            for (Banner banner : banners) {
-                showAppBanner(banner.getId());
-            }
-        }
+		appBannersDisabled = false;
+    	if (appBannerModule == null) {
+			return;
+		}
+		appBannerModule.enableBanners();
     }
 
     public void disableAppBanners() {
-        if (!isInitialized()) {
-            appBannerModule = AppBannerModule.init(ActivityLifecycleListener.currentActivity, channelId, this.developmentMode);
-        }
-        banners = appBannerModule.storeBanners();
+		appBannersDisabled = true;
+		if (appBannerModule == null) {
+			return;
+		}
+		appBannerModule.disableBanners();
     }
 }

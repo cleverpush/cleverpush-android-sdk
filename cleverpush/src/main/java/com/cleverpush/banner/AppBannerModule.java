@@ -68,8 +68,9 @@ public class AppBannerModule {
     private int sessions;
     private boolean loading = false;
 
-    private List<AppBannerPopup> popups = new ArrayList<>();
-	private List<Banner> banners = null;
+    private Collection<AppBannerPopup> popups = new ArrayList<>();
+	private Collection<AppBannerPopup> pendingBanners = new ArrayList<>();
+	private Collection<Banner> banners = null;
 	private Collection<AppBannersListener> getBannersListeners = new ArrayList<>();
 
 	private Map<String, String> events = new HashMap<>();
@@ -90,11 +91,6 @@ public class AppBannerModule {
         handlerThread.start();
 		handler = new Handler(handlerThread.getLooper());
     }
-
-	public List<Banner> storeBanners() {
-		loadBanners();
-		return banners;
-	}
 
 	private void loadBanners() {
     	loadBanners(null);
@@ -264,7 +260,7 @@ public class AppBannerModule {
 		});
     }
 
-    private void createBanners(List<Banner> banners) {
+    private void createBanners(Collection<Banner> banners) {
 		for (Banner banner : banners) {
             if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
             	Log.d(TAG, "Skipping Banner because: Draft");
@@ -339,6 +335,12 @@ public class AppBannerModule {
     }
 
     private void scheduleBanners() {
+		if (CleverPush.getInstance(activity).areAppBannersDisabled()) {
+			pendingBanners.addAll(popups);
+			popups.removeAll(pendingBanners);
+			return;
+		}
+
         Date now = new Date();
         for (AppBannerPopup bannerPopup : popups) {
             Banner banner = bannerPopup.getData();
@@ -427,6 +429,18 @@ public class AppBannerModule {
         editor.putStringSet(SHOWN_APP_BANNER_PREF, shownBanners);
         editor.commit();
     }
+
+	public void enableBanners() {
+		if (pendingBanners != null && pendingBanners.size() > 0) {
+			popups.addAll(pendingBanners);
+			pendingBanners.clear();
+			this.scheduleBanners();
+		}
+	}
+
+	public void disableBanners() {
+		pendingBanners = new ArrayList<>();
+	}
 
     @Override
     protected void finalize() throws Throwable {

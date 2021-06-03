@@ -141,7 +141,7 @@ public class AppBannerPopup {
             case POSITION_TYPE_BOTTOM:
                 set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 20);
                 break;
-	    case default:
+	    	default:
                 set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 0);
                 set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 0);
                 break;
