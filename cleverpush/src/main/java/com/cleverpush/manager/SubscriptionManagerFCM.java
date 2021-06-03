@@ -60,8 +60,8 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
 
         try {
             return getTokenWithClassFirebaseMessaging();
-        } catch (Exception  e) {
-            Log.e("CleverPush", "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken");
+        } catch (Exception e) {
+            Log.d("CleverPush", "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken");
         }
         return getTokenWithClassFirebaseInstanceId(senderId);
     }
