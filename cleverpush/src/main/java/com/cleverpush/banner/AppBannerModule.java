@@ -91,15 +91,26 @@ public class AppBannerModule {
 		handler = new Handler(handlerThread.getLooper());
     }
 
+	/**
+	 * store all banners locally
+	 * @return List<Banner> stored locally
+	 */
 	public List<Banner> storeBanners() {
 		loadBanners();
 		return banners;
 	}
 
+	/**
+	 * will load banners
+	 */
 	private void loadBanners() {
     	loadBanners(null);
 	}
 
+	/**
+	 * will load banners for specific notification ID
+	 * @param notificationId id of the notification
+	 */
     private void loadBanners(String notificationId) {
     	if (loading) {
     		return;
@@ -154,6 +165,11 @@ public class AppBannerModule {
         });
     }
 
+	/**
+	 * send banner event to the server
+	 * @param event event needed to send
+	 * @param banner banner for which you want to send event
+	 */
 	private void sendBannerEvent(String event, Banner banner) {
     	Log.d(TAG, "sendBannerEvent: " + event);
 
@@ -187,6 +203,10 @@ public class AppBannerModule {
 		});
 	}
 
+	/**
+	 * initialize session for channel
+	 * @param channel
+	 */
 	public void initSession(String channel) {
     	this.channel = channel;
 
@@ -215,11 +235,17 @@ public class AppBannerModule {
 		this.startup();
 	}
 
+	/**
+	 * get sessions stored in preferences
+	 */
 	private int getSessions() {
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 		return sharedPreferences.getInt(CleverPushPreferences.APP_BANNER_SESSIONS, 0);
 	}
 
+	/**
+	 * save sessions to the preferences
+	 */
 	private void saveSessions() {
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 		SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -227,16 +253,30 @@ public class AppBannerModule {
 		editor.apply();
 	}
 
+	/**
+	 * trigger event
+	 * @param key
+	 * @param value
+	 */
 	public void triggerEvent(String key, String value) {
 		events.put(key, value);
 
 		this.startup();
 	}
 
+	/**
+	 * get banners
+	 * @param listener AppBannersListener
+	 */
 	public void getBanners(AppBannersListener listener) {
 		this.getBanners(listener, null);
 	}
 
+	/**
+	 * get banners
+	 * @param listener 		 AppBannersListener
+	 * @param notificationId notificationId
+	 */
 	public void getBanners(AppBannersListener listener, String notificationId) {
 		if (listener != null) {
 			if (notificationId != null) {
@@ -255,6 +295,9 @@ public class AppBannerModule {
 		}
 	}
 
+	/**
+	 * startup
+	 */
     private void startup() {
     	Log.d(TAG, "startup");
 
@@ -264,7 +307,11 @@ public class AppBannerModule {
 		});
     }
 
-    private void createBanners(List<Banner> banners) {
+	/**
+	 * create banners popup
+	 * @param banners list of banners
+	 */
+	private void createBanners(List<Banner> banners) {
 		for (Banner banner : banners) {
             if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
             	Log.d(TAG, "Skipping Banner because: Draft");
@@ -338,7 +385,10 @@ public class AppBannerModule {
         }
     }
 
-    private void scheduleBanners() {
+	/**
+	 * schedule banners
+	 */
+	private void scheduleBanners() {
         Date now = new Date();
         for (AppBannerPopup bannerPopup : popups) {
             Banner banner = bannerPopup.getData();
@@ -362,10 +412,19 @@ public class AppBannerModule {
         }
     }
 
+	/**
+	 * show banner by bannerID
+	 * @param bannerId  id of banner
+	 */
 	public void showBannerById(String bannerId) {
 		showBannerById(bannerId, null);
 	}
 
+	/**
+	 * show banner by ID
+	 * @param bannerId 		 id of the banner
+	 * @param notificationId id of notification
+	 */
     public void showBannerById(String bannerId, String notificationId) {
     	Log.d("CleverPush/AppBanner", "showBannerById: " + bannerId);
     	this.getBanners(banners -> {
@@ -379,6 +438,10 @@ public class AppBannerModule {
 		}, notificationId);
 	}
 
+	/**
+	 * show banner popup
+	 * @param bannerPopup banner popup you want to show
+	 */
     private void showBanner(AppBannerPopup bannerPopup) {
         bannerPopup.init();
         bannerPopup.show();
@@ -407,7 +470,11 @@ public class AppBannerModule {
         this.sendBannerEvent("delivered", bannerPopup.getData());
     }
 
-    private boolean isBannerShown(String id) {
+	/**
+	 * check if banner is shown
+	 * @param id id of the banner
+	 */
+	private boolean isBannerShown(String id) {
         SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
@@ -415,7 +482,11 @@ public class AppBannerModule {
         return shownBanners.contains(id);
     }
 
-    private void bannerIsShown(String id) {
+	/**
+	 * store when banner is shown
+	 * @param id id of the banner
+	 */
+	private void bannerIsShown(String id) {
         SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 

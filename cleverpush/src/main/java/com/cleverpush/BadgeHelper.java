@@ -12,10 +12,22 @@ import com.cleverpush.shortcutbadger.ShortcutBadgeException;
 import com.cleverpush.shortcutbadger.ShortcutBadger;
 
 public class BadgeHelper {
+
+	/**
+	 *  update badge count
+	 * @param context		 context of caller
+	 * @param incrementBadge is badge increment
+	 */
 	public static void update(Context context, boolean incrementBadge) {
 		update(context, incrementBadge, 0);
 	}
 
+	/**
+	 *  update badge count
+	 * @param context		  context of caller
+	 * @param incrementBadge  is badge increment
+	 * @param additionalCount additional badge count
+	 */
 	public static void update(Context context, boolean incrementBadge, int additionalCount) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			updateBadge(context, incrementBadge, additionalCount);
@@ -43,6 +55,12 @@ public class BadgeHelper {
 		return statusBarNotifications;
 	}
 
+	/**
+	 *  update badge count
+	 * @param context		  context of caller
+	 * @param incrementBadge  is badge increment
+	 * @param additionalCount additional badge count
+	 */
 	@RequiresApi(api = Build.VERSION_CODES.M)
 	private static void updateBadge(Context context, boolean incrementBadge, int additionalCount) {
 		StatusBarNotification[] activeNotifs = getActiveNotifications(context);
@@ -62,6 +80,11 @@ public class BadgeHelper {
 		updateCount(runningCount, context);
 	}
 
+	/**
+	 * update count
+	 * @param count   new count
+	 * @param context context of caller
+	 */
 	static void updateCount(int count, Context context) {
 		try {
 			ShortcutBadger.applyCountOrThrow(context, count);

@@ -50,6 +50,10 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
 
     private Thread registerThread;
 
+    /**
+     * register in background
+     * @param senderId sender_id
+     */
     private synchronized void registerInBackground(final String senderId) {
         // If any thread is still running, don't create a new one
         if (registerThread != null && registerThread.isAlive())
@@ -73,6 +77,11 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
 
     private boolean firedCallback;
 
+    /**
+     * attempt registration
+     * @param senderId     sender_id
+     * @param currentRetry current retry count
+     */
     private boolean attemptRegistration(String senderId, int currentRetry) {
         try {
             String token = getToken(senderId);
@@ -113,6 +122,11 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
         return false;
     }
 
+    /**
+     * check if project number is valid
+     * @param senderId sender_id
+     * @param callback call back for registeredHandler
+     */
     private boolean isValidProjectNumber(String senderId, SubscriptionManager.RegisteredHandler callback) {
         boolean isProjectNumberValidFormat;
         try {

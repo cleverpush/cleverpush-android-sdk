@@ -37,14 +37,29 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         this.channelConfig = channelConfig;
     }
 
+    /**
+     * sync subscription
+     * @param token device token
+     */
     void syncSubscription(String token) {
         syncSubscription(token, null);
     }
 
+    /**
+     * sync subscription
+     * @param token    device token
+     * @param senderId sender_id
+     */
     void syncSubscription(String token, String senderId) {
         syncSubscription(token, senderId, false);
     }
 
+    /**
+     * sync subscription
+     *@param token    device token
+     *@param senderId sender_id
+     * @param retry   is retry available
+     */
     void syncSubscription(String token, String senderId, boolean retry) {
         Log.d("CleverPush", "syncSubscription");
 

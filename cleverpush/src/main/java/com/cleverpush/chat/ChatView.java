@@ -27,6 +27,9 @@ public class ChatView extends WebView {
         this.init();
     }
 
+    /**
+     * load chat view
+     */
     public void loadChat() {
         Context context = this.getContext();
         CleverPush.getInstance(context).getSubscriptionId(subscriptionId -> {
@@ -38,6 +41,10 @@ public class ChatView extends WebView {
         loadChat("preview");
     }
 
+    /**
+     * load chat
+     * @param subscriptionId lastSubscriptionId
+     */
     public void loadChat(String subscriptionId) {
         lastSubscriptionId = subscriptionId;
 
@@ -124,6 +131,9 @@ public class ChatView extends WebView {
         }).start();
     }
 
+    /**
+     * initialize chat view
+     */
     void init() {
         this.handler = new Handler();
         Context context = this.getContext();
@@ -160,6 +170,9 @@ public class ChatView extends WebView {
         this.loadChat();
     }
 
+    /**
+     * get last subscription ID
+     */
     public String getLastSubscriptionId() {
         return lastSubscriptionId;
     }

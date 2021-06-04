@@ -228,7 +228,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with notification received callback
-     * @param channelId channelID of the channel
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
@@ -237,7 +237,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with notification opened callback
-     * @param channelId channelID of the channel
+     * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) {
@@ -247,7 +247,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     /**
      *initialize Cleverpush SDK with notification opened callback and subscribed callback
      * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener         callback for subscription
      */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, null, notificationOpenedListener, subscribedListener);
@@ -256,7 +256,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     /**
      *initialize Cleverpush SDK with notification received callback and subscribed callback
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener           callback for subscription
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, notificationReceivedListener, null, subscribedListener);
@@ -264,9 +264,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with notification received callback and notification opened callback
-     * @param channelId channelID of the channel
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener callback for the notification opened
+     * @param notificationOpenedListener   callback for the notification opened
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, null);
@@ -274,7 +274,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with subscribed callback
-     * @param channelId channelID of the channel
+     * @param channelId          channelID of the channel
      * @param subscribedListener callback for subscription
      */
     public void init(String channelId, @Nullable final SubscribedListener subscribedListener) {
@@ -283,9 +283,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with notification received callback and subscribed callback
-     * @param channelId channelID of the channel
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener           callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, null, subscribedListener);
@@ -293,9 +293,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with notification opened callback and subscribed callback
-     * @param channelId channelID of the channel
+     * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener         callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, null, notificationOpenedListener, subscribedListener);
@@ -303,10 +303,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with notification received, notification opened callback and subscribed callback
-     * @param channelId channelID of the channel
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
+     * @param notificationOpenedListener   callback for the notification opened
+     * @param subscribedListener           callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, true);
@@ -314,10 +314,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with notification opened callback and subscribed callback and if there is autoRegister
-     * @param channelId channelID of the channel
+     * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
-     * @param autoRegister boolean for auto register
+     * @param subscribedListener         callback for subscription
+     * @param autoRegister               boolean for auto register
      */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         init(channelId, null, notificationOpenedListener, subscribedListener, autoRegister);
@@ -325,21 +325,21 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     /**
      *initialize Cleverpush SDK for channel with notification received callback and subscribed callback and if there is autoRegister
-     * @param channelId channelID of the channel
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener callback for subscription
-     * @param autoRegister boolean for auto register
+     * @param subscribedListener           callback for subscription
+     * @param autoRegister                 boolean for auto register
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         init(channelId, notificationReceivedListener, null, subscribedListener, autoRegister);
     }
     /**
      *initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
-     * @param channelId channelID of the channel
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
-     * @param autoRegister boolean for auto register
+     * @param notificationOpenedListener   callback for the notification opened
+     * @param subscribedListener           callback for subscription
+     * @param autoRegister                 boolean for auto register
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
@@ -869,6 +869,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         this.checkTags(url, params);
     }
 
+    /**
+     * will track session start
+     */
     private void trackSessionStart() {
         // reset
         this.sessionVisits = 0;
@@ -909,6 +912,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         this.sessionVisits += 1;
     }
 
+    /**
+     * will track session end
+     */
     private void trackSessionEnd() {
         if (sessionStartedTimestamp == 0) {
             Log.e("CleverPush", "Error tracking session end - session started timestamp is 0");
@@ -958,10 +964,17 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_ID);
     }
 
+    /**
+     * Subscribe to the channel
+     */
     public void subscribe() {
         subscribe(false);
     }
 
+    /**
+     * Subscribe to the channel
+     * @param newSubscription boolean for if subscription is new or old
+     */
     public void subscribe(boolean newSubscription) {
         if (this.subscriptionInProgress) {
             return;
@@ -1008,6 +1021,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         });
     }
 
+    /**
+     * unsubscribe from the channel
+     */
     public void unsubscribe() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
@@ -1039,10 +1055,18 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * set if tracking consent is required or not
+     * @param required value of tracking consent is required or not
+     */
     public void setTrackingConsentRequired(Boolean required) {
         trackingConsentRequired = required;
     }
 
+    /**
+     * wait for tracking consent
+     * @param listener listener for the trackingConsentListeners
+     */
     public void waitForTrackingConsent(TrackingConsentListener listener) {
         if (listener != null) {
             if (trackingConsentRequired && !hasTrackingConsent) {
@@ -1055,6 +1079,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * set tracking consent
+     * @param consent boolean value for if there is tracking consent or not
+     */
     public void setTrackingConsent(Boolean consent) {
         hasTrackingConsentCalled = true;
         hasTrackingConsent = consent;
@@ -1082,6 +1110,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return channelConfig;
     }
 
+    /**
+     * get config for the channel
+     * @param listener listener for the channelConfigListener
+     */
     public void getChannelConfig(ChannelConfigListener listener) {
         if (listener != null) {
             if (channelConfig == null && !initialized) {
@@ -1092,6 +1124,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * set config for the channel
+     * @param value values you want to set for channel config
+     */
     public synchronized void setChannelConfig(JSONObject value) {
         channelConfig = value;
         notifyAll();
@@ -1119,6 +1155,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return subscriptionId;
     }
 
+    /**
+     * will return subscription ID on successful subscrption
+     * @param listener subscribedListener
+     */
     public void getSubscriptionId(SubscribedListener listener) {
         if (listener != null) {
             if (subscriptionId == null) {
@@ -1129,6 +1169,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * set subscription Id
+     * @param value value of the subscription Id
+     */
     public synchronized void setSubscriptionId(String value) {
         subscriptionId = value;
         notifyAll();
@@ -1141,10 +1185,19 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+
+    /**
+     * Returns if notification received
+     * @return will return if notification is received or not
+     */
     public boolean isNotificationReceivedListenerCallback() {
         return notificationReceivedListener != null && notificationReceivedListener instanceof NotificationReceivedCallbackListener;
     }
 
+    /**
+     * fire notification receivedListener
+     * @param openedResult Notification openedResult
+     */
     public boolean fireNotificationReceivedListener(final NotificationOpenedResult openedResult) {
         if (notificationReceivedListener == null) {
             return false;
@@ -1153,6 +1206,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return true;
     }
 
+    /**
+     * fire notification received callback
+     * @param openedResult Notification openedResult
+     */
     public boolean fireNotificationReceivedCallbackListener(final NotificationOpenedResult openedResult) {
         if (notificationReceivedListener == null || !(notificationReceivedListener instanceof NotificationReceivedCallbackListener)) {
             return false;
@@ -1160,10 +1217,17 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return ((NotificationReceivedCallbackListener) notificationReceivedListener).notificationReceivedCallback(openedResult);
     }
 
+    /**
+     * remove notification received listener
+     */
     public void removeNotificationReceivedListener() {
         notificationReceivedListener = null;
     }
 
+    /**
+     * use to fire notification opened listener
+     * @param openedResult Notification openedResult
+     */
     public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
         if (notificationOpenedListener == null) {
             unprocessedOpenedNotifications.add(openedResult);
@@ -1178,10 +1242,17 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return true;
     }
 
+    /**
+     * remove notification opened listener
+     */
     public void removeNotificationOpenedListener() {
         notificationOpenedListener = null;
     }
 
+    /**
+     * se to fire subscribed listener
+     * @param subscriptionId subscription id
+     */
     public void fireSubscribedListener(final String subscriptionId) {
         if (subscribedListener == null ||  subscriptionId == null) {
             return;
@@ -1189,12 +1260,19 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         subscribedListener.subscribed(subscriptionId);
     }
 
+    /**
+     * remove subscribed listener
+     */
     public void removeSubscribedListener() {
         subscribedListener = null;
     }
 
     private SubscriptionManager subscriptionManager;
 
+    /**
+     * will return subscription manager based on device configuration
+     * @return subscriptionManager
+     */
     public SubscriptionManager getSubscriptionManager() {
         if (subscriptionManager != null) {
             return subscriptionManager;
@@ -1212,10 +1290,18 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return subscriptionManager;
     }
 
+
+    /**
+     * set subscription Manager
+     * @param subscriptionManager
+     */
     public void setSubscriptionManager(SubscriptionManager subscriptionManager) {
         this.subscriptionManager = subscriptionManager;
     }
 
+    /**
+     * will check if there is firebase messaging library
+     */
     static boolean hasFCMLibrary() {
         try {
             Class.forName("com.google.firebase.messaging.FirebaseMessaging");
@@ -1225,6 +1311,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * will check if there is google cloud messaging library
+     */
     private static boolean hasGCMLibrary() {
         try {
             Class.forName("com.google.android.gms.gcm.GoogleCloudMessaging");
@@ -1234,6 +1323,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * will check if googlePlayServices is installed and enabled
+     */
     static boolean isGMSInstalledAndEnabled() {
         try {
             PackageManager pm = CleverPush.context.getPackageManager();
@@ -1244,6 +1336,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * will check for HuaweiApiAvailability
+     */
     private static boolean hasHMSAvailabilityLibrary() {
         try {
             Class.forName("com.huawei.hms.api.HuaweiApiAvailability");
@@ -1253,6 +1348,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * will check for HHMSPushKitLibrary
+     */
     private static boolean hasHMSPushKitLibrary() {
         try {
             Class.forName("com.huawei.hms.aaid.HmsInstanceId");
@@ -1262,6 +1360,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * will check for HMSAGConnectLibrary
+     */
     private static boolean hasHMSAGConnectLibrary() {
         try {
             Class.forName("com.huawei.agconnect.config.AGConnectServicesConfig");
@@ -1271,15 +1372,24 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * will check for AllHMSLibrariesForPushKit
+     */
     static boolean hasAllHMSLibrariesForPushKit() {
         return hasHMSAGConnectLibrary() && hasHMSPushKitLibrary();
     }
 
+    /**
+     * will check if HMS core is Installed And Enabled
+     */
     private static boolean isHMSCoreInstalledAndEnabled() {
         HuaweiApiAvailability availability = HuaweiApiAvailability.getInstance();
         return availability.isHuaweiMobileServicesAvailable(CleverPush.context) == 0;
     }
 
+    /**
+     * will check if there is ADM support
+     */
     private boolean supportsADM() {
         try {
             Class.forName("com.amazon.device.messaging.ADM");
@@ -1289,6 +1399,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * will check if there is HMS support
+     */
     private boolean supportsHMS() {
         if (!hasHMSAvailabilityLibrary() || !hasAllHMSLibrariesForPushKit()) {
             return false;
@@ -1296,26 +1409,44 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return isHMSCoreInstalledAndEnabled();
     }
 
+    /**
+     * get  SubscriptionTags
+     * @return String set of subsription tags
+     */
     public Set<String> getSubscriptionTags() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
     }
 
+    /**
+     * get Subscription topics
+     * @return String set of subscription topics
+     */
     public Set<String> getSubscriptionTopics() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>());
     }
 
+    /**
+     * check if there is subscription topics
+     * @return boolean if there is subscription topics or not
+     */
     public boolean hasSubscriptionTopics() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS);
     }
 
+    /**
+     * check if DeselectAll is selected or not
+     */
     public boolean hasDeSelectAll() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.getBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, false);
     }
 
+    /**
+     * set DeselectAll value based on user selection
+     */
     public void setDeSelectAll(Boolean isDeSelectAll) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1323,6 +1454,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         editor.commit();
     }
 
+    /**
+     * get subscription attributes stored in preference
+     * @return Map<String, String> of subscription attributes
+     */
     public Map<String, String> getSubscriptionAttributes() {
         Map<String, String> outputMap = new HashMap<>();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
@@ -1343,14 +1478,26 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return outputMap;
     }
 
+    /**
+     * check if stored subscription tags has given subscription tag
+     * @param tagId tagid of the subscription tag
+     */
     public boolean hasSubscriptionTag(String tagId) {
         return this.getSubscriptionTags().contains(tagId);
     }
 
+    /**
+     * get subscription attribute from attributeId
+     * @param attributeId attribute id of subscription attribute
+     */
     public String getSubscriptionAttribute(String attributeId) {
         return this.getSubscriptionAttributes().get(attributeId);
     }
 
+    /**
+     * get all available tags from channel config
+     * @param channelConfig channel config
+     */
     private Set<ChannelTag> getAvailableTagsFromConfig(JSONObject channelConfig) {
         Set<ChannelTag> tags = new HashSet<>();
         if (channelConfig != null && channelConfig.has("channelTags")) {
@@ -1374,18 +1521,31 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     }
 
 
+    /**
+     * get all available tags from the channel config
+     * @return Set<ChannelTag> set of available tags
+     */
     @Deprecated
     public Set<ChannelTag> getAvailableTags() {
         JSONObject channelConfig = this.getChannelConfig();
         return this.getAvailableTagsFromConfig(channelConfig);
     }
 
+    /**
+     * get all available tags from the channel config
+     * @param listener ChannelTagsListener
+     */
     public void getAvailableTags(ChannelTagsListener listener) {
         this.getChannelConfig(channelConfig -> {
             listener.ready(this.getAvailableTagsFromConfig(channelConfig));
         });
     }
 
+    /**
+     * get all available attributes from channel config
+     * @param channelConfig channel config
+     * @return Set<CustomAttribute> set of custom attribute
+     */
     private Set<CustomAttribute> getAvailableAttributesFromConfig(JSONObject channelConfig) {
         Set<CustomAttribute> attributes = new HashSet<>();
         if (channelConfig != null && channelConfig.has("customAttributes")) {
@@ -1416,18 +1576,31 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return this.getAvailableAttributesFromConfig(channelConfig);
     }
 
+    /**
+     * get all available attributes from channel config
+     * @param listener ChannelAttributesListener
+     */
     public void getAvailableAttributes(ChannelAttributesListener listener) {
         this.getChannelConfig(channelConfig -> {
             listener.ready(this.getAvailableAttributesFromConfig(channelConfig));
         });
     }
 
+    /**
+     * get all available topics from channel config
+     * @param listener ChannelTopicsListener
+     */
     public void getAvailableTopics(ChannelTopicsListener listener) {
         this.getChannelConfig(channelConfig -> {
             listener.ready(this.getAvailableTopicsFromConfig(channelConfig));
         });
     }
 
+    /**
+     * get all available topics from channel config
+     * @param channelConfig channel config
+     * @return Set<ChannelTopic> set of available topics
+     */
     private Set<ChannelTopic> getAvailableTopicsFromConfig(JSONObject channelConfig) {
         Set<ChannelTopic> topics = new LinkedHashSet<>();
         if (channelConfig != null && channelConfig.has("channelTopics")) {
@@ -1466,6 +1639,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return topics;
     }
 
+    /**
+     * add subscription tag
+     * @param tagId tagID of the subscription tag
+     */
     public void addSubscriptionTag(String tagId) {
         Log.d("CleverPush", "addSubscriptionTag: " + tagId);
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
@@ -1506,6 +1683,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         })).start());
     }
 
+    /**
+     * remove subscription tag
+     * @param tagId tagId of the subscription tag
+     */
     public void removeSubscriptionTag(String tagId) {
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId != null) {
@@ -1540,10 +1721,19 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         })).start());
     }
 
+    /**
+     * set subscription topics
+     * @param topicIds String[] of topicIds
+     */
     public void setSubscriptionTopics(String[] topicIds) {
         setSubscriptionTopics(topicIds, null);
     }
 
+    /**
+     * set subscription topics with completion callback
+     * @param topicIds           String[] of topicIds
+     * @param completionListener completionListener
+     */
     public void setSubscriptionTopics(String[] topicIds, CompletionListener completionListener) {
         new Thread(() -> {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
@@ -1600,6 +1790,11 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }).start();
     }
 
+    /**
+     * set subscription attribute
+     * @param attributeId attribute ID
+     * @param value       value
+     */
     public void setSubscriptionAttribute(String attributeId, String value) {
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId != null) {
@@ -1643,6 +1838,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         })).start());
     }
 
+    /**
+     * sync subscription
+     */
     public void trySubscriptionSync() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         int currentTime = (int) (System.currentTimeMillis() / 1000L);
@@ -1654,6 +1852,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * set subscription language
+     * @param language language to set in subscription
+     */
     public void setSubscriptionLanguage(String language) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         String currentLanguage = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
@@ -1667,6 +1869,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * set subscription country
+     * @param country country to set in subscription
+     */
     public void setSubscriptionCountry(String country) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         String currentCountry = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
@@ -1680,6 +1886,10 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     *get notifications
+     * @return Set<Notification> set of the notification
+     */
     public Set<Notification> getNotifications() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         Set<String> encodedNotifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
@@ -1694,10 +1904,19 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return notifications;
     }
 
+    /**
+     * track event
+     * @param eventName name of the event
+     */
     public void trackEvent(String eventName) {
         this.trackEvent(eventName, null);
     }
 
+    /**
+     * track event
+     * @param eventName name of the event
+     * @param amount    amount
+     */
     public void trackEvent(String eventName, Float amount) {
         this.getChannelConfig(channelConfig -> {
             if (channelConfig == null) {
@@ -1752,10 +1971,19 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         });
     }
 
+    /**
+     * track notification delivered
+     * @param notificationId id of the notification
+     */
 	public void trackNotificationDelivered(String notificationId) {
 		this.getSubscriptionId(subscriptionId -> this.trackNotificationDelivered(notificationId, subscriptionId));
 	}
 
+    /**
+     * track notification delivered
+     * @param notificationId id of the notification
+     * @param subscriptionId subscription id
+     */
 	public void trackNotificationDelivered(String notificationId, String subscriptionId) {
 		JSONObject jsonBody = new JSONObject();
 		try {
@@ -1768,10 +1996,19 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 		CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
 	}
 
+    /**
+     * track notification clicked
+     * @param notificationId id of notification
+     */
 	public void trackNotificationClicked(String notificationId) {
     	this.getSubscriptionId(subscriptionId -> this.trackNotificationClicked(notificationId, subscriptionId));
 	}
 
+    /**
+     * track notification clicked
+     * @param notificationId id of the notification
+     * @param subscriptionId subscription id
+     */
     public void trackNotificationClicked(String notificationId, String subscriptionId) {
 		JSONObject jsonBody = new JSONObject();
 		try {
@@ -1784,6 +2021,11 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 		CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
 	}
 
+    /**
+     * trigger app banner event
+     * @param key
+     * @param value
+     */
 	public void triggerAppBannerEvent(String key, String value) {
     	if (this.appBannerModule == null) {
 			pendingAppBannerEvents.put(key, value);
@@ -1812,10 +2054,19 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     }
 
+    /**
+     * show app banner
+     * @param bannerId id of the banner
+     */
     public void showAppBanner(String bannerId) {
 		showAppBanner(bannerId, null);
     }
 
+    /**
+     * show app banner
+     * @param bannerId       id of the banner
+     * @param notificationId id of the notification
+     */
 	public void showAppBanner(String bannerId, String notificationId) {
 		if (appBannerModule == null) {
 			pendingShowAppBannerId = bannerId;
@@ -1825,6 +2076,9 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 		appBannerModule.showBannerById(bannerId, notificationId);
 	}
 
+    /**
+     * show pending topics dialog
+     */
     private void showPendingTopicsDialog() {
         this.getChannelConfig(config -> {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
@@ -1858,14 +2112,26 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         });
     }
 
+    /**
+     * show topics dialog
+     */
     public void showTopicsDialog() {
         showTopicsDialog(ActivityLifecycleListener.currentActivity);
     }
 
+    /**
+     * show topic dialog
+     * @param dialogActivity context of the activity
+     */
     public void showTopicsDialog(Context dialogActivity) {
         showTopicsDialog(dialogActivity, null);
     }
 
+    /**
+     * show topic dialog
+     * @param dialogActivity       context of the activity
+     * @param topicsDialogListener topic dialog listener
+     */
     public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener) {
         try {
             if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
@@ -1877,6 +2143,12 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * show topic dialog
+     * @param dialogActivity        context of activity
+     * @param topicsDialogListener  topic dialog listener
+     * @param themeResId            theme Resource ID
+     */
     public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener, @StyleRes int themeResId) {
         CleverPush instance = this;
         this.getChannelConfig(channelConfig -> {
@@ -2091,50 +2363,98 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     }
 
+    /**
+     * set API endpoint
+     * @param apiEndpoint endpoint of the API
+     */
     public void setApiEndpoint(String apiEndpoint) {
         CleverPushHttpClient.BASE_URL = apiEndpoint;
     }
 
+    /**
+     * set app context
+     * @param newAppContext context of the app
+     */
     static void setAppContext(Context newAppContext) {
         context = newAppContext.getApplicationContext();
     }
 
+    /**
+     * set branding color
+     * @param color color value
+     */
     public void setBrandingColor(int color) {
         brandingColor = color;
     }
 
+    /**
+     * get branding color
+     * @return branding color
+     */
     public int getBrandingColor() {
         return brandingColor;
     }
 
+    /**
+     * chat URL opened listener
+     * @param listener ChatUrlOpenedListener
+     */
     public void setChatUrlOpenedListener(ChatUrlOpenedListener listener) {
         chatUrlOpenedListener = listener;
     }
 
+    /**
+     * get chat URl opened listener
+     * @return chatUrlOpenedListener
+     */
     public ChatUrlOpenedListener getChatUrlOpenedListener() {
         return chatUrlOpenedListener;
     }
 
+    /**
+     * set chat subscribe listener
+     * @param listener chatSubscribeListener
+     */
     public void setChatSubscribeListener(ChatSubscribeListener listener) {
         chatSubscribeListener = listener;
     }
 
+    /**
+     * get chat subscribe listener
+     * @return chatSubscribeListener
+     */
     public ChatSubscribeListener getChatSubscribeListener() {
         return chatSubscribeListener;
     }
 
+    /**
+     * set topics changed listener
+     * @param listener topicsChangedListener
+     */
     public void setTopicsChangedListener(TopicsChangedListener listener) {
         topicsChangedListener = listener;
     }
 
+    /**
+     * set app banner opened listener
+     * @param listener appBannerOpenedListener
+     */
     public void setAppBannerOpenedListener(AppBannerOpenedListener listener) {
         appBannerOpenedListener = listener;
     }
 
+    /**
+     * get App banner opened listener
+     * @return appBannerOpenedListener
+     */
     public AppBannerOpenedListener getAppBannerOpenedListener() {
         return appBannerOpenedListener;
     }
 
+    /**
+     * get topics changed listener
+     * @return will return topicsChangedListener
+     */
     public TopicsChangedListener getTopicsChangedListener() {
         return topicsChangedListener;
     }
@@ -2185,31 +2505,57 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         }
     }
 
+    /**
+     * set auto clear badge
+     * @param autoClearBadge boolean of autoClearBadge
+     */
     public void setAutoClearBadge(boolean autoClearBadge) {
         this.autoClearBadge = autoClearBadge;
     }
 
+    /**
+     * get auto clear badge
+     * @return boolean of auto clear badge
+     */
     public boolean getAutoClearBadge() {
         return autoClearBadge;
     }
 
+    /**
+     * set increment badge
+     * @param incrementBadge boolean value increment badge
+     */
     public void setIncrementBadge(boolean incrementBadge) {
         this.incrementBadge = incrementBadge;
     }
 
+    /**
+     * get increment badge
+     * @return boolean value of incrementBadge
+     */
     public boolean getIncrementBadge() {
         return incrementBadge;
     }
 
+    /**
+     * will enable development mode for the SDK
+     */
     public void enableDevelopmentMode() {
         Log.w("CleverPush", "CleverPush SDK is running in development mode. Only use this for testing!");
         this.developmentMode = true;
     }
 
+    /**
+     * check if development mode enabled
+     * @return
+     */
     public boolean isDevelopmentModeEnabled() {
         return this.developmentMode;
     }
 
+    /**
+     * will clear all the subscription data
+     */
     private void clearSubscriptionData() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();

@@ -43,6 +43,9 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         this.supportEmail = supportEmail;
     }
 
+    /**
+     * Build rating dialog
+     */
     private void build() {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -78,6 +81,9 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
                 .create();
     }
 
+    /**
+     * open play store
+     */
     private void openMarket() {
         final String appPackageName = context.getPackageName();
         try {
@@ -87,6 +93,9 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         }
     }
 
+    /**
+     * send email
+     */
     private void sendEmail() {
         final Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent.setType("text/email");
@@ -96,6 +105,9 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         context.startActivity(Intent.createChooser(emailIntent, "Send mail..."));
     }
 
+    /**
+     * show dialog
+     */
     public void show() {
         this.build();
         alertDialog.show();

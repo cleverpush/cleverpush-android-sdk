@@ -45,6 +45,9 @@ public class AppBanner {
 		}
 	}
 
+	/**
+	 * show app banner
+	 */
 	@SuppressLint("SetJavaScriptEnabled")
 	public void show() {
         ((Activity) this.context).runOnUiThread(() -> {
@@ -71,10 +74,16 @@ public class AppBanner {
         });
 	}
 
+	/**
+	 * hide app banner
+	 */
 	public void hide() {
 		dialog.dismiss();
 	}
 
+	/**
+	 * get Id of app banner
+	 */
 	public String getId() {
 		return id;
 	}
