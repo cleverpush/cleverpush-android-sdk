@@ -27,9 +27,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
-import com.cleverpush.banner.models.Banner;
 import com.cleverpush.listener.AppBannerOpenedListener;
-import com.cleverpush.listener.AppBannerUrlOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
 import com.cleverpush.listener.ChannelTagsListener;
@@ -83,9 +81,9 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
+public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.13.1";
+    public static final String SDK_VERSION = "1.14.0";
 
     private static CleverPush instance;
 
@@ -117,6 +115,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 	private String pendingShowAppBannerNotificationId = null;
     private String currentPageUrl;
     private AppBannerModule appBannerModule;
+	private boolean appBannersDisabled = false;
 
     private String channelId;
     private String subscriptionId = null;
@@ -142,7 +141,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
     private boolean developmentMode = false;
 
-    private List<Banner> banners = null;
+    private boolean showingTopicsDialog = false;
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -816,8 +815,46 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
     private void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = new GoogleApiClient.Builder(CleverPush.context)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
+                    .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                        @Override
+                        public void onConnected(@Nullable Bundle bundle) {
+                            Log.d("CleverPush", "GoogleApiClient onConnected");
+
+                            if (geofenceList.size() > 0) {
+                                Log.d("CleverPush", "initing geofences " + geofenceList.toString());
+
+                                GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+                                builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+                                builder.addGeofences(geofenceList);
+                                GeofencingRequest geofenceRequest = builder.build();
+
+                                Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
+                                // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
+                                PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                                try {
+                                    LocationServices.GeofencingApi.addGeofences(
+                                            googleApiClient,
+                                            geofenceRequest,
+                                            geofencePendingIntent
+                                    );
+                                } catch (SecurityException securityException) {
+                                    // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onConnectionSuspended(int i) {
+                            Log.d("CleverPush", "GoogleApiClient onConnectionSuspended");
+                        }
+                    })
+                    .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                        @Override
+                        public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                            Log.d("CleverPush", "GoogleApiClient onConnectionFailed");
+                        }
+                    })
                     .addApi(LocationServices.API)
                     .build();
 
@@ -1289,7 +1326,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
         return subscriptionManager;
     }
-
 
     /**
      * set subscription Manager
@@ -2034,30 +2070,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 		this.appBannerModule.triggerEvent(key, value);
 	}
 
-    @Deprecated
-    public void showAppBanners() {
-
-    }
-
-    @Deprecated
-    public void showAppBanners(Activity activity) {
-        showAppBanners(activity, null);
-    }
-
-    @Deprecated
-    public void showAppBanners(AppBannerUrlOpenedListener urlOpenedListener) {
-
-    }
-
-    @Deprecated
-    public void showAppBanners(Activity activity, AppBannerUrlOpenedListener urlOpenedListener) {
-
-    }
-
-    /**
-     * show app banner
-     * @param bannerId id of the banner
-     */
     public void showAppBanner(String bannerId) {
 		showAppBanner(bannerId, null);
     }
@@ -2150,12 +2162,18 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
      * @param themeResId            theme Resource ID
      */
     public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener, @StyleRes int themeResId) {
-        CleverPush instance = this;
+    	// Ensure it will only be shown once at a time
+    	if (showingTopicsDialog) {
+    		return;
+		}
+        showingTopicsDialog = true;
+
         this.getChannelConfig(channelConfig -> {
             if (channelConfig == null) {
                 if (topicsDialogListener != null) {
                     topicsDialogListener.callback(false);
                 }
+				showingTopicsDialog = false;
                 return;
             }
 
@@ -2197,7 +2215,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
 
                     if (hasDeSelectAll()) {
                         setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true);
-                    }else {
+                    } else {
                         setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false);
                     }
 
@@ -2209,6 +2227,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                         if (topicsDialogListener != null) {
                             topicsDialogListener.callback(false);
                         }
+						showingTopicsDialog = false;
                     });
                     alertBuilder.setPositiveButton(CleverPush.context.getResources().getString(R.string.save), (dialogInterface, i) -> {
                         if (checkboxDeSelectAll.isChecked()) {
@@ -2230,6 +2249,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                         if (topicsDialogListener != null) {
                             topicsDialogListener.callback(true);
                         }
+						showingTopicsDialog = false;
                     });
 
                     AlertDialog alert = alertBuilder.create();
@@ -2237,6 +2257,7 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
                 });
 
             } catch (JSONException e) {
+				showingTopicsDialog = false;
                 Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
             }
         });
@@ -2459,44 +2480,6 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         return topicsChangedListener;
     }
 
-    @SuppressLint("MissingPermission")
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d("CleverPush", "GoogleApiClient onConnected");
-
-        if (geofenceList.size() > 0) {
-            Log.d("CleverPush", "initing geofences " + geofenceList.toString());
-
-            GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-            builder.addGeofences(geofenceList);
-            GeofencingRequest geofenceRequest = builder.build();
-
-            Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
-            // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
-            PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            try {
-                LocationServices.GeofencingApi.addGeofences(
-                        googleApiClient,
-                        geofenceRequest,
-                        geofencePendingIntent
-                );
-            } catch (SecurityException securityException) {
-                // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-            }
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d("CleverPush", "GoogleApiClient onConnectionFailed");
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.d("CleverPush", "GoogleApiClient onConnectionSuspended");
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -2567,18 +2550,23 @@ public class CleverPush implements GoogleApiClient.OnConnectionFailedListener, G
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
     }
 
+	public boolean areAppBannersDisabled() {
+    	return appBannersDisabled;
+	}
+
     public void enableAppBanners() {
-        if(banners != null){
-            for (Banner banner : banners) {
-                showAppBanner(banner.getId());
-            }
-        }
+		appBannersDisabled = false;
+    	if (appBannerModule == null) {
+			return;
+		}
+		appBannerModule.enableBanners();
     }
 
     public void disableAppBanners() {
-        if (!isInitialized()) {
-            appBannerModule = AppBannerModule.init(ActivityLifecycleListener.currentActivity, channelId, this.developmentMode);
-        }
-        banners = appBannerModule.storeBanners();
+		appBannersDisabled = true;
+		if (appBannerModule == null) {
+			return;
+		}
+		appBannerModule.disableBanners();
     }
 }

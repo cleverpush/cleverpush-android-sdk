@@ -1,5 +1,11 @@
 ## Changelog
 
+== 1.14.0 ==
+* Improved App Banner Positions (Top, Center, Bottom)
+* Added Support for Firebase SDK 22+
+* Improved "Uncheck all topics" behaviour
+* Added methods for enabling an disabling App Banners
+
 == 1.13.1 ==
 * Improved App Banner Layout for tablets
 

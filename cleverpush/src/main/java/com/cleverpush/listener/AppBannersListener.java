@@ -2,8 +2,8 @@ package com.cleverpush.listener;
 
 import com.cleverpush.banner.models.Banner;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface AppBannersListener {
-    void ready(List<Banner> banners);
+    void ready(Collection<Banner> banners);
 }

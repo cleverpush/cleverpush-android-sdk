@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.annotation.WorkerThread;
 
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 
@@ -103,16 +104,17 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
     /**
      * Will use to get Firebase token if firebase-message newer than 20.0.0
      */
+	@SuppressWarnings("unchecked")
     @WorkerThread
-    private String getTokenWithClassFirebaseMessaging() throws Exception {
+	private String getTokenWithClassFirebaseMessaging() throws Exception {
         Exception exception;
         try {
             Class<?> FirebaseInstanceIdClass = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
             Method getInstanceMethod = FirebaseInstanceIdClass.getMethod("getInstance");
             Object instanceId = getInstanceMethod.invoke(null, null);
             Method getTokenMethod = FirebaseInstanceIdClass.getMethod("getToken");
-            Object token = getTokenMethod.invoke(instanceId, null);
-            return String.valueOf(((Task<String>) token).getResult());
+            Task<String> tokenTask = (Task<String>) getTokenMethod.invoke(instanceId, null);
+            return Tasks.await(tokenTask);
         } catch (ClassNotFoundException e) {
             exception = e ;
         } catch (NoSuchMethodException e) {
