@@ -1,5 +1,8 @@
 ## Changelog
 
+== 1.14.1 ==
+* Optimized Topics Dialog behaviour when shown multiple times
+
 == 1.14.0 ==
 * Improved App Banner Positions (Top, Center, Bottom)
 * Added Support for Firebase SDK 22+

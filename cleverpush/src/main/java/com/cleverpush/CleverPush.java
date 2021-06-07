@@ -1,12 +1,10 @@
 package com.cleverpush;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -83,7 +81,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.14.0";
+    public static final String SDK_VERSION = "1.14.1";
 
     private static CleverPush instance;
 
@@ -1917,8 +1915,6 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                 }
 
                 ((Activity) dialogActivity).runOnUiThread(() -> {
-                    Log.d("CleverPush", "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
-
                     AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity, themeResId);
 
                     String headerTitle = CleverPush.context.getResources().getString(R.string.topics_dialog_title);
@@ -1986,13 +1982,11 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                     });
 
                     AlertDialog alert = alertBuilder.create();
-                    alert.show();
-                    alert.setOnShowListener(new DialogInterface.OnShowListener() {
-                        @Override
-                        public void onShow(DialogInterface dialog) {
-                            showingTopicsDialog = true;
-                        }
-                    });
+                    alert.setOnShowListener(dialog -> {
+						Log.d("CleverPush", "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
+						showingTopicsDialog = true;
+					});
+					alert.show();
                 });
 
             } catch (JSONException e) {
