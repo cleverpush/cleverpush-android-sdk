@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -1899,7 +1900,6 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     	if (showingTopicsDialog) {
     		return;
 		}
-        showingTopicsDialog = true;
 
         this.getChannelConfig(channelConfig -> {
             if (channelConfig == null) {
@@ -1987,6 +1987,12 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
                     AlertDialog alert = alertBuilder.create();
                     alert.show();
+                    alert.setOnShowListener(new DialogInterface.OnShowListener() {
+                        @Override
+                        public void onShow(DialogInterface dialog) {
+                            showingTopicsDialog = true;
+                        }
+                    });
                 });
 
             } catch (JSONException e) {
