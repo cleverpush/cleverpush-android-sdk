@@ -383,7 +383,6 @@ public class AppBannerModule {
 
     private void showBanner(AppBannerPopup bannerPopup) {
         bannerPopup.init();
-        bannerPopup.show();
 
         if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
             bannerIsShown(bannerPopup.getData().getId());
