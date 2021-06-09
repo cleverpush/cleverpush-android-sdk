@@ -1,5 +1,11 @@
 ## Changelog
 
+== 1.14.X
+* Improved Behaviour of App Banners
+
+== 1.14.2 ==
+* Optimized Topics Dialog for Dark Mode
+
 == 1.14.1 ==
 * Optimized Topics Dialog behaviour when shown multiple times
 
