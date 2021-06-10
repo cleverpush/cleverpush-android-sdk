@@ -9,6 +9,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -1899,6 +1902,8 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     		return;
 		}
 
+        int nightModeFlags = CleverPush.context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
         this.getChannelConfig(channelConfig -> {
             if (channelConfig == null) {
                 if (topicsDialogListener != null) {
@@ -1941,11 +1946,17 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
                     CheckBox checkboxDeSelectAll = new CheckBox(CleverPush.context);
                     checkboxDeSelectAll.setText(context.getText(R.string.deselect_all));
+                    if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+                        checkboxDeSelectAll.setTextColor(Color.WHITE);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            checkboxDeSelectAll.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
+                        }
+                    }
 
                     if (hasDeSelectAll()) {
-                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true);
+                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true, nightModeFlags);
                     } else {
-                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false);
+                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false, nightModeFlags);
                     }
 
                     checkboxLayout.addView(parentLayout);
@@ -2003,8 +2014,9 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
      * @param channelTopics       topics from the channel
      * @param checkedTopics       userSelectedTopics
      * @param isDeselectAll       is deselectall checkbox is checked or not
+     * @param nightModeFlags      flag if there is night mode
      */
-    private void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean isDeselectAll) {
+    private void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean isDeselectAll, int nightModeFlags) {
         try {
             parentLayout.removeAllViews();
             Set<String> selectedTopics = instance.getSubscriptionTopics();
@@ -2024,7 +2036,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                                 e.printStackTrace();
                             }
                         }
-                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true);
+                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true, nightModeFlags);
                     }
                 });
             }
@@ -2043,6 +2055,13 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
                     CheckBox checkbox = new CheckBox(CleverPush.context);
                     checkbox.setText(topic.optString("name"));
+
+                    if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+                        checkbox.setTextColor(Color.WHITE);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            checkbox.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
+                        }
+                    }
 
                     if (!hasDeSelectAll()) {
                         checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
@@ -2082,6 +2101,13 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                             checkedTopics[childIndex] = checkbox.isChecked();
 
                             checkboxChild.setText(childTopic.optString("name"));
+
+                            if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+                                checkboxChild.setTextColor(Color.WHITE);
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                    checkboxChild.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
+                                }
+                            }
 
                             if (!hasDeSelectAll()) {
                                 checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
