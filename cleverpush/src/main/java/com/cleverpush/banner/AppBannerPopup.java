@@ -444,7 +444,12 @@ public class AppBannerPopup {
 
                 animateBody(getRoot().getHeight(), 0f);
             }else {
-                new tryShowSafe().execute();
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        new tryShowSafe().execute();
+                    }
+                }, 100);
             }
         }
 
