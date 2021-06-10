@@ -127,6 +127,7 @@ public class AppBannerPopup {
         if (isInitialized) { return; }
 
         popupRoot = createLayout();
+        LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
 
         ConstraintLayout mConstraintLayout  = (ConstraintLayout)popupRoot.findViewById(R.id.parent);
         ScrollView scrollView =  popupRoot.findViewById(R.id.scrollView);
@@ -141,7 +142,7 @@ public class AppBannerPopup {
             case POSITION_TYPE_BOTTOM:
                 set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 20);
                 break;
-	    	default:
+            default:
                 set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 0);
                 set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 0);
                 break;
@@ -149,7 +150,43 @@ public class AppBannerPopup {
 
         set.applyTo(mConstraintLayout);
 
-        new composeBannerViewTask().execute("");
+        composeBackground(body);
+        if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+            composeHtmlBanner(body, data.getContent());
+        } else {
+            for (BannerBlock bannerBlock : data.getBlocks()) {
+                activity.runOnUiThread(new Runnable() {
+                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void run() {
+                        switch (bannerBlock.getType()) {
+                            case Text:
+                                composeTextBlock(body, (BannerTextBlock) bannerBlock);
+                                break;
+                            case Image:
+                                composeImageBlock(body, (BannerImageBlock) bannerBlock);
+                                break;
+                            case Button:
+                                composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
+                                break;
+                            case HTML:
+                                composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
+                                break;
+                        }
+                    }
+                });
+            }
+        }
+
+        popup = new PopupWindow(
+                popupRoot,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                true
+        );
+        popup.setAnimationStyle(R.style.banner_animation);
+
+        isInitialized = true;
     }
 
     public void show() {
@@ -157,11 +194,7 @@ public class AppBannerPopup {
             throw new IllegalStateException("Must be initialized");
         }
 
-        popupRoot.findViewById(R.id.bannerBody).setTranslationY(getRoot().getHeight());
-        popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
-
-        animateBody(getRoot().getHeight(), 0f);
-
+        new tryShowSafe().execute();
     }
 
     private void tryShowSafe() {
@@ -396,54 +429,23 @@ public class AppBannerPopup {
         }
     }
 
-    public class composeBannerViewTask extends AsyncTask<String, Void, String> {
+    public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
         @Override
-        protected String doInBackground(String... strings) {
-            LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
-            composeBackground(body);
-            if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
-                composeHtmlBanner(body, data.getContent());
-            } else {
-                for (BannerBlock bannerBlock : data.getBlocks()) {
-                    activity.runOnUiThread(new Runnable() {
-                        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                        @Override
-                        public void run() {
-                            switch (bannerBlock.getType()) {
-                                case Text:
-                                    composeTextBlock(body, (BannerTextBlock) bannerBlock);
-                                    break;
-                                case Image:
-                                    composeImageBlock(body, (BannerImageBlock) bannerBlock);
-                                    break;
-                                case Button:
-                                    composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
-                                    break;
-                                case HTML:
-                                    composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
-                                    break;
-                            }
-                        }
-                    });
-                }
-            }
-
-            popup = new PopupWindow(
-                    popupRoot,
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    true
-            );
-            popup.setAnimationStyle(R.style.banner_animation);
-
-            isInitialized = true;
-            return null;
+        protected Boolean doInBackground(String... strings) {
+            return isRootReady();
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            show();
+        protected void onPostExecute(Boolean isRootReady) {
+            super.onPostExecute(isRootReady);
+            if (isRootReady) {
+                popupRoot.findViewById(R.id.bannerBody).setTranslationY(getRoot().getHeight());
+                popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
+
+                animateBody(getRoot().getHeight(), 0f);
+            }else {
+                new tryShowSafe().execute();
+            }
         }
 
     }
