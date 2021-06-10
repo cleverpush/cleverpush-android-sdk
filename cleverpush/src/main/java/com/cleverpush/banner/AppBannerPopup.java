@@ -50,6 +50,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AppBannerPopup {
     private static final String CONTENT_TYPE_BLOCKS = "block";
@@ -432,7 +434,18 @@ public class AppBannerPopup {
     public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
         @Override
         protected Boolean doInBackground(String... strings) {
-            return isRootReady();
+            if(isRootReady()) {
+                return  true;
+            } else {
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        new tryShowSafe().execute();
+                    }
+                }, 100);
+
+            }
+            return false;
         }
 
         @Override
@@ -443,13 +456,6 @@ public class AppBannerPopup {
                 popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
 
                 animateBody(getRoot().getHeight(), 0f);
-            }else {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        new tryShowSafe().execute();
-                    }
-                }, 100);
             }
         }
 
