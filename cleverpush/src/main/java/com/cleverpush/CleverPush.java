@@ -143,6 +143,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     private boolean developmentMode = false;
 
     private boolean showingTopicsDialog = false;
+    private boolean confirmAlertShown = false;
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -1041,6 +1042,13 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                             CleverPush.instance.showPendingTopicsDialog();
                         }
                     }
+
+                    if (!confirmAlertShown) {
+                    	// If the confirm alert has not been tracked by the customer already,
+						// we will track it here retroperspectively to ensure opt-in rate statistics
+						// are correct
+                    	this.setConfirmAlertShown();
+					}
                 }
             });
         });
@@ -1842,6 +1850,24 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 			return;
 		}
 		appBannerModule.showBannerById(bannerId, notificationId);
+	}
+
+	/**
+	 * This method may be called by the customer to ensure opt-in rates get calculated correctly.
+	 */
+	public void setConfirmAlertShown() {
+		confirmAlertShown = true;
+
+		JSONObject jsonBody = new JSONObject();
+		try {
+			jsonBody.put("channelId", channelId);
+			jsonBody.put("platformName", "Android");
+			jsonBody.put("browserType", "SDK");
+		} catch (JSONException e) {
+			Log.e("CleverPush", "Error setting confirm alert shown", e);
+		}
+
+		CleverPushHttpClient.post("/channel/confirm-alert", jsonBody, null);
 	}
 
     private void showPendingTopicsDialog() {
