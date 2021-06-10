@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.util.Base64;
@@ -49,6 +50,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AppBannerPopup {
     private static final String CONTENT_TYPE_BLOCKS = "block";
@@ -141,7 +144,7 @@ public class AppBannerPopup {
             case POSITION_TYPE_BOTTOM:
                 set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 20);
                 break;
-	    	default:
+            default:
                 set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 0);
                 set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 0);
                 break;
@@ -154,34 +157,34 @@ public class AppBannerPopup {
             composeHtmlBanner(body, data.getContent());
         } else {
             for (BannerBlock bannerBlock : data.getBlocks()) {
-				activity.runOnUiThread(new Runnable() {
-				   @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-				   @Override
-				   public void run() {
-					   switch (bannerBlock.getType()) {
-						   case Text:
-							   composeTextBlock(body, (BannerTextBlock) bannerBlock);
-							   break;
-						   case Image:
-							   composeImageBlock(body, (BannerImageBlock) bannerBlock);
-							   break;
-						   case Button:
-							   composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
-							   break;
-						   case HTML:
-							   composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
-							   break;
-					   }
-				   }
-			    });
+                activity.runOnUiThread(new Runnable() {
+                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void run() {
+                        switch (bannerBlock.getType()) {
+                            case Text:
+                                composeTextBlock(body, (BannerTextBlock) bannerBlock);
+                                break;
+                            case Image:
+                                composeImageBlock(body, (BannerImageBlock) bannerBlock);
+                                break;
+                            case Button:
+                                composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
+                                break;
+                            case HTML:
+                                composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
+                                break;
+                        }
+                    }
+                });
             }
         }
 
         popup = new PopupWindow(
-            popupRoot,
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            true
+                popupRoot,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                true
         );
         popup.setAnimationStyle(R.style.banner_animation);
 
@@ -193,7 +196,7 @@ public class AppBannerPopup {
             throw new IllegalStateException("Must be initialized");
         }
 
-        runInMain(this::tryShowSafe);
+        new tryShowSafe().execute();
     }
 
     private void tryShowSafe() {
@@ -426,5 +429,35 @@ public class AppBannerPopup {
         public void close() {
             dismiss();
         }
+    }
+
+    public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            if(isRootReady()) {
+                return  true;
+            } else {
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        new tryShowSafe().execute();
+                    }
+                }, 100);
+
+            }
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean isRootReady) {
+            super.onPostExecute(isRootReady);
+            if (isRootReady) {
+                popupRoot.findViewById(R.id.bannerBody).setTranslationY(getRoot().getHeight());
+                popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
+
+                animateBody(getRoot().getHeight(), 0f);
+            }
+        }
+
     }
 }

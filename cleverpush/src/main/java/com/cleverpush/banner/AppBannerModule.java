@@ -383,7 +383,7 @@ public class AppBannerModule {
 
     private void showBanner(AppBannerPopup bannerPopup) {
         bannerPopup.init();
-        bannerPopup.show();
+		bannerPopup.show();
 
         if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
             bannerIsShown(bannerPopup.getData().getId());
@@ -409,13 +409,20 @@ public class AppBannerModule {
         this.sendBannerEvent("delivered", bannerPopup.getData());
     }
 
-    private boolean isBannerShown(String id) {
-        SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
-        Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
+	private boolean isBannerShown(String id) {
+		if (this.activity == null) {
+			return false;
+		}
 
-        assert shownBanners != null;
-        return shownBanners.contains(id);
-    }
+		SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
+		Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
+
+		if (shownBanners == null) {
+			return false;
+		}
+
+		return shownBanners.contains(id);
+	}
 
     private void bannerIsShown(String id) {
         SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
