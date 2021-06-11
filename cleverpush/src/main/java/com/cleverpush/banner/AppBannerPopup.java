@@ -17,6 +17,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -130,6 +131,7 @@ public class AppBannerPopup {
 
         popupRoot = createLayout();
         LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
+        ImageView bannerBackGroundImage =  popupRoot.findViewById(R.id.bannerBackgroundImage);
 
         ConstraintLayout mConstraintLayout  = (ConstraintLayout)popupRoot.findViewById(R.id.parent);
         ScrollView scrollView =  popupRoot.findViewById(R.id.scrollView);
@@ -152,7 +154,7 @@ public class AppBannerPopup {
 
         set.applyTo(mConstraintLayout);
 
-        composeBackground(body);
+        composeBackground(bannerBackGroundImage,body);
         if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
             composeHtmlBanner(body, data.getContent());
         } else {
@@ -226,14 +228,40 @@ public class AppBannerPopup {
         return layout;
     }
 
-    private void composeBackground(View body) {
-        BannerBackground bg = data.getBackground();
-        GradientDrawable drawableBG = new GradientDrawable();
-        drawableBG.setShape(GradientDrawable.RECTANGLE);
-        drawableBG.setCornerRadius(10 * getPXScale());
-        drawableBG.setColor(this.parseColor(bg.getColor()));
+    private void composeBackground(ImageView bannerBackground,LinearLayout body) {
 
-        body.setBackground(drawableBG);
+        BannerBackground bg = data.getBackground();
+        final ViewTreeObserver observer= body.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, body.getHeight());
+                bannerBackground.setLayoutParams(layoutParams);
+                if (observer.isAlive()) {
+                    observer.removeGlobalOnLayoutListener(this);
+                }
+            }
+        });
+        if(bg.getImageUrl() == null || bg.getImageUrl().equalsIgnoreCase("null") || bg.getImageUrl().equalsIgnoreCase("")){
+            GradientDrawable drawableBG = new GradientDrawable();
+            drawableBG.setShape(GradientDrawable.RECTANGLE);
+            drawableBG.setCornerRadius(10 * getPXScale());
+            drawableBG.setColor(this.parseColor(bg.getColor()));
+            bannerBackground.setBackground(drawableBG);
+        }else {
+            new Thread(() -> {
+                try {
+                    InputStream in = new URL(bg.getImageUrl()).openStream();
+                    Bitmap bitmap = BitmapFactory.decodeStream(in);
+                    if (bitmap != null) {
+                        bannerBackground.setImageBitmap(bitmap);
+                    }
+                } catch (Exception ignored) {
+                    Log.e("bitmap",ignored.getLocalizedMessage());
+                }
+            }).start();
+        }
+
     }
 
     private void composeButtonBlock(LinearLayout body, BannerButtonBlock block) {
@@ -339,6 +367,7 @@ public class AppBannerPopup {
         );
         params.setMargins(0, 0, 0, 20);
         webView.setLayoutParams(params);
+        webView.setBackgroundColor(Color.TRANSPARENT);
         body.addView(webLayout);
     }
 

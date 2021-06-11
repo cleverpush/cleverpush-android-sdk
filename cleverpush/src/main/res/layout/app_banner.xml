@@ -19,17 +19,31 @@
         app:layout_constraintHeight_percent="0.9"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintWidth_percent="0.8">
-        <LinearLayout
-            android:id="@+id/bannerBody"
-            style="@style/banner_body"
+        <FrameLayout
+            android:id="@+id/FrameLayout1"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/cp_appbanner_layout"
-            android:clickable="true"
-            android:paddingLeft="10dp"
-            android:paddingTop="15dp"
-            android:paddingRight="10dp"
-            android:paddingBottom="15dp"
-            android:orientation="vertical" />
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/bannerBackgroundImage"
+                android:background="@drawable/cp_appbanner_layout"
+                android:scaleType="centerCrop"
+                />
+
+            <LinearLayout
+                android:id="@+id/bannerBody"
+                style="@style/banner_body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:paddingLeft="10dp"
+                android:paddingTop="15dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="15dp"
+                android:orientation="vertical" />
+        </FrameLayout>
+
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
