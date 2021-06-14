@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
@@ -16,7 +15,6 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -27,7 +25,6 @@ import android.widget.PopupWindow;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.dynamicanimation.animation.DynamicAnimation;
@@ -126,7 +123,9 @@ public class AppBannerPopup {
     }
 
     public void init() {
-        if (isInitialized) { return; }
+        if (isInitialized) {
+        	return;
+        }
 
         popupRoot = createLayout();
         LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
@@ -157,26 +156,22 @@ public class AppBannerPopup {
             composeHtmlBanner(body, data.getContent());
         } else {
             for (BannerBlock bannerBlock : data.getBlocks()) {
-                activity.runOnUiThread(new Runnable() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                    @Override
-                    public void run() {
-                        switch (bannerBlock.getType()) {
-                            case Text:
-                                composeTextBlock(body, (BannerTextBlock) bannerBlock);
-                                break;
-                            case Image:
-                                composeImageBlock(body, (BannerImageBlock) bannerBlock);
-                                break;
-                            case Button:
-                                composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
-                                break;
-                            case HTML:
-                                composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
-                                break;
-                        }
-                    }
-                });
+                activity.runOnUiThread(() -> {
+					switch (bannerBlock.getType()) {
+						case Text:
+							composeTextBlock(body, (BannerTextBlock) bannerBlock);
+							break;
+						case Image:
+							composeImageBlock(body, (BannerImageBlock) bannerBlock);
+							break;
+						case Button:
+							composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
+							break;
+						case HTML:
+							composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
+							break;
+					}
+				});
             }
         }
 
@@ -192,15 +187,15 @@ public class AppBannerPopup {
     }
 
     public void show() {
-        if(!isInitialized) {
-            throw new IllegalStateException("Must be initialized");
+        if (!isInitialized) {
+			return;
         }
 
         new tryShowSafe().execute();
     }
 
     private void tryShowSafe() {
-        if(this.isRootReady()) {
+        if (this.isRootReady()) {
             popupRoot.findViewById(R.id.bannerBody).setTranslationY(getRoot().getHeight());
             popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
 
@@ -211,8 +206,8 @@ public class AppBannerPopup {
     }
 
     public void dismiss() {
-        if(!isInitialized) {
-            throw new IllegalStateException("Must be initialized");
+        if (!isInitialized) {
+            return;
         }
 
         runInMain(() -> animateBody(0f, getRoot().getHeight()));
