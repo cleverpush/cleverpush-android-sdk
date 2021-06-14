@@ -58,12 +58,14 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -76,6 +78,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -84,7 +87,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.14.3";
+    public static final String SDK_VERSION = "1.14.4";
 
     private static CleverPush instance;
 
@@ -334,6 +337,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         init(channelId, notificationReceivedListener, null, subscribedListener, autoRegister);
     }
+
     /**
      *initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
      * @param channelId channelID of the channel
@@ -352,16 +356,15 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
         SubscriptionManagerFCM.disableFirebaseInstanceIdService(CleverPush.context);
 
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+
         // try to get cached Channel ID from Shared Preferences
         if (this.channelId == null) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
             this.channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         }
 
         if (this.channelId != null) {
             Log.d("CleverPush", "Initializing with Channel ID: " + this.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
-
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
             String storedChannelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
             String storedSubscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
@@ -472,7 +475,6 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         }
 
         // increment app opens
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         int appOpens = sharedPreferences.getInt(CleverPushPreferences.APP_OPENS, 0) + 1;
         editor.putInt(CleverPushPreferences.APP_OPENS, appOpens);
@@ -1728,11 +1730,24 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     public Set<Notification> getNotifications() {
+		Gson gson = new Gson();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+
+		String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
+		if (notificationsJson != null) {
+			try {
+				Type type = new TypeToken<List<Notification>>() {}.getType();
+				List<Notification> notifications = gson.fromJson(notificationsJson, type);
+				return new HashSet<>(notifications);
+			} catch (Exception ex) {
+				Log.e("CleverPush", "error while getting stored notifications", ex);
+			}
+		}
+
+		// deprecated
         Set<String> encodedNotifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
         Set<Notification> notifications = new HashSet<>();
         if (encodedNotifications != null) {
-            Gson gson = new Gson();
             for (String encodedNotification : encodedNotifications) {
                 Notification notification = gson.fromJson(encodedNotification, Notification.class);
                 notifications.add(notification);
@@ -2262,11 +2277,22 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
 	public boolean areAppBannersDisabled() {
-    	return appBannersDisabled;
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+		appBannersDisabled = sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, false);
+		return appBannersDisabled;
+	}
+
+	private void saveAppBannersDisabled() {
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+		SharedPreferences.Editor editor = sharedPreferences.edit();
+		editor.remove(CleverPushPreferences.APP_BANNERS_DISABLED).apply();
+		editor.putBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, appBannersDisabled);
+		editor.commit();
 	}
 
     public void enableAppBanners() {
 		appBannersDisabled = false;
+		this.saveAppBannersDisabled();
     	if (appBannerModule == null) {
 			return;
 		}
@@ -2275,6 +2301,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
     public void disableAppBanners() {
 		appBannersDisabled = true;
+		this.saveAppBannersDisabled();
 		if (appBannerModule == null) {
 			return;
 		}

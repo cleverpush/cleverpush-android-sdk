@@ -1,6 +1,10 @@
 ## Changelog
 
-== 1.14.3
+== 1.14.4 ==
+* Improved Behaviour of App Banners
+* Improved internal storage of received notifications
+
+== 1.14.3 ==
 * Improved Behaviour of App Banners
 
 == 1.14.2 ==
