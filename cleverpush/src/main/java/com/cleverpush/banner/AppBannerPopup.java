@@ -72,7 +72,9 @@ public class AppBannerPopup {
 
         return force;
     }
+
     private static Map<Alignment, Integer> alignmentMap = new HashMap<>();
+
     static {
         alignmentMap.put(Alignment.Left, View.TEXT_ALIGNMENT_TEXT_START);
         alignmentMap.put(Alignment.Center, View.TEXT_ALIGNMENT_CENTER);
@@ -92,8 +94,8 @@ public class AppBannerPopup {
     private boolean isInitialized = false;
 
     public void setOpenedListener(AppBannerOpenedListener openedListener) {
-    	this.openedListener = openedListener;
-	}
+        this.openedListener = openedListener;
+    }
 
     private boolean isRootReady() {
         return activity.getWindow().getDecorView().isShown();
@@ -127,19 +129,21 @@ public class AppBannerPopup {
     }
 
     public void init() {
-        if (isInitialized) { return; }
+        if (isInitialized) {
+            return;
+        }
 
         popupRoot = createLayout();
-        LinearLayout body =  popupRoot.findViewById(R.id.bannerBody);
-        ImageView bannerBackGroundImage =  popupRoot.findViewById(R.id.bannerBackgroundImage);
+        LinearLayout body = popupRoot.findViewById(R.id.bannerBody);
+        ImageView bannerBackGroundImage = popupRoot.findViewById(R.id.bannerBackgroundImage);
 
-        ConstraintLayout mConstraintLayout  = (ConstraintLayout)popupRoot.findViewById(R.id.parent);
-        ScrollView scrollView =  popupRoot.findViewById(R.id.scrollView);
+        ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot.findViewById(R.id.parent);
+        ScrollView scrollView = popupRoot.findViewById(R.id.scrollView);
 
         ConstraintSet set = new ConstraintSet();
         set.clone(mConstraintLayout);
 
-        switch (data.getPositionType()){
+        switch (data.getPositionType()) {
             case POSITION_TYPE_TOP:
                 set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 20);
                 break;
@@ -154,7 +158,7 @@ public class AppBannerPopup {
 
         set.applyTo(mConstraintLayout);
 
-        composeBackground(bannerBackGroundImage,body);
+        composeBackground(bannerBackGroundImage, body);
         if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
             composeHtmlBanner(body, data.getContent());
         } else {
@@ -174,7 +178,7 @@ public class AppBannerPopup {
                                 composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
                                 break;
                             case HTML:
-                                composeHtmlBLock(body,(BannerHTMLBlock)bannerBlock);
+                                composeHtmlBLock(body, (BannerHTMLBlock) bannerBlock);
                                 break;
                         }
                     }
@@ -194,7 +198,7 @@ public class AppBannerPopup {
     }
 
     public void show() {
-        if(!isInitialized) {
+        if (!isInitialized) {
             throw new IllegalStateException("Must be initialized");
         }
 
@@ -202,7 +206,7 @@ public class AppBannerPopup {
     }
 
     private void tryShowSafe() {
-        if(this.isRootReady()) {
+        if (this.isRootReady()) {
             popupRoot.findViewById(R.id.bannerBody).setTranslationY(getRoot().getHeight());
             popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
 
@@ -213,7 +217,7 @@ public class AppBannerPopup {
     }
 
     public void dismiss() {
-        if(!isInitialized) {
+        if (!isInitialized) {
             throw new IllegalStateException("Must be initialized");
         }
 
@@ -228,10 +232,10 @@ public class AppBannerPopup {
         return layout;
     }
 
-    private void composeBackground(ImageView bannerBackground,LinearLayout body) {
+    private void composeBackground(ImageView bannerBackground, LinearLayout body) {
 
         BannerBackground bg = data.getBackground();
-        final ViewTreeObserver observer= body.getViewTreeObserver();
+        final ViewTreeObserver observer = body.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -242,13 +246,13 @@ public class AppBannerPopup {
                 }
             }
         });
-        if(bg.getImageUrl() == null || bg.getImageUrl().equalsIgnoreCase("null") || bg.getImageUrl().equalsIgnoreCase("")){
+        if (bg.getImageUrl() == null || bg.getImageUrl().equalsIgnoreCase("null") || bg.getImageUrl().equalsIgnoreCase("")) {
             GradientDrawable drawableBG = new GradientDrawable();
             drawableBG.setShape(GradientDrawable.RECTANGLE);
             drawableBG.setCornerRadius(10 * getPXScale());
             drawableBG.setColor(this.parseColor(bg.getColor()));
             bannerBackground.setBackground(drawableBG);
-        }else {
+        } else {
             new Thread(() -> {
                 try {
                     InputStream in = new URL(bg.getImageUrl()).openStream();
@@ -257,7 +261,7 @@ public class AppBannerPopup {
                         bannerBackground.setImageBitmap(bitmap);
                     }
                 } catch (Exception ignored) {
-                    Log.e("bitmap",ignored.getLocalizedMessage());
+                    Log.e(TAG, ignored.getLocalizedMessage());
                 }
             }).start();
         }
@@ -267,7 +271,7 @@ public class AppBannerPopup {
     private void composeButtonBlock(LinearLayout body, BannerButtonBlock block) {
         Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
         button.setText(block.getText());
-        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4/3);
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
         button.setTextColor(this.parseColor(block.getColor()));
         Integer alignment = alignmentMap.get(block.getAlignment());
         button.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
@@ -278,31 +282,31 @@ public class AppBannerPopup {
         bg.setColor(this.parseColor(block.getBackground()));
         button.setBackground(bg);
 
-		button.setOnClickListener(view -> {
-			if (block.getAction().getDismiss()) {
-				dismiss();
-			}
+        button.setOnClickListener(view -> {
+            if (block.getAction().getDismiss()) {
+                dismiss();
+            }
 
-			if (this.openedListener != null) {
-				this.openedListener.opened((block.getAction()));
-			}
-		});
-		button.setOnTouchListener((view, motionEvent) -> {
-			int action = motionEvent.getAction();
-			if (action == MotionEvent.ACTION_DOWN) {
-				view.animate().cancel();
-				view.animate().scaleX(0.98f).setDuration(200).start();
-				view.animate().scaleY(0.98f).setDuration(200).start();
-				return false;
-			} else if (action == MotionEvent.ACTION_UP) {
-				view.animate().cancel();
-				view.animate().scaleX(1f).setDuration(200).start();
-				view.animate().scaleY(1f).setDuration(200).start();
-				return false;
-			}
+            if (this.openedListener != null) {
+                this.openedListener.opened((block.getAction()));
+            }
+        });
+        button.setOnTouchListener((view, motionEvent) -> {
+            int action = motionEvent.getAction();
+            if (action == MotionEvent.ACTION_DOWN) {
+                view.animate().cancel();
+                view.animate().scaleX(0.98f).setDuration(200).start();
+                view.animate().scaleY(0.98f).setDuration(200).start();
+                return false;
+            } else if (action == MotionEvent.ACTION_UP) {
+                view.animate().cancel();
+                view.animate().scaleX(1f).setDuration(200).start();
+                view.animate().scaleY(1f).setDuration(200).start();
+                return false;
+            }
 
-			return false;
-		});
+            return false;
+        });
 
         body.addView(button);
     }
@@ -310,14 +314,14 @@ public class AppBannerPopup {
     private void composeTextBlock(LinearLayout body, BannerTextBlock block) {
         TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
         textView.setText(block.getText());
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4/3);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
         textView.setTextColor(this.parseColor(block.getColor()));
 
-        if(block.getFamily() != null){
+        if (block.getFamily() != null) {
             try {
-                Typeface font = Typeface.createFromAsset(activity.getAssets(), block.getFamily()+".ttf");
+                Typeface font = Typeface.createFromAsset(activity.getAssets(), block.getFamily() + ".ttf");
                 textView.setTypeface(font);
-            }catch (Exception ex) {
+            } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage(), ex);
             }
 
@@ -355,12 +359,12 @@ public class AppBannerPopup {
     }
 
     private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
-		LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
-		WebView webView = webLayout.findViewById(R.id.webView);
-		webView.getSettings().setJavaScriptEnabled(true);
-		webView.setVerticalScrollBarEnabled(false);
-		webView.setHorizontalScrollBarEnabled(false);
-		webView.loadUrl(block.getUrl());
+        LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
+        WebView webView = webLayout.findViewById(R.id.webView);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.setVerticalScrollBarEnabled(false);
+        webView.setHorizontalScrollBarEnabled(false);
+        webView.loadUrl(block.getUrl());
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 pxToDp(Integer.parseInt(block.getHeight()))
@@ -374,45 +378,47 @@ public class AppBannerPopup {
     public static int pxToDp(int px) {
         return (int) (px * Resources.getSystem().getDisplayMetrics().density);
     }
+
     /**
      * Will compose and add HTML Banner to the body of banner layout.
-     * @param  body  parent layout to add HTML view
-     * @param  htmlContent html content which will be displayed in banner
+     *
+     * @param body        parent layout to add HTML view
+     * @param htmlContent html content which will be displayed in banner
      */
     private void composeHtmlBanner(LinearLayout body, String htmlContent) {
         activity.runOnUiThread(() -> {
-		String htmlWithJs = htmlContent.replace("</body>","" +
-		"<script type=\"text/javascript\">\n" +
-		"// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" +
-		"var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" +
-		"function onCloseClick() {\n" +
-		"  try {\n" +
-		"    htmlBannerInterface.close();\n" +
-		"  } catch (error) {\n" +
-		"    console.log('Caught error on closeBtn click', error);\n" +
-		"  }\n" +
-		"}\n" +
-		"for (var i = 0; i < closeBtns.length; i++) {\n" +
-		"  closeBtns[i].addEventListener('click', onCloseClick);\n" +
-		"}\n" +
-		"</script>\n" +
-		"</body>");
-		ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
-		WebView webView = webLayout.findViewById(R.id.webView);
-		webView.getSettings().setJavaScriptEnabled(true);
-		webView.getSettings().setLoadsImagesAutomatically(true);
-		webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
+            String htmlWithJs = htmlContent.replace("</body>", "" +
+                    "<script type=\"text/javascript\">\n" +
+                    "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" +
+                    "var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" +
+                    "function onCloseClick() {\n" +
+                    "  try {\n" +
+                    "    htmlBannerInterface.close();\n" +
+                    "  } catch (error) {\n" +
+                    "    console.log('Caught error on closeBtn click', error);\n" +
+                    "  }\n" +
+                    "}\n" +
+                    "for (var i = 0; i < closeBtns.length; i++) {\n" +
+                    "  closeBtns[i].addEventListener('click', onCloseClick);\n" +
+                    "}\n" +
+                    "</script>\n" +
+                    "</body>");
+            ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
+            WebView webView = webLayout.findViewById(R.id.webView);
+            webView.getSettings().setJavaScriptEnabled(true);
+            webView.getSettings().setLoadsImagesAutomatically(true);
+            webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
 
-		String encodedHtml = null;
-		try {
-			encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		webView.loadData(encodedHtml , "text/html; charset=utf-8", "UTF-8");
+            String encodedHtml = null;
+            try {
+                encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            webView.loadData(encodedHtml, "text/html; charset=utf-8", "UTF-8");
 
-		body.addView(webLayout);
-	});
+            body.addView(webLayout);
+        });
     }
 
     private void animateBody(float from, float to) {
@@ -430,7 +436,7 @@ public class AppBannerPopup {
     }
 
     private void runInMain(Runnable runnable, long delay) {
-        if(delay <= 0L) {
+        if (delay <= 0L) {
             mainHandler.post(runnable);
         } else {
             mainHandler.postDelayed(runnable, delay);
@@ -438,17 +444,17 @@ public class AppBannerPopup {
     }
 
     private int parseColor(String colorStr) {
-		if (colorStr.charAt(0) == '#' && colorStr.length() == 4) {
-			colorStr = "#" + colorStr.charAt(1) + colorStr.charAt(1) + colorStr.charAt(2) + colorStr.charAt(2) + colorStr.charAt(3) + colorStr.charAt(3);
-		}
-		int color = Color.BLACK;
-		try {
-			color = Color.parseColor(colorStr);
-		} catch (Exception ex) {
+        if (colorStr.charAt(0) == '#' && colorStr.length() == 4) {
+            colorStr = "#" + colorStr.charAt(1) + colorStr.charAt(1) + colorStr.charAt(2) + colorStr.charAt(2) + colorStr.charAt(3) + colorStr.charAt(3);
+        }
+        int color = Color.BLACK;
+        try {
+            color = Color.parseColor(colorStr);
+        } catch (Exception ex) {
 
-		}
-		return color;
-	}
+        }
+        return color;
+    }
 
     /**
      * Will provide javascript bridge to perform close button click in HTML.
@@ -463,8 +469,8 @@ public class AppBannerPopup {
     public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
         @Override
         protected Boolean doInBackground(String... strings) {
-            if(isRootReady()) {
-                return  true;
+            if (isRootReady()) {
+                return true;
             } else {
                 new Timer().schedule(new TimerTask() {
                     @Override
