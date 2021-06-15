@@ -1931,7 +1931,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
             if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
                 showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
             else
-                showTopicsDialog(dialogActivity, topicsDialogListener, 0);
+                showTopicsDialog(dialogActivity, topicsDialogListener, R.style.alertDialogTheme);
         } catch (IllegalStateException ex) {
             showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
         }
