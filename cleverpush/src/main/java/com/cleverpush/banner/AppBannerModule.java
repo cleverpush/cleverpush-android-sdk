@@ -374,6 +374,12 @@ public class AppBannerModule {
 			for (Banner banner : banners) {
 				if (banner.getId().equals(bannerId)) {
 					AppBannerPopup popup = new AppBannerPopup(activity, banner);
+
+					if (CleverPush.getInstance(activity).areAppBannersDisabled()) {
+						pendingBanners.add(popup);
+						break;
+					}
+
 					handler.post(() -> showBanner(popup));
 					break;
 				}

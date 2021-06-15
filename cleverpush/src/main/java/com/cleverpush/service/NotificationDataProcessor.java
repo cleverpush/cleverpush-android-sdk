@@ -12,9 +12,12 @@ import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.Subscription;
+import com.cleverpush.util.LimitedSizeQueue;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.Type;
+import java.util.List;
 
 import static com.cleverpush.service.NotificationExtenderService.EXTENDER_SERVICE_JOB_ID;
 
@@ -79,12 +82,30 @@ public class NotificationDataProcessor {
         try {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            Set<String> notifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
-            if (notifications != null) {
-                notifications.add(notification.getRawPayload());
+
+			Gson gson = new Gson();
+            int maximumNotifications = 100;
+            String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
+			Type type = new TypeToken<List<Notification>>() {}.getType();
+
+			LimitedSizeQueue<Notification> notifications = null;
+            if (notificationsJson != null) {
+				try {
+					List<Notification> notificationList = gson.fromJson(notificationsJson, type);
+					notifications = new LimitedSizeQueue<>();
+					notifications.addAll(notificationList);
+				} catch (Exception ex) {}
             }
-            editor.remove(CleverPushPreferences.NOTIFICATIONS).apply();
-            editor.putStringSet(CleverPushPreferences.NOTIFICATIONS, notifications);
+            if (notifications == null) {
+				notifications = new LimitedSizeQueue<>();
+			}
+			notifications.setCapacity(maximumNotifications);
+
+			notifications.add(notification);
+
+            editor.remove(CleverPushPreferences.NOTIFICATIONS_JSON).apply();
+			editor.remove(CleverPushPreferences.NOTIFICATIONS).apply();
+            editor.putString(CleverPushPreferences.NOTIFICATIONS_JSON, gson.toJson(notifications, type));
             editor.putString(CleverPushPreferences.LAST_NOTIFICATION_ID, notificationId);
             editor.commit();
         } catch (Exception e) {
