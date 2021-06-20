@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.15.0
+* Added `pushSubscriptionAttribute`, `pullSubscriptionAttribute` and `hasSubscriptionAttributeValue` methods for array attributes
+* Result from getSubscriptionAttributes added to Map<String, Object>
+
 ## 1.14.5
 * Improved style of topics dialog
 
