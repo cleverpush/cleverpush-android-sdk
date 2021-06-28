@@ -150,10 +150,26 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
     private int currentPositionOfTagToAdd = 0;
     private int currentPositionOfTagToRemove = 0;
-    private boolean addingMultipleTag = false;
-    private boolean removingMultipleTag = false;
     private String[] tagIdsToAdd;
     private String[] tagIdsToRemove;
+    private OnAddTagCompleted onAddTagCompleted;
+    private OnRemoveTagCompleted onRemoveTagCompleted;
+
+    public void setOnAddTagCompletedListener(OnAddTagCompleted onAddTagCompleted) {
+        this.onAddTagCompleted = onAddTagCompleted;
+    }
+
+    public void setOnRemoveTagCompletedListener(OnRemoveTagCompleted onRemoveTagCompleted) {
+        this.onRemoveTagCompleted = onRemoveTagCompleted;
+    }
+
+    public interface OnAddTagCompleted {
+        void onAddTagCompleted();
+    }
+
+    public interface OnRemoveTagCompleted {
+        void onRemoveTagCompleted();
+    }
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -197,7 +213,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     /**
-     *initialize Cleverpush SDK
+     * initialize Cleverpush SDK
      */
     public void init() {
         init(null, null, null, null, true);
@@ -220,6 +236,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, notificationOpenedListener);
     }
+
     /**
      *initialize Cleverpush SDK with subscribed callback
      * @param subscribedListener callback for subscription
@@ -229,6 +246,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, subscribedListener);
     }
+
     /**
      *initialize Cleverpush SDK for channel
      * @param channelId channelID of the channel
@@ -1524,9 +1542,17 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
     public void addSubscriptionTags(String[] tagIds) {
         this.tagIdsToAdd = tagIds;
-        addingMultipleTag = true;
         currentPositionOfTagToAdd = 0;
         addSubscriptionTag(tagIds[currentPositionOfTagToAdd]);
+        this.setOnAddTagCompletedListener(new OnAddTagCompleted() {
+            @Override
+            public void onAddTagCompleted() {
+                if (currentPositionOfTagToAdd != tagIdsToAdd.length - 1) {
+                    currentPositionOfTagToAdd++;
+                    addSubscriptionTag(tagIdsToAdd[currentPositionOfTagToAdd]);
+                }
+            }
+        });
     }
 
     public void addSubscriptionTag(String tagId) {
@@ -1534,21 +1560,10 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
             if (subscriptionId != null) {
                 Set<String> tags = this.getSubscriptionTags();
                 if (tags.contains(tagId)) {
-                    if (addingMultipleTag) {
-                        if (currentPositionOfTagToAdd != tagIdsToAdd.length - 1) {
-                            currentPositionOfTagToAdd++;
-                            addSubscriptionTag(tagIdsToAdd[currentPositionOfTagToAdd]);
-                            Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
-                            return;
-                        } else {
-                            addingMultipleTag = false;
-                            return;
-                        }
-
-                    } else {
-                        Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
-                        return;
-                    }
+                    if(onAddTagCompleted !=  null)
+                        onAddTagCompleted.onAddTagCompleted();
+                    Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
+                    return;
 
                 }
 
@@ -1573,16 +1588,8 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                         editor.commit();
 
                         Log.d("CleverPush", "addSubscriptionTag: " + tagId);
-
-                        if (addingMultipleTag) {
-                            if (currentPositionOfTagToAdd != tagIdsToAdd.length - 1) {
-                                currentPositionOfTagToAdd++;
-                                addSubscriptionTag(tagIdsToAdd[currentPositionOfTagToAdd]);
-                            } else {
-                                addingMultipleTag = false;
-                            }
-
-                        }
+                        if(onAddTagCompleted !=  null)
+                            onAddTagCompleted.onAddTagCompleted();
                     }
 
                     @Override
@@ -1596,9 +1603,17 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
     public void removeSubscriptionTags(String[] tagIds) {
         this.tagIdsToRemove = tagIds;
-        removingMultipleTag = true;
         currentPositionOfTagToRemove = 0;
         removeSubscriptionTag(tagIds[currentPositionOfTagToAdd]);
+        this.setOnRemoveTagCompletedListener(new OnRemoveTagCompleted() {
+            @Override
+            public void onRemoveTagCompleted() {
+                if (currentPositionOfTagToRemove != tagIdsToRemove.length - 1) {
+                    currentPositionOfTagToRemove++;
+                    removeSubscriptionTag(tagIdsToRemove[currentPositionOfTagToRemove]);
+                }
+            }
+        });
     }
 
     public void removeSubscriptionTag(String tagId) {
@@ -1624,16 +1639,9 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                         editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
                         editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
                         editor.commit();
+                        if(onRemoveTagCompleted != null)
+                            onRemoveTagCompleted.onRemoveTagCompleted();
 
-                        if (removingMultipleTag) {
-                            if (currentPositionOfTagToRemove != tagIdsToRemove.length - 1) {
-                                currentPositionOfTagToRemove++;
-                                removeSubscriptionTag(tagIdsToRemove[currentPositionOfTagToRemove]);
-                            } else {
-                                removingMultipleTag = false;
-                            }
-
-                        }
                     }
 
                     @Override
