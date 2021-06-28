@@ -1,4 +1,4 @@
-package com.cleverpush;
+ package com.cleverpush;
 
 import android.Manifest;
 import android.app.Activity;
@@ -147,6 +147,13 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
+
+    private int currentPositionOfTagToAdd = 0;
+    private int currentPositionOfTagToRemove = 0;
+    private boolean addingMultipleTag = false;
+    private boolean removingMultipleTag = false;
+    private String[] tagIdsToAdd;
+    private String[] tagIdsToRemove;
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -1515,14 +1522,34 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         return topics;
     }
 
+    public void addSubscriptionTags(String[] tagIds) {
+        this.tagIdsToAdd = tagIds;
+        addingMultipleTag = true;
+        currentPositionOfTagToAdd = 0;
+        addSubscriptionTag(tagIds[currentPositionOfTagToAdd]);
+    }
+
     public void addSubscriptionTag(String tagId) {
-        Log.d("CleverPush", "addSubscriptionTag: " + tagId);
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId != null) {
                 Set<String> tags = this.getSubscriptionTags();
                 if (tags.contains(tagId)) {
-                    Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
-                    return;
+                    if (addingMultipleTag) {
+                        if (currentPositionOfTagToAdd != tagIdsToAdd.length - 1) {
+                            currentPositionOfTagToAdd++;
+                            addSubscriptionTag(tagIdsToAdd[currentPositionOfTagToAdd]);
+                            Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
+                            return;
+                        } else {
+                            addingMultipleTag = false;
+                            return;
+                        }
+
+                    } else {
+                        Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
+                        return;
+                    }
+
                 }
 
                 JSONObject jsonBody = new JSONObject();
@@ -1544,6 +1571,18 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                         editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
                         editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
                         editor.commit();
+
+                        Log.d("CleverPush", "addSubscriptionTag: " + tagId);
+
+                        if (addingMultipleTag) {
+                            if (currentPositionOfTagToAdd != tagIdsToAdd.length - 1) {
+                                currentPositionOfTagToAdd++;
+                                addSubscriptionTag(tagIdsToAdd[currentPositionOfTagToAdd]);
+                            } else {
+                                addingMultipleTag = false;
+                            }
+
+                        }
                     }
 
                     @Override
@@ -1553,6 +1592,13 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                 });
             }
         })).start());
+    }
+
+    public void removeSubscriptionTags(String[] tagIds) {
+        this.tagIdsToRemove = tagIds;
+        removingMultipleTag = true;
+        currentPositionOfTagToRemove = 0;
+        removeSubscriptionTag(tagIds[currentPositionOfTagToAdd]);
     }
 
     public void removeSubscriptionTag(String tagId) {
@@ -1578,6 +1624,16 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                         editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
                         editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
                         editor.commit();
+
+                        if (removingMultipleTag) {
+                            if (currentPositionOfTagToRemove != tagIdsToRemove.length - 1) {
+                                currentPositionOfTagToRemove++;
+                                removeSubscriptionTag(tagIdsToRemove[currentPositionOfTagToRemove]);
+                            } else {
+                                removingMultipleTag = false;
+                            }
+
+                        }
                     }
 
                     @Override
