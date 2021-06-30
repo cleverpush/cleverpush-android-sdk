@@ -87,7 +87,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.15.0";
+    public static final String SDK_VERSION = "1.15.1";
 
     private static CleverPush instance;
 
