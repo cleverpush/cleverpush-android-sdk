@@ -2,32 +2,16 @@ package com.cleverpush.stories;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Picture;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
-import android.os.Build;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.R;
@@ -42,7 +26,6 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailList
     private ArrayList<Story> stories;
     private OnNextEventListener onNextEventListener;
     private OnPreviousEventListener onPreviousEventListener;
-    boolean isRedirected;
 
     public StoryDetailListAdapter(Context mContext, ArrayList<Story> stories) {
         this.mContext = mContext;
@@ -153,7 +136,6 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailList
     public class StoryDetailJavascriptInterface {
         @JavascriptInterface
         public void next(int position) {
-            Log.e("position", position + "");
             onNextEventListener.onNextEventListener(position);
         }
 

@@ -1,4 +1,4 @@
- package com.cleverpush.banner;
+package com.cleverpush.banner;
 
 import android.app.Activity;
 import android.content.res.Resources;
