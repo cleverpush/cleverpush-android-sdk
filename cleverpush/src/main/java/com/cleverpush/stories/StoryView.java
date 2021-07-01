@@ -8,9 +8,12 @@ import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,15 +35,15 @@ public class StoryView extends LinearLayout {
     private ArrayList<Story> stories = new ArrayList<>();
     StoryViewListAdapter storyViewListAdapter;
 
-    protected static final int DEFAULT_BORDER_COLOR = Color.BLACK;
+    protected static final int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
 
-    protected int borderColor;
+    final TypedArray attrArray;
 
     public StoryView(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
-        final TypedArray attrArray = getContext().obtainStyledAttributes(attrs, R.styleable.StoryView);
-        initAttributes(attrArray);
+        attrArray = getContext().obtainStyledAttributes(attrs, R.styleable.StoryView);
+        loadStory();
     }
 
     private void loadStory() {
@@ -91,9 +94,17 @@ public class StoryView extends LinearLayout {
 
     private void displayStoryHead(ArrayList<Story> stories) {
         View root = LayoutInflater.from(context).inflate(R.layout.story_view, this, true);
+
+        RelativeLayout rlMain = root.findViewById(R.id.rlMain);
+        rlMain.setBackgroundColor(attrArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR));
+        ViewGroup.LayoutParams params = rlMain.getLayoutParams();
+        params.height = (int) attrArray.getDimension(R.styleable.StoryView_story_view_height, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.width = (int) attrArray.getDimension(R.styleable.StoryView_story_view_width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rlMain.setLayoutParams(params);
+
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager((Activity) context, LinearLayoutManager.HORIZONTAL, false);
         RecyclerView recyclerView = root.findViewById(R.id.rvStories);
-        storyViewListAdapter = new StoryViewListAdapter((Activity) context, stories, borderColor);
+        storyViewListAdapter = new StoryViewListAdapter((Activity) context, stories, attrArray);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(storyViewListAdapter);
         storyViewListAdapter.setOnItemClicked(new StoryViewListAdapter.OnItemClicked() {
@@ -113,10 +124,5 @@ public class StoryView extends LinearLayout {
                 recyclerView.smoothScrollToPosition(position);
             }
         });
-    }
-
-    protected void initAttributes(TypedArray attrArray) {
-        borderColor = attrArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
-        loadStory();
     }
 }

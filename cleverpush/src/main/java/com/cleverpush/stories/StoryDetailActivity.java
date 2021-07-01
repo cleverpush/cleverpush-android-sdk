@@ -21,7 +21,6 @@ import java.util.ArrayList;
 
 public class StoryDetailActivity extends Activity {
 
-
     StoryDetailListAdapter storyDetailListAdapter;
     private ArrayList<Story> stories = new ArrayList<>();
     private int selectedPosition = 0;
@@ -109,5 +108,4 @@ public class StoryDetailActivity extends Activity {
             }
         });
     }
-
 }
