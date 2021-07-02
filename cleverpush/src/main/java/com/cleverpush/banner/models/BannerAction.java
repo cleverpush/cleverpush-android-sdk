@@ -20,6 +20,7 @@ public class BannerAction {
     private String url;
     private String urlType;
     private boolean dismiss;
+	private boolean openInWebView;
 
     private BannerAction() {}
 
@@ -33,7 +34,11 @@ public class BannerAction {
 
 	public boolean getDismiss() { return dismiss; }
 
-    public static BannerAction create(JSONObject json) throws JSONException {
+	public boolean isOpenInWebView() {
+		return openInWebView;
+	}
+
+	public static BannerAction create(JSONObject json) throws JSONException {
         BannerAction banner = new BannerAction();
 
         if (json != null) {
@@ -42,6 +47,9 @@ public class BannerAction {
 			banner.url = json.optString("url");
 			banner.urlType = json.optString("urlType");
 			banner.dismiss = json.optBoolean("dismiss");
+			if(json.has("openInWebview")){
+				banner.openInWebView = json.optBoolean("openInWebview");
+			}
 		}
 
         return banner;
