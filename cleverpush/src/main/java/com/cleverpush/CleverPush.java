@@ -29,6 +29,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.listener.AddTagCompletedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
@@ -40,6 +41,7 @@ import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
+import com.cleverpush.listener.RemoveTagCompletedListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
@@ -148,18 +150,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
 
-    private int currentPositionOfTagToAdd = 0;
-    private int currentPositionOfTagToRemove = 0;
-    private String[] tagIdsToAdd;
-    private String[] tagIdsToRemove;
 
-    public interface OnAddTagCompleted {
-        void onAddTagCompleted();
-    }
-
-    public interface OnRemoveTagCompleted {
-        void onRemoveTagCompleted();
-    }
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -1531,29 +1522,28 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void addSubscriptionTags(String[] tagIds) {
-        currentPositionOfTagToAdd = 0;
-        addSubscriptionTag(tagIds[currentPositionOfTagToAdd], new OnAddTagCompleted() {
+
+        addSubscriptionTag(tagIds[0], new AddTagCompletedListener(){
             @Override
-            public void onAddTagCompleted() {
+            public void tagAdded(int currentPositionOfTagToAdd) {
                 if (currentPositionOfTagToAdd != tagIds.length - 1) {
-                    currentPositionOfTagToAdd++;
-                    addSubscriptionTag(tagIds[currentPositionOfTagToAdd], this::onAddTagCompleted);
+                    addSubscriptionTag(tagIds[++currentPositionOfTagToAdd], this,++currentPositionOfTagToAdd);
                 }
             }
-        });
+        },0);
     }
 
     public void addSubscriptionTag(String tagId) {
-        addSubscriptionTag(tagId, null);
+        addSubscriptionTag(tagId, null,-1);
     }
 
-    public void addSubscriptionTag(String tagId, OnAddTagCompleted onAddTagCompleted) {
+    public void addSubscriptionTag(String tagId, AddTagCompletedListener addTagCompletedListener,int currentPositionOfTagToAdd) {
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId != null) {
                 Set<String> tags = this.getSubscriptionTags();
                 if (tags.contains(tagId)) {
-                    if (onAddTagCompleted != null) {
-                        onAddTagCompleted.onAddTagCompleted();
+                    if (addTagCompletedListener != null) {
+                        addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);
                     }
                     Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
                     return;
@@ -1580,9 +1570,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
                         editor.commit();
 
-                        if (onAddTagCompleted != null) {
-                            onAddTagCompleted.onAddTagCompleted();
+                        if (addTagCompletedListener != null) {
+                            addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);
                         }
+                        Log.e("addedPosition",currentPositionOfTagToAdd+"");
+                        Log.e("addedTag",tagId+"");
                     }
 
                     @Override
@@ -1595,13 +1587,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void removeSubscriptionTags(String[] tagIds) {
-        currentPositionOfTagToRemove = 0;
-        removeSubscriptionTag(tagIds[currentPositionOfTagToAdd], new OnRemoveTagCompleted() {
+        final int[] currentPositionOfTagToRemove = {0};
+        removeSubscriptionTag(tagIds[currentPositionOfTagToRemove[0]], new RemoveTagCompletedListener() {
             @Override
-            public void onRemoveTagCompleted() {
-                if (currentPositionOfTagToRemove != tagIds.length - 1) {
-                    currentPositionOfTagToRemove++;
-                    removeSubscriptionTag(tagIds[currentPositionOfTagToRemove], this::onRemoveTagCompleted);
+            public void tagRemoved() {
+                if (currentPositionOfTagToRemove[0] != tagIds.length - 1) {
+                    currentPositionOfTagToRemove[0]++;
+                    removeSubscriptionTag(tagIds[currentPositionOfTagToRemove[0]], this);
                 }
             }
         });
@@ -1611,7 +1603,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         removeSubscriptionTag(tagId, null);
     }
 
-    public void removeSubscriptionTag(String tagId, OnRemoveTagCompleted onRemoveTagCompleted) {
+    public void removeSubscriptionTag(String tagId, RemoveTagCompletedListener onRemoveTagCompleted) {
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId != null) {
                 JSONObject jsonBody = new JSONObject();
@@ -1635,7 +1627,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
                         editor.commit();
                         if (onRemoveTagCompleted != null) {
-                            onRemoveTagCompleted.onRemoveTagCompleted();
+                            onRemoveTagCompleted.tagRemoved();
                         }
 
 
@@ -2481,7 +2473,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
     }
 
-    public boolean areAppBannersDisabled() {
+    public boolean isAppBannersDisabled() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         appBannersDisabled = sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, false);
         return appBannersDisabled;
