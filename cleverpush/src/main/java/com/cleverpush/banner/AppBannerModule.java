@@ -92,7 +92,7 @@ public class AppBannerModule {
         handler = new Handler(handlerThread.getLooper());
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(CleverPushPreferences.APP_BANNERS_IS_POP_UP_SHOWING, false);
+        editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false);
         editor.commit();
     }
 
@@ -116,7 +116,7 @@ public class AppBannerModule {
             bannersPath += "&notificationId=" + notificationId;
         }
 
-        Log.d("CleverPush/AppBanner", "Loading banners: " + bannersPath);
+        Log.d(TAG, "Loading banners: " + bannersPath);
 
         CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
             @Override
@@ -190,11 +190,9 @@ public class AppBannerModule {
     public void initSession(String channel) {
         this.channel = channel;
 
-        if (
-                !CleverPush.getInstance(activity).isDevelopmentModeEnabled()
-                        && lastSessionTimestamp > 0
-                        && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH
-        ) {
+        if (!CleverPush.getInstance(activity).isDevelopmentModeEnabled()
+            && lastSessionTimestamp > 0
+            && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
             return;
         }
 
@@ -238,19 +236,20 @@ public class AppBannerModule {
     }
 
     public void getBanners(AppBannersListener listener, String notificationId) {
-        if (listener != null) {
-            if (notificationId != null) {
-                // reload banners because the banner might have been created just seconds ago
+        if (listener == null) {
+            return;
+        }
+        if (notificationId != null) {
+            // reload banners because the banner might have been created just seconds ago
+            getBannersListeners.add(listener);
+            handler.post(() -> {
+                this.loadBanners(notificationId);
+            });
+        } else {
+            if (banners == null) {
                 getBannersListeners.add(listener);
-                handler.post(() -> {
-                    this.loadBanners(notificationId);
-                });
             } else {
-                if (banners == null) {
-                    getBannersListeners.add(listener);
-                } else {
-                    listener.ready(banners);
-                }
+                listener.ready(banners);
             }
         }
     }
@@ -262,6 +261,11 @@ public class AppBannerModule {
             createBanners(banners);
             scheduleBanners();
         });
+    }
+
+    private boolean isBannerTimeAllowed(Banner banner) {
+        Date now = new Date();
+        return banner.getStopAtType() == BannerStopAtType.SpecificTime && banner.getStopAt().before(now);
     }
 
     private void createBanners(Collection<Banner> banners) {
@@ -367,7 +371,7 @@ public class AppBannerModule {
     }
 
     public void showBannerById(String bannerId, String notificationId) {
-        Log.d("CleverPush/AppBanner", "showBannerById: " + bannerId);
+        Log.d(TAG, "showBannerById: " + bannerId);
         this.getBanners(banners -> {
             for (Banner banner : banners) {
                 if (banner.getId().equals(bannerId)) {
@@ -389,13 +393,13 @@ public class AppBannerModule {
         Date now = new Date();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
-        if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNERS_IS_POP_UP_SHOWING, false)) {
-            Log.d(TAG, "Skipping Banner because: One Banner already on screen");
+        if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
+            Log.d(TAG, "Skipping Banner because: A Banner is already on the screen");
             return;
         }
 
-        if (bannerPopup.getData().getStopAtType() == BannerStopAtType.SpecificTime && bannerPopup.getData().getStopAt().before(now)) {
-            Log.d(TAG, "Skipping Banner because: Time");
+        if (!isBannerTimeAllowed(bannerPopup.getData())) {
+            Log.d(TAG, "Skipping Banner because: Stop Time");
             return;
         }
 

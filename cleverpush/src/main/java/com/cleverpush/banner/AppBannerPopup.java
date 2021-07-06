@@ -201,14 +201,18 @@ public class AppBannerPopup {
         isInitialized = true;
     }
 
+    private void toggleShowing(boolean isShowing) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, isShowing);
+        editor.commit();
+    }
+
     public void show() {
         if (!isInitialized) {
             throw new IllegalStateException("Must be initialized");
         }
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(CleverPushPreferences.APP_BANNERS_IS_POP_UP_SHOWING, true);
-        editor.commit();
+        this.toggleShowing(true);
         new tryShowSafe().execute();
     }
 
@@ -230,15 +234,9 @@ public class AppBannerPopup {
         }
 
         runInMain(() -> animateBody(0f, getRoot().getHeight()));
-        runInMain(new Runnable() {
-            @Override
-            public void run() {
-                popup.dismiss();
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putBoolean(CleverPushPreferences.APP_BANNERS_IS_POP_UP_SHOWING, false);
-                editor.commit();
-            }
+        runInMain(() -> {
+            popup.dismiss();
+            this.toggleShowing(false);
         },200);
 
     }
@@ -251,7 +249,6 @@ public class AppBannerPopup {
     }
 
     private void composeBackground(ImageView bannerBackground, LinearLayout body) {
-
         BannerBackground bg = data.getBackground();
         final ViewTreeObserver observer = body.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -283,7 +280,6 @@ public class AppBannerPopup {
                 }
             }).start();
         }
-
     }
 
     private void composeButtonBlock(LinearLayout body, BannerButtonBlock block) {

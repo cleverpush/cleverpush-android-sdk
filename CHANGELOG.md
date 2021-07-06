@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.15.2
+* App Banners: prevent showing multiple banners at the same time
+* App Banners: Validate "stopAt" field for banners triggered manually or by notification
+
 ## 1.15.1
 * Catch FCM exceptions in onReceivedMessage listener to prevent crash on invalid payloads
 
