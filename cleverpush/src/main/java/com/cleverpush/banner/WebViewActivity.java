@@ -27,12 +27,14 @@ public class WebViewActivity extends Activity {
         handleBundleData(getIntent().getExtras());
 
     }
+
     private void handleBundleData(Bundle extras) {
         if (extras.containsKey("url")) {
             url = extras.getString("url");
             init();
         }
     }
+
     private void init() {
         WebView webView = findViewById(R.id.webView);
         ImageView closeButton = findViewById(R.id.ivClose);

@@ -301,8 +301,12 @@ public class AppBannerPopup {
         button.setBackground(bg);
 
         button.setOnClickListener(view -> {
-            if (block.getAction().getDismiss()) {
-                dismiss();
+            if (block.getAction().isOpenInWebView()) {
+                WebViewActivity.launch(activity, block.getAction().getUrl());
+            } else {
+                if (block.getAction().getDismiss()) {
+                    dismiss();
+                }
             }
 
             if (this.openedListener != null) {
