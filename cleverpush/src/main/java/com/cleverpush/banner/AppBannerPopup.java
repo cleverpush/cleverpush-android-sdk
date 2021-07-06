@@ -1,6 +1,7 @@
 package com.cleverpush.banner;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,6 +11,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
@@ -35,6 +37,8 @@ import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
 
+import com.cleverpush.CleverPush;
+import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.blocks.Alignment;
@@ -201,7 +205,10 @@ public class AppBannerPopup {
         if (!isInitialized) {
             throw new IllegalStateException("Must be initialized");
         }
-
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CleverPushPreferences.APP_BANNERS_IS_POP_UP_SHOWING, true);
+        editor.commit();
         new tryShowSafe().execute();
     }
 
@@ -218,11 +225,22 @@ public class AppBannerPopup {
 
     public void dismiss() {
         if (!isInitialized) {
-            throw new IllegalStateException("Must be initialized");
+            Log.e(TAG,"Must be initialized");
+            return;
         }
 
         runInMain(() -> animateBody(0f, getRoot().getHeight()));
-        runInMain(() -> popup.dismiss(), 200);
+        runInMain(new Runnable() {
+            @Override
+            public void run() {
+                popup.dismiss();
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean(CleverPushPreferences.APP_BANNERS_IS_POP_UP_SHOWING, false);
+                editor.commit();
+            }
+        },200);
+
     }
 
     private View createLayout() {

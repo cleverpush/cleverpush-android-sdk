@@ -27,5 +27,6 @@ public class CleverPushPreferences {
 	public static final String APP_BANNER_SESSIONS = "appBannerSessions";
 	public static final String APP_BANNERS_DISABLED = "appBannersDisabled";
     public static final String SUBSCRIPTION_TOPICS_DESELECT_ALL = "subscriptionTopicsDeselectAll";
+    public static final String APP_BANNERS_IS_POP_UP_SHOWING = "isPopUpShowing";
 
 }
