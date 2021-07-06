@@ -280,6 +280,11 @@ public class AppBannerModule {
                 continue;
             }
 
+            if (!isBannerTimeAllowed(banner)) {
+                Log.d(TAG, "Skipping Banner because: Time");
+                continue;
+            }
+
             if (banner.getTriggerType() == BannerTriggerType.Conditions) {
                 boolean triggers = false;
                 for (BannerTrigger trigger : banner.getTriggers()) {
