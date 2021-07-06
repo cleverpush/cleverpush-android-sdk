@@ -374,6 +374,15 @@ public class AppBannerPopup {
 
             }
         }).start();
+
+        img.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (block.getAction().isOpenInWebView()) {
+                    WebViewActivity.launch(activity,block.getAction().getUrl());
+                }
+            }
+        });
     }
 
     private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {

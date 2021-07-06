@@ -3,4 +3,5 @@
     <color name="cp_notification_btn_bg">#80ffffff</color>
     <color name="cp_in_app_close_button_background">#e2e2e2</color>
 	<color name="cp_bannerBackground">#ffffff</color>
+    <color name="cp_black_trans">#A6000000</color>
 </resources>
