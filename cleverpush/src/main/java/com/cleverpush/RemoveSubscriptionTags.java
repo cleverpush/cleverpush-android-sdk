@@ -24,7 +24,6 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
         this.tagIds = tagIds;
     }
 
-
     @Override
     public void tagRemoved(int currentPositionOfTagToRemove) {
         if (currentPositionOfTagToRemove != tagIds.length - 1) {
@@ -56,27 +55,33 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
             Set<String> tags = this.getSubscriptionTags();
             tags.remove(tagId);
 
-            CleverPushHttpClient.post("/subscription/untag", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                @Override
-                public void onSuccess(String response) {
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
-                    editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
-                    editor.commit();
-                    if (onRemoveTagCompleted != null) {
-                        onRemoveTagCompleted.tagRemoved(currentPositionOfTagToRemove);
-                    }
-                    Log.e("removedTag", tagId);
-
-
-                }
-
-                @Override
-                public void onFailure(int statusCode, String response, Throwable throwable) {
-                    Log.e("CleverPush", "Error removing tag - HTTP " + statusCode);
-                }
-            });
+            CleverPushHttpClient.post("/subscription/untag", jsonBody, removeSubscriptionTagResponseHandler(tagId, onRemoveTagCompleted, currentPositionOfTagToRemove, tags));
         }
+    }
+
+    public CleverPushHttpClient.ResponseHandler removeSubscriptionTagResponseHandler(String tagId, RemoveTagCompletedListener onRemoveTagCompleted, int currentPositionOfTagToRemove, Set<String> tags) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        CleverPushHttpClient.ResponseHandler responseHandler = new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
+                editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
+                editor.commit();
+                if (onRemoveTagCompleted != null) {
+                    onRemoveTagCompleted.tagRemoved(currentPositionOfTagToRemove);
+                }
+                Log.e("removedTag", tagId);
+
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+                Log.e("CleverPush", "Error removing tag - HTTP " + statusCode);
+            }
+        };
+        return responseHandler;
     }
 
     public Set<String> getSubscriptionTags() {

@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationList extends ArrayList<com.cleverpush.Notification> {
-    private List<com.cleverpush.Notification> Notification;
+    private List<com.cleverpush.Notification> notification;
 
     public List<com.cleverpush.Notification> getNotification() {
-        return Notification;
+        return this.notification;
     }
 
     public void setNotification(List<com.cleverpush.Notification> notification) {
-        Notification = notification;
+        this.notification = notification;
     }
 }

@@ -29,7 +29,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
-import com.cleverpush.listener.AddTagCompletedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
@@ -41,7 +40,6 @@ import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
-import com.cleverpush.listener.RemoveTagCompletedListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
@@ -51,6 +49,8 @@ import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerHMS;
+import com.cleverpush.mapper.Mapper;
+import com.cleverpush.mapper.SubscriptionToListMapper;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
 import com.google.android.gms.common.ConnectionResult;
@@ -60,14 +60,12 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -118,10 +116,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
     private Map<String, String> pendingAppBannerEvents = new HashMap<>();
     private String pendingShowAppBannerId = null;
-	private String pendingShowAppBannerNotificationId = null;
+    private String pendingShowAppBannerNotificationId = null;
     private String currentPageUrl;
     private AppBannerModule appBannerModule;
-	private boolean appBannersDisabled = false;
+    private boolean appBannersDisabled = false;
 
     private String channelId;
     private String subscriptionId = null;
@@ -200,6 +198,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification received callback
+     *
      * @param notificationReceivedListener callback for the notification received
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
@@ -209,6 +208,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification opened callback
+     *
      * @param notificationOpenedListener callback for the notification opened
      */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) {
@@ -218,6 +218,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with subscribed callback
+     *
      * @param subscribedListener callback for subscription
      */
 
@@ -228,6 +229,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel
+     *
      * @param channelId channelID of the channel
      */
     public void init(String channelId) {
@@ -236,6 +238,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      */
@@ -245,6 +248,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback
+     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      */
@@ -254,8 +258,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification opened callback and subscribed callback
+     *
      * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener         callback for subscription
      */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, null, notificationOpenedListener, subscribedListener);
@@ -263,8 +268,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification received callback and subscribed callback
+     *
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener           callback for subscription
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, notificationReceivedListener, null, subscribedListener);
@@ -272,6 +278,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and notification opened callback
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
@@ -282,6 +289,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with subscribed callback
+     *
      * @param channelId          channelID of the channel
      * @param subscribedListener callback for subscription
      */
@@ -291,9 +299,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and subscribed callback
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener           callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, null, subscribedListener);
@@ -301,6 +310,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback and subscribed callback
+     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
@@ -311,6 +321,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received, notification opened callback and subscribed callback
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
@@ -322,6 +333,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback and subscribed callback and if there is autoRegister
+     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
@@ -333,6 +345,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and subscribed callback and if there is autoRegister
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param subscribedListener           callback for subscription
@@ -344,11 +357,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
-     * @param autoRegister boolean for auto register
+     * @param notificationOpenedListener   callback for the notification opened
+     * @param subscribedListener           callback for subscription
+     * @param autoRegister                 boolean for auto register
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
@@ -494,6 +508,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * subscribe or sync subscription
+     *
      * @param autoRegister boolean for auto register
      */
     private void subscribeOrSync(boolean autoRegister) {
@@ -1520,33 +1535,42 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void addMultipleSubscriptionTags(String[] tagIds) {
-        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-            AddSubscriptionTags addMultipleSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId,this.channelId,tagIds);
-            addMultipleSubscriptionTagsHelper.addMultipleSubscriptionTags();
-        })).start());
-
+        addSubscriptionTagTrackingConsent(tagIds);
     }
 
     public void addSubscriptionTag(String tagId) {
-        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-            AddSubscriptionTags addMultipleSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId,this.channelId,tagId);
-            addMultipleSubscriptionTagsHelper.addSubscriptionTag();
-        })).start());
+        addSubscriptionTagTrackingConsent(tagId);
     }
 
-    public void removeMultipleSubscriptionSubscriptionTags(String[] tagIds) {
-        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-            RemoveSubscriptionTags removeSubscriptionTags =  new RemoveSubscriptionTags(subscriptionId,this.channelId,tagIds);
-            removeSubscriptionTags.removeMultipleSubscriptionSubscriptionTags();
-        })).start());
+    private void addSubscriptionTagTrackingConsent(String... tagIds) {
+        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(getAddMultipleSubscriptionTagsSubscribedListener(tagIds))).start());
+    }
 
+    private SubscribedListener getAddMultipleSubscriptionTagsSubscribedListener(String... tagIds) {
+        return subscriptionId -> {
+            AddSubscriptionTags addMultipleSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId, this.channelId, tagIds);
+            addMultipleSubscriptionTagsHelper.addMultipleSubscriptionTags();
+        };
+    }
+
+
+    public void removeMultipleSubscriptionSubscriptionTags(String[] tagIds) {
+        removeSubscriptionTagTrackingConsent(tagIds);
     }
 
     public void removeSubscriptionTag(String tagId) {
-        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-            RemoveSubscriptionTags removeSubscriptionTags =  new RemoveSubscriptionTags(subscriptionId,this.channelId,tagId);
+        removeSubscriptionTagTrackingConsent(tagId);
+    }
+
+    private void removeSubscriptionTagTrackingConsent(String... tagIds) {
+        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(getRemoveSubscriptionTagSubscribedListener(tagIds))).start());
+    }
+
+    private SubscribedListener getRemoveSubscriptionTagSubscribedListener(String... tagIds) {
+        return subscriptionId -> {
+            RemoveSubscriptionTags removeSubscriptionTags = new RemoveSubscriptionTags(subscriptionId, this.channelId, tagIds);
             removeSubscriptionTags.removeMultipleSubscriptionSubscriptionTags();
-        })).start());
+        };
     }
 
     public void setSubscriptionTopics(String[] topicIds) {
@@ -1665,14 +1689,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
 
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
                 ArrayList<String> arrayList = new ArrayList<>();
                 try {
                     JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-                    Mapper jsonArrayToListMapper = new SubscriptionToListMapper();
-                    arrayList.addAll((Collection<String>) jsonArrayToListMapper.toValue(arrayValue));
+                    Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
+                    arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
                 } catch (Exception ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
@@ -1684,30 +1707,36 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
                 subscriptionAttributes.put(attributeId, arrayString);
 
-                CleverPushHttpClient.post("/subscription/attribute/push-value", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        try {
-                            if (sharedPreferences != null) {
-                                JSONObject jsonObject = new JSONObject(subscriptionAttributes);
-                                String jsonString = jsonObject.toString();
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
-                                editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-                                editor.commit();
-                            }
-                        } catch (Exception ex) {
-                            Log.e("CleverPush", ex.getMessage(), ex);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error pushing attribute value - HTTP " + statusCode);
-                    }
-                });
+                CleverPushHttpClient.post("/subscription/attribute/push-value", jsonBody, pushSubscriptionAttributeValueResponseHandler(subscriptionAttributes));
             }
         })).start());
+    }
+
+    public CleverPushHttpClient.ResponseHandler pushSubscriptionAttributeValueResponseHandler(Map<String, Object> subscriptionAttributes) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        CleverPushHttpClient.ResponseHandler responseHandler = new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    if (sharedPreferences != null) {
+                        JSONObject jsonObject = new JSONObject(subscriptionAttributes);
+                        String jsonString = jsonObject.toString();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+                        editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
+                        editor.commit();
+                    }
+                } catch (Exception ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+                Log.e("CleverPush", "Error pushing attribute value - HTTP " + statusCode);
+            }
+        };
+        return responseHandler;
     }
 
     public void pullSubscriptionAttributeValue(String attributeId, String value) {
@@ -1723,15 +1752,15 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
 
-				SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-				Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
                 ArrayList<String> arrayList = new ArrayList<>();
 
                 try {
                     JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-                    Mapper jsonArrayToListMapper = new SubscriptionToListMapper();
-                    arrayList.addAll((Collection<String>) jsonArrayToListMapper.toValue(arrayValue));
+                    Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
+                    arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
                 } catch (Exception ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
@@ -1742,30 +1771,36 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
                 subscriptionAttributes.put(attributeId, arrayString);
 
-                CleverPushHttpClient.post("/subscription/attribute/pull-value", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        try {
-                            if (sharedPreferences != null) {
-                                JSONObject jsonObject = new JSONObject(subscriptionAttributes);
-                                String jsonString = jsonObject.toString();
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
-                                editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-                                editor.commit();
-                            }
-                        } catch (Exception ex) {
-                            Log.e("CleverPush", ex.getMessage(), ex);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error pulling attribute value - HTTP " + statusCode);
-                    }
-                });
+                CleverPushHttpClient.post("/subscription/attribute/pull-value", jsonBody, pullSubscriptionAttributeValueResponseHandler(subscriptionAttributes));
             }
         })).start());
+    }
+
+    public CleverPushHttpClient.ResponseHandler pullSubscriptionAttributeValueResponseHandler(Map<String, Object> subscriptionAttributes) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        CleverPushHttpClient.ResponseHandler responseHandler = new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    if (sharedPreferences != null) {
+                        JSONObject jsonObject = new JSONObject(subscriptionAttributes);
+                        String jsonString = jsonObject.toString();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+                        editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
+                        editor.commit();
+                    }
+                } catch (Exception ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+                Log.e("CleverPush", "Error pulling attribute value - HTTP " + statusCode);
+            }
+        };
+        return responseHandler;
     }
 
     public boolean hasSubscriptionAttributeValue(String attributeId, String value) {
@@ -1774,8 +1809,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         ArrayList<String> arrayList = new ArrayList<>();
         try {
             JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-            Mapper jsonArrayToListMapper = new SubscriptionToListMapper();
-            arrayList.addAll((Collection<String>) jsonArrayToListMapper.toValue(arrayValue));
+            Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
+            arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
         } catch (Exception ex) {
             Log.e("CleverPush", ex.getMessage(), ex);
         }
@@ -1826,7 +1861,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
         if (notificationsJson != null) {
             try {
-                List<Notification> notifications = gson.fromJson(notificationsJson,NotificationList.class);
+                List<Notification> notifications = gson.fromJson(notificationsJson, NotificationList.class);
                 return new HashSet<>(notifications);
             } catch (Exception ex) {
                 Log.e("CleverPush", "error while getting stored notifications", ex);
@@ -2140,6 +2175,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * Will create list of checkbox for the topics.
+     *
      * @param parentLayout        parent layout to add checkboxes
      * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
