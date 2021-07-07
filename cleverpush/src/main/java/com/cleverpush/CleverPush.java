@@ -85,9 +85,9 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCallback {
+public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.15.0";
+    public static final String SDK_VERSION = "1.15.2";
 
     private static CleverPush instance;
 
@@ -116,10 +116,10 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
     private Map<String, String> pendingAppBannerEvents = new HashMap<>();
     private String pendingShowAppBannerId = null;
-	private String pendingShowAppBannerNotificationId = null;
+    private String pendingShowAppBannerNotificationId = null;
     private String currentPageUrl;
     private AppBannerModule appBannerModule;
-	private boolean appBannersDisabled = false;
+    private boolean appBannersDisabled = false;
 
     private String channelId;
     private String subscriptionId = null;
@@ -159,7 +159,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
             CleverPush.context = context.getApplicationContext();
         }
 
-          sessionListener = open -> {
+        sessionListener = open -> {
             if (open) {
                 this.trackSessionStart();
 
@@ -190,14 +190,15 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     /**
-     *initialize Cleverpush SDK
+     * initialize Cleverpush SDK
      */
     public void init() {
         init(null, null, null, null, true);
     }
 
     /**
-     *initialize Cleverpush SDK with notification received callback
+     * initialize Cleverpush SDK with notification received callback
+     *
      * @param notificationReceivedListener callback for the notification received
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
@@ -206,15 +207,18 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     /**
-     *initialize Cleverpush SDK with notification opened callback
+     * initialize Cleverpush SDK with notification opened callback
+     *
      * @param notificationOpenedListener callback for the notification opened
      */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) {
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, notificationOpenedListener);
     }
+
     /**
-     *initialize Cleverpush SDK with subscribed callback
+     * initialize Cleverpush SDK with subscribed callback
+     *
      * @param subscribedListener callback for subscription
      */
 
@@ -222,8 +226,10 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         String channelId = MetaDataUtils.getChannelId(CleverPush.context);
         init(channelId, subscribedListener);
     }
+
     /**
-     *initialize Cleverpush SDK for channel
+     * initialize Cleverpush SDK for channel
+     *
      * @param channelId channelID of the channel
      */
     public void init(String channelId) {
@@ -231,8 +237,9 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification received callback
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification received callback
+     *
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
@@ -240,8 +247,9 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification opened callback
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification opened callback
+     *
+     * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) {
@@ -249,36 +257,40 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     /**
-     *initialize Cleverpush SDK with notification opened callback and subscribed callback
+     * initialize Cleverpush SDK with notification opened callback and subscribed callback
+     *
      * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener         callback for subscription
      */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, null, notificationOpenedListener, subscribedListener);
     }
 
     /**
-     *initialize Cleverpush SDK with notification received callback and subscribed callback
+     * initialize Cleverpush SDK with notification received callback and subscribed callback
+     *
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener           callback for subscription
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, notificationReceivedListener, null, subscribedListener);
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification received callback and notification opened callback
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification received callback and notification opened callback
+     *
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener callback for the notification opened
+     * @param notificationOpenedListener   callback for the notification opened
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, null);
     }
 
     /**
-     *initialize Cleverpush SDK for channel with subscribed callback
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with subscribed callback
+     *
+     * @param channelId          channelID of the channel
      * @param subscribedListener callback for subscription
      */
     public void init(String channelId, @Nullable final SubscribedListener subscribedListener) {
@@ -286,65 +298,71 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification received callback and subscribed callback
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification received callback and subscribed callback
+     *
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener           callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, null, subscribedListener);
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification opened callback and subscribed callback
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification opened callback and subscribed callback
+     *
+     * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
+     * @param subscribedListener         callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, null, notificationOpenedListener, subscribedListener);
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification received, notification opened callback and subscribed callback
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification received, notification opened callback and subscribed callback
+     *
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
+     * @param notificationOpenedListener   callback for the notification opened
+     * @param subscribedListener           callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, true);
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification opened callback and subscribed callback and if there is autoRegister
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification opened callback and subscribed callback and if there is autoRegister
+     *
+     * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
-     * @param autoRegister boolean for auto register
+     * @param subscribedListener         callback for subscription
+     * @param autoRegister               boolean for auto register
      */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         init(channelId, null, notificationOpenedListener, subscribedListener, autoRegister);
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification received callback and subscribed callback and if there is autoRegister
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification received callback and subscribed callback and if there is autoRegister
+     *
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener callback for subscription
-     * @param autoRegister boolean for auto register
+     * @param subscribedListener           callback for subscription
+     * @param autoRegister                 boolean for auto register
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         init(channelId, notificationReceivedListener, null, subscribedListener, autoRegister);
     }
 
     /**
-     *initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
-     * @param channelId channelID of the channel
+     * initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
+     *
+     * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener callback for subscription
-     * @param autoRegister boolean for auto register
+     * @param notificationOpenedListener   callback for the notification opened
+     * @param subscribedListener           callback for subscription
+     * @param autoRegister                 boolean for auto register
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
@@ -356,7 +374,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
         SubscriptionManagerFCM.disableFirebaseInstanceIdService(CleverPush.context);
 
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
         // try to get cached Channel ID from Shared Preferences
         if (this.channelId == null) {
@@ -490,6 +508,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
     /**
      * subscribe or sync subscription
+     *
      * @param autoRegister boolean for auto register
      */
     private void subscribeOrSync(boolean autoRegister) {
@@ -539,7 +558,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         if (pendingShowAppBannerId != null) {
             appBannerModule.showBannerById(pendingShowAppBannerId, pendingShowAppBannerNotificationId);
             pendingShowAppBannerId = null;
-			pendingShowAppBannerNotificationId = null;
+            pendingShowAppBannerNotificationId = null;
         }
 
         appBannerModule.initSession(channelId);
@@ -1046,11 +1065,11 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                     }
 
                     if (!confirmAlertShown) {
-                    	// If the confirm alert has not been tracked by the customer already,
-						// we will track it here retroperspectively to ensure opt-in rate statistics
-						// are correct
-                    	this.setConfirmAlertShown();
-					}
+                        // If the confirm alert has not been tracked by the customer already,
+                        // we will track it here retroperspectively to ensure opt-in rate statistics
+                        // are correct
+                        this.setConfirmAlertShown();
+                    }
                 }
             });
         });
@@ -1073,7 +1092,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                 @Override
                 public void onSuccess(String response) {
                     try {
-                    	Log.d("CleverPush", "unsubscribe success");
+                        Log.d("CleverPush", "unsubscribe success");
                         self.clearSubscriptionData();
                     } catch (Throwable t) {
                         Log.e("CleverPush", "Error", t);
@@ -1214,9 +1233,9 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
-		if (openedResult.getNotification().getAppBanner() != null) {
-			showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
-		}
+        if (openedResult.getNotification().getAppBanner() != null) {
+            showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
+        }
 
         if (notificationOpenedListener == null) {
             unprocessedOpenedNotifications.add(openedResult);
@@ -1232,7 +1251,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     public void fireSubscribedListener(final String subscriptionId) {
-        if (subscribedListener == null ||  subscriptionId == null) {
+        if (subscribedListener == null || subscriptionId == null) {
             return;
         }
         subscribedListener.subscribed(subscriptionId);
@@ -1692,146 +1711,146 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         })).start());
     }
 
-	public void pushSubscriptionAttributeValue(String attributeId, String value) {
-		this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-			if (subscriptionId != null) {
-				JSONObject jsonBody = new JSONObject();
-				try {
-					jsonBody.put("channelId", this.channelId);
-					jsonBody.put("attributeId", attributeId);
-					jsonBody.put("value", value);
-					jsonBody.put("subscriptionId", subscriptionId);
-				} catch (JSONException ex) {
-					Log.e("CleverPush", ex.getMessage(), ex);
-				}
+    public void pushSubscriptionAttributeValue(String attributeId, String value) {
+        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
+            if (subscriptionId != null) {
+                JSONObject jsonBody = new JSONObject();
+                try {
+                    jsonBody.put("channelId", this.channelId);
+                    jsonBody.put("attributeId", attributeId);
+                    jsonBody.put("value", value);
+                    jsonBody.put("subscriptionId", subscriptionId);
+                } catch (JSONException ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
 
-				SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-				Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
-				ArrayList<String> arrayList = new ArrayList<>();
-				try {
-					JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-					if (arrayValue != null) {
-						for (int i = 0; i < arrayValue.length(); i++) {
-							arrayList.add(arrayValue.getString(i));
-						}
-					}
-				} catch (Exception ex) {
-					Log.e("CleverPush", ex.getMessage(), ex);
-				}
+                ArrayList<String> arrayList = new ArrayList<>();
+                try {
+                    JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
+                    if (arrayValue != null) {
+                        for (int i = 0; i < arrayValue.length(); i++) {
+                            arrayList.add(arrayValue.getString(i));
+                        }
+                    }
+                } catch (Exception ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
 
-				arrayList.add(value);
-				String[] arrayString = arrayList.toArray(new String[0]);
-				if (arrayString == null) {
-					return;
-				}
-				subscriptionAttributes.put(attributeId, arrayString);
+                arrayList.add(value);
+                String[] arrayString = arrayList.toArray(new String[0]);
+                if (arrayString == null) {
+                    return;
+                }
+                subscriptionAttributes.put(attributeId, arrayString);
 
-				CleverPushHttpClient.post("/subscription/attribute/push-value", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-					@Override
-					public void onSuccess(String response) {
-						try {
-							if (sharedPreferences != null) {
-								JSONObject jsonObject = new JSONObject(subscriptionAttributes);
-								String jsonString = jsonObject.toString();
-								SharedPreferences.Editor editor = sharedPreferences.edit();
-								editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
-								editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-								editor.commit();
-							}
-						} catch (Exception ex) {
-							Log.e("CleverPush", ex.getMessage(), ex);
-						}
-					}
+                CleverPushHttpClient.post("/subscription/attribute/push-value", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+                    @Override
+                    public void onSuccess(String response) {
+                        try {
+                            if (sharedPreferences != null) {
+                                JSONObject jsonObject = new JSONObject(subscriptionAttributes);
+                                String jsonString = jsonObject.toString();
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+                                editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
+                                editor.commit();
+                            }
+                        } catch (Exception ex) {
+                            Log.e("CleverPush", ex.getMessage(), ex);
+                        }
+                    }
 
-					@Override
-					public void onFailure(int statusCode, String response, Throwable throwable) {
-						Log.e("CleverPush", "Error pushing attribute value - HTTP " + statusCode);
-					}
-				});
-			}
-		})).start());
-	}
+                    @Override
+                    public void onFailure(int statusCode, String response, Throwable throwable) {
+                        Log.e("CleverPush", "Error pushing attribute value - HTTP " + statusCode);
+                    }
+                });
+            }
+        })).start());
+    }
 
-	public void pullSubscriptionAttributeValue(String attributeId, String value) {
-		this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-			if (subscriptionId != null) {
-				JSONObject jsonBody = new JSONObject();
-				try {
-					jsonBody.put("channelId", this.channelId);
-					jsonBody.put("attributeId", attributeId);
-					jsonBody.put("value", value);
-					jsonBody.put("subscriptionId", subscriptionId);
-				} catch (JSONException ex) {
-					Log.e("CleverPush", ex.getMessage(), ex);
-				}
+    public void pullSubscriptionAttributeValue(String attributeId, String value) {
+        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
+            if (subscriptionId != null) {
+                JSONObject jsonBody = new JSONObject();
+                try {
+                    jsonBody.put("channelId", this.channelId);
+                    jsonBody.put("attributeId", attributeId);
+                    jsonBody.put("value", value);
+                    jsonBody.put("subscriptionId", subscriptionId);
+                } catch (JSONException ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
 
-				SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-				Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
-				ArrayList<String> arrayList = new ArrayList<>();
-				try {
-					JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-					if (arrayValue != null) {
-						for (int i = 0; i < arrayValue.length(); i++) {
-							if (!arrayValue.getString(i).equals(value)) {
-								arrayList.add(arrayValue.getString(i));
-							}
-						}
-					}
-				} catch (Exception ex) {
-					Log.e("CleverPush", ex.getMessage(), ex);
-				}
+                ArrayList<String> arrayList = new ArrayList<>();
+                try {
+                    JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
+                    if (arrayValue != null) {
+                        for (int i = 0; i < arrayValue.length(); i++) {
+                            if (!arrayValue.getString(i).equals(value)) {
+                                arrayList.add(arrayValue.getString(i));
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
 
-				String[] arrayString = arrayList.toArray(new String[0]);
-				if (arrayString == null) {
-					return;
-				}
-				subscriptionAttributes.put(attributeId, arrayString);
+                String[] arrayString = arrayList.toArray(new String[0]);
+                if (arrayString == null) {
+                    return;
+                }
+                subscriptionAttributes.put(attributeId, arrayString);
 
-				CleverPushHttpClient.post("/subscription/attribute/pull-value", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-					@Override
-					public void onSuccess(String response) {
-						try {
-							if (sharedPreferences != null) {
-								JSONObject jsonObject = new JSONObject(subscriptionAttributes);
-								String jsonString = jsonObject.toString();
-								SharedPreferences.Editor editor = sharedPreferences.edit();
-								editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
-								editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-								editor.commit();
-							}
-						} catch (Exception ex) {
-							Log.e("CleverPush", ex.getMessage(), ex);
-						}
-					}
+                CleverPushHttpClient.post("/subscription/attribute/pull-value", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+                    @Override
+                    public void onSuccess(String response) {
+                        try {
+                            if (sharedPreferences != null) {
+                                JSONObject jsonObject = new JSONObject(subscriptionAttributes);
+                                String jsonString = jsonObject.toString();
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+                                editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
+                                editor.commit();
+                            }
+                        } catch (Exception ex) {
+                            Log.e("CleverPush", ex.getMessage(), ex);
+                        }
+                    }
 
-					@Override
-					public void onFailure(int statusCode, String response, Throwable throwable) {
-						Log.e("CleverPush", "Error pulling attribute value - HTTP " + statusCode);
-					}
-				});
-			}
-		})).start());
-	}
+                    @Override
+                    public void onFailure(int statusCode, String response, Throwable throwable) {
+                        Log.e("CleverPush", "Error pulling attribute value - HTTP " + statusCode);
+                    }
+                });
+            }
+        })).start());
+    }
 
-	public boolean hasSubscriptionAttributeValue(String attributeId, String value) {
-		Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
+    public boolean hasSubscriptionAttributeValue(String attributeId, String value) {
+        Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
-		ArrayList<String> arrayList = new ArrayList<>();
-		try {
-			JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-			if (arrayValue != null) {
-				for (int i = 0; i < arrayValue.length(); i++) {
-					arrayList.add(arrayValue.getString(i));
-				}
-			}
-		} catch (Exception ex) {
-			Log.e("CleverPush", ex.getMessage(), ex);
-		}
+        ArrayList<String> arrayList = new ArrayList<>();
+        try {
+            JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
+            if (arrayValue != null) {
+                for (int i = 0; i < arrayValue.length(); i++) {
+                    arrayList.add(arrayValue.getString(i));
+                }
+            }
+        } catch (Exception ex) {
+            Log.e("CleverPush", ex.getMessage(), ex);
+        }
 
-		return arrayList.contains(value);
-	}
+        return arrayList.contains(value);
+    }
 
     public void trySubscriptionSync() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
@@ -1871,21 +1890,22 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     public Set<Notification> getNotifications() {
-		Gson gson = new Gson();
+        Gson gson = new Gson();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
-		String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
-		if (notificationsJson != null) {
-			try {
-				Type type = new TypeToken<List<Notification>>() {}.getType();
-				List<Notification> notifications = gson.fromJson(notificationsJson, type);
-				return new HashSet<>(notifications);
-			} catch (Exception ex) {
-				Log.e("CleverPush", "error while getting stored notifications", ex);
-			}
-		}
+        String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
+        if (notificationsJson != null) {
+            try {
+                Type type = new TypeToken<List<Notification>>() {
+                }.getType();
+                List<Notification> notifications = gson.fromJson(notificationsJson, type);
+                return new HashSet<>(notifications);
+            } catch (Exception ex) {
+                Log.e("CleverPush", "error while getting stored notifications", ex);
+            }
+        }
 
-		// deprecated
+        // deprecated
         Set<String> encodedNotifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
         Set<Notification> notifications = new HashSet<>();
         if (encodedNotifications != null) {
@@ -1955,76 +1975,76 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         });
     }
 
-	public void trackNotificationDelivered(String notificationId) {
-		this.getSubscriptionId(subscriptionId -> this.trackNotificationDelivered(notificationId, subscriptionId));
-	}
-
-	public void trackNotificationDelivered(String notificationId, String subscriptionId) {
-		JSONObject jsonBody = new JSONObject();
-		try {
-			jsonBody.put("notificationId", notificationId);
-			jsonBody.put("subscriptionId", subscriptionId);
-		} catch (JSONException e) {
-			Log.e("CleverPush", "Error generating delivered json", e);
-		}
-
-		CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
-	}
-
-	public void trackNotificationClicked(String notificationId) {
-    	this.getSubscriptionId(subscriptionId -> this.trackNotificationClicked(notificationId, subscriptionId));
-	}
-
-    public void trackNotificationClicked(String notificationId, String subscriptionId) {
-		JSONObject jsonBody = new JSONObject();
-		try {
-			jsonBody.put("notificationId", notificationId);
-			jsonBody.put("subscriptionId", subscriptionId);
-		} catch (JSONException e) {
-			Log.e("CleverPush", "Error generating clicked json", e);
-		}
-
-		CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
-	}
-
-	public void triggerAppBannerEvent(String key, String value) {
-    	if (this.appBannerModule == null) {
-			pendingAppBannerEvents.put(key, value);
-    		return;
-		}
-		this.appBannerModule.triggerEvent(key, value);
-	}
-
-    public void showAppBanner(String bannerId) {
-		showAppBanner(bannerId, null);
+    public void trackNotificationDelivered(String notificationId) {
+        this.getSubscriptionId(subscriptionId -> this.trackNotificationDelivered(notificationId, subscriptionId));
     }
 
-	public void showAppBanner(String bannerId, String notificationId) {
-		if (appBannerModule == null) {
-			pendingShowAppBannerId = bannerId;
-			pendingShowAppBannerNotificationId = notificationId;
-			return;
-		}
-		appBannerModule.showBannerById(bannerId, notificationId);
-	}
+    public void trackNotificationDelivered(String notificationId, String subscriptionId) {
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("notificationId", notificationId);
+            jsonBody.put("subscriptionId", subscriptionId);
+        } catch (JSONException e) {
+            Log.e("CleverPush", "Error generating delivered json", e);
+        }
 
-	/**
-	 * This method may be called by the customer to ensure opt-in rates get calculated correctly.
-	 */
-	public void setConfirmAlertShown() {
-		confirmAlertShown = true;
+        CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
+    }
 
-		JSONObject jsonBody = new JSONObject();
-		try {
-			jsonBody.put("channelId", channelId);
-			jsonBody.put("platformName", "Android");
-			jsonBody.put("browserType", "SDK");
-		} catch (JSONException e) {
-			Log.e("CleverPush", "Error setting confirm alert shown", e);
-		}
+    public void trackNotificationClicked(String notificationId) {
+        this.getSubscriptionId(subscriptionId -> this.trackNotificationClicked(notificationId, subscriptionId));
+    }
 
-		CleverPushHttpClient.post("/channel/confirm-alert", jsonBody, null);
-	}
+    public void trackNotificationClicked(String notificationId, String subscriptionId) {
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("notificationId", notificationId);
+            jsonBody.put("subscriptionId", subscriptionId);
+        } catch (JSONException e) {
+            Log.e("CleverPush", "Error generating clicked json", e);
+        }
+
+        CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
+    }
+
+    public void triggerAppBannerEvent(String key, String value) {
+        if (this.appBannerModule == null) {
+            pendingAppBannerEvents.put(key, value);
+            return;
+        }
+        this.appBannerModule.triggerEvent(key, value);
+    }
+
+    public void showAppBanner(String bannerId) {
+        showAppBanner(bannerId, null);
+    }
+
+    public void showAppBanner(String bannerId, String notificationId) {
+        if (appBannerModule == null) {
+            pendingShowAppBannerId = bannerId;
+            pendingShowAppBannerNotificationId = notificationId;
+            return;
+        }
+        appBannerModule.showBannerById(bannerId, notificationId);
+    }
+
+    /**
+     * This method may be called by the customer to ensure opt-in rates get calculated correctly.
+     */
+    public void setConfirmAlertShown() {
+        confirmAlertShown = true;
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("channelId", channelId);
+            jsonBody.put("platformName", "Android");
+            jsonBody.put("browserType", "SDK");
+        } catch (JSONException e) {
+            Log.e("CleverPush", "Error setting confirm alert shown", e);
+        }
+
+        CleverPushHttpClient.post("/channel/confirm-alert", jsonBody, null);
+    }
 
     private void showPendingTopicsDialog() {
         this.getChannelConfig(config -> {
@@ -2079,10 +2099,10 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
     }
 
     public void showTopicsDialog(Context dialogActivity, TopicsDialogListener topicsDialogListener, @StyleRes int themeResId) {
-    	// Ensure it will only be shown once at a time
-    	if (showingTopicsDialog) {
-    		return;
-		}
+        // Ensure it will only be shown once at a time
+        if (showingTopicsDialog) {
+            return;
+        }
 
         int nightModeFlags = CleverPush.context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
 
@@ -2091,7 +2111,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                 if (topicsDialogListener != null) {
                     topicsDialogListener.callback(false);
                 }
-				showingTopicsDialog = false;
+                showingTopicsDialog = false;
                 return;
             }
 
@@ -2108,7 +2128,8 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                     if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
                         try {
                             headerTitle = channelConfig.getString("confirmAlertSelectTopicsLaterTitle");
-                        } catch (Exception ignored) {}
+                        } catch (Exception ignored) {
+                        }
                     }
 
                     alertBuilder.setTitle(headerTitle);
@@ -2149,7 +2170,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                         if (topicsDialogListener != null) {
                             topicsDialogListener.callback(false);
                         }
-						showingTopicsDialog = false;
+                        showingTopicsDialog = false;
                     });
                     alertBuilder.setPositiveButton(CleverPush.context.getResources().getString(R.string.save), (dialogInterface, i) -> {
                         if (checkboxDeSelectAll.isChecked()) {
@@ -2171,19 +2192,19 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
                         if (topicsDialogListener != null) {
                             topicsDialogListener.callback(true);
                         }
-						showingTopicsDialog = false;
+                        showingTopicsDialog = false;
                     });
 
                     AlertDialog alert = alertBuilder.create();
                     alert.setOnShowListener(dialog -> {
-						Log.d("CleverPush", "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
-						showingTopicsDialog = true;
-					});
-					alert.show();
+                        Log.d("CleverPush", "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
+                        showingTopicsDialog = true;
+                    });
+                    alert.show();
                 });
 
             } catch (JSONException e) {
-				showingTopicsDialog = false;
+                showingTopicsDialog = false;
                 Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
             }
         });
@@ -2191,6 +2212,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
 
     /**
      * Will create list of checkbox for the topics.
+     *
      * @param parentLayout        parent layout to add checkboxes
      * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
@@ -2203,7 +2225,7 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
             parentLayout.removeAllViews();
             Set<String> selectedTopics = instance.getSubscriptionTopics();
 
-            if (channelConfig.optBoolean("topicsDialogShowUnsubscribe",false)) {
+            if (channelConfig.optBoolean("topicsDialogShowUnsubscribe", false)) {
                 checkboxDeSelectAll.setChecked(isDeselectAll);
                 parentLayout.addView(checkboxDeSelectAll);
                 checkboxDeSelectAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -2417,35 +2439,35 @@ public class CleverPush implements  ActivityCompat.OnRequestPermissionsResultCal
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
     }
 
-	public boolean areAppBannersDisabled() {
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-		appBannersDisabled = sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, false);
-		return appBannersDisabled;
-	}
+    public boolean areAppBannersDisabled() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        appBannersDisabled = sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, false);
+        return appBannersDisabled;
+    }
 
-	private void saveAppBannersDisabled() {
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-		SharedPreferences.Editor editor = sharedPreferences.edit();
-		editor.remove(CleverPushPreferences.APP_BANNERS_DISABLED).apply();
-		editor.putBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, appBannersDisabled);
-		editor.commit();
-	}
+    private void saveAppBannersDisabled() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(CleverPushPreferences.APP_BANNERS_DISABLED).apply();
+        editor.putBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, appBannersDisabled);
+        editor.commit();
+    }
 
     public void enableAppBanners() {
-		appBannersDisabled = false;
-		this.saveAppBannersDisabled();
-    	if (appBannerModule == null) {
-			return;
-		}
-		appBannerModule.enableBanners();
+        appBannersDisabled = false;
+        this.saveAppBannersDisabled();
+        if (appBannerModule == null) {
+            return;
+        }
+        appBannerModule.enableBanners();
     }
 
     public void disableAppBanners() {
-		appBannersDisabled = true;
-		this.saveAppBannersDisabled();
-		if (appBannerModule == null) {
-			return;
-		}
-		appBannerModule.disableBanners();
+        appBannersDisabled = true;
+        this.saveAppBannersDisabled();
+        if (appBannerModule == null) {
+            return;
+        }
+        appBannerModule.disableBanners();
     }
 }

@@ -1,6 +1,7 @@
 package com.cleverpush.banner;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,6 +11,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
@@ -35,6 +37,8 @@ import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
 
+import com.cleverpush.CleverPush;
+import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.blocks.Alignment;
@@ -197,11 +201,18 @@ public class AppBannerPopup {
         isInitialized = true;
     }
 
+    private void toggleShowing(boolean isShowing) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, isShowing);
+        editor.commit();
+    }
+
     public void show() {
         if (!isInitialized) {
             throw new IllegalStateException("Must be initialized");
         }
-
+        this.toggleShowing(true);
         new tryShowSafe().execute();
     }
 
@@ -218,11 +229,16 @@ public class AppBannerPopup {
 
     public void dismiss() {
         if (!isInitialized) {
-            throw new IllegalStateException("Must be initialized");
+            Log.e(TAG,"Must be initialized");
+            return;
         }
 
         runInMain(() -> animateBody(0f, getRoot().getHeight()));
-        runInMain(() -> popup.dismiss(), 200);
+        runInMain(() -> {
+            popup.dismiss();
+            this.toggleShowing(false);
+        },200);
+
     }
 
     private View createLayout() {
@@ -233,7 +249,6 @@ public class AppBannerPopup {
     }
 
     private void composeBackground(ImageView bannerBackground, LinearLayout body) {
-
         BannerBackground bg = data.getBackground();
         final ViewTreeObserver observer = body.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -265,7 +280,6 @@ public class AppBannerPopup {
                 }
             }).start();
         }
-
     }
 
     private void composeButtonBlock(LinearLayout body, BannerButtonBlock block) {
@@ -283,8 +297,12 @@ public class AppBannerPopup {
         button.setBackground(bg);
 
         button.setOnClickListener(view -> {
-            if (block.getAction().getDismiss()) {
-                dismiss();
+            if (block.getAction().isOpenInWebView()) {
+                WebViewActivity.launch(activity, block.getAction().getUrl());
+            } else {
+                if (block.getAction().getDismiss()) {
+                    dismiss();
+                }
             }
 
             if (this.openedListener != null) {
@@ -356,6 +374,15 @@ public class AppBannerPopup {
 
             }
         }).start();
+
+        img.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (block.getAction().isOpenInWebView()) {
+                    WebViewActivity.launch(activity,block.getAction().getUrl());
+                }
+            }
+        });
     }
 
     private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
