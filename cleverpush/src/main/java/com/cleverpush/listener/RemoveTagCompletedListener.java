@@ -1,5 +1,5 @@
 package com.cleverpush.listener;
 
 public interface RemoveTagCompletedListener {
-    void tagRemoved();
+    void tagRemoved(int currentPositionOfTagToRemove);
 }

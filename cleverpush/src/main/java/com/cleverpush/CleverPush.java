@@ -51,6 +51,8 @@ import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerHMS;
+import com.cleverpush.mapper.Mapper;
+import com.cleverpush.mapper.SubscriptionToListMapper;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
 import com.google.android.gms.common.ConnectionResult;
@@ -1521,127 +1523,35 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return topics;
     }
 
-    public void addSubscriptionTags(String[] tagIds) {
+    public void addMultipleSubscriptionTags(String[] tagIds) {
+        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
+            AddSubscriptionTags addMultipleSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId,this.channelId,tagIds);
+            addMultipleSubscriptionTagsHelper.addMultipleSubscriptionTags();
+        })).start());
 
-        addSubscriptionTag(tagIds[0], new AddTagCompletedListener(){
-            @Override
-            public void tagAdded(int currentPositionOfTagToAdd) {
-                if (currentPositionOfTagToAdd != tagIds.length - 1) {
-                    addSubscriptionTag(tagIds[++currentPositionOfTagToAdd], this,++currentPositionOfTagToAdd);
-                }
-            }
-        },0);
     }
 
     public void addSubscriptionTag(String tagId) {
-        addSubscriptionTag(tagId, null,-1);
-    }
-
-    public void addSubscriptionTag(String tagId, AddTagCompletedListener addTagCompletedListener,int currentPositionOfTagToAdd) {
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-            if (subscriptionId != null) {
-                Set<String> tags = this.getSubscriptionTags();
-                if (tags.contains(tagId)) {
-                    if (addTagCompletedListener != null) {
-                        addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);
-                    }
-                    Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
-                    return;
-
-                }
-
-                JSONObject jsonBody = new JSONObject();
-                try {
-                    jsonBody.put("channelId", this.channelId);
-                    jsonBody.put("tagId", tagId);
-                    jsonBody.put("subscriptionId", subscriptionId);
-                } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
-                }
-
-                tags.add(tagId);
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-
-                CleverPushHttpClient.post("/subscription/tag", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
-                        editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
-                        editor.commit();
-
-                        if (addTagCompletedListener != null) {
-                            addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);
-                        }
-                        Log.e("addedPosition",currentPositionOfTagToAdd+"");
-                        Log.e("addedTag",tagId+"");
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error adding tag - HTTP " + statusCode);
-                    }
-                });
-            }
+            AddSubscriptionTags addMultipleSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId,this.channelId,tagId);
+            addMultipleSubscriptionTagsHelper.addSubscriptionTag();
         })).start());
     }
 
-    public void removeSubscriptionTags(String[] tagIds) {
-        final int[] currentPositionOfTagToRemove = {0};
-        removeSubscriptionTag(tagIds[currentPositionOfTagToRemove[0]], new RemoveTagCompletedListener() {
-            @Override
-            public void tagRemoved() {
-                if (currentPositionOfTagToRemove[0] != tagIds.length - 1) {
-                    currentPositionOfTagToRemove[0]++;
-                    removeSubscriptionTag(tagIds[currentPositionOfTagToRemove[0]], this);
-                }
-            }
-        });
+    public void removeMultipleSubscriptionSubscriptionTags(String[] tagIds) {
+        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
+            RemoveSubscriptionTags removeSubscriptionTags =  new RemoveSubscriptionTags(subscriptionId,this.channelId,tagIds);
+            removeSubscriptionTags.removeMultipleSubscriptionSubscriptionTags();
+        })).start());
+
     }
 
     public void removeSubscriptionTag(String tagId) {
-        removeSubscriptionTag(tagId, null);
-    }
-
-    public void removeSubscriptionTag(String tagId, RemoveTagCompletedListener onRemoveTagCompleted) {
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-            if (subscriptionId != null) {
-                JSONObject jsonBody = new JSONObject();
-                try {
-                    jsonBody.put("channelId", this.channelId);
-                    jsonBody.put("tagId", tagId);
-                    jsonBody.put("subscriptionId", subscriptionId);
-                } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
-                }
-
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                Set<String> tags = this.getSubscriptionTags();
-                tags.remove(tagId);
-
-                CleverPushHttpClient.post("/subscription/untag", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
-                        editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
-                        editor.commit();
-                        if (onRemoveTagCompleted != null) {
-                            onRemoveTagCompleted.tagRemoved();
-                        }
-
-
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error removing tag - HTTP " + statusCode);
-                    }
-                });
-            }
+            RemoveSubscriptionTags removeSubscriptionTags =  new RemoveSubscriptionTags(subscriptionId,this.channelId,tagId);
+            removeSubscriptionTags.removeMultipleSubscriptionSubscriptionTags();
         })).start());
     }
-
 
     public void setSubscriptionTopics(String[] topicIds) {
         setSubscriptionTopics(topicIds, null);
@@ -1765,11 +1675,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 ArrayList<String> arrayList = new ArrayList<>();
                 try {
                     JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-                    if (arrayValue != null) {
-                        for (int i = 0; i < arrayValue.length(); i++) {
-                            arrayList.add(arrayValue.getString(i));
-                        }
-                    }
+                    Mapper jsonArrayToListMapper = new SubscriptionToListMapper();
+                    arrayList.addAll((Collection<String>) jsonArrayToListMapper.toValue(arrayValue));
                 } catch (Exception ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
@@ -1824,15 +1731,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
                 ArrayList<String> arrayList = new ArrayList<>();
+
                 try {
                     JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-                    if (arrayValue != null) {
-                        for (int i = 0; i < arrayValue.length(); i++) {
-                            if (!arrayValue.getString(i).equals(value)) {
-                                arrayList.add(arrayValue.getString(i));
-                            }
-                        }
-                    }
+                    Mapper jsonArrayToListMapper = new SubscriptionToListMapper();
+                    arrayList.addAll((Collection<String>) jsonArrayToListMapper.toValue(arrayValue));
                 } catch (Exception ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
@@ -1875,15 +1778,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         ArrayList<String> arrayList = new ArrayList<>();
         try {
             JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-            if (arrayValue != null) {
-                for (int i = 0; i < arrayValue.length(); i++) {
-                    arrayList.add(arrayValue.getString(i));
-                }
-            }
+            Mapper jsonArrayToListMapper = new SubscriptionToListMapper();
+            arrayList.addAll((Collection<String>) jsonArrayToListMapper.toValue(arrayValue));
         } catch (Exception ex) {
             Log.e("CleverPush", ex.getMessage(), ex);
         }
-
         return arrayList.contains(value);
     }
 
@@ -1931,9 +1830,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
         if (notificationsJson != null) {
             try {
-                Type type = new TypeToken<List<Notification>>() {
-                }.getType();
-                List<Notification> notifications = gson.fromJson(notificationsJson, type);
+                List<Notification> notifications = gson.fromJson(notificationsJson,NotificationList.class);
                 return new HashSet<>(notifications);
             } catch (Exception ex) {
                 Log.e("CleverPush", "error while getting stored notifications", ex);
