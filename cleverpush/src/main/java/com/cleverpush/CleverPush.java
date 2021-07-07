@@ -51,8 +51,6 @@ import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerHMS;
-import com.cleverpush.mapper.Mapper;
-import com.cleverpush.mapper.SubscriptionToListMapper;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
 import com.google.android.gms.common.ConnectionResult;
@@ -91,7 +89,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.15.0";
+    public static final String SDK_VERSION = "1.15.2";
 
     private static CleverPush instance;
 
@@ -120,10 +118,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
     private Map<String, String> pendingAppBannerEvents = new HashMap<>();
     private String pendingShowAppBannerId = null;
-    private String pendingShowAppBannerNotificationId = null;
+	private String pendingShowAppBannerNotificationId = null;
     private String currentPageUrl;
     private AppBannerModule appBannerModule;
-    private boolean appBannersDisabled = false;
+	private boolean appBannersDisabled = false;
 
     private String channelId;
     private String subscriptionId = null;
@@ -151,8 +149,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
-
-
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -259,7 +255,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     /**
      * initialize Cleverpush SDK with notification opened callback and subscribed callback
      * @param notificationOpenedListener callback for the notification opened
-     * @param subscribedListener         callback for subscription
+     * @param subscribedListener callback for subscription
      */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, null, notificationOpenedListener, subscribedListener);
@@ -268,7 +264,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     /**
      * initialize Cleverpush SDK with notification received callback and subscribed callback
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener           callback for subscription
+     * @param subscribedListener callback for subscription
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(null, notificationReceivedListener, null, subscribedListener);
@@ -297,7 +293,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * initialize Cleverpush SDK for channel with notification received callback and subscribed callback
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param subscribedListener           callback for subscription
+     * @param subscribedListener callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, null, subscribedListener);
@@ -350,9 +346,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener   callback for the notification opened
-     * @param subscribedListener           callback for subscription
-     * @param autoRegister                 boolean for auto register
+     * @param notificationOpenedListener callback for the notification opened
+     * @param subscribedListener callback for subscription
+     * @param autoRegister boolean for auto register
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
@@ -1727,8 +1723,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
 
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
+				SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+				Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
                 ArrayList<String> arrayList = new ArrayList<>();
 
