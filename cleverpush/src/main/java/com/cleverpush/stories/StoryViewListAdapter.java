@@ -35,16 +35,18 @@ import java.util.ArrayList;
 
 public class StoryViewListAdapter extends RecyclerView.Adapter<ItemViewHolder> {
 
-    TypedArray attrArray;
+
 
     private int DEFAULT_BORDER_COLOR = Color.BLACK;
     private int DEFAULT_TEXT_COLOR = Color.BLACK;
+
     private Context context;
     private ArrayList<Story> stories;
     private OnItemClickListener onItemClickListener;
+    TypedArray attrArray;
 
-    public StoryViewListAdapter(Context mContext, ArrayList<Story> stories, TypedArray attrArray, OnItemClickListener onItemClickListener) {
-        this.context = mContext;
+    public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray attrArray, OnItemClickListener onItemClickListener) {
+        this.context = context;
         this.stories = stories;
         this.attrArray = attrArray;
         this.onItemClickListener = onItemClickListener;
