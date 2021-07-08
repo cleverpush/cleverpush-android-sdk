@@ -17,4 +17,5 @@ public class SubscriptionToListMapper implements Mapper<JSONArray, Collection<St
     public Collection<String> toValue(JSONArray key) {
         return new Gson().fromJson(key.toString(), Collection.class);
     }
+    
 }

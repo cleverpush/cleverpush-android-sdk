@@ -14,4 +14,5 @@ public class NotificationList extends ArrayList<com.cleverpush.Notification> {
     public void setNotification(List<com.cleverpush.Notification> notification) {
         this.notification = notification;
     }
+
 }
