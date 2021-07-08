@@ -89,11 +89,9 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         };
     }
 
-
     public Set<String> getSubscriptionTags() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
     }
-
-
+    
 }
