@@ -15,7 +15,7 @@ import java.util.Set;
 public class AddSubscriptionTags implements AddTagCompletedListener {
 
     private String[] tagIds;
-    private String subscriptionId = null;
+    private String subscriptionId;
     private String channelId;
 
     public AddSubscriptionTags(String subscriptionId, String channelId, String... tagIds) {
@@ -27,8 +27,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
     @Override
     public void tagAdded(int currentPositionOfTagToAdd) {
         if (currentPositionOfTagToAdd != tagIds.length - 1) {
-            currentPositionOfTagToAdd++;
-            addSubscriptionTag(tagIds[currentPositionOfTagToAdd], this, currentPositionOfTagToAdd);
+            addSubscriptionTag(tagIds[++currentPositionOfTagToAdd], this, currentPositionOfTagToAdd);
         }
     }
 
@@ -63,15 +62,16 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
 
             tags.add(tagId);
 
-            CleverPushHttpClient.post("/subscription/tag", jsonBody, addSubscriptionTagResponseHandler(tagId, addTagCompletedListener, currentPositionOfTagToAdd, tags));
+            CleverPushHttpClient.post("/subscription/tag", jsonBody, addTagResponseHandler(tagId, addTagCompletedListener, currentPositionOfTagToAdd, tags));
         }
     }
 
-    private CleverPushHttpClient.ResponseHandler addSubscriptionTagResponseHandler(String tagId, AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd, Set<String> tags) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    private CleverPushHttpClient.ResponseHandler addTagResponseHandler(String tagId, AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd, Set<String> tags) {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
+
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
                 editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);

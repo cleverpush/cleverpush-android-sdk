@@ -15,7 +15,7 @@ import java.util.Set;
 public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
 
     private String[] tagIds;
-    private String subscriptionId = null;
+    private String subscriptionId;
     private String channelId;
 
     public RemoveSubscriptionTags(String subscriptionId, String channelId, String... tagIds) {
@@ -27,8 +27,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
     @Override
     public void tagRemoved(int currentPositionOfTagToRemove) {
         if (currentPositionOfTagToRemove != tagIds.length - 1) {
-            currentPositionOfTagToRemove++;
-            removeSubscriptionTag(tagIds[currentPositionOfTagToRemove], this, currentPositionOfTagToRemove);
+            removeSubscriptionTag(tagIds[++currentPositionOfTagToRemove], this, currentPositionOfTagToRemove);
         }
     }
 

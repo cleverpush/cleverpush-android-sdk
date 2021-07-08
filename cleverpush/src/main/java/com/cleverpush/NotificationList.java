@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationList extends ArrayList<com.cleverpush.Notification> {
+
     private List<com.cleverpush.Notification> notification;
 
     public List<com.cleverpush.Notification> getNotification() {
