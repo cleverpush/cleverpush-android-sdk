@@ -8,6 +8,8 @@ import java.io.Serializable;
 
 public class Story implements Serializable {
 
+    public static final long serialVersionUID = 1L;
+
     @SerializedName("_id")
     @Expose
     private String id;
@@ -20,10 +22,10 @@ public class Story implements Serializable {
     @SerializedName("content")
     @Expose
     private Content content;
-    private boolean isOpened = false;
+    private boolean opened = false;
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(String id) {
@@ -31,7 +33,7 @@ public class Story implements Serializable {
     }
 
     public String getChannel() {
-        return channel;
+        return this.channel;
     }
 
     public void setChannel(String channel) {
@@ -39,7 +41,7 @@ public class Story implements Serializable {
     }
 
     public String getTitle() {
-        return title;
+        return this.title;
     }
 
     public void setTitle(String title) {
@@ -47,7 +49,7 @@ public class Story implements Serializable {
     }
 
     public Content getContent() {
-        return content;
+        return this.content;
     }
 
     public void setContent(Content content) {
@@ -55,10 +57,10 @@ public class Story implements Serializable {
     }
 
     public boolean isOpened() {
-        return isOpened;
+        return this.opened;
     }
 
     public void setOpened(boolean opened) {
-        isOpened = opened;
+        this.opened = opened;
     }
 }

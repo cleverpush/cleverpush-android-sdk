@@ -7,5 +7,6 @@
         <attr name="story_view_height" format="dimension"/>
         <attr name="story_view_width" format="dimension"/>
         <attr name="font_family" format="string" />
+        <attr name="widget_id" format="string" />
     </declare-styleable>
 </resources>

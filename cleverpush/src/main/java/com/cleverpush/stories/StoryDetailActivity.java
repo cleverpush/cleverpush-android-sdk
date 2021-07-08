@@ -13,19 +13,22 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
 import com.cleverpush.R;
-import com.cleverpush.stories.Utils.OnSwipeTouchListener;
+import com.cleverpush.stories.listener.OnSwipeDownListener;
+import com.cleverpush.stories.listener.OnSwipeTouchListener;
+import com.cleverpush.stories.listener.StoryChangeListener;
 import com.cleverpush.stories.models.Story;
 
 import java.util.ArrayList;
 
 
-public class StoryDetailActivity extends Activity {
+public class StoryDetailActivity extends Activity implements StoryChangeListener {
 
     StoryDetailListAdapter storyDetailListAdapter;
-    private ArrayList<Story> stories = new ArrayList<>();
-    private int selectedPosition = 0;
     RecyclerView recyclerView;
     OnSwipeTouchListener onSwipeTouchListener;
+
+    private ArrayList<Story> stories = new ArrayList<>();
+    private int selectedPosition = 0;
 
     public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition) {
         Intent intent = new Intent(activity, StoryDetailActivity.class);
@@ -53,7 +56,7 @@ public class StoryDetailActivity extends Activity {
                 finish();
             }
         });
-        onSwipeTouchListener = new OnSwipeTouchListener(this, recyclerView, new OnSwipeTouchListener.OnSwipeDown() {
+        onSwipeTouchListener = new OnSwipeTouchListener(this, recyclerView, new OnSwipeDownListener() {
             @Override
             public void onSwipeDown() {
                 finish();
@@ -87,25 +90,25 @@ public class StoryDetailActivity extends Activity {
     private void loadStoryDetails() {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         SnapHelper snapHelper = new PagerSnapHelper();
-        storyDetailListAdapter = new StoryDetailListAdapter(this, stories);
+        storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this);
         recyclerView.setLayoutManager(linearLayoutManager);
         snapHelper.attachToRecyclerView(recyclerView);
         recyclerView.setAdapter(storyDetailListAdapter);
         recyclerView.smoothScrollToPosition(selectedPosition);
-
-        storyDetailListAdapter.setOnNextEventListener(new StoryDetailListAdapter.OnNextEventListener() {
-            @Override
-            public void onNextEventListener(int position) {
-                if (position != stories.size() - 1)
-                    recyclerView.smoothScrollToPosition(position + 1);
-            }
-        });
-        storyDetailListAdapter.setOnPreviousEventListener(new StoryDetailListAdapter.OnPreviousEventListener() {
-            @Override
-            public void onPreviousEventListener(int position) {
-                if (position != 0)
-                    recyclerView.smoothScrollToPosition(position - 1);
-            }
-        });
     }
+
+    @Override
+    public void onNext(int position) {
+        if (position != stories.size() - 1) {
+            recyclerView.smoothScrollToPosition(position + 1);
+        }
+    }
+
+    @Override
+    public void onPrevious(int position) {
+        if (position != 0) {
+            recyclerView.smoothScrollToPosition(position - 1);
+        }
+    }
+
 }

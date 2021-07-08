@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
+import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.stories.models.StoryListModel;
 import com.google.gson.Gson;
@@ -29,15 +30,16 @@ import com.google.gson.GsonBuilder;
 import java.util.ArrayList;
 
 public class StoryView extends LinearLayout {
-    private Context context;
-    private boolean loading = false;
-    private static final String TAG = "CleverPush/AppStories";
-    private ArrayList<Story> stories = new ArrayList<>();
-    StoryViewListAdapter storyViewListAdapter;
 
     protected static final int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
+    private static final String TAG = "CleverPush/AppStories";
 
-    final TypedArray attrArray;
+    TypedArray attrArray;
+    StoryViewListAdapter storyViewListAdapter;
+
+    private Context context;
+    private boolean loading = false;
+    private ArrayList<Story> stories = new ArrayList<>();
 
     public StoryView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -52,11 +54,15 @@ public class StoryView extends LinearLayout {
         }
         loading = true;
 
-        String storyPath = "/story-widget/o76RepCskiS9QiHsy/config";
+        String storyPath = "/story-widget/"+attrArray.getString(R.styleable.StoryView_widget_id)+"/config";
 
         Log.d(TAG, "Loading stories: " + storyPath);
 
-        CleverPushHttpClient.get(storyPath, new CleverPushHttpClient.ResponseHandler() {
+        CleverPushHttpClient.get(storyPath, loadStoriesResponseHandler());
+    }
+
+    private CleverPushHttpClient.ResponseHandler loadStoriesResponseHandler() {
+        return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 loading = false;
@@ -89,7 +95,7 @@ public class StoryView extends LinearLayout {
                         "\nResponse: " + response
                 );
             }
-        });
+        };
     }
 
     private void displayStoryHead(ArrayList<Story> stories) {
@@ -104,18 +110,22 @@ public class StoryView extends LinearLayout {
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager((Activity) context, LinearLayoutManager.HORIZONTAL, false);
         RecyclerView recyclerView = root.findViewById(R.id.rvStories);
-        storyViewListAdapter = new StoryViewListAdapter((Activity) context, stories, attrArray);
+        storyViewListAdapter = new StoryViewListAdapter((Activity) context, stories, attrArray, getOnItemClickListener(stories, recyclerView));
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(storyViewListAdapter);
-        storyViewListAdapter.setOnItemClicked(new StoryViewListAdapter.OnItemClicked() {
+    }
+
+    private OnItemClickListener getOnItemClickListener(ArrayList<Story> stories, RecyclerView recyclerView) {
+        return new OnItemClickListener() {
             @Override
-            public void onItemClicked(int position) {
+            public void onClicked(int position) {
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-                if (sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "").equalsIgnoreCase("")) {
-                    sharedPreferences.edit().putString(CleverPushPreferences.APP_OPENED_STORIES, stories.get(position).getId()).apply();
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                if (sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "").isEmpty()) {
+                    editor.putString(CleverPushPreferences.APP_OPENED_STORIES, stories.get(position).getId()).apply();
                 } else {
                     if (!sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "").contains(stories.get(position).getId())) {
-                        sharedPreferences.edit().putString(CleverPushPreferences.APP_OPENED_STORIES, sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "") + "," + stories.get(position).getId()).apply();
+                        editor.putString(CleverPushPreferences.APP_OPENED_STORIES, sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "") + "," + stories.get(position).getId()).apply();
                     }
                 }
                 StoryDetailActivity.launch((Activity) context, stories, position);
@@ -123,6 +133,8 @@ public class StoryView extends LinearLayout {
                 storyViewListAdapter.notifyDataSetChanged();
                 recyclerView.smoothScrollToPosition(position);
             }
-        });
+
+        };
     }
+
 }

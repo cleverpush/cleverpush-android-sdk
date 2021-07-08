@@ -4,19 +4,22 @@ package com.cleverpush.stories.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Collections;
 import java.util.List;
 
 public class StoryListModel {
+
+    public static final long serialVersionUID = 1L;
 
     @SerializedName("widget")
     @Expose
     private Widget widget;
     @SerializedName("stories")
     @Expose
-    private List<Story> stories = null;
+    private List<Story> stories = Collections.emptyList();
 
     public Widget getWidget() {
-        return widget;
+        return this.widget;
     }
 
     public void setWidget(Widget widget) {
@@ -24,7 +27,7 @@ public class StoryListModel {
     }
 
     public List<Story> getStories() {
-        return stories;
+        return this.stories;
     }
 
     public void setStories(List<Story> stories) {

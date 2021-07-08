@@ -4,9 +4,12 @@ package com.cleverpush.stories.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Collections;
 import java.util.List;
 
 public class Widget {
+
+    public static final long serialVersionUID = 1L;
 
     @SerializedName("_id")
     @Expose
@@ -22,28 +25,28 @@ public class Widget {
     private String variant;
     @SerializedName("maxStoriesNumber")
     @Expose
-    private Integer maxStoriesNumber;
+    private int maxStoriesNumber;
     @SerializedName("storyHeight")
     @Expose
-    private Integer storyHeight;
+    private int storyHeight;
     @SerializedName("position")
     @Expose
     private String position;
     @SerializedName("margin")
     @Expose
-    private Integer margin;
+    private int margin;
     @SerializedName("display")
     @Expose
     private String display;
     @SerializedName("selectedStories")
     @Expose
-    private List<Object> selectedStories = null;
+    private List<Object> selectedStories = Collections.emptyList();
     @SerializedName("createdAt")
     @Expose
     private String createdAt;
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(String id) {
@@ -51,7 +54,7 @@ public class Widget {
     }
 
     public String getChannel() {
-        return channel;
+        return this.channel;
     }
 
     public void setChannel(String channel) {
@@ -59,7 +62,7 @@ public class Widget {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(String name) {
@@ -67,47 +70,47 @@ public class Widget {
     }
 
     public String getVariant() {
-        return variant;
+        return this.variant;
     }
 
     public void setVariant(String variant) {
         this.variant = variant;
     }
 
-    public Integer getMaxStoriesNumber() {
-        return maxStoriesNumber;
+    public int getMaxStoriesNumber() {
+        return this.maxStoriesNumber;
     }
 
-    public void setMaxStoriesNumber(Integer maxStoriesNumber) {
+    public void setMaxStoriesNumber(int maxStoriesNumber) {
         this.maxStoriesNumber = maxStoriesNumber;
     }
 
-    public Integer getStoryHeight() {
-        return storyHeight;
+    public int getStoryHeight() {
+        return this.storyHeight;
     }
 
-    public void setStoryHeight(Integer storyHeight) {
+    public void setStoryHeight(int storyHeight) {
         this.storyHeight = storyHeight;
     }
 
     public String getPosition() {
-        return position;
+        return this.position;
     }
 
     public void setPosition(String position) {
         this.position = position;
     }
 
-    public Integer getMargin() {
-        return margin;
+    public int getMargin() {
+        return this.margin;
     }
 
-    public void setMargin(Integer margin) {
+    public void setMargin(int margin) {
         this.margin = margin;
     }
 
     public String getDisplay() {
-        return display;
+        return this.display;
     }
 
     public void setDisplay(String display) {

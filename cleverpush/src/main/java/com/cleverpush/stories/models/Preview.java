@@ -8,6 +8,8 @@ import java.io.Serializable;
 
 public class Preview implements Serializable {
 
+    public static final long serialVersionUID = 1L;
+
     @SerializedName("publisher")
     @Expose
     private String publisher;
@@ -19,10 +21,10 @@ public class Preview implements Serializable {
     private String posterPortraitSrc;
     @SerializedName("publisherLogoWidth")
     @Expose
-    private Integer publisherLogoWidth;
+    private int publisherLogoWidth;
     @SerializedName("publisherLogoHeight")
     @Expose
-    private Integer publisherLogoHeight;
+    private int publisherLogoHeight;
     @SerializedName("posterLandscapeSrc")
     @Expose
     private String posterLandscapeSrc;
@@ -31,7 +33,7 @@ public class Preview implements Serializable {
     private String posterSquareSrc;
 
     public String getPublisher() {
-        return publisher;
+        return this.publisher;
     }
 
     public void setPublisher(String publisher) {
@@ -39,7 +41,7 @@ public class Preview implements Serializable {
     }
 
     public String getPublisherLogoSrc() {
-        return publisherLogoSrc;
+        return this.publisherLogoSrc;
     }
 
     public void setPublisherLogoSrc(String publisherLogoSrc) {
@@ -47,31 +49,31 @@ public class Preview implements Serializable {
     }
 
     public String getPosterPortraitSrc() {
-        return posterPortraitSrc;
+        return this.posterPortraitSrc;
     }
 
     public void setPosterPortraitSrc(String posterPortraitSrc) {
         this.posterPortraitSrc = posterPortraitSrc;
     }
 
-    public Integer getPublisherLogoWidth() {
-        return publisherLogoWidth;
+    public int getPublisherLogoWidth() {
+        return this.publisherLogoWidth;
     }
 
-    public void setPublisherLogoWidth(Integer publisherLogoWidth) {
+    public void setPublisherLogoWidth(int publisherLogoWidth) {
         this.publisherLogoWidth = publisherLogoWidth;
     }
 
-    public Integer getPublisherLogoHeight() {
-        return publisherLogoHeight;
+    public int getPublisherLogoHeight() {
+        return this.publisherLogoHeight;
     }
 
-    public void setPublisherLogoHeight(Integer publisherLogoHeight) {
+    public void setPublisherLogoHeight(int publisherLogoHeight) {
         this.publisherLogoHeight = publisherLogoHeight;
     }
 
     public String getPosterLandscapeSrc() {
-        return posterLandscapeSrc;
+        return this.posterLandscapeSrc;
     }
 
     public void setPosterLandscapeSrc(String posterLandscapeSrc) {
@@ -79,7 +81,7 @@ public class Preview implements Serializable {
     }
 
     public String getPosterSquareSrc() {
-        return posterSquareSrc;
+        return this.posterSquareSrc;
     }
 
     public void setPosterSquareSrc(String posterSquareSrc) {

@@ -8,12 +8,14 @@ import java.io.Serializable;
 
 public class Content implements Serializable {
 
+    public static final long serialVersionUID = 1L;
+
     @SerializedName("version")
     @Expose
-    private Integer version;
+    private int version;
     @SerializedName("supportsLandscape")
     @Expose
-    private Boolean supportsLandscape;
+    private boolean supportsLandscape;
     @SerializedName("title")
     @Expose
     private String title;
@@ -24,24 +26,24 @@ public class Content implements Serializable {
     @Expose
     private Preview preview;
 
-    public Integer getVersion() {
+    public int getVersion() {
         return version;
     }
 
-    public void setVersion(Integer version) {
+    public void setVersion(int version) {
         this.version = version;
     }
 
-    public Boolean getSupportsLandscape() {
+    public boolean isSupportsLandscape() {
         return supportsLandscape;
     }
 
-    public void setSupportsLandscape(Boolean supportsLandscape) {
+    public void setSupportsLandscape(boolean supportsLandscape) {
         this.supportsLandscape = supportsLandscape;
     }
 
     public String getTitle() {
-        return title;
+        return this.title;
     }
 
     public void setTitle(String title) {
@@ -49,7 +51,7 @@ public class Content implements Serializable {
     }
 
     public String getCanonicalUrl() {
-        return canonicalUrl;
+        return this.canonicalUrl;
     }
 
     public void setCanonicalUrl(String canonicalUrl) {
@@ -57,7 +59,7 @@ public class Content implements Serializable {
     }
 
     public Preview getPreview() {
-        return preview;
+        return this.preview;
     }
 
     public void setPreview(Preview preview) {
