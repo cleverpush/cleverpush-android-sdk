@@ -67,9 +67,9 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         }
     }
 
-    public CleverPushHttpClient.ResponseHandler addSubscriptionTagResponseHandler(String tagId, AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd, Set<String> tags) {
+    private CleverPushHttpClient.ResponseHandler addSubscriptionTagResponseHandler(String tagId, AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd, Set<String> tags) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        CleverPushHttpClient.ResponseHandler responseHandler = new CleverPushHttpClient.ResponseHandler() {
+        return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -87,7 +87,6 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
                 Log.e("CleverPush", "Error adding tag - HTTP " + statusCode);
             }
         };
-        return responseHandler;
     }
 
 

@@ -1543,7 +1543,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private void addSubscriptionTagTrackingConsent(String... tagIds) {
-        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(getAddMultipleSubscriptionTagsSubscribedListener(tagIds))).start());
+        startTrackingConsent(getAddMultipleSubscriptionTagsSubscribedListener(tagIds));
     }
 
     private SubscribedListener getAddMultipleSubscriptionTagsSubscribedListener(String... tagIds) {
@@ -1563,7 +1563,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private void removeSubscriptionTagTrackingConsent(String... tagIds) {
-        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(getRemoveSubscriptionTagSubscribedListener(tagIds))).start());
+        startTrackingConsent(getRemoveSubscriptionTagSubscribedListener(tagIds));
     }
 
     private SubscribedListener getRemoveSubscriptionTagSubscribedListener(String... tagIds) {
@@ -1571,6 +1571,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             RemoveSubscriptionTags removeSubscriptionTags = new RemoveSubscriptionTags(subscriptionId, this.channelId, tagIds);
             removeSubscriptionTags.removeMultipleSubscriptionSubscriptionTags();
         };
+    }
+
+    private void startTrackingConsent(SubscribedListener subscribedListener) {
+        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscribedListener)).start());
     }
 
     public void setSubscriptionTopics(String[] topicIds) {
@@ -1712,9 +1716,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         })).start());
     }
 
-    public CleverPushHttpClient.ResponseHandler pushSubscriptionAttributeValueResponseHandler(Map<String, Object> subscriptionAttributes) {
+    private CleverPushHttpClient.ResponseHandler pushSubscriptionAttributeValueResponseHandler(Map<String, Object> subscriptionAttributes) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        CleverPushHttpClient.ResponseHandler responseHandler = new CleverPushHttpClient.ResponseHandler() {
+        return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 try {
@@ -1736,7 +1740,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 Log.e("CleverPush", "Error pushing attribute value - HTTP " + statusCode);
             }
         };
-        return responseHandler;
     }
 
     public void pullSubscriptionAttributeValue(String attributeId, String value) {
@@ -1776,9 +1779,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         })).start());
     }
 
-    public CleverPushHttpClient.ResponseHandler pullSubscriptionAttributeValueResponseHandler(Map<String, Object> subscriptionAttributes) {
+    private CleverPushHttpClient.ResponseHandler pullSubscriptionAttributeValueResponseHandler(Map<String, Object> subscriptionAttributes) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        CleverPushHttpClient.ResponseHandler responseHandler = new CleverPushHttpClient.ResponseHandler() {
+        return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 try {
@@ -1800,7 +1803,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 Log.e("CleverPush", "Error pulling attribute value - HTTP " + statusCode);
             }
         };
-        return responseHandler;
     }
 
     public boolean hasSubscriptionAttributeValue(String attributeId, String value) {
