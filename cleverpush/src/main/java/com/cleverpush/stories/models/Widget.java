@@ -9,38 +9,48 @@ import java.util.List;
 
 public class Widget {
 
-    public static final long serialVersionUID = 1L;
+    public static final long serialVersionUID = -7102250436681274220L;
 
     @SerializedName("_id")
     @Expose
     private String id;
+
     @SerializedName("channel")
     @Expose
     private String channel;
+
     @SerializedName("name")
     @Expose
     private String name;
+
     @SerializedName("variant")
     @Expose
     private String variant;
+
     @SerializedName("maxStoriesNumber")
     @Expose
     private int maxStoriesNumber;
+
     @SerializedName("storyHeight")
     @Expose
     private int storyHeight;
+
     @SerializedName("position")
     @Expose
     private String position;
+
     @SerializedName("margin")
     @Expose
     private int margin;
+
     @SerializedName("display")
     @Expose
     private String display;
+
     @SerializedName("selectedStories")
     @Expose
     private List<Object> selectedStories = Collections.emptyList();
+
     @SerializedName("createdAt")
     @Expose
     private String createdAt;

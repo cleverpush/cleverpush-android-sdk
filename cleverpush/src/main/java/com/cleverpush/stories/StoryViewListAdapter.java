@@ -43,12 +43,12 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<ItemViewHolder> {
     private Context context;
     private ArrayList<Story> stories;
     private OnItemClickListener onItemClickListener;
-    TypedArray attrArray;
+    private TypedArray typedArray;
 
-    public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray attrArray, OnItemClickListener onItemClickListener) {
+    public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray, OnItemClickListener onItemClickListener) {
         this.context = context;
         this.stories = stories;
-        this.attrArray = attrArray;
+        this.typedArray = typedArray;
         this.onItemClickListener = onItemClickListener;
     }
 
@@ -65,8 +65,8 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<ItemViewHolder> {
         TextView nameTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
         ImageView image = (ImageView) holder.itemView.findViewById(R.id.ivChallenge);
         nameTextView.setText(stories.get(position).getTitle());
-        nameTextView.setTextColor(attrArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
-        applyFont(nameTextView, attrArray);
+        nameTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
+        applyFont(nameTextView, typedArray);
 
         loadImage(position, image);
 
@@ -77,7 +77,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<ItemViewHolder> {
             border.setShape(GradientDrawable.OVAL);
             border.setCornerRadii(new float[]{0, 0, 0, 0, 0, 0, 0, 0});
             border.setColor(0xFFFFFFFF); //white background
-            border.setStroke(5, attrArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR)); //black border with full opacity
+            border.setStroke(5, typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR)); //black border with full opacity
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
                 image.setBackgroundDrawable(border);
             } else {

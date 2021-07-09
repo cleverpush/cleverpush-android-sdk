@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
-import android.view.View;
 import android.widget.ImageView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -23,12 +22,10 @@ import java.util.ArrayList;
 
 public class StoryDetailActivity extends Activity implements StoryChangeListener {
 
-    StoryDetailListAdapter storyDetailListAdapter;
-    RecyclerView recyclerView;
-    OnSwipeTouchListener onSwipeTouchListener;
-
-    private ArrayList<Story> stories = new ArrayList<>();
+    private RecyclerView recyclerView;
     private int selectedPosition = 0;
+    private OnSwipeTouchListener onSwipeTouchListener;
+    private ArrayList<Story> stories = new ArrayList<>();
 
     public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition) {
         Intent intent = new Intent(activity, StoryDetailActivity.class);
@@ -50,12 +47,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         recyclerView = findViewById(R.id.rvStories);
         ImageView closeButton = findViewById(R.id.ivClose);
         handleBundleData(getIntent().getExtras());
-        closeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
+        closeButton.setOnClickListener(view -> finish());
         onSwipeTouchListener = new OnSwipeTouchListener(this, recyclerView, new OnSwipeDownListener() {
             @Override
             public void onSwipeDown() {
@@ -90,7 +82,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     private void loadStoryDetails() {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         SnapHelper snapHelper = new PagerSnapHelper();
-        storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this);
+        StoryDetailListAdapter storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this);
         recyclerView.setLayoutManager(linearLayoutManager);
         snapHelper.attachToRecyclerView(recyclerView);
         recyclerView.setAdapter(storyDetailListAdapter);
@@ -109,6 +101,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         if (position != 0) {
             recyclerView.smoothScrollToPosition(position - 1);
         }
+    }
+
+    @Override
+    public void onReady(int position) {
+
     }
 
 }

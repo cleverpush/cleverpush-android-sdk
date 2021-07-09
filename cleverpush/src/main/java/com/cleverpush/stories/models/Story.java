@@ -8,20 +8,24 @@ import java.io.Serializable;
 
 public class Story implements Serializable {
 
-    public static final long serialVersionUID = 1L;
+    public static final long serialVersionUID = -2893386129178459307L;
 
     @SerializedName("_id")
     @Expose
     private String id;
+
     @SerializedName("channel")
     @Expose
     private String channel;
+
     @SerializedName("title")
     @Expose
     private String title;
+
     @SerializedName("content")
     @Expose
     private Content content;
+
     private boolean opened = false;
 
     public String getId() {

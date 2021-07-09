@@ -20,10 +20,10 @@ public final class GestureListener extends GestureDetector.SimpleOnGestureListen
     }
 
     @Override
-    public boolean onFling(MotionEvent motionEvent, MotionEvent motionEventTwo, float velocityX, float velocityY) {
+    public boolean onFling(MotionEvent motionEvent, MotionEvent secondMotionEvent, float velocityX, float velocityY) {
         boolean result = false;
         try {
-            float diffY = motionEventTwo.getY() - motionEvent.getY();
+            float diffY = secondMotionEvent.getY() - motionEvent.getY();
             if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                 if (diffY > 0) {
                     if (onSwipeDownListener != null) {

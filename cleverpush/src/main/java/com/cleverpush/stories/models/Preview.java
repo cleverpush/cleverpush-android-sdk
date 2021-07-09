@@ -8,26 +8,32 @@ import java.io.Serializable;
 
 public class Preview implements Serializable {
 
-    public static final long serialVersionUID = 1L;
+    public static final long serialVersionUID = 8816554666381866475L;
 
     @SerializedName("publisher")
     @Expose
     private String publisher;
+
     @SerializedName("publisherLogoSrc")
     @Expose
     private String publisherLogoSrc;
+
     @SerializedName("posterPortraitSrc")
     @Expose
     private String posterPortraitSrc;
+
     @SerializedName("publisherLogoWidth")
     @Expose
     private int publisherLogoWidth;
+
     @SerializedName("publisherLogoHeight")
     @Expose
     private int publisherLogoHeight;
+
     @SerializedName("posterLandscapeSrc")
     @Expose
     private String posterLandscapeSrc;
+
     @SerializedName("posterSquareSrc")
     @Expose
     private String posterSquareSrc;

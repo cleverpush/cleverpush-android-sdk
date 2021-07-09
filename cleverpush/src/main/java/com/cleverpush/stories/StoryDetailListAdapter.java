@@ -26,8 +26,8 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<ItemViewHolder>
     private ArrayList<Story> stories;
     private StoryChangeListener storyChangeListener;
 
-    public StoryDetailListAdapter(Context mContext, ArrayList<Story> stories, StoryChangeListener storyChangeListener) {
-        this.context = mContext;
+    public StoryDetailListAdapter(Context context, ArrayList<Story> stories, StoryChangeListener storyChangeListener) {
+        this.context = context;
         this.stories = stories;
         this.storyChangeListener = storyChangeListener;
     }
@@ -95,13 +95,13 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<ItemViewHolder>
                 "  <script>\n" +
                 "    var player = document.querySelector('amp-story-player');\n" +
                 "    player.addEventListener('noPreviousStory', function (event) {\n" +
-                "      alert('First Page! (Make Native Bridge Calls here)');\n" +
+                "      storyDetailJavascriptInterface.previous(" + position + ");" +
                 "    });\n" +
                 "    player.addEventListener('noNextStory', function (event) {\n" +
-                "      alert('Last Page! (Make Native Bridge Calls here)');\n" +
+                "       storyDetailJavascriptInterface.next(" + position + ");" +
                 "    });\n" +
                 "    player.addEventListener('ready', function (event) {\n" +
-                "      alert('Ready! (Make Native Bridge Calls here)');\n" +
+                "       storyDetailJavascriptInterface.ready(" + position + ");" +
                 "    });\n" +
                 "  </script>\n" +
                 "</body>\n" +
@@ -118,7 +118,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<ItemViewHolder>
 
     public float convertPixelsToDp(float px, Context context) {
         if (px == 0) {
-            return 0;
+            return 0f;
         }
         return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }

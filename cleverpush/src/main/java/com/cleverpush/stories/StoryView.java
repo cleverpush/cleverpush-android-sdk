@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,17 +33,17 @@ public class StoryView extends LinearLayout {
     protected static final int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
     private static final String TAG = "CleverPush/AppStories";
 
-    TypedArray attrArray;
-    StoryViewListAdapter storyViewListAdapter;
+    private TypedArray attrArray;
+    private StoryViewListAdapter storyViewListAdapter;
 
     private Context context;
     private boolean loading = false;
     private ArrayList<Story> stories = new ArrayList<>();
 
-    public StoryView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+    public StoryView(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
         this.context = context;
-        attrArray = getContext().obtainStyledAttributes(attrs, R.styleable.StoryView);
+        attrArray = getContext().obtainStyledAttributes(attributeSet, R.styleable.StoryView);
         loadStory();
     }
 
@@ -58,10 +57,10 @@ public class StoryView extends LinearLayout {
 
         Log.d(TAG, "Loading stories: " + storyPath);
 
-        CleverPushHttpClient.get(storyPath, loadStoriesResponseHandler());
+        CleverPushHttpClient.get(storyPath, getResponseHandler());
     }
 
-    private CleverPushHttpClient.ResponseHandler loadStoriesResponseHandler() {
+    private CleverPushHttpClient.ResponseHandler getResponseHandler() {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
@@ -99,41 +98,39 @@ public class StoryView extends LinearLayout {
     }
 
     private void displayStoryHead(ArrayList<Story> stories) {
-        View root = LayoutInflater.from(context).inflate(R.layout.story_view, this, true);
+        View view = LayoutInflater.from(context).inflate(R.layout.story_view, this, true);
 
-        RelativeLayout rlMain = root.findViewById(R.id.rlMain);
-        rlMain.setBackgroundColor(attrArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR));
-        ViewGroup.LayoutParams params = rlMain.getLayoutParams();
+        RelativeLayout relativeLayout = view.findViewById(R.id.rlMain);
+        relativeLayout.setBackgroundColor(attrArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR));
+        ViewGroup.LayoutParams params = relativeLayout.getLayoutParams();
         params.height = (int) attrArray.getDimension(R.styleable.StoryView_story_view_height, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.width = (int) attrArray.getDimension(R.styleable.StoryView_story_view_width, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rlMain.setLayoutParams(params);
+        relativeLayout.setLayoutParams(params);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager((Activity) context, LinearLayoutManager.HORIZONTAL, false);
-        RecyclerView recyclerView = root.findViewById(R.id.rvStories);
+        RecyclerView recyclerView = view.findViewById(R.id.rvStories);
         storyViewListAdapter = new StoryViewListAdapter((Activity) context, stories, attrArray, getOnItemClickListener(stories, recyclerView));
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(storyViewListAdapter);
     }
 
     private OnItemClickListener getOnItemClickListener(ArrayList<Story> stories, RecyclerView recyclerView) {
-        return new OnItemClickListener() {
-            @Override
-            public void onClicked(int position) {
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                if (sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "").isEmpty()) {
-                    editor.putString(CleverPushPreferences.APP_OPENED_STORIES, stories.get(position).getId()).apply();
-                } else {
-                    if (!sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "").contains(stories.get(position).getId())) {
-                        editor.putString(CleverPushPreferences.APP_OPENED_STORIES, sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "") + "," + stories.get(position).getId()).apply();
-                    }
+        return position -> {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            String id = stories.get(position).getId();
+            String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+            if (preferencesString.isEmpty()) {
+                editor.putString(CleverPushPreferences.APP_OPENED_STORIES, id).apply();
+            } else {
+                if (!preferencesString.contains(id)) {
+                    editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + id).apply();
                 }
-                StoryDetailActivity.launch((Activity) context, stories, position);
-                stories.get(position).setOpened(true);
-                storyViewListAdapter.notifyDataSetChanged();
-                recyclerView.smoothScrollToPosition(position);
             }
-
+            StoryDetailActivity.launch((Activity) context, stories, position);
+            stories.get(position).setOpened(true);
+            storyViewListAdapter.notifyDataSetChanged();
+            recyclerView.smoothScrollToPosition(position);
         };
     }
 
