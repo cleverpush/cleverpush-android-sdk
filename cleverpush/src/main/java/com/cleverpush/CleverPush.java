@@ -87,7 +87,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.15.2";
+    public static final String SDK_VERSION = "1.15.3";
 
     private static CleverPush instance;
 
@@ -829,17 +829,18 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-        ;
     }
 
     /**
      * initialize Geo Fences
      */
+    @SuppressWarnings("deprecation")
     private void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = new GoogleApiClient.Builder(CleverPush.context)
                     .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                         @Override
+                        @SuppressWarnings({"MissingPermission"})
                         public void onConnected(@Nullable Bundle bundle) {
                             Log.d("CleverPush", "GoogleApiClient onConnected");
 
