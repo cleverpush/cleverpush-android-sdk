@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.3
+* Added ProGuard consumer rules
+
 ## 1.15.2
 * App Banners: prevent showing multiple banners at the same time
 * App Banners: Validate "stopAt" field for banners triggered manually or by notification

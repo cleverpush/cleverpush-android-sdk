@@ -1,11 +1,18 @@
 apply plugin: 'com.android.library'
 apply from: 'maven-push.gradle'
 
+ext {
+    buildVersions = [
+            minSdkVersion: 17
+    ]
+}
+
 android {
-    compileSdkVersion 28
+    compileSdkVersion rootProject.buildVersions.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion 17
+        minSdkVersion buildVersions.minSdkVersion
+        consumerProguardFiles 'consumer-proguard-rules.pro'
     }
 
     buildTypes {
@@ -47,6 +54,5 @@ dependencies {
     api 'com.google.firebase:firebase-messaging:[10.2.1, 22.0.99]'
 
     // Huawei
-    compileOnly 'com.huawei.hms:push:4.0.3.301'
+    compileOnly "com.huawei.hms:push:$huaweiHmsPushVersion"
 }
-
