@@ -19,13 +19,13 @@ public class CleverPushPreferences {
     public static final String SUBSCRIPTION_CREATED_AT = "subscriptionCreatedAt";
     public static final String SHOWN_APP_BANNERS = "shownAppBanners";
     public static final String NOTIFICATIONS = "notifications"; // deprecated, now using NOTIFICATIONS_JSON
-	public static final String NOTIFICATIONS_JSON = "notificationsJson";
+    public static final String NOTIFICATIONS_JSON = "notificationsJson";
     public static final String LAST_NOTIFICATION_ID = "lastNotificationId";
     public static final String APP_OPENS = "appOpens";
     public static final String APP_REVIEW_SHOWN = "appReviewShownAt";
     public static final String PENDING_TOPICS_DIALOG = "pendingTopicsDialog";
-	public static final String APP_BANNER_SESSIONS = "appBannerSessions";
-	public static final String APP_BANNERS_DISABLED = "appBannersDisabled";
+    public static final String APP_BANNER_SESSIONS = "appBannerSessions";
+    public static final String APP_BANNERS_DISABLED = "appBannersDisabled";
     public static final String SUBSCRIPTION_TOPICS_DESELECT_ALL = "subscriptionTopicsDeselectAll";
     public static final String APP_OPENED_STORIES = "openedStories";
     public static final String APP_BANNER_SHOWING = "appBannerShowing";

@@ -35,8 +35,6 @@ import java.util.ArrayList;
 
 public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> {
 
-
-
     private int DEFAULT_BORDER_COLOR = Color.BLACK;
     private int DEFAULT_TEXT_COLOR = Color.BLACK;
 
@@ -110,7 +108,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
                     image.setImageBitmap(getRoundedCroppedBitmap(bitmap, bitmap.getWidth()));
                 }
             } catch (Exception exception) {
-                Log.e("CleverPush/StoryView",exception.getLocalizedMessage());
+                Log.e("CleverPush/StoryView", exception.getLocalizedMessage());
             }
         }).start();
     }
@@ -164,7 +162,6 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
     /**
      * Gets a Typeface from the cache. If the Typeface does not exist, creates it, cache it and returns it.
-     *
      * @param context a Context
      * @param path    Path to the font file in the assets folder. ie "fonts/MyCustomFont.ttf"
      * @return the corresponding Typeface (font)
