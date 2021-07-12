@@ -22,8 +22,8 @@ import java.util.ArrayList;
 
 public class StoryDetailActivity extends Activity implements StoryChangeListener {
 
-    private RecyclerView recyclerView;
     private int selectedPosition = 0;
+    private RecyclerView recyclerView;
     private OnSwipeTouchListener onSwipeTouchListener;
     private ArrayList<Story> stories = new ArrayList<>();
 
@@ -58,7 +58,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        onSwipeTouchListener.gestureDetector.onTouchEvent(event);
+        onSwipeTouchListener.getGestureDetector().onTouchEvent(event);
         return super.dispatchTouchEvent(event);
     }
 
@@ -101,11 +101,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         if (position != 0) {
             recyclerView.smoothScrollToPosition(position - 1);
         }
-    }
-
-    @Override
-    public void onReady(int position) {
-
     }
 
 }

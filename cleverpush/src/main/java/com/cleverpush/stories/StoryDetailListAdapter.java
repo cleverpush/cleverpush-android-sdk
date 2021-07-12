@@ -1,5 +1,6 @@
 package com.cleverpush.stories;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -7,11 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.webkit.WebView;
-import android.widget.ProgressBar;
-
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.cleverpush.R;
 import com.cleverpush.stories.listener.StoryChangeListener;
 import com.cleverpush.stories.listener.StoryDetailJavascriptInterface;
@@ -20,32 +18,33 @@ import com.cleverpush.stories.models.Story;
 import java.util.ArrayList;
 
 
-public class StoryDetailListAdapter extends RecyclerView.Adapter<ItemViewHolder> {
+public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailViewHolder>  {
 
-    private Context context;
+    private Activity activity;
     private ArrayList<Story> stories;
     private StoryChangeListener storyChangeListener;
 
-    public StoryDetailListAdapter(Context context, ArrayList<Story> stories, StoryChangeListener storyChangeListener) {
-        this.context = context;
+    public StoryDetailListAdapter(Activity activity, ArrayList<Story> stories, StoryChangeListener storyChangeListener) {
+        this.activity = activity;
         this.stories = stories;
         this.storyChangeListener = storyChangeListener;
     }
 
     @Override
-    public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(context);
+    public StoryDetailViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(activity);
         View itemViewStoryDetail = inflater.inflate(R.layout.item_view_story_detail, parent, false);
-        return new ItemViewHolder(itemViewStoryDetail);
+        return new StoryDetailViewHolder(itemViewStoryDetail);
     }
 
     @Override
-    public void onBindViewHolder(ItemViewHolder holder, int position) {
-        WebView webView = (WebView) holder.itemView.findViewById(R.id.webView);
-        ProgressBar progressBar = (ProgressBar) holder.itemView.findViewById(R.id.progressBar);
+    public void onBindViewHolder(@NonNull StoryDetailViewHolder storyDetailViewHolder, int position) {
+        storyDetailViewHolder.setIsRecyclable(false);
+        storyDetailViewHolder.progressBar.setVisibility(View.VISIBLE);
+
         int measuredWidth = 0;
         int measuredHeight = 0;
-        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager windowManager = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
         measuredWidth = display.getWidth();
         measuredHeight = display.getHeight();
@@ -53,7 +52,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<ItemViewHolder>
         String htmlContent = "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
-                "  <script async src=\"https://cdn.ampproject.org/v0.js\"></script>\n" +
+                "  <script     async src=\"https://cdn.ampproject.org/v0.js\"></script>\n" +
                 "  <script\n" +
                 "    async\n" +
                 "    custom-element=\"amp-story-player\"\n" +
@@ -61,7 +60,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<ItemViewHolder>
                 "  ></script>\n" +
                 "</head>\n" +
                 "<body>\n" +
-                "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, context) + " height=" + convertPixelsToDp(measuredHeight, context) + ">\n" +
+                "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, activity) + " height=" + convertPixelsToDp(measuredHeight, activity) + ">\n" +
                 " <a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + stories.get(position).getId() + "/html\">\n" +
                 "    </a>\n" +
                 "  </amp-story-player>\n" +
@@ -71,44 +70,18 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<ItemViewHolder>
                 "      storyDetailJavascriptInterface.previous(" + position + ");" +
                 "    });\n" +
                 "    player.addEventListener('noNextStory', function (event) {\n" +
-                "       storyDetailJavascriptInterface.next(" + position + ");" +
-                "    });\n" +
-                "  </script>\n" +
-                "</body>\n" +
-                "</html>";
-        String htmlContent2 = "<!DOCTYPE html>\n" +
-                "<html>\n" +
-                "<head>\n" +
-                "  <script async src=\"https://cdn.ampproject.org/v0.js\"></script>\n" +
-                "  <script\n" +
-                "    async\n" +
-                "    custom-element=\"amp-story-player\"\n" +
-                "    src=\"https://cdn.ampproject.org/v0/amp-story-player-0.1.js\"\n" +
-                "  ></script>\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, context) + " height=" + convertPixelsToDp(measuredHeight, context) + ">\n" +
-                " <a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + stories.get(position).getId() + "/html\">\n" +
-                "      Story Name\n" +
-                "    </a>\n" +
-                "  </amp-story-player>\n" +
-                "  <script>\n" +
-                "    var player = document.querySelector('amp-story-player');\n" +
-                "    player.addEventListener('noPreviousStory', function (event) {\n" +
-                "      storyDetailJavascriptInterface.previous(" + position + ");" +
-                "    });\n" +
-                "    player.addEventListener('noNextStory', function (event) {\n" +
-                "       storyDetailJavascriptInterface.next(" + position + ");" +
+                "      storyDetailJavascriptInterface.next(" + position + ");" +
                 "    });\n" +
                 "    player.addEventListener('ready', function (event) {\n" +
-                "       storyDetailJavascriptInterface.ready(" + position + ");" +
+                "       storyDetailJavascriptInterface.ready();" +
                 "    });\n" +
                 "  </script>\n" +
                 "</body>\n" +
                 "</html>";
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.addJavascriptInterface(new StoryDetailJavascriptInterface(), "storyDetailJavascriptInterface");
-        webView.loadData(htmlContent, "text/html; charset=utf-8", "UTF-8");
+
+        storyDetailViewHolder.webView.getSettings().setJavaScriptEnabled(true);
+        storyDetailViewHolder.webView.addJavascriptInterface(new StoryDetailJavascriptInterface(storyDetailViewHolder,storyChangeListener,activity), "storyDetailJavascriptInterface");
+        storyDetailViewHolder.webView.loadData(htmlContent, "text/html; charset=utf-8", "UTF-8");
     }
 
     @Override

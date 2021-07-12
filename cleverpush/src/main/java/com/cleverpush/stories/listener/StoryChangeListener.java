@@ -6,6 +6,4 @@ public interface StoryChangeListener {
 
     void onPrevious(int position);
 
-    void onReady(int position);
-
 }

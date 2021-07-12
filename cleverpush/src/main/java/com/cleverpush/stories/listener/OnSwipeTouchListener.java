@@ -20,4 +20,8 @@ public class OnSwipeTouchListener implements OnTouchListener {
         return gestureDetector.onTouchEvent(event);
     }
 
+    public GestureDetector getGestureDetector() {
+        return this.gestureDetector;
+    }
+
 }

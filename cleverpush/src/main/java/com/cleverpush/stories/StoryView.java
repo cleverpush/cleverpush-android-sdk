@@ -68,7 +68,7 @@ public class StoryView extends LinearLayout {
 
                 GsonBuilder gsonBuilder = new GsonBuilder();
                 Gson gson = gsonBuilder.create();
-                StoryListModel model = gson.fromJson(response.toString(), StoryListModel.class);
+                StoryListModel model = gson.fromJson(response, StoryListModel.class);
                 stories.addAll(model.getStories());
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
                 for (int i = 0; i < stories.size(); i++) {
@@ -118,13 +118,13 @@ public class StoryView extends LinearLayout {
         return position -> {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            String id = stories.get(position).getId();
+            String storyId = stories.get(position).getId();
             String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
             if (preferencesString.isEmpty()) {
-                editor.putString(CleverPushPreferences.APP_OPENED_STORIES, id).apply();
+                editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
             } else {
-                if (!preferencesString.contains(id)) {
-                    editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + id).apply();
+                if (!preferencesString.contains(storyId)) {
+                    editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
                 }
             }
             StoryDetailActivity.launch((Activity) context, stories, position);

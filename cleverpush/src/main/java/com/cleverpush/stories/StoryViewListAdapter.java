@@ -33,7 +33,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
-public class StoryViewListAdapter extends RecyclerView.Adapter<ItemViewHolder> {
+public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> {
 
 
 
@@ -53,15 +53,15 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<ItemViewHolder> {
     }
 
     @Override
-    public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public StoryViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(context);
         View itemViewStoryHead = inflater.inflate(R.layout.item_view_story, parent, false);
-        return new ItemViewHolder(itemViewStoryHead);
+        return new StoryViewHolder(itemViewStoryHead);
     }
 
     @SuppressLint("ResourceType")
     @Override
-    public void onBindViewHolder(ItemViewHolder holder, int position) {
+    public void onBindViewHolder(StoryViewHolder holder, int position) {
         TextView nameTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
         ImageView image = (ImageView) holder.itemView.findViewById(R.id.ivChallenge);
         nameTextView.setText(stories.get(position).getTitle());

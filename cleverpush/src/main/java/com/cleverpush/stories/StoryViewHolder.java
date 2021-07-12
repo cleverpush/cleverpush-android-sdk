@@ -4,9 +4,9 @@ import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-class ItemViewHolder extends RecyclerView.ViewHolder {
+class StoryViewHolder extends RecyclerView.ViewHolder {
 
-        public ItemViewHolder(View itemView) {
+        public StoryViewHolder(View itemView) {
             super(itemView);
         }
 
