@@ -27,26 +27,32 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
     @Override
     public void tagAdded(int currentPositionOfTagToAdd) {
         if (currentPositionOfTagToAdd != tagIds.length - 1) {
-            addSubscriptionTag(tagIds[++currentPositionOfTagToAdd], this, currentPositionOfTagToAdd);
+            addSubscriptionTag(this, currentPositionOfTagToAdd++);
         }
     }
 
     public void addMultipleSubscriptionTags() {
-        addSubscriptionTag(tagIds[0], this, 0);
+        if (tagIds == null || tagIds.length == 0) {
+            return;
+        }
+        addSubscriptionTag(this, 0);
     }
 
     public void addSubscriptionTag() {
-        addSubscriptionTag(tagIds[0], null, -1);
+        if (tagIds == null || tagIds.length == 0) {
+            return;
+        }
+        addSubscriptionTag(null, 0);
     }
 
-    public void addSubscriptionTag(String tagId, AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd) {
+    public void addSubscriptionTag(AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd) {
         if (subscriptionId != null) {
             Set<String> tags = this.getSubscriptionTags();
-            if (tags.contains(tagId)) {
+            if (tags.contains(tagIds[currentPositionOfTagToAdd])) {
                 if (addTagCompletedListener != null) {
                     addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);
                 }
-                Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
+                Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagIds[currentPositionOfTagToAdd]);
                 return;
 
             }
@@ -54,15 +60,15 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
             JSONObject jsonBody = new JSONObject();
             try {
                 jsonBody.put("channelId", this.channelId);
-                jsonBody.put("tagId", tagId);
+                jsonBody.put("tagId", tagIds[currentPositionOfTagToAdd]);
                 jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException ex) {
                 Log.e("CleverPush", ex.getMessage(), ex);
             }
 
-            tags.add(tagId);
+            tags.add(tagIds[currentPositionOfTagToAdd]);
 
-            CleverPushHttpClient.post("/subscription/tag", jsonBody, addTagResponseHandler(tagId, addTagCompletedListener, currentPositionOfTagToAdd, tags));
+            CleverPushHttpClient.post("/subscription/tag", jsonBody, addTagResponseHandler(tagIds[currentPositionOfTagToAdd], addTagCompletedListener, currentPositionOfTagToAdd, tags));
         }
     }
 
@@ -93,5 +99,5 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
     }
-    
+
 }

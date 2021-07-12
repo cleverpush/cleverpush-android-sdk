@@ -145,7 +145,7 @@ public class AppBannerModule {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-				loading = false;
+                loading = false;
                 Log.e(TAG, "Something went wrong when loading banners." +
                         "\nStatus code: " + statusCode +
                         "\nResponse: " + response
@@ -191,8 +191,8 @@ public class AppBannerModule {
         this.channel = channel;
 
         if (!CleverPush.getInstance(activity).isDevelopmentModeEnabled()
-            && lastSessionTimestamp > 0
-            && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
+                && lastSessionTimestamp > 0
+                && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
             return;
         }
 
@@ -329,24 +329,24 @@ public class AppBannerModule {
 
             boolean contains = false;
             for (AppBannerPopup popup : popups) {
-            	if (popup.getData().getId().equals(banner.getId())) {
-            		contains = true;
-            		break;
-				}
-			}
+                if (popup.getData().getId().equals(banner.getId())) {
+                    contains = true;
+                    break;
+                }
+            }
 
             if (!contains) {
-				popups.add(new AppBannerPopup(activity, banner));
-			}
+                popups.add(new AppBannerPopup(activity, banner));
+            }
         }
     }
 
     private void scheduleBanners() {
-		if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
-			pendingBanners.addAll(popups);
-			popups.removeAll(pendingBanners);
-			return;
-		}
+        if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
+            pendingBanners.addAll(popups);
+            popups.removeAll(pendingBanners);
+            return;
+        }
 
         Date now = new Date();
         for (AppBannerPopup bannerPopup : popups) {
@@ -382,17 +382,17 @@ public class AppBannerModule {
                 if (banner.getId().equals(bannerId)) {
                     AppBannerPopup popup = new AppBannerPopup(activity, banner);
 
-					if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
-						pendingBanners.add(popup);
-						break;
-					}
+                    if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
+                        pendingBanners.add(popup);
+                        break;
+                    }
 
-					handler.post(() -> showBanner(popup));
-					break;
-				}
-			}
-		}, notificationId);
-	}
+                    handler.post(() -> showBanner(popup));
+                    break;
+                }
+            }
+        }, notificationId);
+    }
 
     private void showBanner(AppBannerPopup bannerPopup) {
         Date now = new Date();
