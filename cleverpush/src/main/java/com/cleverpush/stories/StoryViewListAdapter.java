@@ -88,7 +88,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (onItemClickListener != null) {
+                if (onItemClickListener == null) {
                     return;
                 }
                 onItemClickListener.onClicked(position);
