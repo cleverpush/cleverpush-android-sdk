@@ -191,8 +191,8 @@ public class AppBannerModule {
         this.channel = channel;
 
         if (!CleverPush.getInstance(activity).isDevelopmentModeEnabled()
-            && lastSessionTimestamp > 0
-            && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
+                && lastSessionTimestamp > 0
+                && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
             return;
         }
 
@@ -342,7 +342,7 @@ public class AppBannerModule {
     }
 
     private void scheduleBanners() {
-        if (CleverPush.getInstance(activity).areAppBannersDisabled()) {
+        if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
             pendingBanners.addAll(popups);
             popups.removeAll(pendingBanners);
             return;
@@ -382,7 +382,7 @@ public class AppBannerModule {
                 if (banner.getId().equals(bannerId)) {
                     AppBannerPopup popup = new AppBannerPopup(activity, banner);
 
-                    if (CleverPush.getInstance(activity).areAppBannersDisabled()) {
+                    if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
                         pendingBanners.add(popup);
                         break;
                     }

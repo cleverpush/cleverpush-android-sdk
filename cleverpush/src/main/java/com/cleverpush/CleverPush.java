@@ -49,6 +49,8 @@ import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerHMS;
+import com.cleverpush.mapper.Mapper;
+import com.cleverpush.mapper.SubscriptionToListMapper;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
 import com.google.android.gms.common.ConnectionResult;
@@ -58,14 +60,12 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -1535,78 +1535,48 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return topics;
     }
 
-    public void addSubscriptionTag(String tagId) {
-        Log.d("CleverPush", "addSubscriptionTag: " + tagId);
-        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-            if (subscriptionId != null) {
-                Set<String> tags = this.getSubscriptionTags();
-                if (tags.contains(tagId)) {
-                    Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagId);
-                    return;
-                }
-
-                JSONObject jsonBody = new JSONObject();
-                try {
-                    jsonBody.put("channelId", this.channelId);
-                    jsonBody.put("tagId", tagId);
-                    jsonBody.put("subscriptionId", subscriptionId);
-                } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
-                }
-
-                tags.add(tagId);
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-
-                CleverPushHttpClient.post("/subscription/tag", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
-                        editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
-                        editor.commit();
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error adding tag - HTTP " + statusCode);
-                    }
-                });
-            }
-        })).start());
+    public void addSubscriptionTags(String[] tagIds) {
+        addSubscriptionTagTrackingConsent(tagIds);
     }
 
+    public void addSubscriptionTag(String tagId) {
+        addSubscriptionTagTrackingConsent(tagId);
+    }
+
+    private void addSubscriptionTagTrackingConsent(String... tagIds) {
+        startTrackingConsent(getAddSubscriptionTagsSubscribedListener(tagIds));
+    }
+
+    private SubscribedListener getAddSubscriptionTagsSubscribedListener(String... tagIds) {
+        return subscriptionId -> {
+            AddSubscriptionTags addSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId, this.channelId, tagIds);
+            addSubscriptionTagsHelper.addSubscriptionTags();
+        };
+    }
+
+
+    public void removeSubscriptionTags(String[] tagIds) {
+        removeSubscriptionTagTrackingConsent(tagIds);
+    }
+
+
     public void removeSubscriptionTag(String tagId) {
-        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-            if (subscriptionId != null) {
-                JSONObject jsonBody = new JSONObject();
-                try {
-                    jsonBody.put("channelId", this.channelId);
-                    jsonBody.put("tagId", tagId);
-                    jsonBody.put("subscriptionId", subscriptionId);
-                } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
-                }
+        removeSubscriptionTagTrackingConsent(tagId);
+    }
 
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                Set<String> tags = this.getSubscriptionTags();
-                tags.remove(tagId);
+    private void removeSubscriptionTagTrackingConsent(String... tagIds) {
+        startTrackingConsent(getRemoveSubscriptionTagSubscribedListener(tagIds));
+    }
 
-                CleverPushHttpClient.post("/subscription/untag", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
-                        editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
-                        editor.commit();
-                    }
+    private SubscribedListener getRemoveSubscriptionTagSubscribedListener(String... tagIds) {
+        return subscriptionId -> {
+            RemoveSubscriptionTags removeSubscriptionTags = new RemoveSubscriptionTags(subscriptionId, this.channelId, tagIds);
+            removeSubscriptionTags.removeSubscriptionTags();
+        };
+    }
 
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error removing tag - HTTP " + statusCode);
-                    }
-                });
-            }
-        })).start());
+    private void startTrackingConsent(SubscribedListener subscribedListener) {
+        this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscribedListener)).start());
     }
 
     public void setSubscriptionTopics(String[] topicIds) {
@@ -1725,17 +1695,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
 
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
                 ArrayList<String> arrayList = new ArrayList<>();
                 try {
                     JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-                    if (arrayValue != null) {
-                        for (int i = 0; i < arrayValue.length(); i++) {
-                            arrayList.add(arrayValue.getString(i));
-                        }
-                    }
+                    Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
+                    arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
                 } catch (Exception ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
@@ -1747,30 +1713,35 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
                 subscriptionAttributes.put(attributeId, arrayString);
 
-                CleverPushHttpClient.post("/subscription/attribute/push-value", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        try {
-                            if (sharedPreferences != null) {
-                                JSONObject jsonObject = new JSONObject(subscriptionAttributes);
-                                String jsonString = jsonObject.toString();
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
-                                editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-                                editor.commit();
-                            }
-                        } catch (Exception ex) {
-                            Log.e("CleverPush", ex.getMessage(), ex);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error pushing attribute value - HTTP " + statusCode);
-                    }
-                });
+                CleverPushHttpClient.post("/subscription/attribute/push-value", jsonBody, pushSubscriptionAttributeValueResponseHandler(subscriptionAttributes));
             }
         })).start());
+    }
+
+    private CleverPushHttpClient.ResponseHandler pushSubscriptionAttributeValueResponseHandler(Map<String, Object> subscriptionAttributes) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        return new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    if (sharedPreferences != null) {
+                        JSONObject jsonObject = new JSONObject(subscriptionAttributes);
+                        String jsonString = jsonObject.toString();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+                        editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
+                        editor.commit();
+                    }
+                } catch (Exception ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+                Log.e("CleverPush", "Error pushing attribute value - HTTP " + statusCode);
+            }
+        };
     }
 
     public void pullSubscriptionAttributeValue(String attributeId, String value) {
@@ -1790,15 +1761,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
                 ArrayList<String> arrayList = new ArrayList<>();
+
                 try {
                     JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-                    if (arrayValue != null) {
-                        for (int i = 0; i < arrayValue.length(); i++) {
-                            if (!arrayValue.getString(i).equals(value)) {
-                                arrayList.add(arrayValue.getString(i));
-                            }
-                        }
-                    }
+                    Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
+                    arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
                 } catch (Exception ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
@@ -1809,30 +1776,35 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
                 subscriptionAttributes.put(attributeId, arrayString);
 
-                CleverPushHttpClient.post("/subscription/attribute/pull-value", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        try {
-                            if (sharedPreferences != null) {
-                                JSONObject jsonObject = new JSONObject(subscriptionAttributes);
-                                String jsonString = jsonObject.toString();
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
-                                editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-                                editor.commit();
-                            }
-                        } catch (Exception ex) {
-                            Log.e("CleverPush", ex.getMessage(), ex);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error pulling attribute value - HTTP " + statusCode);
-                    }
-                });
+                CleverPushHttpClient.post("/subscription/attribute/pull-value", jsonBody, pullSubscriptionAttributeValueResponseHandler(subscriptionAttributes));
             }
         })).start());
+    }
+
+    private CleverPushHttpClient.ResponseHandler pullSubscriptionAttributeValueResponseHandler(Map<String, Object> subscriptionAttributes) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        return new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    if (sharedPreferences != null) {
+                        JSONObject jsonObject = new JSONObject(subscriptionAttributes);
+                        String jsonString = jsonObject.toString();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+                        editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
+                        editor.commit();
+                    }
+                } catch (Exception ex) {
+                    Log.e("CleverPush", ex.getMessage(), ex);
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+                Log.e("CleverPush", "Error pulling attribute value - HTTP " + statusCode);
+            }
+        };
     }
 
     public boolean hasSubscriptionAttributeValue(String attributeId, String value) {
@@ -1841,15 +1813,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         ArrayList<String> arrayList = new ArrayList<>();
         try {
             JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-            if (arrayValue != null) {
-                for (int i = 0; i < arrayValue.length(); i++) {
-                    arrayList.add(arrayValue.getString(i));
-                }
-            }
+            Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
+            arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
         } catch (Exception ex) {
             Log.e("CleverPush", ex.getMessage(), ex);
         }
-
         return arrayList.contains(value);
     }
 
@@ -1897,9 +1865,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
         if (notificationsJson != null) {
             try {
-                Type type = new TypeToken<List<Notification>>() {
-                }.getType();
-                List<Notification> notifications = gson.fromJson(notificationsJson, type);
+                List<Notification> notifications = gson.fromJson(notificationsJson, NotificationList.class);
                 return new HashSet<>(notifications);
             } catch (Exception ex) {
                 Log.e("CleverPush", "error while getting stored notifications", ex);
@@ -2440,7 +2406,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
     }
 
-    public boolean areAppBannersDisabled() {
+    public boolean isAppBannersDisabled() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         appBannersDisabled = sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, false);
         return appBannersDisabled;
