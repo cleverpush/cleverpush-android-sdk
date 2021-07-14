@@ -1554,9 +1554,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
 
-    public void removeMultipleSubscriptionSubscriptionTags(String[] tagIds) {
+    public void removeMultipleSubscriptionTags(String[] tagIds) {
         removeSubscriptionTagTrackingConsent(tagIds);
     }
+
 
     public void removeSubscriptionTag(String tagId) {
         removeSubscriptionTagTrackingConsent(tagId);
