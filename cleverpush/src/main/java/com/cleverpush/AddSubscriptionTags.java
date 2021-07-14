@@ -31,7 +31,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         }
     }
 
-    public void addMultipleSubscriptionTags() {
+    public void addSubscriptionTags() {
         if (tagIds == null || tagIds.length == 0) {
             return;
         }

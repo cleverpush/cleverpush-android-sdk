@@ -1534,7 +1534,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return topics;
     }
 
-    public void addMultipleSubscriptionTags(String[] tagIds) {
+    public void addSubscriptionTags(String[] tagIds) {
         addSubscriptionTagTrackingConsent(tagIds);
     }
 
@@ -1543,18 +1543,18 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private void addSubscriptionTagTrackingConsent(String... tagIds) {
-        startTrackingConsent(getAddMultipleSubscriptionTagsSubscribedListener(tagIds));
+        startTrackingConsent(getAddSubscriptionTagsSubscribedListener(tagIds));
     }
 
-    private SubscribedListener getAddMultipleSubscriptionTagsSubscribedListener(String... tagIds) {
+    private SubscribedListener getAddSubscriptionTagsSubscribedListener(String... tagIds) {
         return subscriptionId -> {
-            AddSubscriptionTags addMultipleSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId, this.channelId, tagIds);
-            addMultipleSubscriptionTagsHelper.addMultipleSubscriptionTags();
+            AddSubscriptionTags addSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId, this.channelId, tagIds);
+            addSubscriptionTagsHelper.addSubscriptionTags();
         };
     }
 
 
-    public void removeMultipleSubscriptionTags(String[] tagIds) {
+    public void removeSubscriptionTags(String[] tagIds) {
         removeSubscriptionTagTrackingConsent(tagIds);
     }
 
@@ -1570,7 +1570,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private SubscribedListener getRemoveSubscriptionTagSubscribedListener(String... tagIds) {
         return subscriptionId -> {
             RemoveSubscriptionTags removeSubscriptionTags = new RemoveSubscriptionTags(subscriptionId, this.channelId, tagIds);
-            removeSubscriptionTags.removeMultipleSubscriptionSubscriptionTags();
+            removeSubscriptionTags.removeSubscriptionTags();
         };
     }
 

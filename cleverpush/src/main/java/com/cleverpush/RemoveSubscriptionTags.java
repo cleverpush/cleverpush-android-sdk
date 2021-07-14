@@ -31,7 +31,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
         }
     }
 
-    public void removeMultipleSubscriptionSubscriptionTags() {
+    public void removeSubscriptionTags() {
         if (tagIds == null || tagIds.length == 0) {
             return;
         }
