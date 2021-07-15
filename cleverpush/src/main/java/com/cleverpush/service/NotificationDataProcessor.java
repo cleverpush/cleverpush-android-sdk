@@ -36,6 +36,8 @@ public class NotificationDataProcessor {
 
         CleverPush cleverPush = CleverPush.getInstance(context);
 
+        cleverPush.trackNotificationDelivered(notificationId, subscriptionId);
+
         boolean dontShowNotification = false;
 
         // default behaviour: do not show notification if application is in the foreground
@@ -76,8 +78,6 @@ public class NotificationDataProcessor {
         if (!dontShowNotification) {
 			NotificationService.getInstance().showNotification(context, notification, subscription);
         }
-
-        cleverPush.trackNotificationDelivered(notificationId, subscriptionId);
 
         try {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);

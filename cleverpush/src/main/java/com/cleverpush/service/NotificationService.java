@@ -60,6 +60,8 @@ import java.util.regex.Pattern;
 public class NotificationService {
     private static NotificationService sInstance;
 
+    private int GET_BITMAP_TIMEOUT = 10 * 1000;
+
     private NotificationService() {
 
     }
@@ -88,12 +90,14 @@ public class NotificationService {
         try {
             URL url = new URL(strURL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(GET_BITMAP_TIMEOUT);
+            connection.setReadTimeout(GET_BITMAP_TIMEOUT);
             connection.setDoInput(true);
             connection.connect();
             InputStream input = connection.getInputStream();
             return BitmapFactory.decodeStream(input);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception exception) {
+            Log.d("CleverPush", "NotificationService: Exception while loading image", exception);
             return null;
         }
     }

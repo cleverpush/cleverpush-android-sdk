@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.4
+* Optimized behaviour for downloading Notification images
+
 ## 1.15.3
 * Added ProGuard consumer rules
 
