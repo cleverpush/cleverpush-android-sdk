@@ -265,23 +265,25 @@ public class AppBannerModule {
 
     private boolean isBannerTimeAllowed(Banner banner) {
         Date now = new Date();
-        return banner.getStopAtType() == BannerStopAtType.SpecificTime && banner.getStopAt().before(now);
+        return banner.getStopAtType() != BannerStopAtType.SpecificTime
+                    || banner.getStopAt() == null
+                    || banner.getStopAt().after(now);
     }
 
     private void createBanners(Collection<Banner> banners) {
         for (Banner banner : banners) {
             if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
-                Log.d(TAG, "Skipping Banner because: Draft");
+                Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Draft");
                 continue;
             }
 
             if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
-                Log.d(TAG, "Skipping Banner because: Frequency");
+                Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Frequency");
                 continue;
             }
 
             if (!isBannerTimeAllowed(banner)) {
-                Log.d(TAG, "Skipping Banner because: Time");
+                Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Time");
                 continue;
             }
 
@@ -395,7 +397,6 @@ public class AppBannerModule {
     }
 
     private void showBanner(AppBannerPopup bannerPopup) {
-        Date now = new Date();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
         if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
