@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.6
+* Improved Topics Dialog behaviour
+
 ## 1.15.5
 * App Banners: Optimized app banner behaviour
 
