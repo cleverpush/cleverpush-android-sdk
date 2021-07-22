@@ -1385,10 +1385,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return sharedPreferences.getBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, false);
     }
 
-    public void setDeSelectAll(Boolean isDeSelectAll) {
+    public void setDeSelectAll(Boolean deSelectAll) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, isDeSelectAll);
+        editor.putBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, deSelectAll);
         editor.commit();
     }
 
@@ -2159,11 +2159,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                     Set<String> selectedTopics = instance.getSubscriptionTopics();
 
-                    if (hasDeSelectAll()) {
-                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true, nightModeFlags, selectedTopics);
-                    } else {
-                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, false, nightModeFlags, selectedTopics);
-                    }
+                    setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, hasDeSelectAll(), nightModeFlags, selectedTopics);
 
                     checkboxLayout.addView(parentLayout);
 
@@ -2189,7 +2185,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                     selectedTopics.clear();
                                     checkedTopics[i] = false;
                                 } catch (JSONException e) {
-                                    e.printStackTrace();
+                                    Log.e("CleverPush", e.getLocalizedMessage());
                                 }
                             }
                         } else {
@@ -2232,16 +2228,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
      * @param checkedTopics       userSelectedTopics
-     * @param isDeselectAll       is deselectall checkbox is checked or not
+     * @param deselectAll       is deselectall checkbox is checked or not
      * @param nightModeFlags      flag if there is night mode
      * @param selectedTopics      selectedTopics
      */
-    private void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean isDeselectAll, int nightModeFlags, Set<String> selectedTopics) {
+    private void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
         try {
             parentLayout.removeAllViews();
 
             if (channelConfig.optBoolean("topicsDialogShowUnsubscribe", false)) {
-                checkboxDeSelectAll.setChecked(isDeselectAll);
+                checkboxDeSelectAll.setChecked(deselectAll);
                 parentLayout.addView(checkboxDeSelectAll);
                 checkboxDeSelectAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     if (isChecked) {
@@ -2272,7 +2268,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         }
                     }
 
-                    if (!hasDeSelectAll() && !isDeselectAll) {
+                    if (!hasDeSelectAll() && !deselectAll) {
                         checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
                     }
 
@@ -2318,7 +2314,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                 }
                             }
 
-                            if (!hasDeSelectAll() && !isDeselectAll) {
+                            if (!hasDeSelectAll() && !deselectAll) {
                                 checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
                             }
 
