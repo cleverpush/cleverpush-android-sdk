@@ -2,7 +2,7 @@ package com.cleverpush.manager;
 
 import org.json.JSONObject;
 
-public interface SubscriptionManager {
+public interface  SubscriptionManager {
 
    interface RegisteredHandler {
       void complete(String id);

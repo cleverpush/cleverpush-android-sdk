@@ -23,6 +23,12 @@ public class CleverPushHttpClient {
     }
 
     public static void get(final String url, final ResponseHandler responseHandler) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        }).start();
         new Thread(() -> makeRequest(url, null, null, responseHandler)).start();
     }
 
@@ -32,7 +38,7 @@ public class CleverPushHttpClient {
         String json = null;
 
         try {
-            con = (HttpURLConnection) new URL(BASE_URL + url).openConnection();
+            con = (HttpURLConnection) new URL(/*BASE_URL + */url).openConnection();
             con.setUseCaches(false);
             con.setConnectTimeout(TIMEOUT);
             con.setReadTimeout(TIMEOUT);

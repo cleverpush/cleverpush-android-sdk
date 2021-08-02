@@ -1,0 +1,141 @@
+{
+	"confirmAlertThemeBackgroundColor": "",
+	"notificationCategoryGroups": [],
+	"staticEndpoint": "https://static.cleverpush.com",
+	"autoRegister": true,
+	"confirmAlertThemeButtonTextColor": "",
+	"channelTopics": [{
+		"createdAt": "2021-04-08T06:00:59.585Z",
+		"name": "Test 2",
+		"channel": ["taWutEzzBZM8za3PS"],
+		"_id": "DTyjspPiNinuf45Yh"
+	}, {
+		"parentTopic": "KNB5TrZ49nobchCca",
+		"createdAt": "2021-04-20T05:00:07.254Z",
+		"layerFunction": null,
+		"name": "Test Sub Topic",
+		"channel": ["taWutEzzBZM8za3PS"],
+		"_id": "qAJ5mdsDqTRE7pci6"
+	}, {
+		"createdAt": "2021-04-08T06:00:59.585Z",
+		"layerFunction": null,
+		"name": "test Topics",
+		"channel": ["taWutEzzBZM8za3PS"],
+		"_id": "KNB5TrZ49nobchCca"
+	}],
+	"confirmAlertBackdropOpacity": 0.75,
+	"alertMinimumVisits": 0,
+	"emailOptInForms": [],
+	"privacyPolicyText": "Privacy policy",
+	"confirmAlertBackdropBlur": false,
+	"hideNotificationBellMobile": false,
+	"hideBranding": false,
+	"multiChannels": {
+		"appChannel": {
+			"confirmAlertNativeTheme": "",
+			"androidPackageName": "com.example.cleverpushtest",
+			"_id": "taWutEzzBZM8za3PS"
+		}
+	},
+	"confirmAlertThemeVariant": "",
+	"channelEvents": [],
+	"webBanners": [],
+	"alertScrollPercentage": 0,
+	"confirmAlertHideChannelTopics": true,
+	"confirmAlertBackdrop": true,
+	"apiEndpoint": "https://api.cleverpush.com",
+	"trackSessions": "undefined",
+	"domain": "",
+	"subdomain": "",
+	"customAttributes": [{
+		"name": "Hardik",
+		"id": "firstname"
+	}, {
+		"name": "Hardik Lakum",
+		"id": "lastname"
+	}],
+	"confirmAlertLinkStyle": {},
+	"loadConfig": false,
+	"gcmManifestPath": "/cleverpush-manifest.json",
+	"showConfirmAlert": true,
+	"fcmId": "960843762417",
+	"showNotificationBell": false,
+	"origin": "https://.cleverpush.com",
+	"chatWidgetThemeColor": "#42a2f2",
+	"hideNotificationBellSubscribed": false,
+	"alertTimeout": 10000,
+	"widgets": [],
+	"channelIcon": "https://static.cleverpush.com/notification/icon/vkikNpHeR9M5BeLp3.png",
+	"confirmAlertAllowButtonStyle": {},
+	"vapidPublicKey": "BMIglZxNMlyACAdGAoKNNvFv6ACoyxAuNL2RLSNB5CeXBQQKIEaCrVdjLaCy0Sc8YG80gc_gNvIvjOJnVVOdUgw",
+	"safariWebServiceUrl": "https://api.cleverpush.com/channel/taWutEzzBZM8za3PS/safari",
+	"showConfirmAlertMobile": false,
+	"androidPackageName": "com.example.cleverpushtest",
+	"topicsDialogShowUnsubscribe": true,
+	"confirmAlertSelectTopicsLaterTitle": "",
+	"channelId": "taWutEzzBZM8za3PS",
+	"confirmAlertTheme": "cleverpush-confirm-default",
+	"confirmAlertThemeLinkColor": "",
+	"faqUrl": "https://cleverpush.com/faq",
+	"notificationBellColor": "#42a2f2",
+	"pageBannerNotifications": [],
+	"confirmAlertTitleStyle": {},
+	"confirmAlertButtonStyle": {},
+	"chatWidgetButtonName": "Support",
+	"loadIframe": true,
+	"confirmAlertSelectTopicsLaterTheme": "",
+	"channelTags": [{
+		"createdAt": "2021-06-25T14:16:30.717Z",
+		"name": "123",
+		"channel": ["taWutEzzBZM8za3PS"],
+		"_id": "WpiakjdAqobHQRg7S",
+		"autoAssignSelector": null,
+		"autoAssignFunction": null
+	}, {
+		"createdAt": "2021-06-25T14:16:30.717Z",
+		"name": "234",
+		"channel": ["taWutEzzBZM8za3PS"],
+		"_id": "FJZQFQhWsuKsbn3Sw",
+		"autoAssignSelector": null,
+		"autoAssignFunction": null
+	}, {
+		"createdAt": "2021-06-25T14:16:30.717Z",
+		"name": "456",
+		"channel": ["taWutEzzBZM8za3PS"],
+		"_id": "TjBSbzEgd5Bnybrhy",
+		"autoAssignSelector": null,
+		"autoAssignFunction": null
+	}, {
+		"createdAt": "2021-06-25T14:16:30.717Z",
+		"name": "789",
+		"channel": ["taWutEzzBZM8za3PS"],
+		"_id": "GzcYeprM88LbHimWz",
+		"autoAssignSelector": null,
+		"autoAssignFunction": null
+	}],
+	"confirmAlertThemeBackground": "",
+	"url": "https://.cleverpush.com/subscribe",
+	"confirmAlertNativeTheme": "",
+	"environment": "production",
+	"confirmAlertThemeTextColor": "",
+	"ownDomain": false,
+	"serviceWorkerFile": "/cleverpush-worker.js",
+	"confirmAlertTests": [],
+	"cleverpushDomain": "cleverpush.com",
+	"channelName": "Hardik Lakum",
+	"followUpCampaigns": [],
+	"geoFences": [{
+		"createdAt": "2021-04-07T09:00:32.522Z",
+		"latitude": 23.031557040041672,
+		"channel": "taWutEzzBZM8za3PS",
+		"name": "GeoFencetest",
+		"startsAt": "2021-04-06T18:30:00.000Z",
+		"_id": "ipMtHD6tzg94FaSXC",
+		"radius": 10000,
+		"endsAt": "2021-04-29T18:30:00.000Z",
+		"status": "published",
+		"longitude": 72.56653969844412
+	}],
+	"confirmAlertStyle": {},
+	"hideFaqLink": false
+}

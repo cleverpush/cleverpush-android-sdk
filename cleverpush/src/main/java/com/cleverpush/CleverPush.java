@@ -49,8 +49,11 @@ import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerHMS;
+import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
+import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
+import com.cleverpush.util.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -88,16 +91,7 @@ import java.util.TimerTask;
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
     public static final String SDK_VERSION = "1.15.3";
-
     private static CleverPush instance;
-
-    public static CleverPush getInstance(@NonNull Context context) {
-        if (instance == null) {
-            instance = new CleverPush(context);
-        }
-        return instance;
-    }
-
     public static Context context;
 
     private NotificationReceivedListenerBase notificationReceivedListener;
@@ -121,10 +115,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private AppBannerModule appBannerModule;
     private boolean appBannersDisabled = false;
 
+
     private String channelId;
     private String subscriptionId = null;
     private JSONObject channelConfig = null;
+
     private boolean subscriptionInProgress = false;
+
     private boolean initialized = false;
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
@@ -148,7 +145,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
 
-    private CleverPush(@NonNull Context context) {
+    public CleverPush(@NonNull Context context) {
         if (context == null) {
             return;
         }
@@ -186,7 +183,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             }
         };
 
-        ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) CleverPush.context, sessionListener);
+        //ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) CleverPush.context, sessionListener);
     }
 
     /**
@@ -372,127 +369,65 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
         channelConfig = null;
 
-        SubscriptionManagerFCM.disableFirebaseInstanceIdService(CleverPush.context);
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SubscriptionManagerFCM.disableFirebaseInstanceIdService(getContext());
 
         // try to get cached Channel ID from Shared Preferences
         if (this.channelId == null) {
-            this.channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
+            this.channelId =  getChannelId(getContext());
         }
 
         if (this.channelId != null) {
             Log.d("CleverPush", "Initializing with Channel ID: " + this.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
 
-            String storedChannelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
-            String storedSubscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+            String storedChannelId  = getChannelId(getContext());
+            String storedSubscriptionId = getSubscriptionId(getContext());
 
             // Check if the channel id changed. Remove the Subscription ID in this case.
             // Maybe the user switched from Dev to Live environment.
-            boolean channelIdChanged = storedSubscriptionId != null && storedChannelId != null && !this.channelId.equals(storedChannelId);
-            if (channelIdChanged) {
+            if (isChannelIdChanged(storedChannelId, storedSubscriptionId)) {
                 try {
                     this.clearSubscriptionData();
                 } catch (Throwable t) {
                     Log.e("CleverPush", "Error", t);
                 }
             }
-
-            sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, this.channelId).apply();
-
+            addOrUpdateChannelId(getContext(), this.channelId);
             // get channel config
-            CleverPush instance = this;
-            String configPath = "/channel/" + this.channelId + "/config";
-            if (developmentMode) {
-                configPath += "?t=" + System.currentTimeMillis();
-            }
-            CleverPushHttpClient.get(configPath, new CleverPushHttpClient.ResponseHandler() {
-                @Override
-                public void onSuccess(String response) {
-                    initialized = true;
-
-                    try {
-                        JSONObject responseJson = new JSONObject(response);
-                        instance.setChannelConfig(responseJson);
-
-                        instance.subscribeOrSync(autoRegister || channelIdChanged);
-
-                        instance.initFeatures();
-
-                    } catch (Throwable ex) {
-                        Log.e("CleverPush", ex.getMessage(), ex);
-                    }
-                }
-
-                @Override
-                public void onFailure(int statusCode, String response, Throwable throwable) {
-                    initialized = true;
-
-                    Log.e("CleverPush", "Failed to fetch Channel Config", throwable);
-
-                    // trigger listeners
-                    if (channelConfig == null) {
-                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-                        instance.fireSubscribedListener(subscriptionId);
-                        instance.setSubscriptionId(subscriptionId);
-                        instance.setChannelConfig(null);
-                    }
-                }
-            });
+            getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId);
         } else {
-            String bundleId = CleverPush.context.getPackageName();
-            Log.d("CleverPush", "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: " + bundleId);
-
+            Log.d("CleverPush", "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: " + getContext().getPackageName());
             // get channel config
-            CleverPush instance = this;
-            CleverPushHttpClient.get("/channel-config?bundleId=" + bundleId + "&platformName=Android", new CleverPushHttpClient.ResponseHandler() {
-                @Override
-                public void onSuccess(String response) {
-                    initialized = true;
-
-                    try {
-                        JSONObject responseJson = new JSONObject(response);
-                        instance.setChannelConfig(responseJson);
-                        instance.channelId = responseJson.getString("channelId");
-
-                        instance.subscribeOrSync(autoRegister);
-
-                        instance.initFeatures();
-
-                        Log.d("CleverPush", "Got Channel ID via Package Name: " + instance.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
-                    } catch (Throwable ex) {
-                        Log.e("CleverPush", ex.getMessage(), ex);
-                    }
-                }
-
-                @Override
-                public void onFailure(int statusCode, String response, Throwable throwable) {
-                    initialized = true;
-
-                    Log.e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?", throwable);
-
-                    // trigger listeners
-                    if (channelConfig == null) {
-                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-                        instance.fireSubscribedListener(subscriptionId);
-                        instance.setSubscriptionId(subscriptionId);
-                        instance.setChannelConfig(null);
-                    }
-                }
-            });
+            getChannelConfigFromBundleId("/channel-config?bundleId=" + getContext().getPackageName() + "&platformName=Android",autoRegister);
         }
 
         // fire listeners for unprocessed open notifications
         if (this.notificationOpenedListener != null) {
-            for (NotificationOpenedResult result : unprocessedOpenedNotifications) {
+            for (NotificationOpenedResult result : getUnprocessedOpenedNotifications() ) {
                 fireNotificationOpenedListener(result);
             }
             unprocessedOpenedNotifications.clear();
         }
-
         // increment app opens
+        incrementAppOpens();
+    }
+
+    public void getChannelConfigFromChannelId(boolean autoRegister, String storedChannelId, String storedSubscriptionId) {
+        CleverPush instance = this;
+        String configPath = "/channel/" + this.channelId + "/config";
+        if (developmentMode) {
+            configPath += "?t=" + System.currentTimeMillis();
+        }
+        CleverPushHttpClient.get(configPath, ChannelConfigFromChannelIdResponseHandler.getResponseHandler(autoRegister, storedChannelId, storedSubscriptionId));
+    }
+
+
+    public void getChannelConfigFromBundleId(String url, boolean autoRegister) {
+        CleverPush instance = this;
+        CleverPushHttpClient.get(url,  new ChannelConfigFromBundleIdResponseHandler(instance).getResponseHandler(autoRegister));
+    }
+
+    public void incrementAppOpens() {
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         SharedPreferences.Editor editor = sharedPreferences.edit();
         int appOpens = sharedPreferences.getInt(CleverPushPreferences.APP_OPENS, 0) + 1;
         editor.putInt(CleverPushPreferences.APP_OPENS, appOpens);
@@ -511,9 +446,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      *
      * @param autoRegister boolean for auto register
      */
-    private void subscribeOrSync(boolean autoRegister) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, this.channelId).apply();
+    public void subscribeOrSync(boolean autoRegister) {
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+        sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, getChannelId(getContext())).apply();
 
         int currentTime = (int) (System.currentTimeMillis() / 1000L);
         int threeDays = 3 * 60 * 60 * 24;
@@ -535,7 +470,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     /**
      * initialize the features
      */
-    private void initFeatures() {
+    public void initFeatures() {
         if (ActivityLifecycleListener.currentActivity == null) {
             this.pendingInitFeaturesCall = true;
             return;
@@ -651,7 +586,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         editor.putString(mapKey, jsonString).apply();
     }
 
-    private Map<String, Integer> loadPreferencesMap(String mapKey) {
+    public Map<String, Integer> loadPreferencesMap(String mapKey) {
         Map<String, Integer> outputMap = new HashMap<>();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         try {
@@ -1014,9 +949,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         }));
     }
 
-    public boolean isSubscribed() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_ID);
+    public boolean  isSubscribed() {
+        return  getSharedPreferences(getContext()).contains(CleverPushPreferences.SUBSCRIPTION_ID);
     }
 
     public void subscribe() {
@@ -1060,7 +994,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, true);
                             editor.commit();
-
                             CleverPush.instance.showPendingTopicsDialog();
                         }
                     }
@@ -1077,8 +1010,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void unsubscribe() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        String subscriptionId = getSubscriptionId(CleverPush.context);
         if (subscriptionId != null) {
             JSONObject jsonBody = new JSONObject();
             try {
@@ -1163,8 +1095,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public synchronized void setChannelConfig(JSONObject value) {
         channelConfig = value;
-        notifyAll();
-
+        //notifyAll();
+        Log.e("test", channelConfig.toString());
         if (channelConfig != null || initialized) {
             for (ChannelConfigListener listener : getChannelConfigListeners) {
                 listener.ready(channelConfig);
@@ -1420,7 +1352,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return this.getSubscriptionAttributes().get(attributeId);
     }
 
-    private Set<ChannelTag> getAvailableTagsFromConfig(JSONObject channelConfig) {
+    public Set<ChannelTag> getAvailableTagsFromConfig(JSONObject channelConfig) {
         Set<ChannelTag> tags = new HashSet<>();
         if (channelConfig != null && channelConfig.has("channelTags")) {
             Gson gson = new Gson();
@@ -2471,4 +2403,51 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         }
         appBannerModule.disableBanners();
     }
+
+    public boolean isChannelIdChanged(String storedChannelId, String storedSubscriptionId) {
+        return storedSubscriptionId != null && storedChannelId != null && !this.channelId.equals(storedChannelId);
+    }
+
+    public String getChannelId(Context context) {
+        return getSharedPreferences(context).getString(CleverPushPreferences.CHANNEL_ID, null);
+    }
+
+    public String getSubscriptionId(Context context) {
+        return getSharedPreferences(context).getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+    }
+
+    public SharedPreferences getSharedPreferences(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public void addOrUpdateChannelId(Context context, String channelId) {
+        getSharedPreferences(context).edit().putString(CleverPushPreferences.CHANNEL_ID, channelId).apply();
+    }
+
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
+    }
+
+    public static CleverPush getInstance(Context context) {
+        if (context == null) {
+            throw new NullPointerException();
+        }
+        if (instance == null) {
+            instance = new CleverPush(context);
+        }
+        return instance;
+    }
+
+    public Context getContext() {
+        return CleverPush.context;
+    }
+
+    public Collection<NotificationOpenedResult> getUnprocessedOpenedNotifications() {
+        return unprocessedOpenedNotifications;
+    }
+
+    public void setChannelId(String channelId) {
+        this.channelId = channelId;
+    }
+
 }
