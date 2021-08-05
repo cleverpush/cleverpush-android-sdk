@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
 public class NotificationService {
     private static NotificationService sInstance;
 
-    private int GET_BITMAP_TIMEOUT = 10 * 1000;
+    private int GET_BITMAP_TIMEOUT = 20 * 1000;
 
     private NotificationService() {
 
@@ -231,7 +231,7 @@ public class NotificationService {
             notificationBuilder = new NotificationCompat.Builder(context);
         }
 
-        if (notification.getSoundFilename() != null) {
+        if (notification.getSoundFilename() != null && !notification.getSoundFilename().isEmpty()) {
             Resources resources = context.getResources();
             String packageName = context.getPackageName();
             int soundId = resources.getIdentifier(notification.getSoundFilename(), "raw", packageName);
@@ -252,7 +252,7 @@ public class NotificationService {
                 .setAutoCancel(true)
                 .setSound(soundUri);
 
-        if (iconUrl != null) {
+        if (iconUrl != null && !iconUrl.isEmpty()) {
 			try {
 				Bitmap icon = getBitmapFromUrl(iconUrl);
 				if (icon != null) {
@@ -262,7 +262,7 @@ public class NotificationService {
 			}
         }
 
-        if (mediaUrl != null) {
+        if (mediaUrl != null && !mediaUrl.isEmpty()) {
             try {
                 Bitmap media = getBitmapFromUrl(mediaUrl);
                 if (media != null) {

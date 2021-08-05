@@ -87,7 +87,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.15.6";
+    public static final String SDK_VERSION = "1.16.0";
 
     private static CleverPush instance;
 
@@ -523,10 +523,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         if (subscriptionId == null && autoRegister || subscriptionId != null && nextSync < currentTime) {
             this.subscribe(subscriptionId == null);
         } else {
-            Date nextSyncDate = new Date(nextSync * 1000L);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault());
-            String formattedDate = sdf.format(nextSyncDate);
-            Log.d("CleverPush", "Subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
+            if (subscriptionId != null) {
+                Date nextSyncDate = new Date(nextSync * 1000L);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault());
+                String formattedDate = sdf.format(nextSyncDate);
+                Log.d("CleverPush", "Subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
+            }
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
         }
@@ -1595,7 +1597,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             editor.putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion);
             editor.commit();
 
-
             this.getSubscriptionId(subscriptionId -> {
                 if (subscriptionId != null) {
                     JSONObject jsonBody = new JSONObject();
@@ -1614,7 +1615,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     }
 
                     Log.d("CleverPush", "setSubscriptionTopics: " + Arrays.toString(topicIds));
-
 
                     CleverPush instance = this;
                     CleverPushHttpClient.post("/subscription/sync/" + this.channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
@@ -2103,6 +2103,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                     final boolean[] checkedTopics = new boolean[channelTopics.length()];
                     String[] topicIds = new String[channelTopics.length()];
+                    final boolean hasDeSelectAllInitial = this.hasDeSelectAll();
 
                     LinearLayout checkboxLayout = new LinearLayout(context);
                     checkboxLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -2155,7 +2156,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                 }
                             }
                         } else {
-                            setDeSelectAll(false);
+                            if (hasDeSelectAllInitial) {
+                                setDeSelectAll(false);
+                                this.subscribe(subscriptionId == null);
+                            }
+
                             Set<String> selectedTopicIds = new HashSet<>();
                             for (int j = 0; j < topicIds.length; j++) {
                                 if (checkedTopics[j]) {

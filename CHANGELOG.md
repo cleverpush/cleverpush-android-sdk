@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.0
+* Added App Stories
+* Added methods for adding / removing multiple tags at once
+
 ## 1.15.6
 * Improved Topics Dialog behaviour
 
