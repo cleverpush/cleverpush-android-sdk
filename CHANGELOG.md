@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.15.6
+* Improved Topics Dialog behaviour
+
+## 1.15.5
+* App Banners: Optimized app banner behaviour
+
+## 1.15.4
+* Optimized behaviour for downloading Notification images
+
 ## 1.15.3
 * Added ProGuard consumer rules
 

@@ -55,6 +55,7 @@ android {
 
 dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 
     // Androidx
