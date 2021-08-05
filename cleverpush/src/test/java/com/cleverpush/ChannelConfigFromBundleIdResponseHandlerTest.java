@@ -26,6 +26,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -36,9 +37,10 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
 
     private MockWebServer mockWebServer;
 
+
     @Mock
     private CleverPush cleverPush;
-    @Mock
+
     private ChannelConfigFromBundleIdResponseHandler channelConfigFromBundleIdResponseHandler;
 
     @Mock
@@ -55,8 +57,8 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         mockWebServer = new MockWebServer();
-        cleverPush = Mockito.spy(new CleverPush(context));
-        channelConfigFromBundleIdResponseHandler = Mockito.spy(new ChannelConfigFromBundleIdResponseHandler(cleverPush));
+        /*cleverPush = Mockito.spy(new CleverPush(context));
+        channelConfigFromBundleIdResponseHandler = Mockito.spy(new ChannelConfigFromBundleIdResponseHandler(cleverPush));*/
     }
 
     @Test
@@ -68,23 +70,19 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
         }
         HttpUrl baseUrl = mockWebServer.url("/v1/chat/");
         mockWebServer.enqueue(new MockResponse().setBody(new MockResponseFileReader("test1.json").getContent()).setResponseCode(200));
-       /* doReturn(context).when(cleverPush).getContext();
+        doReturn(context).when(cleverPush).getContext();
         doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
         doReturn("taWutEzzBZM8za3PS").when(cleverPush).getChannelId(context);
-        when(sharedPreferences.edit()).thenReturn(editor);*/
+        when(sharedPreferences.edit()).thenReturn(editor);
+        when(editor.putString(CleverPushPreferences.CHANNEL_ID, "channelId")).thenReturn(editor);
 
-        CleverPushHttpClient.get( baseUrl.url().toString(),   channelConfigFromBundleIdResponseHandler.getResponseHandler(true));
+        CleverPushHttpClient.get( baseUrl.url().toString(),   new ChannelConfigFromBundleIdResponseHandler(cleverPush).getResponseHandler(true));
+        verify(cleverPush).setInitialized(true);
+        verify(cleverPush).setChannelConfig(any());
+        verify(cleverPush).setChannelId("taWutEzzBZM8za3PS");
+        verify(cleverPush).subscribeOrSync(true);
+        verify(cleverPush).initFeatures();
 
-        try {
-            JSONObject responseJson = new JSONObject(new MockResponseFileReader("test1.json").getContent());
-            verify(cleverPush).setInitialized(true);
-            verify(cleverPush).setChannelConfig(responseJson);
-            verify(cleverPush).setChannelId("taWutEzzBZM8za3PS");
-            verify(cleverPush).subscribeOrSync(true);
-            verify(cleverPush).initFeatures();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
 
 
     }
