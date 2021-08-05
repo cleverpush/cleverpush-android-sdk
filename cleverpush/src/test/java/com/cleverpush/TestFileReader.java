@@ -9,7 +9,7 @@ import java.net.URL;
 import kotlin.io.TextStreamsKt;
 import kotlin.jvm.internal.Intrinsics;
 
-public class MockResponseFileReader {
+public class TestFileReader {
 
     private final String content;
 
@@ -17,7 +17,7 @@ public class MockResponseFileReader {
         return this.content;
     }
 
-    public MockResponseFileReader(String path) {
+    public TestFileReader(String path) {
         Intrinsics.checkParameterIsNotNull(path, "path");
 
         InputStreamReader reader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(path));

@@ -556,12 +556,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         if (this.hasLocationPermission()) {
             return;
         }
-        if (ActivityLifecycleListener.currentActivity == null) {
+        if (getCurrentActivity() == null) {
             this.pendingRequestLocationPermissionCall = true;
             return;
         }
         this.pendingRequestLocationPermissionCall = false;
-        ActivityCompat.requestPermissions(ActivityLifecycleListener.currentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionRequestCode);
+        ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionRequestCode);
     }
 
     /**
@@ -573,7 +573,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return false;
         }
         */
-        return ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
 
@@ -868,7 +868,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void trackPageView(String url, Map<String, ?> params) {
-        if (ActivityLifecycleListener.currentActivity == null) {
+        if (getCurrentActivity() == null) {
             this.pendingPageViews.add(new PageView(url, params));
             return;
         }
@@ -2441,4 +2441,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return pendingInitFeaturesCall;
     }
 
+    public boolean ispendingRequestLocationPermissionCall() {
+        return pendingRequestLocationPermissionCall;
+    }
 }

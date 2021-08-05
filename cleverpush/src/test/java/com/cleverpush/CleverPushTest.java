@@ -1,10 +1,14 @@
 package com.cleverpush;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.NotificationOpenedListener;
@@ -28,6 +32,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 class CleverPushTest {
@@ -61,11 +66,18 @@ class CleverPushTest {
 
     @Mock
     GoogleApiClient googleApiClient;
+
     @Mock
     AppBannerModule appBannerModule;
 
     @Mock
+    ActivityCompat activityCompat;
+
+    @Mock
     Activity activity;
+
+    @Mock
+    ContextCompat contextCompat;
 
     CleverPush cleverPush;
 
@@ -201,18 +213,17 @@ class CleverPushTest {
     }
 
     @Test
-    void testInitFeatures() {
-
+    void testInitFeaturesWhenThereIsNoCurrentActivity() {
         // when there is no current activity
         doReturn(null).when(cleverPush).getCurrentActivity();
         cleverPush.initFeatures();
         assertThat(cleverPush.isPendingInitFeaturesCall()).isTrue();
+    }
 
-        // when there is current activity
+    @Test
+    void testInitFeaturesWhenThereIsCurrentActivity() {
 
         doReturn(activity).when(cleverPush).getCurrentActivity();
-
-        //when(ActivityLifecycleListener.currentActivity).thenReturn(any());
         doReturn(true).when(cleverPush).hasLocationPermission();
         doReturn(googleApiClient).when(cleverPush).getGoogleApiClient();
         doReturn(appBannerModule).when(cleverPush).getAppBannerModule();
@@ -225,6 +236,42 @@ class CleverPushTest {
         verify(cleverPush).initGeoFences();
         verify(appBannerModule).initSession(any());
 
+    }
+
+
+    @Test
+    void testRequestLocationPermissionWhenThereIsAlreadyPermission() {
+        doReturn(true).when(cleverPush).hasLocationPermission();
+        cleverPush.requestLocationPermission();
+        verify(cleverPush).requestLocationPermission();
+        verify(cleverPush).hasLocationPermission();
+        verifyNoMoreInteractions(cleverPush);
+
+    }
+
+    @Test
+    void testRequestLocationPermissionWhenThereIsNoActivity() {
+        doReturn(false).when(cleverPush).hasLocationPermission();
+        doReturn(null).when(cleverPush).getCurrentActivity();
+        cleverPush.requestLocationPermission();
+        assertThat(cleverPush.ispendingRequestLocationPermissionCall()).isTrue();
+    }
+
+    @Test
+    void testRequestLocationPermissionWhenThereIsActivity() {
+        doReturn(false).when(cleverPush).hasLocationPermission();
+        doReturn(activity).when(cleverPush).getCurrentActivity();
+        cleverPush.requestLocationPermission();
+        assertThat(cleverPush.ispendingRequestLocationPermissionCall()).isFalse();
+        verify(activityCompat).requestPermissions(activity,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 101);
+    }
+
+    @Test
+    void testHasLocationPermission() {
+        doReturn(context).when(cleverPush).getContext();
+        when(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(0);
+        cleverPush.hasLocationPermission();
+        assertThat(cleverPush.hasLocationPermission()).isTrue();
     }
 
 
