@@ -2,16 +2,13 @@ package com.cleverpush;
 
 
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.SessionListener;
-import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.junit.jupiter.api.Assertions;
@@ -26,19 +23,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assume.assumeThat;
-import static org.junit.jupiter.params.shadow.com.univocity.parsers.conversions.Conversions.notNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 class CleverPushTest {
 
