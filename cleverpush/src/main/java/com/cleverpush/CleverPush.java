@@ -2146,10 +2146,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                             setDeSelectAll(true);
                             for (int j = 0; j < channelTopics.length(); j++) {
                                 try {
-                                    JSONObject channelTopic = (JSONObject) channelTopics.get(i);
+                                    JSONObject channelTopic = (JSONObject) channelTopics.get(j);
                                     channelTopic.put("defaultUnchecked", true);
                                     selectedTopics.clear();
-                                    checkedTopics[i] = false;
+                                    checkedTopics[j] = false;
                                 } catch (JSONException e) {
                                     Log.e("CleverPush", e.getLocalizedMessage());
                                 }
