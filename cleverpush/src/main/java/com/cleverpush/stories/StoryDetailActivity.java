@@ -38,9 +38,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_story_detail);
-        this.getActionBar().hide();
         init();
-
     }
 
     private void init() {
