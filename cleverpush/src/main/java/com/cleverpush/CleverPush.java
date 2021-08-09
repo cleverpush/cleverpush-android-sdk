@@ -199,7 +199,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification received callback
-     *
      * @param notificationReceivedListener callback for the notification received
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
@@ -209,7 +208,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification opened callback
-     *
      * @param notificationOpenedListener callback for the notification opened
      */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) {
@@ -219,7 +217,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with subscribed callback
-     *
      * @param subscribedListener callback for subscription
      */
 
@@ -230,7 +227,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel
-     *
      * @param channelId channelID of the channel
      */
     public void init(String channelId) {
@@ -239,7 +235,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback
-     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      */
@@ -249,7 +244,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback
-     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      */
@@ -259,7 +253,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification opened callback and subscribed callback
-     *
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
      */
@@ -269,7 +262,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification received callback and subscribed callback
-     *
      * @param notificationReceivedListener callback for the notification received
      * @param subscribedListener           callback for subscription
      */
@@ -279,7 +271,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and notification opened callback
-     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
@@ -290,7 +281,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with subscribed callback
-     *
      * @param channelId          channelID of the channel
      * @param subscribedListener callback for subscription
      */
@@ -300,7 +290,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and subscribed callback
-     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param subscribedListener           callback for subscription
@@ -311,7 +300,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback and subscribed callback
-     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
@@ -322,7 +310,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received, notification opened callback and subscribed callback
-     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
@@ -334,7 +321,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback and subscribed callback and if there is autoRegister
-     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
@@ -346,7 +332,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and subscribed callback and if there is autoRegister
-     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param subscribedListener           callback for subscription
@@ -358,7 +343,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
-     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
@@ -509,7 +493,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * subscribe or sync subscription
-     *
      * @param autoRegister boolean for auto register
      */
     private void subscribeOrSync(boolean autoRegister) {
@@ -1245,14 +1228,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
         }
 
-        if (notificationOpenedListener == null) {
-            if(openedResult.getNotification().getUrl() != null && !openedResult.getNotification().getUrl().equalsIgnoreCase("")){
-                WebViewActivity.launch((Activity) context, openedResult.getNotification().getUrl());
+        if (this.notificationOpenedListener == null) {
+            String notificationUrl = openedResult.getNotification().getUrl();
+
+            if (notificationUrl != null && !notificationUrl.equalsIgnoreCase("")) {
+                WebViewActivity.launch((Activity) context, notificationUrl);
             }
             unprocessedOpenedNotifications.add(openedResult);
             return false;
         }
-        notificationOpenedListener.notificationOpened(openedResult);
+        this.notificationOpenedListener.notificationOpened(openedResult);
 
         return true;
     }
@@ -2203,11 +2188,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * Will create list of checkbox for the topics.
+     *
      * @param parentLayout        parent layout to add checkboxes
      * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
      * @param checkedTopics       userSelectedTopics
-     * @param deselectAll       is deselectall checkbox is checked or not
+     * @param deselectAll         is deselectall checkbox is checked or not
      * @param nightModeFlags      flag if there is night mode
      * @param selectedTopics      selectedTopics
      */
