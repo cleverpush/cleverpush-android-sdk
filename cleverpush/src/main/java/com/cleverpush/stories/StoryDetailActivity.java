@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,7 +21,7 @@ import com.cleverpush.stories.models.Story;
 import java.util.ArrayList;
 
 
-public class StoryDetailActivity extends Activity implements StoryChangeListener {
+public class StoryDetailActivity extends AppCompatActivity implements StoryChangeListener {
 
     private int selectedPosition = 0;
     private RecyclerView recyclerView;
@@ -38,7 +39,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_story_detail);
-        this.getActionBar().hide();
+        getSupportActionBar().hide();
         init();
 
     }

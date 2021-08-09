@@ -38,7 +38,7 @@ public class CleverPushHttpClient {
         String json = null;
 
         try {
-            con = (HttpURLConnection) new URL(/*BASE_URL + */url).openConnection();
+            con = (HttpURLConnection) new URL(BASE_URL + url).openConnection();
             con.setUseCaches(false);
             con.setConnectTimeout(TIMEOUT);
             con.setReadTimeout(TIMEOUT);

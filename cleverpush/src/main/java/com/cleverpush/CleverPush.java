@@ -53,6 +53,7 @@ import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
 import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
 import com.cleverpush.mapper.Mapper;
 import com.cleverpush.mapper.SubscriptionToListMapper;
+import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
 import com.google.android.gms.common.ConnectionResult;
@@ -113,7 +114,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private Map<String, String> pendingAppBannerEvents = new HashMap<>();
     private String pendingShowAppBannerId = null;
     private String pendingShowAppBannerNotificationId = null;
-    private String currentPageUrl;
+    public String currentPageUrl;
     private AppBannerModule appBannerModule;
     private boolean appBannersDisabled = false;
 
@@ -125,7 +126,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
     private boolean pendingInitFeaturesCall = false;
-    private ArrayList<PageView> pendingPageViews = new ArrayList<>();
+    public ArrayList<PageView> pendingPageViews = new ArrayList<>();
 
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
@@ -507,7 +508,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.getChannelConfig(config -> {
             if (config != null && config.optBoolean("appReviewEnabled")) {
                 try {
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
 
                     if (sharedPreferences.getLong(CleverPushPreferences.APP_REVIEW_SHOWN, 0) == 0) {
                         int appReviewSeconds = config.optInt("appReviewSeconds", 0);
@@ -519,24 +520,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         int appOpens = sharedPreferences.getInt(CleverPushPreferences.APP_OPENS, 1);
 
                         if (currentUnixTime >= allowedUnixTime && appOpens >= appReviewOpens) {
-                            (ActivityLifecycleListener.currentActivity).runOnUiThread(() -> {
+                            (getCurrentActivity()).runOnUiThread(() -> {
                                 new Handler().postDelayed(() -> {
                                     if (sharedPreferences.getLong(CleverPushPreferences.APP_REVIEW_SHOWN, 0) == 0) {
                                         SharedPreferences.Editor editor = sharedPreferences.edit();
                                         editor.putLong(CleverPushPreferences.APP_REVIEW_SHOWN, System.currentTimeMillis() / 1000L);
                                         editor.apply();
 
-                                        FiveStarsDialog dialog = new FiveStarsDialog(
-                                                ActivityLifecycleListener.currentActivity,
-                                                config.optString("appReviewEmail")
-                                        );
-                                        dialog.setRateText(config.optString("appReviewText"))
-                                                .setTitle(config.optString("appReviewTitle"))
-                                                .setPositiveButtonText(config.optString("appReviewYes"))
-                                                .setNegativeButtonText(config.optString("appReviewLater"))
-                                                .setNeverButtonText(config.optString("appReviewNo"))
-                                                .setForceMode(false)
-                                                .show();
+                                        ShowFiveStarsDialog(config);
                                     }
                                 }, appReviewSeconds * 1000);
                             });
@@ -547,6 +538,20 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
             }
         });
+    }
+
+    private void ShowFiveStarsDialog(JSONObject config) {
+        FiveStarsDialog dialog = new FiveStarsDialog(
+                ActivityLifecycleListener.currentActivity,
+                config.optString("appReviewEmail")
+        );
+        dialog.setRateText(config.optString("appReviewText"))
+                .setTitle(config.optString("appReviewTitle"))
+                .setPositiveButtonText(config.optString("appReviewYes"))
+                .setNegativeButtonText(config.optString("appReviewLater"))
+                .setNeverButtonText(config.optString("appReviewNo"))
+                .setForceMode(false)
+                .show();
     }
 
     /**
@@ -606,7 +611,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return outputMap;
     }
 
-    private void checkTags(String urlStr, Map<String, ?> params) {
+    public void checkTags(String urlStr, Map<String, ?> params) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
         try {
@@ -878,88 +883,84 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.checkTags(url, params);
     }
 
-    private void trackSessionStart() {
+    public void trackSessionStart() {
         // reset
         this.sessionVisits = 0;
         this.sessionStartedTimestamp = System.currentTimeMillis() / 1000L;
-
         this.waitForTrackingConsent(() -> this.getChannelConfig(config -> {
-            if (config != null && config.optBoolean("trackAppStatistics") || subscriptionId != null) {
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
-                String lastNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null);
-
-                JSONObject jsonBody = new JSONObject();
-                try {
-                    jsonBody.put("channelId", this.channelId);
-                    jsonBody.put("subscriptionId", subscriptionId);
-                    jsonBody.put("fcmToken", fcmToken);
-                    jsonBody.put("lastNotificationId", lastNotificationId);
-                } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
-                }
-
-                CleverPushHttpClient.post("/subscription/session/start", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        Log.d("CleverPush", "Session started");
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
-                    }
-                });
+            if (config != null && config.optBoolean("trackAppStatistics") || getSubscriptionId(getContext()) != null) {
+               updateServerSessionStart();
             }
         }));
+    }
+
+    public void updateServerSessionStart(){
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+        String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
+        String lastNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null);
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("channelId", getChannelId(getContext()));
+            jsonBody.put("subscriptionId", getSubscriptionId(getContext()));
+            jsonBody.put("fcmToken", fcmToken);
+            jsonBody.put("lastNotificationId", lastNotificationId);
+        } catch (JSONException ex) {
+            Log.e("CleverPush", ex.getMessage(), ex);
+        }
+
+        CleverPushHttpClient.post("/subscription/session/start", jsonBody, new TrackSessionStartResponseHandler().getResponseHandler());
     }
 
     public void increaseSessionVisits() {
         this.sessionVisits += 1;
     }
 
-    private void trackSessionEnd() {
-        if (sessionStartedTimestamp == 0) {
+    public void trackSessionEnd() {
+        if (getSessionStartedTimestamp() == 0) {
             Log.e("CleverPush", "Error tracking session end - session started timestamp is 0");
             return;
         }
 
-        long sessionEndedTimestamp = System.currentTimeMillis() / 1000L;
-        long sessionDuration = sessionEndedTimestamp - sessionStartedTimestamp;
-
         this.waitForTrackingConsent(() -> this.getChannelConfig(config -> {
-            if (config != null && config.optBoolean("trackAppStatistics") || subscriptionId != null) {
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
-
-                JSONObject jsonBody = new JSONObject();
-                try {
-                    jsonBody.put("channelId", this.channelId);
-                    jsonBody.put("subscriptionId", subscriptionId);
-                    jsonBody.put("fcmToken", fcmToken);
-                    jsonBody.put("visits", sessionVisits);
-                    jsonBody.put("duration", sessionDuration);
-                } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
-                }
-
-                CleverPushHttpClient.post("/subscription/session/end", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        Log.d("CleverPush", "Session ended");
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
-                    }
-                });
+            if (config != null && config.optBoolean("trackAppStatistics") || getSubscriptionId(getContext()) != null) {
+               updateServerSessionEnd();
             }
 
             // reset
             this.sessionStartedTimestamp = 0;
             this.sessionVisits = 0;
         }));
+    }
+
+    public void updateServerSessionEnd(){
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+        String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
+        long sessionEndedTimestamp = System.currentTimeMillis() / 1000L;
+        long sessionDuration = sessionEndedTimestamp - getSessionStartedTimestamp();
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("channelId", getChannelId(getContext()));
+            jsonBody.put("subscriptionId", getSubscriptionId(getContext()));
+            jsonBody.put("fcmToken", fcmToken);
+            jsonBody.put("visits", getSessionVisits());
+            jsonBody.put("duration", sessionDuration);
+        } catch (JSONException ex) {
+            Log.e("CleverPush", ex.getMessage(), ex);
+        }
+
+        CleverPushHttpClient.post("/subscription/session/end", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                Log.d("CleverPush", "Session ended");
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+                Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
+            }
+        });
     }
 
     public boolean isSubscribed() {
@@ -2441,7 +2442,15 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return pendingInitFeaturesCall;
     }
 
-    public boolean ispendingRequestLocationPermissionCall() {
+    public boolean isPendingRequestLocationPermissionCall() {
         return pendingRequestLocationPermissionCall;
+    }
+
+    public long getSessionStartedTimestamp() {
+        return sessionStartedTimestamp;
+    }
+
+    public int getSessionVisits() {
+        return sessionVisits;
     }
 }

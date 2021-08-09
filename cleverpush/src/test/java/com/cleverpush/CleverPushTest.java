@@ -6,32 +6,54 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.os.Handler;
+import android.os.Message;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.listener.ChannelConfigListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.SessionListener;
+import com.cleverpush.listener.TrackingConsentListener;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.mockito.stubbing.OngoingStubbing;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+
+import okhttp3.HttpUrl;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
+
+import static android.os.Looper.getMainLooper;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -79,14 +101,17 @@ class CleverPushTest {
     @Mock
     ContextCompat contextCompat;
 
-    CleverPush cleverPush;
-
+    private Handler handler;
+    private CleverPush cleverPush;
+    private MockWebServer mockWebServer;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         cleverPush = Mockito.spy(new CleverPush(context));
+        handler = Mockito.spy(new Handler(getMainLooper()));
         activityLifecycleListener = Mockito.spy(new ActivityLifecycleListener(sessionListener));
+        mockWebServer = new MockWebServer();
     }
 
     @Test
@@ -254,7 +279,7 @@ class CleverPushTest {
         doReturn(false).when(cleverPush).hasLocationPermission();
         doReturn(null).when(cleverPush).getCurrentActivity();
         cleverPush.requestLocationPermission();
-        assertThat(cleverPush.ispendingRequestLocationPermissionCall()).isTrue();
+        assertThat(cleverPush.isPendingRequestLocationPermissionCall()).isTrue();
     }
 
     @Test
@@ -262,7 +287,7 @@ class CleverPushTest {
         doReturn(false).when(cleverPush).hasLocationPermission();
         doReturn(activity).when(cleverPush).getCurrentActivity();
         cleverPush.requestLocationPermission();
-        assertThat(cleverPush.ispendingRequestLocationPermissionCall()).isFalse();
+        assertThat(cleverPush.isPendingRequestLocationPermissionCall()).isFalse();
         verify(activityCompat).requestPermissions(activity,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 101);
     }
 
@@ -274,5 +299,372 @@ class CleverPushTest {
         assertThat(cleverPush.hasLocationPermission()).isTrue();
     }
 
+    @Test
+    void testTrackPageViewWhenNoActivity() {
+        doReturn(null).when(cleverPush).getCurrentActivity();
+        Map<String, Object> params = new HashMap<>();
+        params.put("key", "value");
+        cleverPush.trackPageView("url",params);
+        assertThat(cleverPush.pendingPageViews.get(0).getUrl()).isEqualTo("url");
+        assertThat(cleverPush.pendingPageViews.get(0).getParams()).isEqualTo(params);
+    }
+
+    @Test
+    void testTrackPageViewWhenThereIsActivity() {
+        doReturn(activity).when(cleverPush).getCurrentActivity();
+        Map<String, Object> params = new HashMap<>();
+        params.put("key", "value");
+        cleverPush.trackPageView("https://url.com",params);
+        assertThat(cleverPush.currentPageUrl).isEqualTo("https://url.com");
+        verify(cleverPush).checkTags("https://url.com",params);
+    }
+
+    @Test
+    void tesTrackSessionStartWhenThereIsConfigAndTrackAppStatisticsButNoSubscriptionID() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(null).when(cleverPush).getSubscriptionId(context);
+        doReturn("channelId").when(cleverPush).getChannelId(context);
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null)).thenReturn("token");
+        when(sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null)).thenReturn("notificationD");
+
+        Answer<Void> trackingConsentListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                TrackingConsentListener callback = (TrackingConsentListener) invocation.getArguments()[0];
+                callback.ready();
+                return null;
+            }
+        };
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{ \"trackAppStatistics\": true}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+        };
+        doAnswer(trackingConsentListenerAnswer).when(cleverPush).waitForTrackingConsent(any(TrackingConsentListener.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.trackSessionStart();
+
+        verify(cleverPush).updateServerSessionStart();
+    }
+
+    @Test
+    void tesTrackSessionStartWhenThereIsNoConfigAndTrackAppStatisticsButSubscriptionID() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn("subscriptionId").when(cleverPush).getSubscriptionId(context);
+        doReturn("channelId").when(cleverPush).getChannelId(context);
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null)).thenReturn("token");
+        when(sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null)).thenReturn("notificationD");
+
+        Answer<Void> trackingConsentListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                TrackingConsentListener callback = (TrackingConsentListener) invocation.getArguments()[0];
+                callback.ready();
+                return null;
+            }
+        };
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                callback.ready(null);
+                return null;
+            }
+        };
+        doAnswer(trackingConsentListenerAnswer).when(cleverPush).waitForTrackingConsent(any(TrackingConsentListener.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.trackSessionStart();
+
+        verify(cleverPush).updateServerSessionStart();
+    }
+
+    @Test
+    void tesTrackSessionStartWhenThereIsConfigButNoTrackAppStatisticsAndSubscriptionID() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(null).when(cleverPush).getSubscriptionId(context);
+        Answer<Void> trackingConsentListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                TrackingConsentListener callback = (TrackingConsentListener) invocation.getArguments()[0];
+                callback.ready();
+                return null;
+            }
+        };
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{ }");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+        doAnswer(trackingConsentListenerAnswer).when(cleverPush).waitForTrackingConsent(any(TrackingConsentListener.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.trackSessionStart();
+
+        verify(cleverPush, never()).updateServerSessionStart();
+    }
+
+
+//    @Test
+//    void tesTrackSessionEndWhenThereIsNoSessionStartTime() {
+//        when(cleverPush.getSessionStartedTimestamp()).thenReturn(0L);
+//
+//        cleverPush.trackSessionEnd();
+//
+//        verify(cleverPush).trackSessionEnd();
+//        verifyNoMoreInteractions(cleverPush);
+//    }
+
+    @Test
+    void tesTrackSessionEndWhenThereIsConfigAndTrackAppStatisticsButNoSubscriptionID() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(null).when(cleverPush).getSubscriptionId(context);
+        doReturn("channelId").when(cleverPush).getChannelId(context);
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null)).thenReturn("token");
+        when(cleverPush.getSessionStartedTimestamp()).thenReturn(1L);
+
+        Answer<Void> trackingConsentListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                TrackingConsentListener callback = (TrackingConsentListener) invocation.getArguments()[0];
+                callback.ready();
+                return null;
+            }
+        };
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{ \"trackAppStatistics\": true}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+        };
+        doAnswer(trackingConsentListenerAnswer).when(cleverPush).waitForTrackingConsent(any(TrackingConsentListener.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.trackSessionEnd();
+
+        verify(cleverPush).updateServerSessionEnd();
+    }
+
+    @Test
+    void tesTrackSessionEndWhenThereIsNoConfigAndTrackAppStatisticsButSubscriptionID() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn("subscriptionId").when(cleverPush).getSubscriptionId(context);
+        doReturn("channelId").when(cleverPush).getChannelId(context);
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null)).thenReturn("token");
+        when(cleverPush.getSessionStartedTimestamp()).thenReturn(1L);
+
+        Answer<Void> trackingConsentListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                TrackingConsentListener callback = (TrackingConsentListener) invocation.getArguments()[0];
+                callback.ready();
+                return null;
+            }
+        };
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                callback.ready(null);
+                return null;
+            }
+        };
+        doAnswer(trackingConsentListenerAnswer).when(cleverPush).waitForTrackingConsent(any(TrackingConsentListener.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.trackSessionEnd();
+
+        verify(cleverPush).updateServerSessionEnd();
+    }
+
+    @Test
+    void tesTrackSessionEndWhenThereIsConfigButNoTrackAppStatisticsAndSubscriptionID() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(null).when(cleverPush).getSubscriptionId(context);
+        Answer<Void> trackingConsentListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                TrackingConsentListener callback = (TrackingConsentListener) invocation.getArguments()[0];
+                callback.ready();
+                return null;
+            }
+        };
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{ }");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+        doAnswer(trackingConsentListenerAnswer).when(cleverPush).waitForTrackingConsent(any(TrackingConsentListener.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.trackSessionEnd();
+
+        verify(cleverPush, never()).updateServerSessionEnd();
+    }
+
+    @Test
+    void testUpdateServerSessionStart(){
+        String expectedFCMToken = "token";
+        String expectedLastNotificationID = "notificationD";
+        String expectedSubscriptionID = "subscriptionID";
+        String expectedChannelID = "channelId";
+
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null)).thenReturn(expectedFCMToken);
+        when(sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null)).thenReturn(expectedLastNotificationID);
+        doReturn(expectedSubscriptionID).when(cleverPush).getSubscriptionId(context);
+        doReturn(expectedChannelID).when(cleverPush).getChannelId(context);
+
+        try {
+            mockWebServer.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        HttpUrl baseUrl = mockWebServer.url("/subscription/session/start");
+        cleverPush.setApiEndpoint(baseUrl.toString().replace("/subscription/session/start",""));
+        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
+        mockWebServer.enqueue(mockResponse);
+
+        cleverPush.updateServerSessionStart();
+
+        try {
+            RecordedRequest recordedRequest = mockWebServer.takeRequest();
+            assertThat(recordedRequest.getPath()).isEqualTo("/subscription/session/start");
+            assertThat(recordedRequest.getMethod()).isEqualTo("POST");
+            assertThat(recordedRequest.getBody().readUtf8()).isEqualTo("{\"lastNotificationId\":\"notificationD\",\"subscriptionId\":\"subscriptionID\",\"fcmToken\":\"token\",\"channelId\":\"channelId\"}");
+            mockWebServer.shutdown();
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void testUpdateServerSessionEnd(){
+        String expectedFCMToken = "token";
+        Long expectedSessionStartedTimestamp = 1L;
+        int expectedSessionVisits = 1;
+        String expectedSubscriptionID = "subscriptionID";
+        String expectedChannelID = "channelId";
+
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null)).thenReturn(expectedFCMToken);
+        when(cleverPush.getSessionStartedTimestamp()).thenReturn(expectedSessionStartedTimestamp);
+        doReturn(expectedChannelID).when(cleverPush).getChannelId(context);
+        doReturn(expectedSubscriptionID).when(cleverPush).getSubscriptionId(context);
+        doReturn(expectedSessionVisits).when(cleverPush).getSessionVisits();
+
+        try {
+            mockWebServer.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        HttpUrl baseUrl = mockWebServer.url("/subscription/session/end");
+        cleverPush.setApiEndpoint(baseUrl.toString().replace("/subscription/session/end",""));
+        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
+        mockWebServer.enqueue(mockResponse);
+
+        String expectedDuration = String.valueOf(System.currentTimeMillis() / 1000L-expectedSessionStartedTimestamp);
+        cleverPush.updateServerSessionEnd();
+
+        try {
+            RecordedRequest recordedRequest = mockWebServer.takeRequest();
+            assertThat(recordedRequest.getPath()).isEqualTo("/subscription/session/end");
+            assertThat(recordedRequest.getMethod()).isEqualTo("POST");
+            assertThat(recordedRequest.getBody().readUtf8()).isEqualTo("{\"duration\":"+expectedDuration+",\"visits\":1,\"subscriptionId\":\"subscriptionID\",\"fcmToken\":\"token\",\"channelId\":\"channelId\"}");
+            mockWebServer.shutdown();
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void testInitAppReview(){
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        doReturn(activity).when(cleverPush).getCurrentActivity();
+        when(sharedPreferences.getLong(CleverPushPreferences.APP_REVIEW_SHOWN, 0)).thenReturn(0L);
+        when(sharedPreferences.getLong(CleverPushPreferences.SUBSCRIPTION_CREATED_AT, 0)).thenReturn(1L);
+        when(sharedPreferences.getInt(CleverPushPreferences.APP_OPENS, 1)).thenReturn(1);
+        when(cleverPush.getSessionStartedTimestamp()).thenReturn(1L);
+
+
+
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{\n" +
+                            "  \"appReviewEnabled\": true,\n" +
+                            "  \"appReviewSeconds\": 1,\n" +
+                            "  \"appReviewOpens\": 1,\n" +
+                            "  \"appReviewDays\": 1\n" +
+                            "}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        Answer<Void> runOnUiThreadAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                Runnable callback = (Runnable) invocation.getArguments()[0];
+                callback.run();
+                return null;
+            }
+        };
+        final Handler handler = mock(Handler.class);
+        Answer<Void> handlerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                Message msg = invocation.getArgument(0, Message.class);
+                msg.getCallback().run();
+                return null;
+            }
+        };
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+        doAnswer(runOnUiThreadAnswer).when(activity).runOnUiThread(any(Runnable.class));
+        doAnswer(handlerAnswer).when(handler).sendMessageAtTime(any(Message.class), anyLong());
+
+        cleverPush.initAppReview();
+
+    }
 
 }

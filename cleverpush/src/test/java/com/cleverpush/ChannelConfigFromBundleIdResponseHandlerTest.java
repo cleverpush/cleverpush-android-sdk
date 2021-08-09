@@ -1,7 +1,6 @@
 package com.cleverpush;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -14,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
@@ -62,7 +60,7 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
             e.printStackTrace();
         }
         HttpUrl baseUrl = mockWebServer.url("/v1/chat/");
-        MockResponse mockResponse = new MockResponse().setBody(new TestFileReader("test1.json").getContent()).setResponseCode(200);
+        MockResponse mockResponse = new MockResponse().setBody(new TestFileReader("test.json").getContent()).setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
         doReturn(context).when(cleverPush).getContext();
         doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);

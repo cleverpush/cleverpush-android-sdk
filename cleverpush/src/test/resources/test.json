@@ -3,6 +3,7 @@
 	"notificationCategoryGroups": [],
 	"staticEndpoint": "https://static.cleverpush.com",
 	"autoRegister": true,
+	"trackAppStatistics": true,
 	"confirmAlertThemeButtonTextColor": "",
 	"channelTopics": [{
 		"createdAt": "2021-04-08T06:00:59.585Z",
