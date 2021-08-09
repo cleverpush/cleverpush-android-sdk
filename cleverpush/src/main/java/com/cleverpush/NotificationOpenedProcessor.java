@@ -32,17 +32,17 @@ public class NotificationOpenedProcessor {
         result.setNotification(notification);
         result.setSubscription(subscription);
 
-        CleverPush cleverPush = CleverPush.getInstance(context);
-
-        cleverPush.trackNotificationClicked(notificationId, subscriptionId);
-        cleverPush.fireNotificationOpenedListener(result);
-
         // open launcher activity
         Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         if (launchIntent != null) {
             launchIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT/* | Intent.FLAG_ACTIVITY_NEW_TASK*/);
             context.startActivity(launchIntent);
         }
+
+        CleverPush cleverPush = CleverPush.getInstance(context);
+
+        cleverPush.trackNotificationClicked(notificationId, subscriptionId);
+        cleverPush.fireNotificationOpenedListener(result, context);
 
 		BadgeHelper.update(context, cleverPush.getIncrementBadge());
     }
