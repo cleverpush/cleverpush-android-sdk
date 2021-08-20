@@ -29,7 +29,9 @@ public class CleverPushHttpClient {
 
             }
         }).start();
-        new Thread(() -> makeRequest(url, null, null, responseHandler)).start();
+
+        new Thread(() -> makeRequest(url, null, null, responseHandler) ).start();
+        ;
     }
 
     private static void makeRequest(String url, String method, JSONObject jsonBody, ResponseHandler responseHandler) {

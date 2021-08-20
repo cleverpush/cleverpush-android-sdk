@@ -5,6 +5,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.cleverpush.listener.AddTagCompletedListener;
+import com.cleverpush.responsehandlers.AddSubscriptionTagResponseHandler;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,31 +69,8 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
 
             tags.add(tagIds[currentPositionOfTagToAdd]);
 
-            CleverPushHttpClient.post("/subscription/tag", jsonBody, addTagResponseHandler(tagIds[currentPositionOfTagToAdd], addTagCompletedListener, currentPositionOfTagToAdd, tags));
+            CleverPushHttpClient.post("/subscription/tag", jsonBody, new AddSubscriptionTagResponseHandler().getResponseHandler(tagIds[currentPositionOfTagToAdd], addTagCompletedListener, currentPositionOfTagToAdd, tags));
         }
-    }
-
-    private CleverPushHttpClient.ResponseHandler addTagResponseHandler(String tagId, AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd, Set<String> tags) {
-        return new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
-                editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
-                editor.commit();
-
-                if (addTagCompletedListener != null) {
-                    addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error adding tag - HTTP " + statusCode);
-            }
-        };
     }
 
     public Set<String> getSubscriptionTags() {

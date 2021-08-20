@@ -53,7 +53,10 @@ import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
 import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
 import com.cleverpush.mapper.Mapper;
 import com.cleverpush.mapper.SubscriptionToListMapper;
+import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
+import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
+import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
 import com.google.android.gms.common.ConnectionResult;
@@ -63,14 +66,12 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -972,7 +973,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void subscribe(boolean newSubscription) {
-        if (this.subscriptionInProgress) {
+        if (isSubscriptionInProgress()) {
             return;
         }
         this.subscriptionInProgress = true;
@@ -1024,34 +1025,22 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void unsubscribe() {
-        String subscriptionId = getSubscriptionId(CleverPush.context);
+        String subscriptionId = getSubscriptionId(getContext());
         if (subscriptionId != null) {
-            JSONObject jsonBody = new JSONObject();
+            JSONObject jsonBody = getJsonObject();
             try {
-                jsonBody.put("channelId", this.channelId);
+                jsonBody.put("channelId", getChannelId(getContext()));
                 jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException e) {
                 Log.e("CleverPush", "Error", e);
             }
 
-            CleverPush self = this;
-            CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                @Override
-                public void onSuccess(String response) {
-                    try {
-                        Log.d("CleverPush", "unsubscribe success");
-                        self.clearSubscriptionData();
-                    } catch (Throwable t) {
-                        Log.e("CleverPush", "Error", t);
-                    }
-                }
-
-                @Override
-                public void onFailure(int statusCode, String response, Throwable t) {
-                    Log.e("CleverPush", "Failed while unsubscribe request - " + statusCode + " - " + response, t);
-                }
-            });
+            CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody, new UnSubscribeResponseHandler(this).getResponseHandler());
         }
+    }
+
+    public JSONObject getJsonObject() {
+        return new JSONObject();
     }
 
     public void setTrackingConsentRequired(Boolean required) {
@@ -1060,9 +1049,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public void waitForTrackingConsent(TrackingConsentListener listener) {
         if (listener != null) {
-            if (trackingConsentRequired && !hasTrackingConsent) {
-                if (!hasTrackingConsentCalled) {
-                    trackingConsentListeners.add(listener);
+            if (isTrackingConsentRequired() && !hasTrackingConsentCalled()) {
+                if (!hasTrackingConsentCalled()) {
+                    getTrackingConsentListeners().add(listener);
                 }
             } else {
                 listener.ready();
@@ -1197,10 +1186,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void fireSubscribedListener(final String subscriptionId) {
-        if (subscribedListener == null || subscriptionId == null) {
+        if (getSubscribedListener() == null || subscriptionId == null) {
             return;
         }
-        subscribedListener.subscribed(subscriptionId);
+        getSubscribedListener().subscribed(subscriptionId);
     }
 
     public void removeSubscribedListener() {
@@ -1311,13 +1300,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public Set<String> getSubscriptionTags() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
+        return getSharedPreferences(getContext()).getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
     }
 
     public Set<String> getSubscriptionTopics() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>());
+        return getSharedPreferences(getContext()).getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>());
     }
 
     public boolean hasSubscriptionTopics() {
@@ -1339,7 +1326,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public Map<String, Object> getSubscriptionAttributes() {
         Map<String, Object> outputMap = new HashMap<>();
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         try {
             if (sharedPreferences != null) {
                 String jsonString = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, (new JSONObject()).toString());
@@ -1400,7 +1387,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
     }
 
-    private Set<CustomAttribute> getAvailableAttributesFromConfig(JSONObject channelConfig) {
+    public Set<CustomAttribute> getAvailableAttributesFromConfig(JSONObject channelConfig) {
         Set<CustomAttribute> attributes = new HashSet<>();
         if (channelConfig != null && channelConfig.has("customAttributes")) {
             try {
@@ -1540,7 +1527,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             editor.putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion);
             editor.commit();
 
-
             this.getSubscriptionId(subscriptionId -> {
                 if (subscriptionId != null) {
                     JSONObject jsonBody = new JSONObject();
@@ -1560,25 +1546,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                     Log.d("CleverPush", "setSubscriptionTopics: " + Arrays.toString(topicIds));
 
-
-                    CleverPush instance = this;
-                    CleverPushHttpClient.post("/subscription/sync/" + this.channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                        @Override
-                        public void onSuccess(String response) {
-                            TopicsChangedListener topicsChangedListener = instance.getTopicsChangedListener();
-                            if (topicsChangedListener != null) {
-                                topicsChangedListener.changed(new HashSet<>(Arrays.asList(topicIds)));
-                            }
-                            if (completionListener != null) {
-                                completionListener.onComplete();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(int statusCode, String response, Throwable throwable) {
-                            Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
-                        }
-                    });
+                    CleverPushHttpClient.post("/subscription/sync/" + this.channelId, jsonBody, new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicIds, completionListener));
                 }
             });
         }).start();
@@ -1587,9 +1555,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     public void setSubscriptionAttribute(String attributeId, String value) {
         this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId != null) {
-                JSONObject jsonBody = new JSONObject();
+                JSONObject jsonBody = getJsonObject();
                 try {
-                    jsonBody.put("channelId", this.channelId);
+                    jsonBody.put("channelId", getChannelId(getContext()));
                     jsonBody.put("attributeId", attributeId);
                     jsonBody.put("value", value);
                     jsonBody.put("subscriptionId", subscriptionId);
@@ -1597,32 +1565,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     Log.e("CleverPush", ex.getMessage(), ex);
                 }
 
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
                 Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
                 subscriptionAttributes.put(attributeId, value);
 
-                CleverPushHttpClient.post("/subscription/attribute", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                    @Override
-                    public void onSuccess(String response) {
-                        try {
-                            if (sharedPreferences != null) {
-                                JSONObject jsonObject = new JSONObject(subscriptionAttributes);
-                                String jsonString = jsonObject.toString();
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
-                                editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-                                editor.commit();
-                            }
-                        } catch (Exception ex) {
-                            Log.e("CleverPush", ex.getMessage(), ex);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, String response, Throwable throwable) {
-                        Log.e("CleverPush", "Error setting attribute - HTTP " + statusCode);
-                    }
-                });
+                CleverPushHttpClient.post("/subscription/attribute", jsonBody, new SetSubscriptionAttributeResponseHandler().getResponseHandler(subscriptionAttributes));
             }
         })).start());
     }
@@ -1768,12 +1714,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void trySubscriptionSync() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         int currentTime = (int) (System.currentTimeMillis() / 1000L);
         int lastSync = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0);
         int nextSync = lastSync + 5; // allow sync every 5s
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        if (!this.subscriptionInProgress && subscriptionId != null && nextSync < currentTime) {
+        if (!isSubscriptionInProgress() && subscriptionId != null && nextSync < currentTime) {
             this.subscribe(false);
         }
     }
@@ -1806,7 +1752,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public Set<Notification> getNotifications() {
         Gson gson = new Gson();
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
 
         String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
         if (notificationsJson != null) {
@@ -1921,11 +1867,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void triggerAppBannerEvent(String key, String value) {
-        if (this.appBannerModule == null) {
+        if (getAppBannerModule() == null) {
             pendingAppBannerEvents.put(key, value);
             return;
         }
-        this.appBannerModule.triggerEvent(key, value);
+        getAppBannerModule().triggerEvent(key, value);
     }
 
     public void showAppBanner(String bannerId) {
@@ -2321,7 +2267,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public boolean getAutoClearBadge() {
-        return autoClearBadge;
+        return this.autoClearBadge;
     }
 
     public void setIncrementBadge(boolean incrementBadge) {
@@ -2329,7 +2275,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public boolean getIncrementBadge() {
-        return incrementBadge;
+        return this.incrementBadge;
     }
 
     public void enableDevelopmentMode() {
@@ -2341,15 +2287,17 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return this.developmentMode;
     }
 
-    private void clearSubscriptionData() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
-        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC).apply();
-        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT).apply();
-        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_TOPICS).apply();
-        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION).apply();
-        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_TAGS).apply();
-        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
+    public void clearSubscriptionData() {
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+        editor.apply();
     }
 
     public boolean isAppBannersDisabled() {
@@ -2452,5 +2400,33 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public int getSessionVisits() {
         return sessionVisits;
+    }
+
+    public SubscribedListener getSubscribedListener() {
+        return this.subscribedListener;
+    }
+
+    public boolean isSubscriptionInProgress() {
+        return this.subscriptionInProgress;
+    }
+
+    public boolean isTrackingConsentRequired() {
+        return trackingConsentRequired;
+    }
+
+    public boolean hasTrackingConsent() {
+        return hasTrackingConsent;
+    }
+
+    public boolean hasTrackingConsentCalled() {
+        return hasTrackingConsentCalled;
+    }
+
+    public Collection<TrackingConsentListener> getTrackingConsentListeners() {
+        return trackingConsentListeners;
+    }
+
+    public Map<String, String> getPendingAppBannerEvents() {
+        return pendingAppBannerEvents;
     }
 }

@@ -1,9 +1,10 @@
-package com.cleverpush;
+package com.cleverpush.responsehandlers;
 
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.cleverpush.CleverPush;
 import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
 
 import org.junit.jupiter.api.AfterEach;
