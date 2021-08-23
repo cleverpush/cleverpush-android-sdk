@@ -4,14 +4,18 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RatingBar;
 import android.widget.TextView;
+
+import java.lang.reflect.Field;
 
 public class FiveStarsDialog implements DialogInterface.OnClickListener {
 
@@ -91,8 +95,8 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         final Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent.setType("text/email");
         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{supportEmail});
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "App Report (" + context.getPackageName() + ")");
-        emailIntent.putExtra(Intent.EXTRA_TEXT, "");
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "App Report (" + getApplicationName(context) + ")");
+        emailIntent.putExtra(Intent.EXTRA_TEXT, getDeviceInfo());
         context.startActivity(Intent.createChooser(emailIntent, "Send mail..."));
     }
 
@@ -183,4 +187,20 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         return this;
     }
 
+    public static String getApplicationName(Context context) {
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
+        int stringId = applicationInfo.labelRes;
+        return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : context.getString(stringId);
+    }
+
+    private String getDeviceInfo(){
+        Field[] fields = Build.VERSION_CODES.class.getFields();
+        String deviceInfo = "";
+        deviceInfo += "\n OS: " +fields[Build.VERSION.SDK_INT].getName();
+        deviceInfo += "\n OS Version: " + android.os.Build.VERSION.SDK_INT;
+        deviceInfo += "\n Manufacturer: " + Build.MANUFACTURER;
+        deviceInfo += "\n Device: " + android.os.Build.DEVICE;
+        deviceInfo += "\n Model: " + android.os.Build.MODEL;
+        return deviceInfo;
+    }
 }
