@@ -55,6 +55,7 @@ import com.cleverpush.mapper.Mapper;
 import com.cleverpush.mapper.SubscriptionToListMapper;
 import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
+import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
@@ -1814,17 +1815,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                             Log.e("CleverPush", ex.getMessage(), ex);
                         }
 
-                        CleverPushHttpClient.post("/subscription/conversion", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                            @Override
-                            public void onSuccess(String response) {
-                                Log.d("CleverPush", "Event successfully tracked: " + eventName);
-                            }
-
-                            @Override
-                            public void onFailure(int statusCode, String response, Throwable throwable) {
-                                Log.e("CleverPush", "Error tracking event - HTTP " + statusCode);
-                            }
-                        });
+                        CleverPushHttpClient.post("/subscription/conversion", jsonBody, new TrackEventResponseHandler().getResponseHandler(eventName));
                     }
                 });
 

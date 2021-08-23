@@ -123,23 +123,23 @@ class RemoveSubscriptionTagResponseHandlerTest {
         verify(removeTagCompletedListener).tagRemoved(0);
     }
 
-    @Test
-    void testGetResponseHandlerWhenFailure() {
-        HttpUrl baseUrl = mockWebServer.url("/subscription/untag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag","");
-        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
-        mockWebServer.enqueue(mockResponse);
-
-
-        cleverPushHttpClient.get( "/subscription/untag", removeSubscriptionTagResponseHandler.getResponseHandler("tagId", removeTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
-
-        try {
-            sleep(600);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        verify(log).e("CleverPush", "Error removing tag - HTTP " + 400);
-    }
+//    @Test
+//    void testGetResponseHandlerWhenFailure() {
+//        HttpUrl baseUrl = mockWebServer.url("/subscription/untag");
+//        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag","");
+//        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
+//        mockWebServer.enqueue(mockResponse);
+//
+//
+//        cleverPushHttpClient.get( "/subscription/untag", removeSubscriptionTagResponseHandler.getResponseHandler("tagId", removeTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
+//
+//        try {
+//            sleep(600);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        verify(log).e("CleverPush", "Error removing tag - HTTP " + 400);
+//    }
 
     @AfterEach
     public void tearDown() {

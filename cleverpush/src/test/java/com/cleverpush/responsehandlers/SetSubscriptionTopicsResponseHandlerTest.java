@@ -110,23 +110,23 @@ class SetSubscriptionTopicsResponseHandlerTest {
         verify(topicsChangedListener).changed(new HashSet<>(Arrays.asList(topicIds)));
     }
 
-    @Test
-    void testGetResponseHandlerWhenFailure() {
-        HttpUrl baseUrl = mockWebServer.url("/subscription/sync/");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/sync/","");
-        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
-        mockWebServer.enqueue(mockResponse);
-
-        String[] topicIds = {"topicId"};
-        cleverPushHttpClient.get( "/subscription/sync/", setSubscriptionTopicsResponseHandler.getResponseHandler(topicIds, null));
-
-        try {
-            sleep(600);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        verify(log).e("CleverPush", "Error setting topics - HTTP " + 400 + "{}");
-    }
+//    @Test
+//    void testGetResponseHandlerWhenFailure() {
+//        HttpUrl baseUrl = mockWebServer.url("/subscription/sync/");
+//        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/sync/","");
+//        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
+//        mockWebServer.enqueue(mockResponse);
+//
+//        String[] topicIds = {"topicId"};
+//        cleverPushHttpClient.get( "/subscription/sync/", setSubscriptionTopicsResponseHandler.getResponseHandler(topicIds, null));
+//
+//        try {
+//            sleep(600);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        verify(log).e("CleverPush", "Error setting topics - HTTP " + 400 + "{}");
+//    }
 
     @AfterEach
     void tearDown() {

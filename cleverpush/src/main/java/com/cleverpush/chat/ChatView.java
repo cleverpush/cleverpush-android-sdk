@@ -125,7 +125,7 @@ public class ChatView extends WebView {
     }
 
     void init() {
-        this.handler = new Handler();
+        //this.handler = getNewHandler();
         Context context = this.getContext();
 
         this.getSettings().setJavaScriptEnabled(true) ;
@@ -162,5 +162,9 @@ public class ChatView extends WebView {
 
     public String getLastSubscriptionId() {
         return lastSubscriptionId;
+    }
+
+    public Handler getNewHandler() {
+        return new Handler();
     }
 }

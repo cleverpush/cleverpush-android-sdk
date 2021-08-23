@@ -18,6 +18,7 @@ import org.mockito.MockitoAnnotations;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.logging.LogRecord;
 
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
@@ -27,6 +28,7 @@ import static java.lang.Thread.sleep;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.validateMockitoUsage;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -132,5 +134,11 @@ class AddSubscriptionTagResponseHandlerTest {
 
     @AfterEach
     void tearDown() {
+        try {
+            mockWebServer.shutdown();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        validateMockitoUsage();
     }
 }

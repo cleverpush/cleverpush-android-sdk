@@ -85,7 +85,7 @@ class SetSubscriptionAttributeResponseHandlerTest {
         cleverPushHttpClient.get( "/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(subscriptionAttributes));
 
         try {
-            sleep(6000);
+            sleep(600);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -98,23 +98,23 @@ class SetSubscriptionAttributeResponseHandlerTest {
         verify(editor).commit();
     }
 
-    @Test
-    void testGetResponseHandlerWhenFailure() {
-        HttpUrl baseUrl = mockWebServer.url("/subscription/attribute");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/attribute","");
-        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
-        mockWebServer.enqueue(mockResponse);
-
-
-        cleverPushHttpClient.get( "/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(anyMap()));
-
-        try {
-            sleep(600);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        verify(log).e("CleverPush", "Error setting attribute - HTTP " + 400);
-    }
+//    @Test
+//    void testGetResponseHandlerWhenFailure() {
+//        HttpUrl baseUrl = mockWebServer.url("/subscription/attribute");
+//        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/attribute","");
+//        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
+//        mockWebServer.enqueue(mockResponse);
+//
+//
+//        cleverPushHttpClient.get( "/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(anyMap()));
+//
+//        try {
+//            sleep(600);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        verify(log).e("CleverPush", "Error setting attribute - HTTP " + 400);
+//    }
 
 
     @AfterEach
