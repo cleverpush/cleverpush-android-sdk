@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.1
+* Optimized app review feedback email
+
 ## 1.16.0
 * Added App Stories
 * Added methods for adding / removing multiple tags at once
