@@ -15,8 +15,6 @@ import java.util.Set;
 
 public class AddSubscriptionTagResponseHandler {
 
-    private Log Log;
-
     public CleverPushHttpClient.ResponseHandler getResponseHandler(String tagId, AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd, Set<String> tags) {
            return new CleverPushHttpClient.ResponseHandler() {
             @Override
@@ -34,7 +32,6 @@ public class AddSubscriptionTagResponseHandler {
             }
         };
     }
-
 
     public void updateSubscriptionTags(Set<String> tags) {
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());

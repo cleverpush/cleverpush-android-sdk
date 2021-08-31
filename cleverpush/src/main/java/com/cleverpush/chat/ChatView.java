@@ -17,7 +17,6 @@ public class ChatView extends WebView {
 
     public ChatView(Context context) {
         super(context);
-
         this.init();
     }
 
@@ -125,10 +124,11 @@ public class ChatView extends WebView {
     }
 
     void init() {
-        //this.handler = getNewHandler();
+        WebView webView = this;
+        this.handler = new Handler();
         Context context = this.getContext();
 
-        this.getSettings().setJavaScriptEnabled(true) ;
+        this.getSettings().setJavaScriptEnabled(true);
         this.getSettings().setUseWideViewPort(true);
         this.getSettings().setLoadWithOverviewMode(true);
         this.getSettings().setDomStorageEnabled(true);
@@ -162,9 +162,5 @@ public class ChatView extends WebView {
 
     public String getLastSubscriptionId() {
         return lastSubscriptionId;
-    }
-
-    public Handler getNewHandler() {
-        return new Handler();
     }
 }

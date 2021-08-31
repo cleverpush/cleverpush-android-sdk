@@ -1,5 +1,6 @@
 package com.cleverpush;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -18,11 +19,14 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
     private String[] tagIds;
     private String subscriptionId;
     private String channelId;
+    private SharedPreferences sharedPreferences;
+    Set<String> tags;
 
-    public AddSubscriptionTags(String subscriptionId, String channelId, String... tagIds) {
+    public AddSubscriptionTags(String subscriptionId, String channelId, SharedPreferences sharedPreferences, String... tagIds) {
         this.subscriptionId = subscriptionId;
         this.channelId = channelId;
         this.tagIds = tagIds;
+        this.sharedPreferences = sharedPreferences;
     }
 
     @Override
@@ -48,7 +52,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
 
     public void addSubscriptionTag(AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd) {
         if (subscriptionId != null) {
-            Set<String> tags = this.getSubscriptionTags();
+            tags = this.getSubscriptionTags();
             if (tags.contains(tagIds[currentPositionOfTagToAdd])) {
                 if (addTagCompletedListener != null) {
                     addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);
@@ -58,7 +62,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
 
             }
 
-            JSONObject jsonBody = new JSONObject();
+            JSONObject jsonBody = getJsonObject();
             try {
                 jsonBody.put("channelId", this.channelId);
                 jsonBody.put("tagId", tagIds[currentPositionOfTagToAdd]);
@@ -74,8 +78,10 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
     }
 
     public Set<String> getSubscriptionTags() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
     }
 
+    public JSONObject getJsonObject() {
+        return new JSONObject();
+    }
 }

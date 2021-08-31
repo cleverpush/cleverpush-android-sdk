@@ -11,11 +11,13 @@ import android.os.Message;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.SortedList;
 
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
+import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.listener.SubscribedListener;
@@ -36,6 +38,7 @@ import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,13 +54,17 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 import static android.os.Looper.getMainLooper;
 import static com.google.common.truth.Truth.assertThat;
+import static java.lang.Thread.sleep;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.ignoreStubs;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.validateMockitoUsage;
@@ -126,7 +133,8 @@ class CleverPushTest {
     SubscriptionManager subscriptionManager;
 
     @Mock
-    SubscriptionManager.RegisteredHandler registeredHandler;
+    CompletionListener completionListener;
+
 
     @Mock
     JSONObject jsonObject;
@@ -1129,62 +1137,385 @@ class CleverPushTest {
 //        //verify(cleverPush).subscribe(false);
 //        verifyNoMoreInteractions(cleverPush);
 //    }
-//
-//    @Test
-//    void testSubscribeWhenNewSubscriptionIdNull(){
-//        doReturn(false).when(cleverPush).isSubscriptionInProgress();
-//        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
-//
-//        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
-//            public Void answer(InvocationOnMock invocation) {
-//                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
-//                try {
-//                    JSONObject responseJson = new JSONObject("{}");
-//                    callback.ready(responseJson);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                return null;
-//            }
-//        };
-//
-//        Answer<Void> subscriptionManagerAnswer = new Answer<Void>() {
-//            public Void answer(InvocationOnMock invocation) {
-//                SubscriptionManager callback = (SubscriptionManager) invocation.getArguments()[0];
-//                try {
-//                    JSONObject responseJson = new JSONObject("{}");
-//                    callback.subscribe(responseJson, registeredHandler);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                return null;
-//            }
-//        };
-//
-//        Answer<Void> registeredHandlerAnswer = new Answer<Void>() {
-//            public Void answer(InvocationOnMock invocation) {
-//                SubscriptionManager.RegisteredHandler callback = (SubscriptionManager.RegisteredHandler) invocation.getArguments()[0];
-//                callback.complete(null);
-//                return null;
-//            }
-//        };
-//
-//        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
-//        doAnswer(registeredHandlerAnswer).when(registeredHandler).complete(null);
-//        try {
-//            JSONObject responseJson = new JSONObject("{}");
-//            doAnswer(subscriptionManagerAnswer).when(subscriptionManager).subscribe(responseJson,registeredHandler);
-//
-//        } catch (JSONException exception) {
-//            exception.printStackTrace();
-//        }
-//
-//        cleverPush.subscribe(false);
-//
-//        //verify(cleverPush).subscribe(false);
-//    }
+
+    @Test
+    void testSubscribeWhenNewSubscriptionIdNull(){
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete(null);
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(false);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener(null);
+        verify(cleverPush).setSubscriptionId(null);
+       // verifyNoMoreInteractions(cleverPush);
+        //verifyNoMoreInteractions(ignoreStubs(cleverPush));
+
+
+    }
+
+    @Test
+    void testSubscribeWhenConfigIsNull(){
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                callback.ready(null);
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush, never()).updatePendingTopicsDialog(true);
+    }
+
+    @Test
+    void testSubscribeWhenConfirmAlertHideChannelTopicsTrue(){
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{\n" +
+                            "\t\"confirmAlertHideChannelTopics\": true,\n" +
+                            "}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush, never()).updatePendingTopicsDialog(true);
+    }
+
+    @Test
+    void testSubscribeWhenIsConfirmAlertHideChannelTopicsFalseAndNoChannelTopics(){
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{\n" +
+                            "\t\"confirmAlertHideChannelTopics\": false,\n" +
+                            "}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush, never()).updatePendingTopicsDialog(true);
+    }
+
+    @Test
+    void testSubscribeWhenThereISChannelTopicsButSubscriptionTopicsIsNull(){
+        Set<String> selectedTopicIds = new HashSet<>();
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+        doReturn(null).when(cleverPush).getSubscriptionTopics();
+        doNothing().when(cleverPush).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+        doNothing().when(cleverPush).updatePendingTopicsDialog(true);
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{\n" +
+                            "\t\"confirmAlertHideChannelTopics\": false,\n" +
+                            "\t\"channelTopics\": [\"topicId\"]\n" +
+                            "}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush).updatePendingTopicsDialog(true);
+        verify(cleverPush).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+    }
+
+    @Test
+    void testSubscribeWhenThereISChannelTopicsButSubscriptionTopicsSizeIsZero(){
+        Set<String> subscriptionTopics = new HashSet<String>();;
+        Set<String> selectedTopicIds = new HashSet<>();
+
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+        doReturn(subscriptionTopics).when(cleverPush).getSubscriptionTopics();
+        doNothing().when(cleverPush).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+        doNothing().when(cleverPush).updatePendingTopicsDialog(true);
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{\n" +
+                            "\t\"confirmAlertHideChannelTopics\": false,\n" +
+                            "\t\"channelTopics\": [\"topicId\"]\n" +
+                            "}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush).updatePendingTopicsDialog(true);
+        verify(cleverPush).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+    }
+
+    @Test
+    void testSubscribeWhenThereISChannelTopicsButSubscriptionTopicsSizeIsNotZero(){
+        Set<String> subscriptionTopics = new HashSet<String>();
+        subscriptionTopics.add("subscriptionId");
+        Set<String> selectedTopicIds = new HashSet<>();
+
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+        doReturn(subscriptionTopics).when(cleverPush).getSubscriptionTopics();
+        doNothing().when(cleverPush).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+        doNothing().when(cleverPush).updatePendingTopicsDialog(true);
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{\n" +
+                            "\t\"confirmAlertHideChannelTopics\": false,\n" +
+                            "\t\"channelTopics\": [\"topicId\"]\n" +
+                            "}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush).updatePendingTopicsDialog(true);
+        verify(cleverPush, never()).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+    }
+
+    @Test
+    void testSubscribeWhenIsConfirmAlertHideChannelTopicsFalse(){
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{\n" +
+                            "\t\"confirmAlertHideChannelTopics\": false,\n" +
+                            "}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush, never()).updatePendingTopicsDialog(true);
+    }
+
+    @Test
+    void testSubscribeWhenConfirmAlertShownTrue(){
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+        doReturn(true).when(cleverPush).isConfirmAlertShown();
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                callback.ready(null);
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush, never()).setConfirmAlertShown();
+    }
+
+    @Test
+    void testSubscribeWhenConfirmAlertShownFalse(){
+        doReturn(false).when(cleverPush).isSubscriptionInProgress();
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+        doReturn(false).when(cleverPush).isConfirmAlertShown();
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                callback.ready(null);
+                return null;
+            }
+        };
+
+        doAnswer((Answer<Void>) invocation -> {
+            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
+            registeredHandler.complete("subscriptionID");
+            return null;
+        }).when(subscriptionManager)
+                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+
+        cleverPush.subscribe(true);
+
+        assertThat(cleverPush.isSubscriptionInProgress()).isFalse();
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+
+        verify(cleverPush).setConfirmAlertShown();
+    }
 
     @Test
     void testUnsubscribe(){
@@ -1328,6 +1659,98 @@ class CleverPushTest {
         }
 
         cleverPush.unsubscribe();
+        assertThrows(
+                JSONException.class,
+                () -> jsonObject.put("channelId", "channelId"),
+                "Error"
+        );
+    }
+
+    @Test
+    void testSetSubscriptionTopics(){
+        String[] topicIds = new String[] {"topicId"};
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        doReturn(editor).when(sharedPreferences).edit();
+        doReturn("channelId").when(cleverPush).getChannelId(context);
+        when(sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0)).thenReturn(0);
+
+
+        try {
+            mockWebServer.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Answer<Void> subscribedListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                SubscribedListener callback = (SubscribedListener) invocation.getArguments()[0];
+                callback.subscribed("subscriptionId");
+                return null;
+            }
+        };
+
+        doAnswer(subscribedListenerAnswer).when(cleverPush).getSubscriptionId(any(SubscribedListener.class));
+
+        HttpUrl baseUrl = mockWebServer.url("/subscription/sync");
+        cleverPush.setApiEndpoint(baseUrl.toString().replace("/subscription/sync",""));
+        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
+        mockWebServer.enqueue(mockResponse);
+
+        cleverPush.setSubscriptionTopics(topicIds, completionListener);
+
+        try {
+            sleep(600);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
+        verify(editor).apply();
+        verify(editor).putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(Arrays.asList(topicIds)));
+        verify(editor).putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 1);
+        verify(editor).commit();
+
+        try {
+            RecordedRequest recordedRequest = mockWebServer.takeRequest();
+            assertThat(recordedRequest.getPath()).isEqualTo("/subscription/sync/channelId");
+            assertThat(recordedRequest.getMethod()).isEqualTo("POST");
+            mockWebServer.shutdown();
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void testSetSubscriptionTopicsWhenThereIsJSONException(){
+        String[] topicIds = new String[] {"topicId"};
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        doReturn(editor).when(sharedPreferences).edit();
+        doReturn("channelId").when(cleverPush).getChannelId(context);
+        when(sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0)).thenReturn(0);
+
+
+
+        Answer<Void> subscribedListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                SubscribedListener callback = (SubscribedListener) invocation.getArguments()[0];
+                callback.subscribed("subscriptionId");
+                return null;
+            }
+        };
+        doAnswer(subscribedListenerAnswer).when(cleverPush).getSubscriptionId(any(SubscribedListener.class));
+
+
+        try {
+            when(jsonObject.put("channelId", "channelId")).thenThrow(new JSONException("Error"));
+        } catch (JSONException exception) {
+            exception.printStackTrace();
+        }
+
+        cleverPush.setSubscriptionTopics(topicIds, completionListener);
+
         assertThrows(
                 JSONException.class,
                 () -> jsonObject.put("channelId", "channelId"),

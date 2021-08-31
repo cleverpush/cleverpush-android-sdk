@@ -22,6 +22,7 @@ import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.listener.AppBannersListener;
+import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,65 +51,67 @@ public class AppBannerModule {
 
     private static AppBannerModule instance;
 
-    public static AppBannerModule init(Activity activity, String channel) {
-        return init(activity, channel, false);
-    }
-
-    public static AppBannerModule init(Activity activity, String channel, boolean showDrafts) {
-        if (instance == null) {
-            instance = new AppBannerModule(activity, channel, showDrafts);
-        }
-        return instance;
-    }
-
     private Activity activity;
     private String channel;
     private boolean showDrafts;
     private long lastSessionTimestamp;
     private int sessions;
     private boolean loading = false;
-
     private Collection<AppBannerPopup> popups = new ArrayList<>();
     private Collection<AppBannerPopup> pendingBanners = new ArrayList<>();
     private Collection<Banner> banners = null;
-    private Collection<AppBannersListener> getBannersListeners = new ArrayList<>();
-
+    private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
     private Map<String, String> events = new HashMap<>();
 
     private HandlerThread handlerThread = new HandlerThread("AppBannerModule");
     private Handler handler;
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
+
+    private AppBannerModule(Activity activity, String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
+        this.activity = activity;
+        this.channel = channel;
+        this.showDrafts = showDrafts;
+        this.sharedPreferences = sharedPreferences;
+        this.editor = editor;
+        this.sessions = this.getSessions();
+
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper());
+//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false);
+        editor.commit();
+    }
 
     private View getRoot() {
         return activity.getWindow().getDecorView().getRootView();
     }
 
-    private AppBannerModule(Activity activity, String channel, boolean showDrafts) {
-        this.activity = activity;
-        this.channel = channel;
-        this.showDrafts = showDrafts;
-        this.sessions = this.getSessions();
+    public static AppBannerModule init(Activity activity, String channel, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
+        return init(activity, channel, false, sharedPreferences, editor);
+    }
 
-        handlerThread.start();
-        handler = new Handler(handlerThread.getLooper());
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false);
-        editor.commit();
+    public static AppBannerModule init(Activity activity, String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
+        if (instance == null) {
+            instance = new AppBannerModule(activity, channel, showDrafts, sharedPreferences, editor);
+        }
+        return instance;
     }
 
     private void loadBanners() {
         loadBanners(null);
     }
 
-    private void loadBanners(String notificationId) {
-        if (loading) {
+    public void loadBanners(String notificationId) {
+        if (isLoading()) {
             return;
         }
-        loading = true;
+        setLoading(true);
 
         String bannersPath = "/channel/" + channel + "/app-banners?platformName=Android";
 
-        if (CleverPush.getInstance(activity).isDevelopmentModeEnabled()) {
+        if (getCleverPushInstance().isDevelopmentModeEnabled()) {
             bannersPath += "&t=" + System.currentTimeMillis();
         }
 
@@ -121,7 +124,7 @@ public class AppBannerModule {
         CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-                loading = false;
+                setLoading(true);
                 banners = new LinkedList<>();
                 try {
                     JSONObject responseJson = new JSONObject(response);
@@ -134,10 +137,10 @@ public class AppBannerModule {
                         banners.add(banner);
                     }
 
-                    for (AppBannersListener listener : getBannersListeners) {
+                    for (AppBannersListener listener : getBannersListeners()) {
                         listener.ready(banners);
                     }
-                    getBannersListeners = new ArrayList<>();
+                    bannersListeners = new ArrayList<>();
                 } catch (Exception ex) {
                     Log.e(TAG, ex.getMessage(), ex);
                 }
@@ -145,7 +148,7 @@ public class AppBannerModule {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                loading = false;
+                setLoading(false);
                 Log.e(TAG, "Something went wrong when loading banners." +
                         "\nStatus code: " + statusCode +
                         "\nResponse: " + response
@@ -154,15 +157,15 @@ public class AppBannerModule {
         });
     }
 
-    private void sendBannerEvent(String event, Banner banner) {
+    public void sendBannerEvent(String event, Banner banner) {
         Log.d(TAG, "sendBannerEvent: " + event);
 
         String subscriptionId = null;
-        if (CleverPush.getInstance(activity).isSubscribed()) {
-            subscriptionId = CleverPush.getInstance(activity).getSubscriptionId();
+        if (getCleverPushInstance().isSubscribed()) {
+            subscriptionId = getCleverPushInstance().getSubscriptionId();
         }
 
-        JSONObject jsonBody = new JSONObject();
+        JSONObject jsonBody = getJsonObject();
         try {
             jsonBody.put("bannerId", banner.getId());
             jsonBody.put("channelId", channel);
@@ -171,20 +174,7 @@ public class AppBannerModule {
             Log.e("CleverPush", ex.getMessage(), ex);
         }
 
-        CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody, new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-
-            }
-
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e(TAG, "App Banner Event failed." +
-                        "\nStatus code: " + statusCode +
-                        "\nResponse: " + response
-                );
-            }
-        });
+        CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody, new SendBannerEventResponseHandler().getResponseHandler());
     }
 
     public void initSession(String channel) {
@@ -209,18 +199,18 @@ public class AppBannerModule {
         this.saveSessions();
 
         banners = null;
+
         handler.post(this::loadBanners);
         this.startup();
     }
 
-    private int getSessions() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    public int getSessions() {
         return sharedPreferences.getInt(CleverPushPreferences.APP_BANNER_SESSIONS, 0);
     }
 
-    private void saveSessions() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+    public void saveSessions() {
+//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(CleverPushPreferences.APP_BANNER_SESSIONS, sessions);
         editor.apply();
     }
@@ -241,20 +231,21 @@ public class AppBannerModule {
         }
         if (notificationId != null) {
             // reload banners because the banner might have been created just seconds ago
-            getBannersListeners.add(listener);
-            handler.post(() -> {
+            bannersListeners.add(listener);
+
+            getHandler().post(() -> {
                 this.loadBanners(notificationId);
             });
         } else {
-            if (banners == null) {
-                getBannersListeners.add(listener);
+            if (getListOfBanners() == null) {
+                bannersListeners.add(listener);
             } else {
-                listener.ready(banners);
+                listener.ready(getListOfBanners());
             }
         }
     }
 
-    private void startup() {
+    public void startup() {
         Log.d(TAG, "startup");
 
         this.getBanners(banners -> {
@@ -263,7 +254,7 @@ public class AppBannerModule {
         });
     }
 
-    private boolean isBannerTimeAllowed(Banner banner) {
+    public boolean isBannerTimeAllowed(Banner banner) {
         Date now = new Date();
         return banner.getStopAtType() != BannerStopAtType.SpecificTime
                     || banner.getStopAt() == null
@@ -343,8 +334,8 @@ public class AppBannerModule {
         }
     }
 
-    private void scheduleBanners() {
-        if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
+    public void scheduleBanners() {
+        if (getCleverPushInstance().isAppBannersDisabled()) {
             pendingBanners.addAll(popups);
             popups.removeAll(pendingBanners);
             return;
@@ -379,25 +370,31 @@ public class AppBannerModule {
 
     public void showBannerById(String bannerId, String notificationId) {
         Log.d(TAG, "showBannerById: " + bannerId);
+//        getBanners(new AppBannersListener() {
+//            @Override
+//            public void ready(Collection<Banner> banners) {
+//
+//            }
+//        },notificationId);
         this.getBanners(banners -> {
             for (Banner banner : banners) {
                 if (banner.getId().equals(bannerId)) {
                     AppBannerPopup popup = new AppBannerPopup(activity, banner);
 
-                    if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
+                    if (getCleverPushInstance().isAppBannersDisabled()) {
                         pendingBanners.add(popup);
                         break;
                     }
 
-                    handler.post(() -> showBanner(popup));
+                    getHandler().post(() -> showBanner(popup));
                     break;
                 }
             }
         }, notificationId);
     }
 
-    private void showBanner(AppBannerPopup bannerPopup) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    public void showBanner(AppBannerPopup bannerPopup) {
+        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
         if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
             Log.d(TAG, "Skipping Banner because: A Banner is already on the screen");
@@ -465,9 +462,9 @@ public class AppBannerModule {
     }
 
     public void enableBanners() {
-        if (pendingBanners != null && pendingBanners.size() > 0) {
-            popups.addAll(pendingBanners);
-            pendingBanners.clear();
+        if (getPendingBanners() != null && getPendingBanners().size() > 0) {
+            popups.addAll(getPendingBanners());
+            getPendingBanners().clear();
             this.scheduleBanners();
         }
     }
@@ -481,4 +478,50 @@ public class AppBannerModule {
         handlerThread.quit();
         super.finalize();
     }
+
+    public long getLastSessionTimestamp() {
+        return lastSessionTimestamp;
+    }
+
+    public boolean isLoading() {
+        return loading;
+    }
+
+    public void setLoading(boolean loading) {
+        this.loading = loading;
+    }
+
+    public Collection<Banner> getListOfBanners() {
+        return banners;
+    }
+
+    public Collection<AppBannerPopup> getPopups() {
+        return popups;
+    }
+
+    public CleverPush getCleverPushInstance() {
+        return CleverPush.getInstance(activity);
+    }
+
+
+    public Collection<AppBannersListener> getBannersListeners() {
+        return bannersListeners;
+    }
+
+    public void clearBannersListeners() {
+         bannersListeners.clear();
+    }
+
+    public JSONObject getJsonObject() {
+        return new JSONObject();
+    }
+
+    public Handler getHandler() {
+        return handler;
+    }
+
+    public Collection<AppBannerPopup> getPendingBanners() {
+        return pendingBanners;
+    }
+
 }

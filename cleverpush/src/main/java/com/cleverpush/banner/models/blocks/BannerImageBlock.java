@@ -27,7 +27,9 @@ public class BannerImageBlock extends BannerBlock {
         BannerImageBlock imageBlock = new BannerImageBlock();
 
         imageBlock.type = BannerBlockType.Image;
-        imageBlock.imageUrl = json.getString("imageUrl");
+        if(json.getString("imageUrl") != null){
+            imageBlock.imageUrl = json.getString("imageUrl");
+        }
         imageBlock.scale = json.getInt("scale");
         imageBlock.dismiss = json.getBoolean("dismiss");
         if(json.has("action")){

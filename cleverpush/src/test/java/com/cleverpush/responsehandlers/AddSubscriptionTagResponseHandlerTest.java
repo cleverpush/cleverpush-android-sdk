@@ -4,9 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.listener.AddTagCompletedListener;
-import com.cleverpush.listener.RemoveTagCompletedListener;
+import com.cleverpush.util.Logger;
+
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,14 +20,14 @@ import org.mockito.MockitoAnnotations;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.logging.LogRecord;
 
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.lang.Thread.sleep;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.validateMockitoUsage;
@@ -51,6 +53,9 @@ class AddSubscriptionTagResponseHandlerTest {
 
     @Mock
     SharedPreferences.Editor editor;
+
+    @Mock
+    Logger logger;
 
     @Mock
     Log log;
@@ -115,6 +120,7 @@ class AddSubscriptionTagResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailure() {
+        //when(log.e("CleverPush", "Error adding tag - HTTP 400")).thenReturn(logger.e("CleverPush", "Error adding tag - HTTP 400"));
         HttpUrl baseUrl = mockWebServer.url("/subscription/tag");
         CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag","");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
@@ -124,11 +130,12 @@ class AddSubscriptionTagResponseHandlerTest {
         cleverPushHttpClient.get( "/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", addTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
 
         try {
-            sleep(600);
+            sleep(6000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        verify(log).e("CleverPush", "Error adding tag - HTTP " + 400);
+        //verify(logger).e("CleverPush", "Error adding tag - HTTP " + 400);
+        assertThat(Logger.e("CleverPush", "Error adding tag - HTTP 400")).isEqualTo(0);
     }
 
 

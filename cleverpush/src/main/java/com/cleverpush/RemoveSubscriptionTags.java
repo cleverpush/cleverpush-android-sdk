@@ -19,11 +19,14 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
     private String[] tagIds;
     private String subscriptionId;
     private String channelId;
+    private SharedPreferences sharedPreferences;
     Set<String> tags;
-    public RemoveSubscriptionTags(String subscriptionId, String channelId, String... tagIds) {
+
+    public RemoveSubscriptionTags(String subscriptionId, String channelId, SharedPreferences sharedPreferences, String... tagIds) {
         this.subscriptionId = subscriptionId;
         this.channelId = channelId;
         this.tagIds = tagIds;
+        this.sharedPreferences = sharedPreferences;
     }
 
     @Override
@@ -66,15 +69,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
     }
 
     public Set<String> getSubscriptionTags() {
-        return getSharedPreferences(getContext()).getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
-    }
-
-    public SharedPreferences getSharedPreferences(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context);
-    }
-
-    public Context getContext() {
-        return CleverPush.context;
+        return sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
     }
 
     public JSONObject getJsonObject() {

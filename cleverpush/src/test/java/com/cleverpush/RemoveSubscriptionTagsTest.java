@@ -42,15 +42,13 @@ class RemoveSubscriptionTagsTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        removeSubscriptionTags = Mockito.spy(new RemoveSubscriptionTags("subscriptionId", "channelId", tagIds));
+        removeSubscriptionTags = Mockito.spy(new RemoveSubscriptionTags("subscriptionId", "channelId", sharedPreferences, tagIds));
     }
 
 
     @Test
     void testRemoveSubscriptionTagWhenThereISJSONException() {
         doReturn(jsonObject).when(removeSubscriptionTags).getJsonObject();
-        doReturn(context).when(removeSubscriptionTags).getContext();
-        doReturn(sharedPreferences).when(removeSubscriptionTags).getSharedPreferences(context);
         try {
             when(jsonObject.put("channelId", "channelId")).thenThrow(new JSONException("Error"));
         } catch (JSONException exception) {
@@ -71,8 +69,6 @@ class RemoveSubscriptionTagsTest {
         tags.add("tagId");
 
         doReturn(jsonObject).when(removeSubscriptionTags).getJsonObject();
-        doReturn(context).when(removeSubscriptionTags).getContext();
-        doReturn(sharedPreferences).when(removeSubscriptionTags).getSharedPreferences(context);
         doReturn(tags).when(removeSubscriptionTags).getSubscriptionTags();
 
 
