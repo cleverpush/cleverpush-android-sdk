@@ -13,6 +13,7 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.banner.models.Banner;
+import com.cleverpush.banner.models.BannerAction;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
@@ -21,6 +22,7 @@ import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
+import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 
@@ -186,8 +188,8 @@ public class AppBannerModule {
             return;
         }
 
-        if (popups.size() > 0) {
-            for (AppBannerPopup popup : popups) {
+        if (getPopups().size() > 0) {
+            for (AppBannerPopup popup : getPopups()) {
                 popup.dismiss();
             }
             popups = new ArrayList<>();
@@ -256,6 +258,9 @@ public class AppBannerModule {
 
     public boolean isBannerTimeAllowed(Banner banner) {
         Date now = new Date();
+        if(banner == null){
+            return false;
+        }
         return banner.getStopAtType() != BannerStopAtType.SpecificTime
                     || banner.getStopAt() == null
                     || banner.getStopAt().after(now);
@@ -336,13 +341,13 @@ public class AppBannerModule {
 
     public void scheduleBanners() {
         if (getCleverPushInstance().isAppBannersDisabled()) {
-            pendingBanners.addAll(popups);
-            popups.removeAll(pendingBanners);
+            pendingBanners.addAll(getPopups());
+            getPopups().removeAll(pendingBanners);
             return;
         }
 
         Date now = new Date();
-        for (AppBannerPopup bannerPopup : popups) {
+        for (AppBannerPopup bannerPopup : getPopups()) {
             Banner banner = bannerPopup.getData();
 
             if (banner.isScheduled()) {
@@ -353,13 +358,13 @@ public class AppBannerModule {
 
             if (banner.getStartAt().before(now)) {
                 if (banner.getDelaySeconds() > 0) {
-                    handler.postDelayed(() -> showBanner(bannerPopup), 1000 * banner.getDelaySeconds());
+                    getHandler().postDelayed(() -> showBanner(bannerPopup), 1000 * banner.getDelaySeconds());
                 } else {
-                    handler.post(() -> showBanner(bannerPopup));
+                    getHandler().post(() -> showBanner(bannerPopup));
                 }
             } else {
                 long delay = banner.getStartAt().getTime() - now.getTime();
-                handler.postDelayed(() -> showBanner(bannerPopup), delay + (1000 * banner.getDelaySeconds()));
+                getHandler().postDelayed(() -> showBanner(bannerPopup), delay + (1000 * banner.getDelaySeconds()));
             }
         }
     }
@@ -370,16 +375,10 @@ public class AppBannerModule {
 
     public void showBannerById(String bannerId, String notificationId) {
         Log.d(TAG, "showBannerById: " + bannerId);
-//        getBanners(new AppBannersListener() {
-//            @Override
-//            public void ready(Collection<Banner> banners) {
-//
-//            }
-//        },notificationId);
         this.getBanners(banners -> {
             for (Banner banner : banners) {
                 if (banner.getId().equals(bannerId)) {
-                    AppBannerPopup popup = new AppBannerPopup(activity, banner);
+                    AppBannerPopup popup = getAppBannerPopup(banner);
 
                     if (getCleverPushInstance().isAppBannersDisabled()) {
                         pendingBanners.add(popup);
@@ -391,6 +390,10 @@ public class AppBannerModule {
                 }
             }
         }, notificationId);
+    }
+
+    public AppBannerPopup getAppBannerPopup(Banner banner) {
+        return new AppBannerPopup(activity, banner);
     }
 
     public void showBanner(AppBannerPopup bannerPopup) {
@@ -415,18 +418,18 @@ public class AppBannerModule {
 
         if (bannerPopup.getData().getDismissType() == BannerDismissType.Timeout) {
             long timeout = Math.max(0, bannerPopup.getData().getDismissTimeout());
-            handler.postDelayed(bannerPopup::dismiss, timeout * 1000);
+            getHandler().postDelayed(bannerPopup::dismiss, timeout * 1000);
         }
 
         bannerPopup.setOpenedListener(action -> {
-            this.sendBannerEvent("clicked", bannerPopup.getData());
+            sendBannerEvent("clicked", bannerPopup.getData());
 
-            if (CleverPush.getInstance(activity).getAppBannerOpenedListener() != null) {
-                CleverPush.getInstance(activity).getAppBannerOpenedListener().opened(action);
+            if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
+                getCleverPushInstance().getAppBannerOpenedListener().opened(action);
             }
 
             if (action.getType().equals("subscribe")) {
-                CleverPush.getInstance(activity).subscribe();
+                getCleverPushInstance().subscribe();
             }
         });
 
@@ -448,15 +451,16 @@ public class AppBannerModule {
         return shownBanners.contains(id);
     }
 
-    private void bannerIsShown(String id) {
-        SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
+    public void bannerIsShown(String id) {
+        //SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
         assert shownBanners != null;
         shownBanners.add(id);
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(SHOWN_APP_BANNER_PREF).apply();
+        editor.remove(SHOWN_APP_BANNER_PREF);
+        editor.apply();
         editor.putStringSet(SHOWN_APP_BANNER_PREF, shownBanners);
         editor.commit();
     }
@@ -523,5 +527,7 @@ public class AppBannerModule {
     public Collection<AppBannerPopup> getPendingBanners() {
         return pendingBanners;
     }
-
+    public void clearPendingBanners() {
+        pendingBanners.clear();
+    }
 }

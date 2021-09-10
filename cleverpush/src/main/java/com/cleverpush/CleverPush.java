@@ -1980,39 +1980,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
 
                 ((Activity) dialogActivity).runOnUiThread(() -> {
-                    AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity, themeResId);
 
-                    String headerTitle = CleverPush.context.getResources().getString(R.string.topics_dialog_title);
-                    if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
-                        try {
-                            headerTitle = channelConfig.getString("confirmAlertSelectTopicsLaterTitle");
-                        } catch (Exception ignored) {
-                        }
-                    }
-
-                    alertBuilder.setTitle(headerTitle);
 
                     final boolean[] checkedTopics = new boolean[channelTopics.length()];
                     String[] topicIds = new String[channelTopics.length()];
 
-                    LinearLayout checkboxLayout = new LinearLayout(context);
-                    checkboxLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    checkboxLayout.setOrientation(LinearLayout.VERTICAL);
+                    LinearLayout checkboxLayout = getCheckboxLayout();
 
-                    LinearLayout parentLayout = new LinearLayout(context);
-                    LinearLayout.LayoutParams parentLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                    parentLayoutParams.setMargins(45, 45, 45, 45);
-                    parentLayout.setLayoutParams(parentLayoutParams);
-                    parentLayout.setOrientation(LinearLayout.VERTICAL);
+                    LinearLayout parentLayout = getParentLayout();
 
-                    CheckBox checkboxDeSelectAll = new CheckBox(CleverPush.context);
-                    checkboxDeSelectAll.setText(context.getText(R.string.deselect_all));
-                    if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-                        checkboxDeSelectAll.setTextColor(Color.WHITE);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            checkboxDeSelectAll.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
-                        }
-                    }
+                    CheckBox checkboxDeSelectAll = getCheckBox(nightModeFlags, context.getText(R.string.deselect_all));
 
                     Set<String> selectedTopics = instance.getSubscriptionTopics();
 
@@ -2020,49 +1997,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                     checkboxLayout.addView(parentLayout);
 
-                    alertBuilder.setView(checkboxLayout);
-
-                    alertBuilder.setOnDismissListener(dialogInterface -> showingTopicsDialog = false);
-
-                    alertBuilder.setNegativeButton(CleverPush.context.getResources().getString(R.string.cancel), (dialogInterface, i) -> {
-                        if (topicsDialogListener != null) {
-                            topicsDialogListener.callback(false);
-                        }
-                        showingTopicsDialog = false;
-                    });
-
-                    alertBuilder.setPositiveButton(CleverPush.context.getResources().getString(R.string.save), (dialogInterface, i) -> {
-                        if (checkboxDeSelectAll.isChecked()) {
-                            unsubscribe();
-                            setDeSelectAll(true);
-                            for (int j = 0; j < channelTopics.length(); j++) {
-                                try {
-                                    JSONObject channelTopic = (JSONObject) channelTopics.get(j);
-                                    channelTopic.put("defaultUnchecked", true);
-                                    selectedTopics.clear();
-                                    checkedTopics[j] = false;
-                                } catch (JSONException e) {
-                                    Log.e("CleverPush", e.getLocalizedMessage());
-                                }
-                            }
-                        } else {
-                            setDeSelectAll(false);
-                            Set<String> selectedTopicIds = new HashSet<>();
-                            for (int j = 0; j < topicIds.length; j++) {
-                                if (checkedTopics[j]) {
-                                    selectedTopicIds.add(topicIds[j]);
-                                }
-                            }
-                            CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
-                        }
-
-                        dialogInterface.dismiss();
-
-                        if (topicsDialogListener != null) {
-                            topicsDialogListener.callback(true);
-                        }
-                        showingTopicsDialog = false;
-                    });
+                    AlertDialog.Builder alertBuilder = getAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics, checkedTopics, topicIds, checkboxLayout, checkboxDeSelectAll, selectedTopics);
 
                     AlertDialog alert = alertBuilder.create();
                     alert.setOnShowListener(dialog -> {
@@ -2077,6 +2012,93 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
             }
         });
+    }
+
+    private AlertDialog.Builder getAlertBuilder(Context dialogActivity, TopicsDialogListener topicsDialogListener, int themeResId, JSONObject channelConfig, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, LinearLayout checkboxLayout, CheckBox checkboxDeSelectAll, Set<String> selectedTopics) {
+        AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity, themeResId);
+
+        String headerTitle = CleverPush.context.getResources().getString(R.string.topics_dialog_title);
+        if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
+            try {
+                headerTitle = channelConfig.getString("confirmAlertSelectTopicsLaterTitle");
+            } catch (Exception ignored) {
+            }
+        }
+
+        alertBuilder.setTitle(headerTitle);
+
+        alertBuilder.setView(checkboxLayout);
+
+        alertBuilder.setOnDismissListener(dialogInterface -> showingTopicsDialog = false);
+
+        alertBuilder.setNegativeButton(CleverPush.context.getResources().getString(R.string.cancel), (dialogInterface, i) -> {
+            if (topicsDialogListener != null) {
+                topicsDialogListener.callback(false);
+            }
+            showingTopicsDialog = false;
+        });
+
+        alertBuilder.setPositiveButton(CleverPush.context.getResources().getString(R.string.save), (dialogInterface, i) -> {
+            if (checkboxDeSelectAll.isChecked()) {
+                unsubscribe();
+                setDeSelectAll(true);
+                for (int j = 0; j < channelTopics.length(); j++) {
+                    try {
+                        JSONObject channelTopic = (JSONObject) channelTopics.get(j);
+                        channelTopic.put("defaultUnchecked", true);
+                        selectedTopics.clear();
+                        checkedTopics[j] = false;
+                    } catch (JSONException e) {
+                        Log.e("CleverPush", e.getLocalizedMessage());
+                    }
+                }
+            } else {
+                setDeSelectAll(false);
+                Set<String> selectedTopicIds = new HashSet<>();
+                for (int j = 0; j < topicIds.length; j++) {
+                    if (checkedTopics[j]) {
+                        selectedTopicIds.add(topicIds[j]);
+                    }
+                }
+                CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+            }
+
+            dialogInterface.dismiss();
+
+            if (topicsDialogListener != null) {
+                topicsDialogListener.callback(true);
+            }
+            showingTopicsDialog = false;
+        });
+        return alertBuilder;
+    }
+
+    private CheckBox getCheckBox(int nightModeFlags, CharSequence text) {
+        CheckBox checkBox = new CheckBox(CleverPush.context);
+        checkBox.setText(text);
+        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+            checkBox.setTextColor(Color.WHITE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                checkBox.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
+            }
+        }
+        return checkBox;
+    }
+
+    private LinearLayout getParentLayout() {
+        LinearLayout parentLayout = new LinearLayout(context);
+        LinearLayout.LayoutParams parentLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        parentLayoutParams.setMargins(45, 45, 45, 45);
+        parentLayout.setLayoutParams(parentLayoutParams);
+        parentLayout.setOrientation(LinearLayout.VERTICAL);
+        return parentLayout;
+    }
+
+    private LinearLayout getCheckboxLayout() {
+        LinearLayout checkboxLayout = new LinearLayout(context);
+        checkboxLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        checkboxLayout.setOrientation(LinearLayout.VERTICAL);
+        return checkboxLayout;
     }
 
     /**
@@ -2103,106 +2125,106 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 });
             }
 
-            for (int i = 0; i < channelTopics.length(); i++) {
-                final int parentIndex = i;
-                JSONObject topic = channelTopics.getJSONObject(i);
-                if (topic != null) {
-                    boolean defaultUnchecked = false;
-                    try {
-                        defaultUnchecked = topic.optBoolean("defaultUnchecked");
-                    } catch (Exception ignored) {
-                    }
-                    String id = topic.getString("_id");
-                    topicIds[i] = id;
-
-                    CheckBox checkbox = new CheckBox(CleverPush.context);
-                    checkbox.setText(topic.optString("name"));
-
-                    if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-                        checkbox.setTextColor(Color.WHITE);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            checkbox.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
-                        }
-                    }
-
-                    if (!hasDeSelectAll() && !deselectAll) {
-                        checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
-                    }
-
-                    if (topic.has("parentTopic") && topic.optString("parentTopic").length() > 0) {
-                        continue;
-                    }
-
-                    parentLayout.addView(checkbox);
-
-                    int addedChildren = 0;
-                    final LinearLayout childLayout = new LinearLayout(context);
-                    for (int j = 0; j < channelTopics.length(); j++) {
-                        final int childIndex = j;
-                        JSONObject childTopic = channelTopics.getJSONObject(j);
-                        if (childTopic != null && childTopic.optString("parentTopic").equals(id)) {
-                            String childId = childTopic.getString("_id");
-                            boolean childDefaultUnchecked = false;
-                            try {
-                                childDefaultUnchecked = topic.optBoolean("defaultUnchecked");
-                            } catch (Exception ignored) {
-                            }
-
-                            addedChildren++;
-
-                            LinearLayout.LayoutParams childLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                            childLayoutParams.setMargins(65, 0, 0, 20);
-                            childLayout.setLayoutParams(childLayoutParams);
-                            childLayout.setOrientation(LinearLayout.VERTICAL);
-
-                            CheckBox checkboxChild = new CheckBox(CleverPush.context);
-                            checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                                checkedTopics[childIndex] = isChecked;
-                                checkboxDeSelectAll.setChecked(false);
-                            });
-                            checkedTopics[childIndex] = checkbox.isChecked();
-
-                            checkboxChild.setText(childTopic.optString("name"));
-
-                            if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-                                checkboxChild.setTextColor(Color.WHITE);
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    checkboxChild.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
-                                }
-                            }
-
-                            if (!hasDeSelectAll() && !deselectAll) {
-                                checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
-                            }
-
-                            childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
-
-                            childLayout.addView(checkboxChild);
-                        }
-                    }
-
-                    checkedTopics[parentIndex] = checkbox.isChecked();
-                    final boolean hasChildren = addedChildren > 0;
-                    checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                        checkboxDeSelectAll.setChecked(false);
-                        checkedTopics[parentIndex] = isChecked;
-                        if (hasChildren) {
-                            childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-                        }
-                    });
-
-                    if (addedChildren > 0) {
-                        parentLayout.addView(childLayout);
-                    }
-
-                } else {
-                    Log.e("CleverPush", "topic is null");
-                }
-            }
+            setUpParentTopicCheckBoxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, deselectAll, nightModeFlags, selectedTopics);
         } catch (JSONException e) {
             Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
         }
 
+    }
+
+    private void setUpParentTopicCheckBoxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) throws JSONException {
+        for (int i = 0; i < channelTopics.length(); i++) {
+            final int parentIndex = i;
+            JSONObject topic = channelTopics.getJSONObject(i);
+            if (topic != null) {
+                boolean defaultUnchecked = false;
+                try {
+                    defaultUnchecked = topic.optBoolean("defaultUnchecked");
+                } catch (Exception ignored) {
+                }
+                String id = topic.getString("_id");
+                topicIds[i] = id;
+
+                CheckBox checkbox = getCheckBox(nightModeFlags, topic.optString("name"));
+
+                if (!hasDeSelectAll() && !deselectAll) {
+                    checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
+                }
+
+                if (topic.has("parentTopic") && topic.optString("parentTopic").length() > 0) {
+                    continue;
+                }
+
+                parentLayout.addView(checkbox);
+
+                setUpChildTopicCheckBoxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, deselectAll, nightModeFlags, selectedTopics, parentIndex, topic, id, checkbox);
+
+            } else {
+                Log.e("CleverPush", "topic is null");
+            }
+        }
+    }
+
+    private void setUpChildTopicCheckBoxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics, int parentIndex, JSONObject topic, String id, CheckBox checkbox) throws JSONException {
+        int addedChildren = 0;
+        final LinearLayout childLayout = new LinearLayout(context);
+        for (int j = 0; j < channelTopics.length(); j++) {
+            final int childIndex = j;
+            JSONObject childTopic = channelTopics.getJSONObject(j);
+            if (childTopic != null && childTopic.optString("parentTopic").equals(id)) {
+                String childId = childTopic.getString("_id");
+                boolean childDefaultUnchecked = false;
+                try {
+                    childDefaultUnchecked = topic.optBoolean("defaultUnchecked");
+                } catch (Exception ignored) {
+                }
+
+                addedChildren++;
+
+                LinearLayout.LayoutParams childLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                childLayoutParams.setMargins(65, 0, 0, 20);
+                childLayout.setLayoutParams(childLayoutParams);
+                childLayout.setOrientation(LinearLayout.VERTICAL);
+
+                CheckBox checkboxChild = new CheckBox(CleverPush.context);
+                checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    checkedTopics[childIndex] = isChecked;
+                    checkboxDeSelectAll.setChecked(false);
+                });
+                checkedTopics[childIndex] = checkbox.isChecked();
+
+                checkboxChild.setText(childTopic.optString("name"));
+
+                if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+                    checkboxChild.setTextColor(Color.WHITE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        checkboxChild.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
+                    }
+                }
+
+                if (!hasDeSelectAll() && !deselectAll) {
+                    checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
+                }
+
+                childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
+
+                childLayout.addView(checkboxChild);
+            }
+        }
+
+        checkedTopics[parentIndex] = checkbox.isChecked();
+        final boolean hasChildren = addedChildren > 0;
+        checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            checkboxDeSelectAll.setChecked(false);
+            checkedTopics[parentIndex] = isChecked;
+            if (hasChildren) {
+                childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        if (addedChildren > 0) {
+            parentLayout.addView(childLayout);
+        }
     }
 
     public void setApiEndpoint(String apiEndpoint) {
