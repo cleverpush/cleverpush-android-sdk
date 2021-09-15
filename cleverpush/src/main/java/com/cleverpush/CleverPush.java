@@ -116,7 +116,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private Map<String, String> pendingAppBannerEvents = new HashMap<>();
     private String pendingShowAppBannerId = null;
     private String pendingShowAppBannerNotificationId = null;
-    public String currentPageUrl;
+    private String currentPageUrl;
     private AppBannerModule appBannerModule;
     private boolean appBannersDisabled = false;
 
@@ -128,7 +128,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
     private boolean pendingInitFeaturesCall = false;
-    public ArrayList<PageView> pendingPageViews = new ArrayList<>();
+    private ArrayList<PageView> pendingPageViews = new ArrayList<>();
 
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
@@ -141,7 +141,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private boolean incrementBadge = false;
     private boolean autoClearBadge = false;
+
     private boolean developmentMode = false;
+
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
 
@@ -409,6 +411,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             }
             unprocessedOpenedNotifications.clear();
         }
+
         // increment app opens
         incrementAppOpens();
     }
@@ -460,10 +463,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         if (subscriptionId == null && autoRegister || subscriptionId != null && nextSync < currentTime) {
             this.subscribe(subscriptionId == null);
         } else {
-            Date nextSyncDate = new Date(nextSync * 1000L);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault());
-            String formattedDate = sdf.format(nextSyncDate);
-            Log.d("CleverPush", "Subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
+            if (subscriptionId != null) {
+                Date nextSyncDate = new Date(nextSync * 1000L);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault());
+                String formattedDate = sdf.format(nextSyncDate);
+                Log.d("CleverPush", "Subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
+            }
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
         }

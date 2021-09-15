@@ -6,7 +6,8 @@
 
     <application>
         <activity android:name="com.cleverpush.NotificationOpenedActivity" android:exported="true" />
-        <activity android:name=".stories.StoryDetailActivity" />
+        <activity android:name=".stories.StoryDetailActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity android:name=".banner.WebViewActivity" />
 
         <service android:name="com.cleverpush.service.CarouselNotificationIntentService" android:exported="false" />

@@ -59,7 +59,6 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
                 }
                 Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagIds[currentPositionOfTagToAdd]);
                 return;
-
             }
 
             JSONObject jsonBody = getJsonObject();

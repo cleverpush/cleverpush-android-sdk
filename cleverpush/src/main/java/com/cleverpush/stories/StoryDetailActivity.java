@@ -21,7 +21,7 @@ import com.cleverpush.stories.models.Story;
 import java.util.ArrayList;
 
 
-public class StoryDetailActivity extends AppCompatActivity implements StoryChangeListener {
+public class StoryDetailActivity extends Activity implements StoryChangeListener {
 
     private int selectedPosition = 0;
     private RecyclerView recyclerView;
@@ -39,9 +39,7 @@ public class StoryDetailActivity extends AppCompatActivity implements StoryChang
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_story_detail);
-        getSupportActionBar().hide();
         init();
-
     }
 
     private void init() {
