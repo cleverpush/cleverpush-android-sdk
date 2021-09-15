@@ -16,7 +16,7 @@ import java.util.Set;
 public class AddSubscriptionTagResponseHandler {
 
     public CleverPushHttpClient.ResponseHandler getResponseHandler(String tagId, AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd, Set<String> tags) {
-           return new CleverPushHttpClient.ResponseHandler() {
+        return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
 

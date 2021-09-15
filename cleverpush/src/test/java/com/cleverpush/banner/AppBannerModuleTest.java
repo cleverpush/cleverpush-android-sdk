@@ -202,16 +202,14 @@ class AppBannerModuleTest {
 
     @Test
     void testInitSession() {
-       // when(sharedPreferences.getInt(CleverPushPreferences.APP_BANNER_SESSIONS, 0)).thenReturn(0);
 
         appBannerModule.initSession("channelId");
 
         assertThat(appBannerModule.getLastSessionTimestamp()).isLessThan(System.currentTimeMillis());
         assertThat(appBannerModule.getListOfBanners()).isEqualTo(null);
         assertThat(appBannerModule.getPopups().size()).isEqualTo(0);
-        //assertThat(appBannerModule.getSessions()).isEqualTo(1);
-       verify(appBannerModule).saveSessions();
-       verify(appBannerModule).startup();
+        verify(appBannerModule).saveSessions();
+        verify(appBannerModule).startup();
 
     }
 
@@ -353,7 +351,6 @@ class AppBannerModuleTest {
             e.printStackTrace();
         }
         assertThat(appBannerModule.getListOfBanners().size()).isEqualTo(1);
-        //assertThat(appBannerModule.getGetBannersListeners().size()).isEqualTo(0);
     }
 
     @Test
@@ -727,9 +724,6 @@ class AppBannerModuleTest {
 
         doReturn(pendingBanners).when(appBannerModule).getPendingBanners();
         doNothing().when(appBannerModule).scheduleBanners();
-//        doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
-//        doReturn(true).when(cleverPush).isDevelopmentModeEnabled();
-
 
         appBannerModule.enableBanners();
 
@@ -795,9 +789,6 @@ class AppBannerModuleTest {
             doReturn(appBannerPopup).when(appBannerModule).getAppBannerPopup(banner);
             doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
-//            doNothing().when(popup).init();
-//            doNothing().when(popup).show();
-
             Answer<Void> appBannersListenerAnswer = new Answer<Void>() {
                 public Void answer(InvocationOnMock invocation) {
                     AppBannersListener callback = (AppBannersListener) invocation.getArguments()[0];
@@ -818,12 +809,9 @@ class AppBannerModuleTest {
             appBannerModule.showBannerById("xuMpMKmoKhAZ8XRKr", null);
 
             verify(appBannerModule).showBanner(appBannerPopup);
-
         } catch (JSONException exception) {
             exception.printStackTrace();
         }
-
-
     }
 
     @Test
@@ -899,7 +887,6 @@ class AppBannerModuleTest {
 
         verify(appBannerModule).bannerIsShown("xuMpMKmoKhAZ8XRKr");
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
-
     }
 
     @Test
@@ -966,7 +953,7 @@ class AppBannerModuleTest {
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
             doReturn(handler).when(appBannerModule).getHandler();
             when(cleverPush.isSubscribed()).thenReturn(true);
-            when(handler.postDelayed(any(Runnable.class),anyLong())).thenAnswer((Answer) invocation -> {
+            when(handler.postDelayed(any(Runnable.class), anyLong())).thenAnswer((Answer) invocation -> {
                 ((Runnable) invocation.getArgument(0)).run();
                 return null;
             });
@@ -1046,7 +1033,7 @@ class AppBannerModuleTest {
                     "\t\t\t\"dismiss\": true,\n" +
                     "\t\t  \t\"type\" : \"subscribe\";\n" +
                     "\t\t}");
-             bannerAction = BannerAction.create(action);
+            bannerAction = BannerAction.create(action);
 
             when(appBannerPopup.getData()).thenReturn(banner);
             doReturn(editor).when(sharedPreferences).edit();
@@ -1187,49 +1174,49 @@ class AppBannerModuleTest {
 
     @Test
     void testScheduleBannersWhenAppBannersIsBeforeCurrentTimeAndNoDelay() {
-            Collection<AppBannerPopup> popups = new ArrayList<>();
-            popups.add(appBannerPopup);
-            Date yesterDay = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
+        Collection<AppBannerPopup> popups = new ArrayList<>();
+        popups.add(appBannerPopup);
+        Date yesterDay = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
 
-            doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
-            doReturn(false).when(cleverPush).isAppBannersDisabled();
-            doReturn(popups).when(appBannerModule).getPopups();
-            doReturn(banner).when(appBannerPopup).getData();
-            doReturn(yesterDay).when(banner).getStartAt();
-            doReturn(handler).when(appBannerModule).getHandler();
-            when(handler.post(any(Runnable.class))).thenAnswer((Answer) invocation -> {
-                ((Runnable) invocation.getArgument(0)).run();
-                return null;
-            });
-            doNothing().when(appBannerModule).showBanner(appBannerPopup);
+        doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
+        doReturn(false).when(cleverPush).isAppBannersDisabled();
+        doReturn(popups).when(appBannerModule).getPopups();
+        doReturn(banner).when(appBannerPopup).getData();
+        doReturn(yesterDay).when(banner).getStartAt();
+        doReturn(handler).when(appBannerModule).getHandler();
+        when(handler.post(any(Runnable.class))).thenAnswer((Answer) invocation -> {
+            ((Runnable) invocation.getArgument(0)).run();
+            return null;
+        });
+        doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
-            appBannerModule.scheduleBanners();
+        appBannerModule.scheduleBanners();
 
-            verify(appBannerModule).showBanner(appBannerPopup);
+        verify(appBannerModule).showBanner(appBannerPopup);
     }
 
     @Test
     void testScheduleBannersWhenAppBannersIsBeforeCurrentTimeAndDelay() {
-            Collection<AppBannerPopup> popups = new ArrayList<>();
-            popups.add(appBannerPopup);
-            Date yesterDay = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
+        Collection<AppBannerPopup> popups = new ArrayList<>();
+        popups.add(appBannerPopup);
+        Date yesterDay = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
 
-            doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
-            doReturn(false).when(cleverPush).isAppBannersDisabled();
-            doReturn(popups).when(appBannerModule).getPopups();
-            doReturn(banner).when(appBannerPopup).getData();
-            doReturn(yesterDay).when(banner).getStartAt();
-            doReturn(5).when(banner).getDelaySeconds();
-            doReturn(handler).when(appBannerModule).getHandler();
-            when(handler.postDelayed(any(Runnable.class),anyLong())).thenAnswer((Answer) invocation -> {
-                ((Runnable) invocation.getArgument(0)).run();
-                return null;
-            });
-            doNothing().when(appBannerModule).showBanner(appBannerPopup);
+        doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
+        doReturn(false).when(cleverPush).isAppBannersDisabled();
+        doReturn(popups).when(appBannerModule).getPopups();
+        doReturn(banner).when(appBannerPopup).getData();
+        doReturn(yesterDay).when(banner).getStartAt();
+        doReturn(5).when(banner).getDelaySeconds();
+        doReturn(handler).when(appBannerModule).getHandler();
+        when(handler.postDelayed(any(Runnable.class), anyLong())).thenAnswer((Answer) invocation -> {
+            ((Runnable) invocation.getArgument(0)).run();
+            return null;
+        });
+        doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
-            appBannerModule.scheduleBanners();
+        appBannerModule.scheduleBanners();
 
-            verify(appBannerModule).showBanner(appBannerPopup);
+        verify(appBannerModule).showBanner(appBannerPopup);
     }
 
     @Test
@@ -1245,7 +1232,7 @@ class AppBannerModuleTest {
         doReturn(yesterDay).when(banner).getStartAt();
         doReturn(5).when(banner).getDelaySeconds();
         doReturn(handler).when(appBannerModule).getHandler();
-        when(handler.postDelayed(any(Runnable.class),anyLong())).thenAnswer((Answer) invocation -> {
+        when(handler.postDelayed(any(Runnable.class), anyLong())).thenAnswer((Answer) invocation -> {
             ((Runnable) invocation.getArgument(0)).run();
             return null;
         });

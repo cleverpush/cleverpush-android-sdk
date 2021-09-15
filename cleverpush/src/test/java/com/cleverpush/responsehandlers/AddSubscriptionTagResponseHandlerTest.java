@@ -79,12 +79,12 @@ class AddSubscriptionTagResponseHandlerTest {
         when(sharedPreferences.edit()).thenReturn(editor);
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/tag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
 
-        cleverPushHttpClient.get( "/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", null, 0, new HashSet<>(Arrays.asList("value"))));
+        cleverPushHttpClient.get("/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", null, 0, new HashSet<>(Arrays.asList("value"))));
 
         try {
             sleep(600);
@@ -102,12 +102,12 @@ class AddSubscriptionTagResponseHandlerTest {
         when(sharedPreferences.edit()).thenReturn(editor);
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/tag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
 
-        cleverPushHttpClient.get( "/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", addTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
+        cleverPushHttpClient.get("/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", addTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
 
         try {
             sleep(600);
@@ -122,12 +122,12 @@ class AddSubscriptionTagResponseHandlerTest {
     void testGetResponseHandlerWhenFailure() {
         //when(log.e("CleverPush", "Error adding tag - HTTP 400")).thenReturn(logger.e("CleverPush", "Error adding tag - HTTP 400"));
         HttpUrl baseUrl = mockWebServer.url("/subscription/tag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
         mockWebServer.enqueue(mockResponse);
 
 
-        cleverPushHttpClient.get( "/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", addTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
+        cleverPushHttpClient.get("/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", addTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
 
         try {
             sleep(6000);

@@ -39,7 +39,6 @@ class SetSubscriptionAttributeResponseHandlerTest {
     private SetSubscriptionAttributeResponseHandler setSubscriptionAttributeResponseHandler;
     private MockWebServer mockWebServer;
 
-
     @Mock
     CleverPushHttpClient cleverPushHttpClient;
 
@@ -77,12 +76,11 @@ class SetSubscriptionAttributeResponseHandlerTest {
         subscriptionAttributes.put("attributeId", "value");
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/attribute");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/attribute","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/attribute", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-
-        cleverPushHttpClient.get( "/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(subscriptionAttributes));
+        cleverPushHttpClient.get("/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(subscriptionAttributes));
 
         try {
             sleep(600);

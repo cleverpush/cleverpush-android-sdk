@@ -57,6 +57,7 @@ class AddSubscriptionTagsTest {
         mockWebServer = new MockWebServer();
         addSubscriptionTags = Mockito.spy(new AddSubscriptionTags("subscriptionId", "channelId", sharedPreferences, tagIds));
     }
+
     @Test
     void testAddSubscriptionTagWhenThereISJSONException() {
         doReturn(jsonObject).when(addSubscriptionTags).getJsonObject();
@@ -67,7 +68,7 @@ class AddSubscriptionTagsTest {
             exception.printStackTrace();
         }
 
-        addSubscriptionTags.addSubscriptionTag(addTagCompletedListener,0);
+        addSubscriptionTags.addSubscriptionTag(addTagCompletedListener, 0);
         assertThrows(
                 JSONException.class,
                 () -> jsonObject.put("channelId", "channelId"),
@@ -77,13 +78,14 @@ class AddSubscriptionTagsTest {
 
     @Test
     void testAddSubscriptionTagWhenSubscriptionTagAlreadyHasTagAndNotNullAddTagCompletedListener() {
-        Set<String> tags = new HashSet<String>();;
+        Set<String> tags = new HashSet<String>();
+        ;
         tags.add("tagId");
 
         doReturn(jsonObject).when(addSubscriptionTags).getJsonObject();
         doReturn(tags).when(addSubscriptionTags).getSubscriptionTags();
 
-        addSubscriptionTags.addSubscriptionTag(addTagCompletedListener,0);
+        addSubscriptionTags.addSubscriptionTag(addTagCompletedListener, 0);
 
         assertThat(addSubscriptionTags.tags.size()).isEqualTo(1);
         verify(addTagCompletedListener).tagAdded(0);
@@ -91,13 +93,14 @@ class AddSubscriptionTagsTest {
 
     @Test
     void testAddSubscriptionTagWhenSubscriptionTagAlreadyHasTagAndNullAddTagCompletedListener() {
-        Set<String> tags = new HashSet<String>();;
+        Set<String> tags = new HashSet<String>();
+        ;
         tags.add("tagId");
 
         doReturn(jsonObject).when(addSubscriptionTags).getJsonObject();
         doReturn(tags).when(addSubscriptionTags).getSubscriptionTags();
 
-        addSubscriptionTags.addSubscriptionTag(null,0);
+        addSubscriptionTags.addSubscriptionTag(null, 0);
 
         assertThat(addSubscriptionTags.tags.size()).isEqualTo(1);
         verify(addTagCompletedListener, never()).tagAdded(0);
@@ -105,7 +108,8 @@ class AddSubscriptionTagsTest {
 
     @Test
     void testAddSubscriptionTagWhenSubscriptionTagsDoNotHaveTag() {
-        Set<String> tags = new HashSet<String>();;
+        Set<String> tags = new HashSet<String>();
+        ;
         tags.add("newTagId");
 
         doReturn(jsonObject).when(addSubscriptionTags).getJsonObject();
@@ -117,11 +121,11 @@ class AddSubscriptionTagsTest {
             e.printStackTrace();
         }
         HttpUrl baseUrl = mockWebServer.url("/subscription/tag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        addSubscriptionTags.addSubscriptionTag(addTagCompletedListener,0);
+        addSubscriptionTags.addSubscriptionTag(addTagCompletedListener, 0);
 
         try {
             sleep(600);

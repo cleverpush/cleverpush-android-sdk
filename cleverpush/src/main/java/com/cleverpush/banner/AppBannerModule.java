@@ -80,8 +80,6 @@ public class AppBannerModule {
 
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
-//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-//        SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false);
         editor.commit();
     }
@@ -211,8 +209,6 @@ public class AppBannerModule {
     }
 
     public void saveSessions() {
-//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-//        SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(CleverPushPreferences.APP_BANNER_SESSIONS, sessions);
         editor.apply();
     }
@@ -258,12 +254,12 @@ public class AppBannerModule {
 
     public boolean isBannerTimeAllowed(Banner banner) {
         Date now = new Date();
-        if(banner == null){
+        if (banner == null) {
             return false;
         }
         return banner.getStopAtType() != BannerStopAtType.SpecificTime
-                    || banner.getStopAt() == null
-                    || banner.getStopAt().after(now);
+                || banner.getStopAt() == null
+                || banner.getStopAt().after(now);
     }
 
     private void createBanners(Collection<Banner> banners) {
@@ -452,7 +448,6 @@ public class AppBannerModule {
     }
 
     public void bannerIsShown(String id) {
-        //SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
         assert shownBanners != null;
@@ -513,7 +508,7 @@ public class AppBannerModule {
     }
 
     public void clearBannersListeners() {
-         bannersListeners.clear();
+        bannersListeners.clear();
     }
 
     public JSONObject getJsonObject() {
@@ -527,6 +522,7 @@ public class AppBannerModule {
     public Collection<AppBannerPopup> getPendingBanners() {
         return pendingBanners;
     }
+
     public void clearPendingBanners() {
         pendingBanners.clear();
     }

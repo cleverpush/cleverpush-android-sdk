@@ -13,12 +13,13 @@ import org.json.JSONObject;
 public class UnSubscribeResponseHandler {
 
     private static CleverPush cleverPush;
+
     public UnSubscribeResponseHandler(CleverPush cleverPush) {
         this.cleverPush = cleverPush;
     }
 
     public CleverPushHttpClient.ResponseHandler getResponseHandler() {
-        return  new CleverPushHttpClient.ResponseHandler() {
+        return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 try {

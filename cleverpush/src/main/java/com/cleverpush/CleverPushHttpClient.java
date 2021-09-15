@@ -30,7 +30,7 @@ public class CleverPushHttpClient {
             }
         }).start();
 
-        new Thread(() -> makeRequest(url, null, null, responseHandler) ).start();
+        new Thread(() -> makeRequest(url, null, null, responseHandler)).start();
         ;
     }
 

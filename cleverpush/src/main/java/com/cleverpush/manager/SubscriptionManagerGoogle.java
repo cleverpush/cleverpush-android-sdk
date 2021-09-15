@@ -23,16 +23,16 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
     public void subscribe(JSONObject channelConfig, RegisteredHandler callback) {
         super.subscribe(channelConfig, callback);
 
-		if (channelConfig != null) {
-			String fcmId = channelConfig.optString("fcmId");
-			if (fcmId != null && !fcmId.isEmpty() && isValidProjectNumber(fcmId, callback)) {
-				internalSubscribe(fcmId);
-			} else {
-				Log.e("CleverPush", "SubscriptionManager: Getting FCM Sender ID failed");
-			}
-		} else {
-			Log.e("CleverPush", "SubscriptionManager: Getting Channel Config failed");
-		}
+        if (channelConfig != null) {
+            String fcmId = channelConfig.optString("fcmId");
+            if (fcmId != null && !fcmId.isEmpty() && isValidProjectNumber(fcmId, callback)) {
+                internalSubscribe(fcmId);
+            } else {
+                Log.e("CleverPush", "SubscriptionManager: Getting FCM Sender ID failed");
+            }
+        } else {
+            Log.e("CleverPush", "SubscriptionManager: Getting Channel Config failed");
+        }
     }
 
     private void internalSubscribe(String senderId) {
@@ -56,18 +56,18 @@ abstract class SubscriptionManagerGoogle extends SubscriptionManagerBase {
             return;
 
         registerThread = new Thread(() -> {
-			for (int currentRetry = 0; currentRetry < REGISTRATION_RETRY_COUNT; currentRetry++) {
-				boolean finished = attemptRegistration(senderId, currentRetry);
-				if (finished) {
-					return;
-				}
-				try {
-					Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		});
+            for (int currentRetry = 0; currentRetry < REGISTRATION_RETRY_COUNT; currentRetry++) {
+                boolean finished = attemptRegistration(senderId, currentRetry);
+                if (finished) {
+                    return;
+                }
+                try {
+                    Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         registerThread.start();
     }
 

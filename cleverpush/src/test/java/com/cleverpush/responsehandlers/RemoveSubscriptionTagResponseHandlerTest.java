@@ -43,7 +43,6 @@ import static org.mockito.Mockito.when;
 
 class RemoveSubscriptionTagResponseHandlerTest {
 
-
     private RemoveSubscriptionTagResponseHandler removeSubscriptionTagResponseHandler;
     private MockWebServer mockWebServer;
 
@@ -84,12 +83,12 @@ class RemoveSubscriptionTagResponseHandlerTest {
         when(sharedPreferences.edit()).thenReturn(editor);
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/untag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
 
-        cleverPushHttpClient.get( "/subscription/untag", removeSubscriptionTagResponseHandler.getResponseHandler("tagId", null, 0, new HashSet<>(Arrays.asList("value"))));
+        cleverPushHttpClient.get("/subscription/untag", removeSubscriptionTagResponseHandler.getResponseHandler("tagId", null, 0, new HashSet<>(Arrays.asList("value"))));
 
         try {
             sleep(600);
@@ -107,12 +106,12 @@ class RemoveSubscriptionTagResponseHandlerTest {
         when(sharedPreferences.edit()).thenReturn(editor);
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/untag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
 
-        cleverPushHttpClient.get( "/subscription/untag", removeSubscriptionTagResponseHandler.getResponseHandler("tagId", removeTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
+        cleverPushHttpClient.get("/subscription/untag", removeSubscriptionTagResponseHandler.getResponseHandler("tagId", removeTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
 
         try {
             sleep(600);

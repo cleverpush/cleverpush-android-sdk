@@ -1,5 +1,6 @@
 package com.cleverpush.responsehandlers;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -12,12 +13,13 @@ import org.json.JSONObject;
 
 public class ChannelConfigFromBundleIdResponseHandler {
 
-    private static CleverPush cleverPush;
+    private CleverPush cleverPush;
+
     public ChannelConfigFromBundleIdResponseHandler(CleverPush cleverPush) {
         this.cleverPush = cleverPush;
     }
 
-    public static CleverPushHttpClient.ResponseHandler getResponseHandler(boolean autoRegister) {
+    public CleverPushHttpClient.ResponseHandler getResponseHandler(boolean autoRegister) {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
@@ -43,7 +45,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
 
                 // trigger listeners
                 if (cleverPush.getChannelConfig() == null) {
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
                     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
                     cleverPush.fireSubscribedListener(subscriptionId);
                     cleverPush.setSubscriptionId(subscriptionId);
@@ -53,4 +55,11 @@ public class ChannelConfigFromBundleIdResponseHandler {
         };
     }
 
+    public SharedPreferences getSharedPreferences(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public Context getContext() {
+        return CleverPush.context;
+    }
 }

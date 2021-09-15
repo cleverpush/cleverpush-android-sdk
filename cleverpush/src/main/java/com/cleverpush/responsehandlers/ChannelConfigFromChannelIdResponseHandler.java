@@ -1,5 +1,6 @@
 package com.cleverpush.responsehandlers;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -12,25 +13,25 @@ import org.json.JSONObject;
 
 public class ChannelConfigFromChannelIdResponseHandler {
 
-    private static CleverPush instance;
+    private CleverPush cleverPush;
 
     public ChannelConfigFromChannelIdResponseHandler(CleverPush instance) {
-        this.instance = instance;
+        this.cleverPush = instance;
     }
 
-    public static CleverPushHttpClient.ResponseHandler getResponseHandler(boolean autoRegister, String storedChannelId, String storedSubscriptionId) {
+    public CleverPushHttpClient.ResponseHandler getResponseHandler(boolean autoRegister, String storedChannelId, String storedSubscriptionId) {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-                instance.setInitialized(true);
+                cleverPush.setInitialized(true);
 
                 try {
                     JSONObject responseJson = new JSONObject(response);
-                    instance.setChannelConfig(responseJson);
+                    cleverPush.setChannelConfig(responseJson);
 
-                    instance.subscribeOrSync(autoRegister || instance.isChannelIdChanged(storedChannelId, storedSubscriptionId));
+                    cleverPush.subscribeOrSync(autoRegister || cleverPush.isChannelIdChanged(storedChannelId, storedSubscriptionId));
 
-                    instance.initFeatures();
+                    cleverPush.initFeatures();
 
                 } catch (Throwable ex) {
                     Log.e("CleverPush", ex.getMessage(), ex);
@@ -39,20 +40,27 @@ public class ChannelConfigFromChannelIdResponseHandler {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                instance.setInitialized(true);
+                cleverPush.setInitialized(true);
 
                 Log.e("CleverPush", "Failed to fetch Channel Config", throwable);
 
                 // trigger listeners
-                if (instance.getChannelConfig() == null) {
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                if (cleverPush.getChannelConfig() == null) {
+                    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
                     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-                    instance.fireSubscribedListener(subscriptionId);
-                    instance.setSubscriptionId(subscriptionId);
-                    instance.setChannelConfig(null);
+                    cleverPush.fireSubscribedListener(subscriptionId);
+                    cleverPush.setSubscriptionId(subscriptionId);
+                    cleverPush.setChannelConfig(null);
                 }
             }
         };
     }
 
+    public SharedPreferences getSharedPreferences(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public Context getContext() {
+        return CleverPush.context;
+    }
 }

@@ -103,9 +103,9 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
     /**
      * Will use to get Firebase token if firebase-message newer than 20.0.0
      */
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     @WorkerThread
-	private String getTokenWithClassFirebaseMessaging() throws Exception {
+    private String getTokenWithClassFirebaseMessaging() throws Exception {
         Exception exception;
         try {
             Class<?> FirebaseInstanceIdClass = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
@@ -115,11 +115,11 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
             Task<String> tokenTask = (Task<String>) getTokenMethod.invoke(instanceId, null);
             return Tasks.await(tokenTask);
         } catch (ClassNotFoundException e) {
-            exception = e ;
+            exception = e;
         } catch (NoSuchMethodException e) {
             exception = e;
         } catch (IllegalAccessException e) {
-            exception =  new IllegalAccessException();
+            exception = new IllegalAccessException();
         } catch (InvocationTargetException e) {
             exception = e;
         }

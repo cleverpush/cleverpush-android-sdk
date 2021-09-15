@@ -127,7 +127,7 @@ public class ChatView extends WebView {
         Context context = this.getContext();
 
         WebSettings webSettings = this.getSettings();
-        webSettings.setJavaScriptEnabled(true) ;
+        webSettings.setJavaScriptEnabled(true);
         webSettings.setUseWideViewPort(true);
         webSettings.setLoadWithOverviewMode(true);
         webSettings.setDomStorageEnabled(true);
@@ -168,7 +168,7 @@ public class ChatView extends WebView {
         return lastSubscriptionId;
     }
 
-    public WebView getWebView(){
+    public WebView getWebView() {
         return this;
     }
 

@@ -37,7 +37,6 @@ class SetSubscriptionTopicsResponseHandlerTest {
     private SetSubscriptionTopicsResponseHandler setSubscriptionTopicsResponseHandler;
     private MockWebServer mockWebServer;
 
-
     @Mock
     CleverPushHttpClient cleverPushHttpClient;
 
@@ -72,12 +71,12 @@ class SetSubscriptionTopicsResponseHandlerTest {
         doReturn(null).when(cleverPush).getTopicsChangedListener();
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/sync/");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/sync/","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/sync/", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
         String[] topicIds = {"topicId"};
-        cleverPushHttpClient.get( "/subscription/sync/", setSubscriptionTopicsResponseHandler.getResponseHandler(topicIds, completionListener));
+        cleverPushHttpClient.get("/subscription/sync/", setSubscriptionTopicsResponseHandler.getResponseHandler(topicIds, completionListener));
         try {
             sleep(600);
         } catch (InterruptedException e) {
@@ -94,12 +93,12 @@ class SetSubscriptionTopicsResponseHandlerTest {
         doReturn(topicsChangedListener).when(cleverPush).getTopicsChangedListener();
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/sync/");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/sync/","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/sync/", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
         String[] topicIds = {"topicId"};
-        cleverPushHttpClient.get( "/subscription/sync/", setSubscriptionTopicsResponseHandler.getResponseHandler(topicIds, null));
+        cleverPushHttpClient.get("/subscription/sync/", setSubscriptionTopicsResponseHandler.getResponseHandler(topicIds, null));
         try {
             sleep(600);
         } catch (InterruptedException e) {

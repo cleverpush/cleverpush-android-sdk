@@ -25,9 +25,6 @@ import static org.mockito.Mockito.when;
 class RemoveSubscriptionTagsTest {
 
     @Mock
-    Context context;
-
-    @Mock
     SharedPreferences sharedPreferences;
 
     @Mock
@@ -55,7 +52,8 @@ class RemoveSubscriptionTagsTest {
             exception.printStackTrace();
         }
 
-        removeSubscriptionTags.removeSubscriptionTag(removeTagCompletedListener,0);
+        removeSubscriptionTags.removeSubscriptionTag(removeTagCompletedListener, 0);
+
         assertThrows(
                 JSONException.class,
                 () -> jsonObject.put("channelId", "channelId"),
@@ -65,14 +63,13 @@ class RemoveSubscriptionTagsTest {
 
     @Test
     void testRemoveSubscriptionTag() {
-        Set<String> tags = new HashSet<String>();;
+        Set<String> tags = new HashSet<String>();
         tags.add("tagId");
 
         doReturn(jsonObject).when(removeSubscriptionTags).getJsonObject();
         doReturn(tags).when(removeSubscriptionTags).getSubscriptionTags();
 
-
-        removeSubscriptionTags.removeSubscriptionTag(removeTagCompletedListener,0);
+        removeSubscriptionTags.removeSubscriptionTag(removeTagCompletedListener, 0);
 
         assertThat(removeSubscriptionTags.tags.size()).isEqualTo(0);
     }
