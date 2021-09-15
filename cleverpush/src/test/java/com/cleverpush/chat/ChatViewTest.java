@@ -64,7 +64,6 @@ class ChatViewTest {
 
     @Test
     void testInit() {
-        //doReturn(webView).when(chatView).getWebView();
         doReturn(context).when(chatView).getContext();
         doReturn(webSettings).when(chatView).getSettings();
         doReturn(chatJavascriptInterface).when(chatView).getChatJavascriptInterface(context);

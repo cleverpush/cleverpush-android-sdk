@@ -1894,7 +1894,6 @@ class CleverPushTest {
     void testSetCheckboxListWhenThereIsNoTopicsDialogShowUnsubscribe() {
         final JSONObject[] responseJson = new JSONObject[1];
         Set<String> selectedTopics = new HashSet<String>();
-        ;
         selectedTopics.add("slectedTopicId");
         String[] topicIds = new String[]{"topicId"};
         boolean[] checkedTopics = new boolean[]{false};
@@ -1925,7 +1924,6 @@ class CleverPushTest {
     void testSetCheckboxListWhenThereIsTopicsDialogShowUnsubscribe() {
         final JSONObject[] responseJson = new JSONObject[1];
         Set<String> selectedTopics = new HashSet<String>();
-        ;
         selectedTopics.add("slectedTopicId");
         String[] topicIds = new String[]{"topicId"};
         boolean[] checkedTopics = new boolean[]{false};

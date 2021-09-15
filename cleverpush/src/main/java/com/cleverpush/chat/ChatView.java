@@ -18,7 +18,7 @@ public class ChatView extends WebView {
 
     public ChatView(Context context) {
         super(context);
-        //this.init();
+        this.init();
     }
 
     public ChatView(Context context, AttributeSet attrs) {
@@ -127,10 +127,12 @@ public class ChatView extends WebView {
         Context context = this.getContext();
 
         WebSettings webSettings = this.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setUseWideViewPort(true);
-        webSettings.setLoadWithOverviewMode(true);
-        webSettings.setDomStorageEnabled(true);
+        if(webSettings != null) {
+            webSettings.setJavaScriptEnabled(true);
+            webSettings.setUseWideViewPort(true);
+            webSettings.setLoadWithOverviewMode(true);
+            webSettings.setDomStorageEnabled(true);
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             this.setWebContentsDebuggingEnabled(true);
@@ -140,9 +142,10 @@ public class ChatView extends WebView {
 
         this.loadUrl("about:blank");
 
-        this.setWebViewClient(getWebViewClient(context));
-
-        this.loadChat();
+        if(getCleverPushInstance() != null){
+            this.setWebViewClient(getWebViewClient(context));
+            this.loadChat();
+        }
     }
 
     public WebViewClient getWebViewClient(Context context) {
@@ -173,7 +176,10 @@ public class ChatView extends WebView {
     }
 
     public CleverPush getCleverPushInstance() {
-        return CleverPush.getInstance(getWebView().getContext());
+        if(getContext() != null){
+            return CleverPush.getInstance(getWebView().getContext());
+        }
+        return null;
     }
 
     public ChatJavascriptInterface getChatJavascriptInterface(Context context) {
