@@ -9,6 +9,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
@@ -50,18 +51,17 @@ public class AppBannerModule {
 
     private static AppBannerModule instance;
 
-    public static AppBannerModule init(Activity activity, String channel) {
-        return init(activity, channel, false);
+    public static AppBannerModule init(String channel) {
+        return init( channel, false);
     }
 
-    public static AppBannerModule init(Activity activity, String channel, boolean showDrafts) {
+    public static AppBannerModule init(String channel, boolean showDrafts) {
         if (instance == null) {
-            instance = new AppBannerModule(activity, channel, showDrafts);
+            instance = new AppBannerModule(channel, showDrafts);
         }
         return instance;
     }
 
-    private Activity activity;
     private String channel;
     private boolean showDrafts;
     private long lastSessionTimestamp;
@@ -79,11 +79,10 @@ public class AppBannerModule {
     private Handler handler;
 
     private View getRoot() {
-        return activity.getWindow().getDecorView().getRootView();
+        return ActivityLifecycleListener.currentActivity.getWindow().getDecorView().getRootView();
     }
 
-    private AppBannerModule(Activity activity, String channel, boolean showDrafts) {
-        this.activity = activity;
+    private AppBannerModule(String channel, boolean showDrafts) {
         this.channel = channel;
         this.showDrafts = showDrafts;
         this.sessions = this.getSessions();
@@ -108,7 +107,7 @@ public class AppBannerModule {
 
         String bannersPath = "/channel/" + channel + "/app-banners?platformName=Android";
 
-        if (CleverPush.getInstance(activity).isDevelopmentModeEnabled()) {
+        if (CleverPush.getInstance(ActivityLifecycleListener.currentActivity).isDevelopmentModeEnabled()) {
             bannersPath += "&t=" + System.currentTimeMillis();
         }
 
@@ -158,8 +157,8 @@ public class AppBannerModule {
         Log.d(TAG, "sendBannerEvent: " + event);
 
         String subscriptionId = null;
-        if (CleverPush.getInstance(activity).isSubscribed()) {
-            subscriptionId = CleverPush.getInstance(activity).getSubscriptionId();
+        if (CleverPush.getInstance(ActivityLifecycleListener.currentActivity).isSubscribed()) {
+            subscriptionId = CleverPush.getInstance(ActivityLifecycleListener.currentActivity).getSubscriptionId();
         }
 
         JSONObject jsonBody = new JSONObject();
@@ -190,7 +189,7 @@ public class AppBannerModule {
     public void initSession(String channel) {
         this.channel = channel;
 
-        if (!CleverPush.getInstance(activity).isDevelopmentModeEnabled()
+        if (!CleverPush.getInstance(ActivityLifecycleListener.currentActivity).isDevelopmentModeEnabled()
                 && lastSessionTimestamp > 0
                 && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
             return;
@@ -338,13 +337,13 @@ public class AppBannerModule {
             }
 
             if (!contains) {
-                popups.add(new AppBannerPopup(activity, banner));
+                popups.add(new AppBannerPopup(ActivityLifecycleListener.currentActivity, banner));
             }
         }
     }
 
     private void scheduleBanners() {
-        if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
+        if (CleverPush.getInstance(ActivityLifecycleListener.currentActivity).isAppBannersDisabled()) {
             pendingBanners.addAll(popups);
             popups.removeAll(pendingBanners);
             return;
@@ -382,9 +381,9 @@ public class AppBannerModule {
         this.getBanners(banners -> {
             for (Banner banner : banners) {
                 if (banner.getId().equals(bannerId)) {
-                    AppBannerPopup popup = new AppBannerPopup(activity, banner);
+                    AppBannerPopup popup = new AppBannerPopup(ActivityLifecycleListener.currentActivity, banner);
 
-                    if (CleverPush.getInstance(activity).isAppBannersDisabled()) {
+                    if (CleverPush.getInstance(ActivityLifecycleListener.currentActivity).isAppBannersDisabled()) {
                         pendingBanners.add(popup);
                         break;
                     }
@@ -424,12 +423,12 @@ public class AppBannerModule {
         bannerPopup.setOpenedListener(action -> {
             this.sendBannerEvent("clicked", bannerPopup.getData());
 
-            if (CleverPush.getInstance(activity).getAppBannerOpenedListener() != null) {
-                CleverPush.getInstance(activity).getAppBannerOpenedListener().opened(action);
+            if (CleverPush.getInstance(ActivityLifecycleListener.currentActivity).getAppBannerOpenedListener() != null) {
+                CleverPush.getInstance(ActivityLifecycleListener.currentActivity).getAppBannerOpenedListener().opened(action);
             }
 
             if (action.getType().equals("subscribe")) {
-                CleverPush.getInstance(activity).subscribe();
+                CleverPush.getInstance(ActivityLifecycleListener.currentActivity).subscribe();
             }
         });
 
@@ -437,11 +436,11 @@ public class AppBannerModule {
     }
 
     private boolean isBannerShown(String id) {
-        if (this.activity == null) {
+        if (ActivityLifecycleListener.currentActivity == null) {
             return false;
         }
 
-        SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = ActivityLifecycleListener.currentActivity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
         if (shownBanners == null) {
@@ -452,7 +451,7 @@ public class AppBannerModule {
     }
 
     private void bannerIsShown(String id) {
-        SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = ActivityLifecycleListener.currentActivity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
         assert shownBanners != null;

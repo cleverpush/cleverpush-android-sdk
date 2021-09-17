@@ -548,7 +548,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.initAppReview();
         this.initGeoFences();
 
-        appBannerModule = AppBannerModule.init(ActivityLifecycleListener.currentActivity, channelId, this.developmentMode);
+        appBannerModule = AppBannerModule.init(channelId, this.developmentMode);
 
         if (pendingAppBannerEvents != null) {
             for (Map.Entry<String, String> entry : pendingAppBannerEvents.entrySet()) {
@@ -2441,5 +2441,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return;
         }
         appBannerModule.disableBanners();
+    }
+
+    public static void removeInstance() {
+        instance = null;
     }
 }
