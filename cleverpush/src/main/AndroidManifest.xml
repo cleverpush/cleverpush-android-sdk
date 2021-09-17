@@ -5,7 +5,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application>
-        <activity android:name="com.cleverpush.NotificationOpenedActivity" android:exported="true" />
+        <activity android:name="com.cleverpush.NotificationOpenedActivity"
+            android:exported="true"
+            android:noHistory="true"/>
         <activity android:name=".stories.StoryDetailActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity android:name=".banner.WebViewActivity" />

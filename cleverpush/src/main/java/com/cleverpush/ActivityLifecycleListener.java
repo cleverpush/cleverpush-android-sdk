@@ -88,5 +88,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         if (activity == currentActivity) {
             currentActivity = null;
         }
+        sessionListener = null;
+        CleverPush.removeInstance();
     }
 }
