@@ -16,7 +16,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     public static Activity currentActivity;
 
     private int counter = 0;
-    private SessionListener sessionListener;
+    private static SessionListener sessionListener;
 
     public ActivityLifecycleListener(SessionListener sessionListener) {
         this.sessionListener = sessionListener;
@@ -90,5 +90,10 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         }
         sessionListener = null;
         CleverPush.removeInstance();
+    }
+
+    public static void clearSessionListner(){
+        sessionListener = null;
+        currentActivity = null;
     }
 }
