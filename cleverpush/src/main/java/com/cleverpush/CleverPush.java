@@ -51,6 +51,7 @@ import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerHMS;
 import com.cleverpush.mapper.Mapper;
 import com.cleverpush.mapper.SubscriptionToListMapper;
+import com.cleverpush.service.CleanUpService;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
 import com.google.android.gms.common.ConnectionResult;
@@ -158,6 +159,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         } else {
             CleverPush.context = context.getApplicationContext();
         }
+        CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
 
         sessionListener = open -> {
             if (open) {
