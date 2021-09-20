@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.2
+* Fixed NotificationOpenedHandler firing twice when re-opening app from background
+* Addressed possible memory leaks
+
 ## 1.16.1
 * Optimized app review feedback email
 
