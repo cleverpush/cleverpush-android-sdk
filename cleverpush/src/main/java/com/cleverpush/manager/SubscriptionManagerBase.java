@@ -148,7 +148,11 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                                 }
                             }
                         }
-                        sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(topicIds)).apply();
+                        if(!CleverPush.isSubscribeForTopicsDialog()){
+                            sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(topicIds)).apply();
+                        }else {
+                            CleverPush.setIsSubscribeForTopicsDialog(false);
+                        }
 
                         if (responseJson.has("topicsVersion")) {
                             int topicsVersion = responseJson.getInt("topicsVersion");

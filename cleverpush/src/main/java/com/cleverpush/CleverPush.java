@@ -91,6 +91,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     public static final String SDK_VERSION = "1.16.2";
 
     private static CleverPush instance;
+    private static boolean isSubscribeForTopicsDialog = false;
 
     public static CleverPush getInstance(@NonNull Context context) {
         if (instance == null) {
@@ -517,14 +518,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, this.channelId).apply();
 
-        int currentTime = (int) (System.currentTimeMillis() / 1000L);
         int threeDays = 3 * 60 * 60 * 24;
         int lastSync = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0);
         int nextSync = lastSync + threeDays;
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        String subscriptionStatus = sharedPreferences.getString(CleverPushPreferences.CLEVERPUSH_STATUS,"");
+        Boolean isUnSubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
 
-        if (!subscriptionStatus.equalsIgnoreCase("UNSUBSCRIBED") && subscriptionId == null && autoRegister || subscriptionId != null && nextSync < currentTime) {
+        if (!isUnSubscribed && subscriptionId == null && autoRegister || isSyncTimePassed(nextSync, subscriptionId)) {
             this.subscribe(subscriptionId == null);
         } else {
             if (subscriptionId != null) {
@@ -536,6 +536,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             this.fireSubscribedListener(subscriptionId);
             this.setSubscriptionId(subscriptionId);
         }
+    }
+
+    private boolean isSyncTimePassed(int nextSync, String subscriptionId) {
+        int currentTime = (int) (System.currentTimeMillis() / 1000L);
+        return subscriptionId != null && nextSync < currentTime;
     }
 
     /**
@@ -1037,7 +1042,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(CleverPushPreferences.CLEVERPUSH_STATUS, "");
+        editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
 
         this.getChannelConfig(config -> {
             SubscriptionManager subscriptionManager = this.getSubscriptionManager();
@@ -1047,37 +1052,39 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 this.fireSubscribedListener(newSubscriptionId);
                 this.setSubscriptionId(newSubscriptionId);
 
-                if (newSubscriptionId != null && newSubscription) {
-                    if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
-                        JSONArray channelTopics = config.optJSONArray("channelTopics");
-                        if (channelTopics != null && channelTopics.length() > 0) {
-                            Set<String> topics = this.getSubscriptionTopics();
-                            if (topics == null || topics.size() == 0) {
-                                Set<String> selectedTopicIds = new HashSet<>();
-                                for (int i = 0; i < channelTopics.length(); i++) {
-                                    JSONObject channelTopic = channelTopics.optJSONObject(i);
-                                    if (channelTopic != null && !channelTopic.optBoolean("defaultUnchecked")) {
-                                        String id = channelTopic.optString("_id");
-                                        if (id != null) {
-                                            selectedTopicIds.add(id);
+                if (!isSubscribeForTopicsDialog) {
+                    if (newSubscriptionId != null && newSubscription) {
+                        if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
+                            JSONArray channelTopics = config.optJSONArray("channelTopics");
+                            if (channelTopics != null && channelTopics.length() > 0) {
+                                Set<String> topics = this.getSubscriptionTopics();
+                                if (topics == null || topics.size() == 0) {
+                                    Set<String> selectedTopicIds = new HashSet<>();
+                                    for (int i = 0; i < channelTopics.length(); i++) {
+                                        JSONObject channelTopic = channelTopics.optJSONObject(i);
+                                        if (channelTopic != null && !channelTopic.optBoolean("defaultUnchecked")) {
+                                            String id = channelTopic.optString("_id");
+                                            if (id != null) {
+                                                selectedTopicIds.add(id);
+                                            }
                                         }
                                     }
+                                    this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
                                 }
-                                this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+
+                                editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, true);
+                                editor.commit();
+
+                                CleverPush.instance.showPendingTopicsDialog();
                             }
-
-                            editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, true);
-                            editor.commit();
-
-                            CleverPush.instance.showPendingTopicsDialog();
                         }
-                    }
 
-                    if (!confirmAlertShown) {
-                        // If the confirm alert has not been tracked by the customer already,
-                        // we will track it here retroperspectively to ensure opt-in rate statistics
-                        // are correct
-                        this.setConfirmAlertShown();
+                        if (!confirmAlertShown) {
+                            // If the confirm alert has not been tracked by the customer already,
+                            // we will track it here retroperspectively to ensure opt-in rate statistics
+                            // are correct
+                            this.setConfirmAlertShown();
+                        }
                     }
                 }
             });
@@ -1105,7 +1112,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         self.clearSubscriptionData();
 
                         SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString(CleverPushPreferences.CLEVERPUSH_STATUS, "UNSUBSCRIBED");
+                        editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, true);
                         editor.commit();
                     } catch (Throwable t) {
                         Log.e("CleverPush", "Error", t);
@@ -2166,8 +2173,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                 }
                             }
                         } else {
-                            setDeSelectAll(false);
-                            this.subscribe(subscriptionId == null);
+                            if (hasDeSelectAllInitial) {
+                                setDeSelectAll(false);
+                                subscriptionId = null;
+                                isSubscribeForTopicsDialog = true;
+                                this.subscribe(subscriptionId == null);
+                            }
 
                             Set<String> selectedTopicIds = new HashSet<>();
                             for (int j = 0; j < topicIds.length; j++) {
@@ -2207,7 +2218,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
      * @param checkedTopics       userSelectedTopics
-     * @param deselectAll       is deselectall checkbox is checked or not
+     * @param deselectAll         is deselectall checkbox is checked or not
      * @param nightModeFlags      flag if there is night mode
      * @param selectedTopics      selectedTopics
      */
@@ -2449,6 +2460,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return;
         }
         appBannerModule.disableBanners();
+    }
+
+    public static boolean isSubscribeForTopicsDialog() {
+        return isSubscribeForTopicsDialog;
+    }
+
+    public static void setIsSubscribeForTopicsDialog(boolean isSubscribeForTopicsDialog) {
+        CleverPush.isSubscribeForTopicsDialog = isSubscribeForTopicsDialog;
     }
 
     public static void removeInstance() {
