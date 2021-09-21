@@ -520,7 +520,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         int lastSync = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0);
         int nextSync = lastSync + threeDays;
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        if (subscriptionId == null && autoRegister || subscriptionId != null && nextSync < currentTime) {
+        String subscriptionStatus = sharedPreferences.getString(CleverPushPreferences.CLEVERPUSH_STATUS,"");
+
+        if (!subscriptionStatus.equalsIgnoreCase("UNSUBSCRIBED") && subscriptionId == null && autoRegister || subscriptionId != null && nextSync < currentTime) {
             this.subscribe(subscriptionId == null);
         } else {
             if (subscriptionId != null) {
@@ -1031,6 +1033,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         }
         this.subscriptionInProgress = true;
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(CleverPushPreferences.CLEVERPUSH_STATUS, "");
+
         this.getChannelConfig(config -> {
             SubscriptionManager subscriptionManager = this.getSubscriptionManager();
             subscriptionManager.subscribe(config, newSubscriptionId -> {
@@ -1058,8 +1064,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                 this.setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
                             }
 
-                            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, true);
                             editor.commit();
 
@@ -1097,6 +1101,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     try {
                         Log.d("CleverPush", "unsubscribe success");
                         self.clearSubscriptionData();
+
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString(CleverPushPreferences.CLEVERPUSH_STATUS, "UNSUBSCRIBED");
+                        editor.commit();
                     } catch (Throwable t) {
                         Log.e("CleverPush", "Error", t);
                     }
@@ -2156,10 +2164,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                 }
                             }
                         } else {
-                            if (hasDeSelectAllInitial) {
-                                setDeSelectAll(false);
-                                this.subscribe(subscriptionId == null);
-                            }
+                            setDeSelectAll(false);
+                            this.subscribe(subscriptionId == null);
 
                             Set<String> selectedTopicIds = new HashSet<>();
                             for (int j = 0; j < topicIds.length; j++) {
