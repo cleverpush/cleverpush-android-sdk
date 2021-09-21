@@ -29,5 +29,6 @@ public class CleverPushPreferences {
     public static final String SUBSCRIPTION_TOPICS_DESELECT_ALL = "subscriptionTopicsDeselectAll";
     public static final String APP_OPENED_STORIES = "openedStories";
     public static final String APP_BANNER_SHOWING = "appBannerShowing";
+    public static final String CLEVERPUSH_STATUS = "cleverPushStatus";
 
 }
