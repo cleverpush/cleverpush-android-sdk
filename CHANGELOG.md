@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.3
+* Improved 'autoRegister: true' behaviour when user has unsubscribed.
+
 ## 1.16.2
 * Fixed NotificationOpenedHandler firing twice when re-opening app from background
 * Addressed possible memory leaks
