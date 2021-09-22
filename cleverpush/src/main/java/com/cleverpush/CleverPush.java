@@ -522,9 +522,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         int lastSync = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0);
         int nextSync = lastSync + threeDays;
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        Boolean isUnSubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
+        Boolean isUnsubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
 
-        if (!isUnSubscribed && subscriptionId == null && autoRegister || isSyncTimePassed(nextSync, subscriptionId)) {
+        if (!isUnsubscribed && subscriptionId == null && autoRegister || isSyncTimePassed(nextSync, subscriptionId)) {
             this.subscribe(subscriptionId == null);
         } else {
             if (subscriptionId != null) {
