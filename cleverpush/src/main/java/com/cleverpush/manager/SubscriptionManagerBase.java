@@ -148,9 +148,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                                 }
                             }
                         }
-                        if(!CleverPush.isSubscribeForTopicsDialog()){
+                        if (!CleverPush.isSubscribeForTopicsDialog()) {
                             sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(topicIds)).apply();
-                        }else {
+                        } else {
                             CleverPush.setIsSubscribeForTopicsDialog(false);
                         }
 
