@@ -32,7 +32,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
     @Override
     public void tagRemoved(int currentPositionOfTagToRemove) {
         if (currentPositionOfTagToRemove != tagIds.length - 1) {
-            removeSubscriptionTag(this, currentPositionOfTagToRemove++);
+            removeSubscriptionTag(this, currentPositionOfTagToRemove + 1);
         }
     }
 

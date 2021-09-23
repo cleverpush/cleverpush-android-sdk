@@ -7,8 +7,9 @@ import android.content.SharedPreferences;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.util.Logger;
 
-import org.junit.Before;
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +54,9 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
 
     @Mock
     Activity activity;
+
+    @Mock
+    Logger logger;
 
     @BeforeEach
     public void setUp() {
@@ -89,11 +94,10 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
                 "}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-
         cleverPushHttpClient.get("/channel/channelId/config", channelConfigFromChannelIdResponseHandler.getResponseHandler(true, "storedChannelId", "storedSubscriptionId"));
 
         try {
-            sleep(60000);
+            sleep(600);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -102,6 +106,62 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
         verify(cleverPush).setChannelConfig(any());
         verify(cleverPush).subscribeOrSync(anyBoolean());
         verify(cleverPush).initFeatures();
+    }
+
+    @Test
+    void testGetResponseHandlerWhenFailureAndChannelConfigIsNull() {
+        when(channelConfigFromChannelIdResponseHandler.getLogger()).thenReturn(logger);
+        doReturn(context).when(channelConfigFromChannelIdResponseHandler).getContext();
+        doReturn(sharedPreferences).when(channelConfigFromChannelIdResponseHandler).getSharedPreferences(context);
+        doReturn(null).when(cleverPush).getChannelConfig();
+        when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn("subscriptionID");
+
+        HttpUrl baseUrl = mockWebServer.url("/channel/channelId/config");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/channel/channelId/config", "");
+        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
+        mockWebServer.enqueue(mockResponse);
+
+        cleverPushHttpClient.get("/channel/channelId/config", channelConfigFromChannelIdResponseHandler.getResponseHandler(true, "storedChannelId", "storedSubscriptionId"));
+
+        try {
+            sleep(600);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        verify(logger).e("CleverPush", "Failed to fetch Channel Config", null);
+        verify(cleverPush).setInitialized(true);
+        verify(cleverPush).fireSubscribedListener("subscriptionID");
+        verify(cleverPush).setSubscriptionId("subscriptionID");
+        verify(cleverPush).setChannelConfig(null);
+    }
+
+    @Test
+    void testGetResponseHandlerWhenFailureAndChannelConfigIsNotNull() {
+        when(channelConfigFromChannelIdResponseHandler.getLogger()).thenReturn(logger);
+        doReturn(context).when(channelConfigFromChannelIdResponseHandler).getContext();
+        doReturn(sharedPreferences).when(channelConfigFromChannelIdResponseHandler).getSharedPreferences(context);
+        doReturn(new JSONObject()).when(cleverPush).getChannelConfig();
+        when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn("subscriptionID");
+
+        HttpUrl baseUrl = mockWebServer.url("/channel/channelId/config");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/channel/channelId/config", "");
+        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
+        mockWebServer.enqueue(mockResponse);
+
+        cleverPushHttpClient.get("/channel/channelId/config", channelConfigFromChannelIdResponseHandler.getResponseHandler(true, "storedChannelId", "storedSubscriptionId"));
+
+        try {
+            sleep(600);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        verify(logger).e("CleverPush", "Failed to fetch Channel Config", null);
+        verify(cleverPush).setInitialized(true);
+        verify(cleverPush, never()).fireSubscribedListener("subscriptionID");
+        verify(cleverPush, never()).setSubscriptionId("subscriptionID");
+        verify(cleverPush, never()).setChannelConfig(null);
     }
 
     @AfterEach

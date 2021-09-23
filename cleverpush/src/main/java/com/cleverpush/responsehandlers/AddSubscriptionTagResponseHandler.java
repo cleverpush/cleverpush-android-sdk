@@ -9,6 +9,7 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.AddTagCompletedListener;
+import com.cleverpush.util.Logger;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +29,7 @@ public class AddSubscriptionTagResponseHandler {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error adding tag - HTTP " + statusCode);
+                getLogger().e("CleverPush", "Error adding tag - HTTP " + statusCode);
             }
         };
     }
@@ -52,6 +53,10 @@ public class AddSubscriptionTagResponseHandler {
 
     public Context getContext() {
         return CleverPush.context;
+    }
+
+    public Logger getLogger() {
+        return new Logger();
     }
 
 }

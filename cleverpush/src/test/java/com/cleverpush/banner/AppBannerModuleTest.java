@@ -1,36 +1,28 @@
 package com.cleverpush.banner;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
-import android.util.Log;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
-import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
-import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannersListener;
-import com.cleverpush.listener.SubscribedListener;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
@@ -202,7 +194,6 @@ class AppBannerModuleTest {
 
     @Test
     void testInitSession() {
-
         appBannerModule.initSession("channelId");
 
         assertThat(appBannerModule.getLastSessionTimestamp()).isLessThan(System.currentTimeMillis());
@@ -210,7 +201,6 @@ class AppBannerModuleTest {
         assertThat(appBannerModule.getPopups().size()).isEqualTo(0);
         verify(appBannerModule).saveSessions();
         verify(appBannerModule).startup();
-
     }
 
     @Test
@@ -636,7 +626,7 @@ class AppBannerModuleTest {
                 "\t\t\"dismissType\": \"till_dismissed\",\n" +
                 "\t\t\"dismissTimeout\": -1,\n" +
                 "\t\t\"stopAtType\": \"specific_time\",\n" +
-                "\t\t\"stopAt\": \"2021-09-15T023:21:59.174Z\",\n" +
+                "\t\t\"stopAt\": \"2025-09-15T023:21:59.174Z\",\n" +
                 "\t\t\"frequency\": \"once_per_session\",\n" +
                 "\t\t\"triggers\": [],\n" +
                 "\t\t\"triggerType\": \"app_open\",\n" +
@@ -756,7 +746,6 @@ class AppBannerModuleTest {
             Answer<Void> appBannersListenerAnswer = new Answer<Void>() {
                 public Void answer(InvocationOnMock invocation) {
                     AppBannersListener callback = (AppBannersListener) invocation.getArguments()[0];
-
                     callback.ready(banners);
                     return null;
                 }
@@ -769,7 +758,6 @@ class AppBannerModuleTest {
         appBannerModule.showBannerById("xuMpMKmoKhAZ8XRKr", null);
 
         assertThat(appBannerModule.getPendingBanners().size()).isEqualTo(1);
-
     }
 
     @Test
@@ -792,7 +780,6 @@ class AppBannerModuleTest {
             Answer<Void> appBannersListenerAnswer = new Answer<Void>() {
                 public Void answer(InvocationOnMock invocation) {
                     AppBannersListener callback = (AppBannersListener) invocation.getArguments()[0];
-
                     callback.ready(banners);
                     return null;
                 }
@@ -804,7 +791,6 @@ class AppBannerModuleTest {
                 ((Runnable) invocation.getArgument(0)).run();
                 return null;
             });
-
 
             appBannerModule.showBannerById("xuMpMKmoKhAZ8XRKr", null);
 
@@ -965,7 +951,6 @@ class AppBannerModuleTest {
 
         verify(appBannerPopup).dismiss();
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
-
     }
 
     @Test
@@ -1061,7 +1046,6 @@ class AppBannerModuleTest {
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
         verify(appBannerOpenedListener).opened(bannerAction);
         verify(cleverPush).subscribe();
-
     }
 
     @Test
@@ -1156,7 +1140,6 @@ class AppBannerModuleTest {
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
         verify(appBannerOpenedListener, never()).opened(bannerAction);
         verify(cleverPush, never()).subscribe();
-
     }
 
     @Test
@@ -1169,7 +1152,6 @@ class AppBannerModuleTest {
 
         assertThat(appBannerModule.getPendingBanners().size()).isEqualTo(1);
         assertThat(appBannerModule.getPopups().size()).isEqualTo(0);
-
     }
 
     @Test

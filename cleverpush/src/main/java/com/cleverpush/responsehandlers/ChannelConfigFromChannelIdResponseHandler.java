@@ -8,6 +8,7 @@ import android.util.Log;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONObject;
 
@@ -42,7 +43,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
             public void onFailure(int statusCode, String response, Throwable throwable) {
                 cleverPush.setInitialized(true);
 
-                Log.e("CleverPush", "Failed to fetch Channel Config", throwable);
+                getLogger().e("CleverPush", "Failed to fetch Channel Config", throwable);
 
                 // trigger listeners
                 if (cleverPush.getChannelConfig() == null) {
@@ -62,5 +63,9 @@ public class ChannelConfigFromChannelIdResponseHandler {
 
     public Context getContext() {
         return CleverPush.context;
+    }
+
+    public Logger getLogger() {
+        return new Logger();
     }
 }

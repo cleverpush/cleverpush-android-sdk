@@ -1,6 +1,5 @@
 package com.cleverpush;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.cleverpush.listener.RemoveTagCompletedListener;
@@ -17,7 +16,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -41,7 +39,6 @@ class RemoveSubscriptionTagsTest {
         MockitoAnnotations.openMocks(this);
         removeSubscriptionTags = Mockito.spy(new RemoveSubscriptionTags("subscriptionId", "channelId", sharedPreferences, tagIds));
     }
-
 
     @Test
     void testRemoveSubscriptionTagWhenThereISJSONException() {

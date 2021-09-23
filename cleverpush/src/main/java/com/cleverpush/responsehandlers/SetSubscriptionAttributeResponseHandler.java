@@ -9,6 +9,7 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.AddTagCompletedListener;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONObject;
 
@@ -40,7 +41,7 @@ public class SetSubscriptionAttributeResponseHandler {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error setting attribute - HTTP " + statusCode);
+                getLogger().e("CleverPush", "Error setting attribute - HTTP " + statusCode);
             }
         };
     }
@@ -53,4 +54,7 @@ public class SetSubscriptionAttributeResponseHandler {
         return CleverPush.context;
     }
 
+    public Logger getLogger() {
+        return new Logger();
+    }
 }

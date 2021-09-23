@@ -49,10 +49,10 @@ import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
 import com.cleverpush.manager.SubscriptionManagerHMS;
-import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
-import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
 import com.cleverpush.mapper.Mapper;
 import com.cleverpush.mapper.SubscriptionToListMapper;
+import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
+import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
 import com.cleverpush.responsehandlers.TrackEventResponseHandler;
@@ -94,7 +94,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.15.6";
+    public static final String SDK_VERSION = "1.16.1";
 
     private static CleverPush instance;
     public static Context context;
@@ -116,7 +116,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private Map<String, String> pendingAppBannerEvents = new HashMap<>();
     private String pendingShowAppBannerId = null;
     private String pendingShowAppBannerNotificationId = null;
-    public String currentPageUrl;
+    private String currentPageUrl;
     private AppBannerModule appBannerModule;
     private boolean appBannersDisabled = false;
 
@@ -128,8 +128,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
     private boolean pendingInitFeaturesCall = false;
-    public ArrayList<PageView> pendingPageViews = new ArrayList<>();
-
+    private ArrayList<PageView> pendingPageViews = new ArrayList<>();
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
     private int locationPermissionRequestCode = 101;
@@ -532,7 +531,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                         editor.putLong(CleverPushPreferences.APP_REVIEW_SHOWN, System.currentTimeMillis() / 1000L);
                                         editor.apply();
 
-                                        ShowFiveStarsDialog(config);
+                                        showFiveStarsDialog(config);
                                     }
                                 }, appReviewSeconds * 1000);
                             });
@@ -545,7 +544,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
     }
 
-    public void ShowFiveStarsDialog(JSONObject config) {
+    public void showFiveStarsDialog(JSONObject config) {
         FiveStarsDialog dialog = new FiveStarsDialog(
                 ActivityLifecycleListener.currentActivity,
                 config.optString("appReviewEmail")
@@ -2500,5 +2499,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public String getPendingShowAppBannerId() {
         return pendingShowAppBannerId;
+    }
+
+    public String getCurrentPageUrl() {
+        return currentPageUrl;
+    }
+
+    public ArrayList<PageView> getPendingPageViews() {
+        return pendingPageViews;
     }
 }

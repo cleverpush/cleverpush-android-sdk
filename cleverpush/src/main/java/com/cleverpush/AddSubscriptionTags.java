@@ -32,7 +32,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
     @Override
     public void tagAdded(int currentPositionOfTagToAdd) {
         if (currentPositionOfTagToAdd != tagIds.length - 1) {
-            addSubscriptionTag(this, currentPositionOfTagToAdd++);
+            addSubscriptionTag(this, currentPositionOfTagToAdd + 1);
         }
     }
 

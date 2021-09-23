@@ -23,15 +23,7 @@ public class CleverPushHttpClient {
     }
 
     public static void get(final String url, final ResponseHandler responseHandler) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        }).start();
-
         new Thread(() -> makeRequest(url, null, null, responseHandler)).start();
-        ;
     }
 
     private static void makeRequest(String url, String method, JSONObject jsonBody, ResponseHandler responseHandler) {

@@ -7,6 +7,7 @@ import android.util.Log;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.RemoveTagCompletedListener;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
@@ -52,7 +53,7 @@ class SetSubscriptionAttributeResponseHandlerTest {
     SharedPreferences.Editor editor;
 
     @Mock
-    Log log;
+    Logger logger;
 
     @BeforeEach
     void setUp() {
@@ -87,33 +88,34 @@ class SetSubscriptionAttributeResponseHandlerTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
         verify(editor).apply();
-
         JSONObject jsonObject = new JSONObject(subscriptionAttributes);
         String jsonString = jsonObject.toString();
         verify(editor).putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
         verify(editor).commit();
     }
 
-//    @Test
-//    void testGetResponseHandlerWhenFailure() {
-//        HttpUrl baseUrl = mockWebServer.url("/subscription/attribute");
-//        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/attribute","");
-//        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
-//        mockWebServer.enqueue(mockResponse);
-//
-//
-//        cleverPushHttpClient.get( "/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(anyMap()));
-//
-//        try {
-//            sleep(600);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//        verify(log).e("CleverPush", "Error setting attribute - HTTP " + 400);
-//    }
+    @Test
+    void testGetResponseHandlerWhenFailure() {
+        when(setSubscriptionAttributeResponseHandler.getLogger()).thenReturn(logger);
 
+        HttpUrl baseUrl = mockWebServer.url("/subscription/attribute");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/attribute","");
+        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
+        mockWebServer.enqueue(mockResponse);
+
+        cleverPushHttpClient.get( "/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(anyMap()));
+
+        try {
+            sleep(600);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        verify(logger).e("CleverPush", "Error setting attribute - HTTP " + 400);
+    }
 
     @AfterEach
     void tearDown() {

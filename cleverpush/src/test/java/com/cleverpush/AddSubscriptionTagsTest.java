@@ -1,14 +1,11 @@
 package com.cleverpush;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.cleverpush.listener.AddTagCompletedListener;
-import com.cleverpush.listener.RemoveTagCompletedListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -16,7 +13,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,9 +30,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AddSubscriptionTagsTest {
-
-    @Mock
-    Context context;
 
     @Mock
     SharedPreferences sharedPreferences;
@@ -79,7 +72,6 @@ class AddSubscriptionTagsTest {
     @Test
     void testAddSubscriptionTagWhenSubscriptionTagAlreadyHasTagAndNotNullAddTagCompletedListener() {
         Set<String> tags = new HashSet<String>();
-        ;
         tags.add("tagId");
 
         doReturn(jsonObject).when(addSubscriptionTags).getJsonObject();
@@ -94,7 +86,6 @@ class AddSubscriptionTagsTest {
     @Test
     void testAddSubscriptionTagWhenSubscriptionTagAlreadyHasTagAndNullAddTagCompletedListener() {
         Set<String> tags = new HashSet<String>();
-        ;
         tags.add("tagId");
 
         doReturn(jsonObject).when(addSubscriptionTags).getJsonObject();
@@ -109,7 +100,6 @@ class AddSubscriptionTagsTest {
     @Test
     void testAddSubscriptionTagWhenSubscriptionTagsDoNotHaveTag() {
         Set<String> tags = new HashSet<String>();
-        ;
         tags.add("newTagId");
 
         doReturn(jsonObject).when(addSubscriptionTags).getJsonObject();

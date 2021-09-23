@@ -127,7 +127,7 @@ public class ChatView extends WebView {
         Context context = this.getContext();
 
         WebSettings webSettings = this.getSettings();
-        if(webSettings != null) {
+        if (webSettings != null) {
             webSettings.setJavaScriptEnabled(true);
             webSettings.setUseWideViewPort(true);
             webSettings.setLoadWithOverviewMode(true);
@@ -142,7 +142,7 @@ public class ChatView extends WebView {
 
         this.loadUrl("about:blank");
 
-        if(getCleverPushInstance() != null){
+        if (getCleverPushInstance() != null) {
             this.setWebViewClient(getWebViewClient(context));
             this.loadChat();
         }
@@ -176,7 +176,7 @@ public class ChatView extends WebView {
     }
 
     public CleverPush getCleverPushInstance() {
-        if(getContext() != null){
+        if (getContext() != null) {
             return CleverPush.getInstance(getWebView().getContext());
         }
         return null;
@@ -193,5 +193,4 @@ public class ChatView extends WebView {
     public Handler getHandler() {
         return handler;
     }
-
 }

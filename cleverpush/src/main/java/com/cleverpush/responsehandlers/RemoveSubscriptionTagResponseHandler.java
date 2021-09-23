@@ -9,10 +9,10 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.RemoveTagCompletedListener;
+import com.cleverpush.util.Logger;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
 public class RemoveSubscriptionTagResponseHandler {
 
@@ -29,7 +29,7 @@ public class RemoveSubscriptionTagResponseHandler {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error removing tag - HTTP " + statusCode);
+                getLogger().e("CleverPush", "Error removing tag - HTTP " + statusCode);
             }
         };
 
@@ -56,4 +56,7 @@ public class RemoveSubscriptionTagResponseHandler {
         return CleverPush.context;
     }
 
+    public Logger getLogger() {
+        return new Logger();
+    }
 }

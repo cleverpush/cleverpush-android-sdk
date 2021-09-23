@@ -7,6 +7,7 @@ import android.util.Log;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONObject;
 
@@ -23,18 +24,21 @@ public class UnSubscribeResponseHandler {
             @Override
             public void onSuccess(String response) {
                 try {
-                    Log.d("CleverPush", "unsubscribe success");
+                    getLogger().d("CleverPush", "unsubscribe success");
                     cleverPush.clearSubscriptionData();
                 } catch (Throwable t) {
-                    Log.e("CleverPush", "Error", t);
+                    getLogger().e("CleverPush", "Error", t);
                 }
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable t) {
-                Log.e("CleverPush", "Failed while unsubscribe request - " + statusCode + " - " + response, t);
+                getLogger().e("CleverPush", "Failed while unsubscribe request - " + statusCode + " - " + response, t);
             }
         };
     }
 
+    public Logger getLogger() {
+        return new Logger();
+    }
 }

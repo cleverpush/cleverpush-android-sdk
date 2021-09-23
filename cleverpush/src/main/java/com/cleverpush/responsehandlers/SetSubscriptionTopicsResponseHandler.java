@@ -10,6 +10,7 @@ import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.TopicsChangedListener;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONObject;
 
@@ -40,9 +41,12 @@ public class SetSubscriptionTopicsResponseHandler {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
+                getLogger().e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
             }
         };
     }
 
+    public Logger getLogger() {
+        return new Logger();
+    }
 }

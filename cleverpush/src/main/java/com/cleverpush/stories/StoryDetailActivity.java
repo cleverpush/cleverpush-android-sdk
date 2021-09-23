@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
@@ -69,7 +68,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
             stories = (ArrayList<Story>) extras.getSerializable("stories");
             loadStoryDetails();
         }
-
     }
 
     @Override
@@ -101,5 +99,4 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
             recyclerView.smoothScrollToPosition(position - 1);
         }
     }
-
 }

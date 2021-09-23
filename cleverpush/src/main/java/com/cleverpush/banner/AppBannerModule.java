@@ -502,7 +502,6 @@ public class AppBannerModule {
         return CleverPush.getInstance(activity);
     }
 
-
     public Collection<AppBannersListener> getBannersListeners() {
         return bannersListeners;
     }

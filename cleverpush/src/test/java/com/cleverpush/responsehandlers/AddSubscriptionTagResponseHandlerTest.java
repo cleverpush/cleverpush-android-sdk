@@ -57,9 +57,6 @@ class AddSubscriptionTagResponseHandlerTest {
     @Mock
     Logger logger;
 
-    @Mock
-    Log log;
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -83,7 +80,6 @@ class AddSubscriptionTagResponseHandlerTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-
         cleverPushHttpClient.get("/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", null, 0, new HashSet<>(Arrays.asList("value"))));
 
         try {
@@ -91,6 +87,7 @@ class AddSubscriptionTagResponseHandlerTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         verify(addSubscriptionTagResponseHandler).updateSubscriptionTags(new HashSet<>(Arrays.asList("value")));
         verify(addTagCompletedListener, never()).tagAdded(0);
     }
@@ -106,6 +103,25 @@ class AddSubscriptionTagResponseHandlerTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
+        cleverPushHttpClient.get("/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", addTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
+
+        try {
+            sleep(600);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        verify(addSubscriptionTagResponseHandler).updateSubscriptionTags(new HashSet<>(Arrays.asList("value")));
+        verify(addTagCompletedListener).tagAdded(0);
+    }
+
+    @Test
+    void testGetResponseHandlerWhenFailure() {
+        when(addSubscriptionTagResponseHandler.getLogger()).thenReturn(logger);
+        HttpUrl baseUrl = mockWebServer.url("/subscription/tag");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag", "");
+        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
+        mockWebServer.enqueue(mockResponse);
 
         cleverPushHttpClient.get("/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", addTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
 
@@ -114,30 +130,9 @@ class AddSubscriptionTagResponseHandlerTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        verify(addSubscriptionTagResponseHandler).updateSubscriptionTags(new HashSet<>(Arrays.asList("value")));
-        verify(addTagCompletedListener).tagAdded(0);
+
+        verify(logger).e("CleverPush", "Error adding tag - HTTP " + 400);
     }
-
-    @Test
-    void testGetResponseHandlerWhenFailure() {
-        //when(log.e("CleverPush", "Error adding tag - HTTP 400")).thenReturn(logger.e("CleverPush", "Error adding tag - HTTP 400"));
-        HttpUrl baseUrl = mockWebServer.url("/subscription/tag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag", "");
-        MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
-        mockWebServer.enqueue(mockResponse);
-
-
-        cleverPushHttpClient.get("/subscription/tag", addSubscriptionTagResponseHandler.getResponseHandler("tagId", addTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
-
-        try {
-            sleep(6000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        //verify(logger).e("CleverPush", "Error adding tag - HTTP " + 400);
-        assertThat(Logger.e("CleverPush", "Error adding tag - HTTP 400")).isEqualTo(0);
-    }
-
 
     @AfterEach
     void tearDown() {
