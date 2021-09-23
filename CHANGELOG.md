@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.4
+* Fixed ActivityLifecycleListener removing CleverPush instance too early
+
 ## 1.16.3
 * Improved 'autoRegister: true' behaviour when user has unsubscribed.
 
