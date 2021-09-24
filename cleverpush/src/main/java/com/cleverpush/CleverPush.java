@@ -150,6 +150,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
+    private boolean webViewOpenEnabled = false;
+
 
     private CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -1246,10 +1248,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         }
 
         if (this.notificationOpenedListener == null) {
-            String notificationUrl = openedResult.getNotification().getUrl();
+            if (webViewOpenEnabled) {
+                String notificationUrl = openedResult.getNotification().getUrl();
 
-            if (notificationUrl != null && !notificationUrl.equalsIgnoreCase("")) {
-                WebViewActivity.launch((Activity) context, notificationUrl);
+                if (notificationUrl != null && !notificationUrl.equalsIgnoreCase("")) {
+                    WebViewActivity.launch((Activity) context, notificationUrl);
+                }
             }
             unprocessedOpenedNotifications.add(openedResult);
             return false;
@@ -2466,5 +2470,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public static void removeInstance() {
         instance = null;
+    }
+
+    public void setWebViewOpenEnabled(boolean webViewOpenEnabled) {
+        this.webViewOpenEnabled = webViewOpenEnabled;
     }
 }
