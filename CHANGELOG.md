@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.16.4
+* Fixed ActivityLifecycleListener removing CleverPush instance too early
+
+## 1.16.3
+* Improved 'autoRegister: true' behaviour when user has unsubscribed.
+
+## 1.16.2
+* Fixed NotificationOpenedHandler firing twice when re-opening app from background
+* Addressed possible memory leaks
+
+## 1.16.1
+* Optimized app review feedback email
+
 ## 1.16.0
 * Added App Stories
 * Added methods for adding / removing multiple tags at once
