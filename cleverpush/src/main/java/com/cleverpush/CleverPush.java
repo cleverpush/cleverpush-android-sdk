@@ -152,7 +152,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean confirmAlertShown = false;
     private boolean webViewOpenEnabled = false;
 
-
     private CleverPush(@NonNull Context context) {
         if (context == null) {
             return;

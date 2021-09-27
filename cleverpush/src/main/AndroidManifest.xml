@@ -33,6 +33,12 @@
                 <action android:name="com.huawei.push.action.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <service
+            android:enabled="true"
+            android:name="com.cleverpush.service.CleanUpService"
+            android:exported="false"
+            android:stopWithTask="false" />
     </application>
 
     <!-- START: ShortcutBadger -->
