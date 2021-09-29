@@ -29,7 +29,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
-import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
@@ -203,6 +202,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification received callback
+     *
      * @param notificationReceivedListener callback for the notification received
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
@@ -212,6 +212,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification opened callback
+     *
      * @param notificationOpenedListener callback for the notification opened
      */
     public void init(@Nullable final NotificationOpenedListener notificationOpenedListener) {
@@ -221,6 +222,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with subscribed callback
+     *
      * @param subscribedListener callback for subscription
      */
 
@@ -231,6 +233,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel
+     *
      * @param channelId channelID of the channel
      */
     public void init(String channelId) {
@@ -239,6 +242,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      */
@@ -248,6 +252,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback
+     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      */
@@ -257,6 +262,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification opened callback and subscribed callback
+     *
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
      */
@@ -266,6 +272,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK with notification received callback and subscribed callback
+     *
      * @param notificationReceivedListener callback for the notification received
      * @param subscribedListener           callback for subscription
      */
@@ -275,6 +282,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and notification opened callback
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
@@ -285,6 +293,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with subscribed callback
+     *
      * @param channelId          channelID of the channel
      * @param subscribedListener callback for subscription
      */
@@ -294,6 +303,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and subscribed callback
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param subscribedListener           callback for subscription
@@ -304,6 +314,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback and subscribed callback
+     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
@@ -314,6 +325,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received, notification opened callback and subscribed callback
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
@@ -325,6 +337,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification opened callback and subscribed callback and if there is autoRegister
+     *
      * @param channelId                  channelID of the channel
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
@@ -336,6 +349,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback and subscribed callback and if there is autoRegister
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param subscribedListener           callback for subscription
@@ -347,6 +361,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * initialize Cleverpush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
+     *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
@@ -497,6 +512,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * subscribe or sync subscription
+     *
      * @param autoRegister boolean for auto register
      */
     private void subscribeOrSync(boolean autoRegister) {
@@ -2471,6 +2487,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         instance = null;
     }
 
+    /**
+     * enable disable open notification in webview
+     *
+     * @param webViewOpenEnabled is webView enabled or disabled for notifications
+     */
     public void setWebViewOpenEnabled(boolean webViewOpenEnabled) {
         this.webViewOpenEnabled = webViewOpenEnabled;
     }

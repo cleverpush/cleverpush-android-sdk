@@ -44,6 +44,6 @@ public class NotificationOpenedProcessor {
         cleverPush.trackNotificationClicked(notificationId, subscriptionId);
         cleverPush.fireNotificationOpenedListener(result, context);
 
-		BadgeHelper.update(context, cleverPush.getIncrementBadge());
+        BadgeHelper.update(context, cleverPush.getIncrementBadge());
     }
 }

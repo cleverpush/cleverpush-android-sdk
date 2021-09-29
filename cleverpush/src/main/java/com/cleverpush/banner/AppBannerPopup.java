@@ -40,6 +40,7 @@ import androidx.dynamicanimation.animation.SpringForce;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
+import com.cleverpush.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.blocks.Alignment;
 import com.cleverpush.banner.models.blocks.BannerBackground;

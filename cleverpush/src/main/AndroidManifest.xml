@@ -12,7 +12,7 @@
         <activity android:name=".stories.StoryDetailActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
-        <activity android:name=".banner.WebViewActivity"
+        <activity android:name=".WebViewActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"
             />
 
