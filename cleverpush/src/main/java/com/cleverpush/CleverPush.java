@@ -37,9 +37,11 @@ import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
+import com.cleverpush.listener.NotificationFromApiCallbackListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
+import com.cleverpush.listener.NotificationsCallbackListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
@@ -1876,6 +1878,28 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public Set<Notification> getNotifications() {
+        return getNotificationsFromLocal();
+    }
+
+    public void getNotifications(boolean combineWithApi, NotificationsCallbackListener notificationsCallbackListener) {
+        Set<Notification> localNotifications = getNotificationsFromLocal();
+
+        if (combineWithApi) {
+            getNotificationsFromApi(new NotificationFromApiCallbackListener() {
+                @Override
+                public void ready(List<Notification> remoteNotifications) {
+                    List<Notification> notifications = new ArrayList<>();
+                    notifications.addAll(localNotifications);
+                    notifications.addAll(remoteNotifications);
+                    notificationsCallbackListener.ready(new HashSet<>(notifications));
+                }
+            });
+        } else {
+            notificationsCallbackListener.ready(localNotifications);
+        }
+    }
+
+    public Set<Notification> getNotificationsFromLocal() {
         Gson gson = new Gson();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
@@ -1899,6 +1923,40 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             }
         }
         return notifications;
+    }
+
+    private void getNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
+        String url = "/channel/" + this.channelId + "/received-notifications?";
+        ArrayList<String> subscriptionTopics = new ArrayList<String>(getSubscriptionTopics());
+
+        for (int i = 0; i < subscriptionTopics.size(); i++) {
+            if (i == 0) {
+                url = url + "topics[]=" + subscriptionTopics.get(i);
+            } else {
+                url = url + "&topics[]=" + subscriptionTopics.get(i);
+            }
+        }
+
+        CleverPushHttpClient.get(url, new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                if (response != null) {
+                    Gson gson = new Gson();
+                    try {
+                        JSONObject notificationObject = new JSONObject(response);
+                        List<Notification> notifications = gson.fromJson(notificationObject.getJSONArray("notifications").toString(), NotificationList.class);
+                        notificationFromApiCallbackListener.ready(notifications);
+                    } catch (Exception ex) {
+                        Log.e("CleverPush", "error while getting stored notifications", ex);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+                Log.e("CleverPush", "Error tgot Response - HTTP " + statusCode);
+            }
+        });
     }
 
     public void trackEvent(String eventName) {
@@ -2214,6 +2272,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * Will create list of checkbox for the topics.
+     *
      * @param parentLayout        parent layout to add checkboxes
      * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
