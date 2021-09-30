@@ -27,7 +27,7 @@ public class CleanUpService extends Service {
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
         CleverPush.removeInstance();
-        ActivityLifecycleListener.clearSessionListner();
+        ActivityLifecycleListener.clearSessionListener();
         this.stopSelf();
     }
 }

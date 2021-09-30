@@ -104,7 +104,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         }
     }
 
-    public static void clearSessionListner(){
+    public static void clearSessionListener() {
         sessionListener = null;
         currentActivity = null;
     }
