@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.5
+* Delayed CleanUpService start until first Activity is ready
+
 ## 1.16.4
 * Fixed ActivityLifecycleListener removing CleverPush instance too early
 
