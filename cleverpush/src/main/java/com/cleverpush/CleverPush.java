@@ -37,9 +37,11 @@ import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
+import com.cleverpush.listener.NotificationFromApiCallbackListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
+import com.cleverpush.listener.NotificationsCallbackListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
@@ -74,6 +76,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1875,6 +1879,49 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public Set<Notification> getNotifications() {
+        return getNotificationsFromLocal();
+    }
+
+    public void getNotifications(boolean combineWithApi, NotificationsCallbackListener notificationsCallbackListener) {
+        Set<Notification> localNotifications = getNotificationsFromLocal();
+
+        if (combineWithApi) {
+            getReceivedNotificationsFromApi(new NotificationFromApiCallbackListener() {
+                @Override
+                public void ready(List<Notification> remoteNotifications) {
+                    List<Notification> allNotifications = new ArrayList<>();
+                    List<Notification> notifications = new ArrayList<>();
+                    allNotifications.addAll(localNotifications);
+                    allNotifications.addAll(remoteNotifications);
+
+                    for (Notification notification : allNotifications) {
+                        boolean isFound = false;
+                        for (Notification e : notifications) {
+                            if (e.getId().equals(notification.getId())) {
+                                isFound = true;
+                                break;
+                            }
+                        }
+                        if (!isFound) {
+                            notifications.add(notification);
+                        }
+                    }
+
+                    Collections.sort(notifications, new Comparator<Notification>() {
+                        public int compare(Notification notification1, Notification notification2) {
+                            return notification1.createdAt.compareTo(notification2.createdAt);
+                        }
+                    });
+
+                    notificationsCallbackListener.ready(new HashSet<>(notifications));
+                }
+            });
+        } else {
+            notificationsCallbackListener.ready(localNotifications);
+        }
+    }
+
+    public Set<Notification> getNotificationsFromLocal() {
         Gson gson = new Gson();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
@@ -1898,6 +1945,41 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             }
         }
         return notifications;
+    }
+
+    private void getReceivedNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
+        String url = "/channel/" + this.channelId + "/received-notifications";
+        ArrayList<String> subscriptionTopics = new ArrayList<String>(getSubscriptionTopics());
+
+        for (int i = 0; i < subscriptionTopics.size(); i++) {
+            if (i == 0) {
+                url += "?";
+            } else {
+                url += "&";
+            }
+            url += "topics[]=" + subscriptionTopics.get(i);
+        }
+
+        CleverPushHttpClient.get(url, new CleverPushHttpClient.ResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                if (response != null) {
+                    Gson gson = new Gson();
+                    try {
+                        JSONObject notificationObject = new JSONObject(response);
+                        List<Notification> notifications = gson.fromJson(notificationObject.getJSONArray("notifications").toString(), NotificationList.class);
+                        notificationFromApiCallbackListener.ready(notifications);
+                    } catch (Exception ex) {
+                        Log.e("CleverPush", "error while getting stored notifications", ex);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, String response, Throwable throwable) {
+                Log.e("CleverPush", "Error got Response - HTTP " + statusCode);
+            }
+        });
     }
 
     public void trackEvent(String eventName) {
@@ -2213,6 +2295,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     /**
      * Will create list of checkbox for the topics.
+     *
      * @param parentLayout        parent layout to add checkboxes
      * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
