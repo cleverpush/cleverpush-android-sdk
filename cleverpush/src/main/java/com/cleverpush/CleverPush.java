@@ -160,7 +160,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         } else {
             CleverPush.context = context.getApplicationContext();
         }
-        CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
 
         sessionListener = open -> {
             if (open) {
