@@ -1926,15 +1926,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private void getNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
-        String url = "/channel/" + this.channelId + "/received-notifications?";
+        String url = "/channel/" + this.channelId + "/received-notifications";
         ArrayList<String> subscriptionTopics = new ArrayList<String>(getSubscriptionTopics());
 
         for (int i = 0; i < subscriptionTopics.size(); i++) {
             if (i == 0) {
-                url = url + "topics[]=" + subscriptionTopics.get(i);
+                url += "?";
             } else {
-                url = url + "&topics[]=" + subscriptionTopics.get(i);
+                url += "&";
             }
+            url += "&topics[]=" + subscriptionTopics.get(i);
         }
 
         CleverPushHttpClient.get(url, new CleverPushHttpClient.ResponseHandler() {
