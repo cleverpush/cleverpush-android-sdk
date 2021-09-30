@@ -76,6 +76,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1885,12 +1887,33 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         Set<Notification> localNotifications = getNotificationsFromLocal();
 
         if (combineWithApi) {
-            getNotificationsFromApi(new NotificationFromApiCallbackListener() {
+            getReceivedNotificationsFromApi(new NotificationFromApiCallbackListener() {
                 @Override
                 public void ready(List<Notification> remoteNotifications) {
+                    List<Notification> allNotifications = new ArrayList<>();
                     List<Notification> notifications = new ArrayList<>();
-                    notifications.addAll(localNotifications);
-                    notifications.addAll(remoteNotifications);
+                    allNotifications.addAll(localNotifications);
+                    allNotifications.addAll(remoteNotifications);
+
+                    for (Notification notification : allNotifications) {
+                        boolean isFound = false;
+                        for (Notification e : notifications) {
+                            if (e.getId().equals(notification.getId())) {
+                                isFound = true;
+                                break;
+                            }
+                        }
+                        if (!isFound) {
+                            notifications.add(notification);
+                        }
+                    }
+
+                    Collections.sort(notifications, new Comparator<Notification>() {
+                        public int compare(Notification notification1, Notification notification2) {
+                            return notification1.createdAt.compareTo(notification2.createdAt);
+                        }
+                    });
+
                     notificationsCallbackListener.ready(new HashSet<>(notifications));
                 }
             });
@@ -1925,7 +1948,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return notifications;
     }
 
-    private void getNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
+    private void getReceivedNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
         String url = "/channel/" + this.channelId + "/received-notifications";
         ArrayList<String> subscriptionTopics = new ArrayList<String>(getSubscriptionTopics());
 
@@ -1935,7 +1958,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             } else {
                 url += "&";
             }
-            url += "&topics[]=" + subscriptionTopics.get(i);
+            url += "topics[]=" + subscriptionTopics.get(i);
         }
 
         CleverPushHttpClient.get(url, new CleverPushHttpClient.ResponseHandler() {
@@ -1955,7 +1978,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error tgot Response - HTTP " + statusCode);
+                Log.e("CleverPush", "Error got Response - HTTP " + statusCode);
             }
         });
     }
