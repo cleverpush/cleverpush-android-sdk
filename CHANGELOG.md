@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.0
+* Updates for Android 12
+
 ## 1.16.5
 * Delayed CleanUpService start until first Activity is ready
 * Added new getNotifications(true, callback) method which can combine notifications from local storage and from the API
