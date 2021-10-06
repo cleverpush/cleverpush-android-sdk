@@ -868,7 +868,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                                 Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
                                 // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
-                                PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
                                 try {
                                     LocationServices.GeofencingApi.addGeofences(
