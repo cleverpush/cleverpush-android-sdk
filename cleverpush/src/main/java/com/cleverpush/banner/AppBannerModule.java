@@ -9,6 +9,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
@@ -180,7 +181,7 @@ public class AppBannerModule {
     public void initSession(String channel) {
         this.channel = channel;
 
-        if (!CleverPush.getInstance(activity).isDevelopmentModeEnabled()
+        if (!CleverPush.getInstance(ActivityLifecycleListener.currentActivity).isDevelopmentModeEnabled()
                 && lastSessionTimestamp > 0
                 && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
             return;

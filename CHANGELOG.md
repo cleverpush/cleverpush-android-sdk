@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.17.0
+* Updates for Android 12
+
+## 1.16.5
+* Delayed CleanUpService start until first Activity is ready
+* Added new getNotifications(true, callback) method which can combine notifications from local storage and from the API
+
+## 1.16.4
+* Fixed ActivityLifecycleListener removing CleverPush instance too early
+
+## 1.16.3
+* Improved 'autoRegister: true' behaviour when user has unsubscribed.
+
+## 1.16.2
+* Fixed NotificationOpenedHandler firing twice when re-opening app from background
+* Addressed possible memory leaks
+
 ## 1.16.1
 * Optimized app review feedback email
 
