@@ -4,13 +4,13 @@ import org.json.JSONObject;
 
 public interface SubscriptionManager {
 
-   interface RegisteredHandler {
-      void complete(String id);
-   }
+    interface RegisteredHandler {
+        void complete(String id);
+    }
 
-   void subscribe(JSONObject channelConfig, RegisteredHandler callback);
+    void subscribe(JSONObject channelConfig, RegisteredHandler callback);
 
-   void tokenCallback(String token);
+    void tokenCallback(String token);
 
-   String getProviderName();
+    String getProviderName();
 }

@@ -14,11 +14,11 @@ public class Subscription implements Serializable {
         return id;
     }
 
-	public String getRawPayload() {
-		return rawPayload;
-	}
+    public String getRawPayload() {
+        return rawPayload;
+    }
 
-	public void setRawPayload(String rawPayload) {
-		this.rawPayload = rawPayload;
-	}
+    public void setRawPayload(String rawPayload) {
+        this.rawPayload = rawPayload;
+    }
 }

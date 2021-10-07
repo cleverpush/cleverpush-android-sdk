@@ -68,7 +68,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
             stories = (ArrayList<Story>) extras.getSerializable("stories");
             loadStoryDetails();
         }
-
     }
 
     @Override
@@ -100,5 +99,4 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
             recyclerView.smoothScrollToPosition(position - 1);
         }
     }
-
 }

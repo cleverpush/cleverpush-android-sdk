@@ -229,7 +229,7 @@ public class AppBannerPopup {
 
     public void dismiss() {
         if (!isInitialized) {
-            Log.e(TAG,"Must be initialized");
+            Log.e(TAG, "Must be initialized");
             return;
         }
 
@@ -237,7 +237,7 @@ public class AppBannerPopup {
         runInMain(() -> {
             popup.dismiss();
             this.toggleShowing(false);
-        },200);
+        }, 200);
 
     }
 
@@ -379,7 +379,7 @@ public class AppBannerPopup {
             @Override
             public void onClick(View view) {
                 if (block.getAction().isOpenInWebView()) {
-                    WebViewActivity.launch(activity,block.getAction().getUrl());
+                    WebViewActivity.launch(activity, block.getAction().getUrl());
                 }
             }
         });

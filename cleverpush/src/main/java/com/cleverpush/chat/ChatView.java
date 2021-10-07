@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
@@ -17,19 +18,17 @@ public class ChatView extends WebView {
 
     public ChatView(Context context) {
         super(context);
-
         this.init();
     }
 
     public ChatView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         this.init();
     }
 
     public void loadChat() {
         Context context = this.getContext();
-        CleverPush.getInstance(context).getSubscriptionId(subscriptionId -> {
+        getCleverPushInstance().getSubscriptionId(subscriptionId -> {
             this.loadChat(subscriptionId);
         });
     }
@@ -49,10 +48,10 @@ public class ChatView extends WebView {
         }
 
         new Thread(() -> {
-            CleverPush.getInstance(context).getChannelConfig(config -> {
+            getCleverPushInstance().getChannelConfig(config -> {
                 String configJson = config != null ? config.toString() : "null";
                 String brandingColorStr = "";
-                int brandingColor = CleverPush.getInstance(context).getBrandingColor();
+                int brandingColor = getCleverPushInstance().getBrandingColor();
                 if (brandingColor != 0) {
                     brandingColorStr = "#" + Integer.toHexString(brandingColor).substring(2);
                 }
@@ -118,8 +117,7 @@ public class ChatView extends WebView {
                         "<script onerror='showErrorView()' src='https://static.cleverpush.com/sdk/cleverpush-chat.js'></script>\n" +
                         "</body>\n" +
                         "</html>";
-
-                this.handler.post(() -> webView.loadDataWithBaseURL("file:///android_asset/", data, "text/html", "UTF-8", null));
+                getHandler().post(() -> webView.loadDataWithBaseURL("file:///android_asset/", data, "text/html", "UTF-8", null));
             });
         }).start();
     }
@@ -128,19 +126,30 @@ public class ChatView extends WebView {
         this.handler = new Handler();
         Context context = this.getContext();
 
-        this.getSettings().setJavaScriptEnabled(true) ;
-        this.getSettings().setUseWideViewPort(true);
-        this.getSettings().setLoadWithOverviewMode(true);
-        this.getSettings().setDomStorageEnabled(true);
+        WebSettings webSettings = this.getSettings();
+        if (webSettings != null) {
+            webSettings.setJavaScriptEnabled(true);
+            webSettings.setUseWideViewPort(true);
+            webSettings.setLoadWithOverviewMode(true);
+            webSettings.setDomStorageEnabled(true);
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             this.setWebContentsDebuggingEnabled(true);
         }
 
-        this.addJavascriptInterface(new ChatJavascriptInterface(context, this), "cleverpushAppInterface");
+        this.addJavascriptInterface(getChatJavascriptInterface(context), "cleverpushAppInterface");
 
         this.loadUrl("about:blank");
 
-        this.setWebViewClient(new WebViewClient() {
+        if (getCleverPushInstance() != null) {
+            this.setWebViewClient(getWebViewClient(context));
+            this.loadChat();
+        }
+    }
+
+    public WebViewClient getWebViewClient(Context context) {
+        return new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 Toast.makeText(context, description, Toast.LENGTH_SHORT).show();
             }
@@ -149,18 +158,39 @@ public class ChatView extends WebView {
                 if (url.equals("about:blank")) {
                     return super.shouldOverrideUrlLoading(view, url);
                 }
-                ChatUrlOpenedListener urlOpenedListener = CleverPush.getInstance(context).getChatUrlOpenedListener();
+                ChatUrlOpenedListener urlOpenedListener = getCleverPushInstance().getChatUrlOpenedListener();
                 if (urlOpenedListener != null) {
                     urlOpenedListener.opened(url);
                 }
                 return true;
             }
-        });
-
-        this.loadChat();
+        };
     }
 
     public String getLastSubscriptionId() {
         return lastSubscriptionId;
+    }
+
+    public WebView getWebView() {
+        return this;
+    }
+
+    public CleverPush getCleverPushInstance() {
+        if (getContext() != null) {
+            return CleverPush.getInstance(getWebView().getContext());
+        }
+        return null;
+    }
+
+    public ChatJavascriptInterface getChatJavascriptInterface(Context context) {
+        return new ChatJavascriptInterface(context, this);
+    }
+
+    public int getBuildVersion() {
+        return Build.VERSION.SDK_INT;
+    }
+
+    public Handler getHandler() {
+        return handler;
     }
 }

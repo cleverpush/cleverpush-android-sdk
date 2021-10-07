@@ -7,8 +7,8 @@ import java.io.Serializable;
 public class NotificationCategory implements Serializable {
     @SerializedName("_id")
     String id;
-	@SerializedName("group")
-	NotificationCategoryGroup group;
+    @SerializedName("group")
+    NotificationCategoryGroup group;
     @SerializedName("name")
     String name;
     @SerializedName("description")
