@@ -817,6 +817,8 @@ class CleverPushTest {
     void testTrySubscriptionSyncWhenThereIsNoSubscriptionInProgressThereIsSubscriptionIdAndNextSyncTimeIsPassed() {
         doReturn(context).when(cleverPush).getContext();
         doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
+
         when(sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0)).thenReturn((int) ((System.currentTimeMillis() / 1000L) - 10));
         when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn("subscriptionId");
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
@@ -1166,6 +1168,9 @@ class CleverPushTest {
     void testSubscribeWhenNewSubscriptionIdNull() {
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
 
         Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
@@ -1197,6 +1202,9 @@ class CleverPushTest {
 
     @Test
     void testSubscribeWhenConfigIsNull() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
 
@@ -1226,6 +1234,9 @@ class CleverPushTest {
 
     @Test
     void testSubscribeWhenConfirmAlertHideChannelTopicsTrue() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
 
@@ -1262,6 +1273,9 @@ class CleverPushTest {
 
     @Test
     void testSubscribeWhenIsConfirmAlertHideChannelTopicsFalseAndNoChannelTopics() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
 
@@ -1299,6 +1313,10 @@ class CleverPushTest {
     @Test
     void testSubscribeWhenThereISChannelTopicsButSubscriptionTopicsIsNull() {
         Set<String> selectedTopicIds = new HashSet<>();
+
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
         doReturn(null).when(cleverPush).getSubscriptionTopics();
@@ -1343,6 +1361,9 @@ class CleverPushTest {
         Set<String> subscriptionTopics = new HashSet<String>();
         Set<String> selectedTopicIds = new HashSet<>();
 
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
         doReturn(subscriptionTopics).when(cleverPush).getSubscriptionTopics();
@@ -1388,6 +1409,9 @@ class CleverPushTest {
         subscriptionTopics.add("subscriptionId");
         Set<String> selectedTopicIds = new HashSet<>();
 
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
         doReturn(subscriptionTopics).when(cleverPush).getSubscriptionTopics();
@@ -1431,6 +1455,9 @@ class CleverPushTest {
     void testSubscribeWhenIsConfirmAlertHideChannelTopicsFalse() {
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
 
         Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
@@ -1465,6 +1492,9 @@ class CleverPushTest {
 
     @Test
     void testSubscribeWhenConfirmAlertShownTrue() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
         doReturn(true).when(cleverPush).isConfirmAlertShown();
@@ -1498,6 +1528,9 @@ class CleverPushTest {
         doReturn(false).when(cleverPush).isSubscriptionInProgress();
         doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
         doReturn(false).when(cleverPush).isConfirmAlertShown();
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
 
         Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
@@ -1579,7 +1612,6 @@ class CleverPushTest {
                 "Error"
         );
     }
-
 
     @Test
     void testSetSubscriptionAttribute() {

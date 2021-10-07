@@ -26,6 +26,11 @@ public class UnSubscribeResponseHandler {
                 try {
                     getLogger().d("CleverPush", "unsubscribe success");
                     cleverPush.clearSubscriptionData();
+
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, true);
+                    editor.commit();
                 } catch (Throwable t) {
                     getLogger().e("CleverPush", "Error", t);
                 }

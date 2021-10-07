@@ -188,12 +188,15 @@ class AppBannerModuleTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        appBannerModule = spy(AppBannerModule.init(activity, "channelId", false, sharedPreferences, editor));
+        appBannerModule = spy(AppBannerModule.init("channelId", false, sharedPreferences, editor));
         mockWebServer = new MockWebServer();
     }
 
     @Test
     void testInitSession() {
+        doReturn(activity).when(appBannerModule).getCurrentActivity();
+        doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
+
         appBannerModule.initSession("channelId");
 
         assertThat(appBannerModule.getLastSessionTimestamp()).isLessThan(System.currentTimeMillis());
@@ -207,6 +210,8 @@ class AppBannerModuleTest {
     void testInitSessionWhenThereIsPopupList() {
         Collection<AppBannerPopup> popups = new ArrayList<>();
         popups.add(appBannerPopup);
+
+        doReturn(activity).when(appBannerModule).getCurrentActivity();
         doReturn(popups).when(appBannerModule).getPopups();
 
         appBannerModule.initSession("channelId");
@@ -445,6 +450,8 @@ class AppBannerModuleTest {
     @Test
     void testGetBannersWhenNotificationIdIsNotNull() {
         Collection<Banner> banners = new LinkedList<>();
+
+        doReturn(activity).when(appBannerModule).getCurrentActivity();
         doReturn(banners).when(appBannerModule).getListOfBanners();
         doReturn(handler).when(appBannerModule).getHandler();
 
@@ -740,6 +747,7 @@ class AppBannerModuleTest {
             Collection<Banner> banners = new LinkedList<>();
             banners.add(banner);
             doReturn(banners).when(appBannerModule).getListOfBanners();
+            doReturn(activity).when(appBannerModule).getCurrentActivity();
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
             doReturn(true).when(cleverPush).isAppBannersDisabled();
 

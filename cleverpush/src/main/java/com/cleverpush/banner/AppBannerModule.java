@@ -54,7 +54,6 @@ public class AppBannerModule {
 
     private static AppBannerModule instance;
 
-    private Activity activity;
     private String channel;
     private boolean showDrafts;
     private long lastSessionTimestamp;
@@ -71,8 +70,7 @@ public class AppBannerModule {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
 
-    private AppBannerModule(Activity activity, String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
-        this.activity = activity;
+    private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
         this.channel = channel;
         this.showDrafts = showDrafts;
         this.sharedPreferences = sharedPreferences;
@@ -86,16 +84,16 @@ public class AppBannerModule {
     }
 
     private View getRoot() {
-        return activity.getWindow().getDecorView().getRootView();
+        return getCurrentActivity().getWindow().getDecorView().getRootView();
     }
 
-    public static AppBannerModule init(Activity activity, String channel, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
-        return init(activity, channel, false, sharedPreferences, editor);
+    public static AppBannerModule init(String channel, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
+        return init(channel, false, sharedPreferences, editor);
     }
 
-    public static AppBannerModule init(Activity activity, String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
+    public static AppBannerModule init(String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
         if (instance == null) {
-            instance = new AppBannerModule(activity, channel, showDrafts, sharedPreferences, editor);
+            instance = new AppBannerModule(channel, showDrafts, sharedPreferences, editor);
         }
         return instance;
     }
@@ -104,7 +102,7 @@ public class AppBannerModule {
         loadBanners(null);
     }
 
-    public void loadBanners(String notificationId) {
+    void loadBanners(String notificationId) {
         if (isLoading()) {
             return;
         }
@@ -158,7 +156,7 @@ public class AppBannerModule {
         });
     }
 
-    public void sendBannerEvent(String event, Banner banner) {
+    void sendBannerEvent(String event, Banner banner) {
         Log.d(TAG, "sendBannerEvent: " + event);
 
         String subscriptionId = null;
@@ -181,7 +179,7 @@ public class AppBannerModule {
     public void initSession(String channel) {
         this.channel = channel;
 
-        if (!CleverPush.getInstance(ActivityLifecycleListener.currentActivity).isDevelopmentModeEnabled()
+        if (!getCleverPushInstance().isDevelopmentModeEnabled()
                 && lastSessionTimestamp > 0
                 && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
             return;
@@ -209,7 +207,7 @@ public class AppBannerModule {
         return sharedPreferences.getInt(CleverPushPreferences.APP_BANNER_SESSIONS, 0);
     }
 
-    public void saveSessions() {
+    void saveSessions() {
         editor.putInt(CleverPushPreferences.APP_BANNER_SESSIONS, sessions);
         editor.apply();
     }
@@ -244,7 +242,7 @@ public class AppBannerModule {
         }
     }
 
-    public void startup() {
+    void startup() {
         Log.d(TAG, "startup");
 
         this.getBanners(banners -> {
@@ -253,7 +251,7 @@ public class AppBannerModule {
         });
     }
 
-    public boolean isBannerTimeAllowed(Banner banner) {
+    boolean isBannerTimeAllowed(Banner banner) {
         Date now = new Date();
         if (banner == null) {
             return false;
@@ -331,12 +329,12 @@ public class AppBannerModule {
             }
 
             if (!contains) {
-                popups.add(new AppBannerPopup(activity, banner));
+                popups.add(new AppBannerPopup(getCurrentActivity(), banner));
             }
         }
     }
 
-    public void scheduleBanners() {
+    void scheduleBanners() {
         if (getCleverPushInstance().isAppBannersDisabled()) {
             pendingBanners.addAll(getPopups());
             getPopups().removeAll(pendingBanners);
@@ -390,12 +388,10 @@ public class AppBannerModule {
     }
 
     public AppBannerPopup getAppBannerPopup(Banner banner) {
-        return new AppBannerPopup(activity, banner);
+        return new AppBannerPopup(getCurrentActivity(), banner);
     }
 
-    public void showBanner(AppBannerPopup bannerPopup) {
-        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-
+    void showBanner(AppBannerPopup bannerPopup) {
         if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
             Log.d(TAG, "Skipping Banner because: A Banner is already on the screen");
             return;
@@ -434,11 +430,11 @@ public class AppBannerModule {
     }
 
     private boolean isBannerShown(String id) {
-        if (this.activity == null) {
+        if (getCurrentActivity() == null) {
             return false;
         }
 
-        SharedPreferences sharedPreferences = this.activity.getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getCurrentActivity().getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
         if (shownBanners == null) {
@@ -448,7 +444,8 @@ public class AppBannerModule {
         return shownBanners.contains(id);
     }
 
-    public void bannerIsShown(String id) {
+    void bannerIsShown(String id) {
+        SharedPreferences sharedPreferences = getCurrentActivity().getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
         assert shownBanners != null;
@@ -500,7 +497,7 @@ public class AppBannerModule {
     }
 
     public CleverPush getCleverPushInstance() {
-        return CleverPush.getInstance(activity);
+        return CleverPush.getInstance(getCurrentActivity());
     }
 
     public Collection<AppBannersListener> getBannersListeners() {
@@ -525,5 +522,9 @@ public class AppBannerModule {
 
     public void clearPendingBanners() {
         pendingBanners.clear();
+    }
+
+    public Activity getCurrentActivity() {
+        return ActivityLifecycleListener.currentActivity;
     }
 }
