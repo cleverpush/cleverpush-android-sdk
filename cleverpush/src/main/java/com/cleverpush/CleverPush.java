@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 
@@ -47,6 +48,7 @@ import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.listener.TopicsDialogListener;
 import com.cleverpush.listener.TrackingConsentListener;
+import com.cleverpush.listener.WebViewClientListener;
 import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
@@ -116,6 +118,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
     private SessionListener sessionListener;
+    private WebViewClientListener webViewClientListener;
     private GoogleApiClient googleApiClient;
     private ArrayList<Geofence> geofenceList = new ArrayList<>();
     private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
@@ -521,7 +524,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     /**
      * initialize the App review
      */
-     void initAppReview() {
+    void initAppReview() {
         this.getChannelConfig(config -> {
             if (config != null && config.optBoolean("appReviewEnabled")) {
                 try {
@@ -557,7 +560,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
     }
 
-     void showFiveStarsDialog(JSONObject config) {
+    void showFiveStarsDialog(JSONObject config) {
         FiveStarsDialog dialog = new FiveStarsDialog(
                 ActivityLifecycleListener.currentActivity,
                 config.optString("appReviewEmail")
@@ -793,7 +796,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * initialize Geo Fences
      */
     @SuppressWarnings("deprecation")
-     void initGeoFences() {
+    void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = getGoogleApiClient();
 
@@ -900,7 +903,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.checkTags(url, params);
     }
 
-     void trackSessionStart() {
+    public void autoTrackWebViewPages(String url) {
+        trackPageView(url);
+    }
+
+    public void setWebViewClientListener(WebView webView, WebViewClientListener webViewClientListener, Map<String, ?> params) {
+        this.webViewClientListener = webViewClientListener;
+        webView.setWebViewClient(new CleverPushWebViewClient(params, webViewClientListener, this));
+    }
+
+    void trackSessionStart() {
         // reset
         this.sessionVisits = 0;
         this.sessionStartedTimestamp = System.currentTimeMillis() / 1000L;
@@ -2229,7 +2241,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * @param nightModeFlags      flag if there is night mode
      * @param selectedTopics      selectedTopics
      */
-     void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
+    void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
 
         parentLayout.removeAllViews();
 
