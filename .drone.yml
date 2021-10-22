@@ -1,0 +1,13 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: deploy
+  image: androidsdk/android-28
+  push:
+    commands:
+      - bash ./gradlew test --stacktrace
+  when:
+    event:
+    - push
