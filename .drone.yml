@@ -7,6 +7,8 @@ steps:
   image: androidsdk/android-28
   push:
     commands:
+      - "./gradlew clean build"
+      - echo "${DRONE_BRANCH}"
       - bash ./gradlew test --stacktrace
   when:
     event:
