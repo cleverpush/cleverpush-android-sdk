@@ -261,6 +261,64 @@ public class AppBannerModule {
                 || banner.getStopAt().after(now);
     }
 
+    boolean isBannerTargetingAllowed(Banner banner) {
+        if (banner == null) {
+            return false;
+        }
+
+        boolean allowed = true;
+
+        if (banner.getTags() != null && banner.getTags().size() > 0) {
+            allowed = false;
+            for (String tag : banner.getTags()) {
+                if (getCleverPushInstance().hasSubscriptionTag(tag)) {
+                    allowed = true;
+                    break;
+                }
+            }
+        }
+
+        if (allowed && banner.getExcludeTags() != null && banner.getExcludeTags().size() > 0) {
+            for (String tag : banner.getExcludeTags()) {
+                if (getCleverPushInstance().hasSubscriptionTag(tag)) {
+                    allowed = false;
+                    break;
+                }
+            }
+        }
+
+        if (allowed && banner.getTopics() != null && banner.getTopics().size() > 0) {
+            allowed = false;
+            for (String topic : banner.getTopics()) {
+                if (getCleverPushInstance().hasSubscriptionTopic(topic)) {
+                    allowed = true;
+                    break;
+                }
+            }
+        }
+
+        if (allowed && banner.getExcludeTopics() != null && banner.getExcludeTopics().size() > 0) {
+            for (String topic : banner.getExcludeTopics()) {
+                if (getCleverPushInstance().hasSubscriptionTopic(topic)) {
+                    allowed = false;
+                    break;
+                }
+            }
+        }
+
+        if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
+            allowed = false;
+            for (HashMap<String, String> attribute : banner.getAttributes()) {
+                if (getCleverPushInstance().hasSubscriptionAttributeValue(attribute.get("id"), attribute.get("value"))) {
+                    allowed = true;
+                    break;
+                }
+            }
+        }
+
+        return allowed;
+    }
+
     private void createBanners(Collection<Banner> banners) {
         for (Banner banner : banners) {
             if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
@@ -275,6 +333,11 @@ public class AppBannerModule {
 
             if (!isBannerTimeAllowed(banner)) {
                 Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Time");
+                continue;
+            }
+
+            if (!isBannerTargetingAllowed(banner)) {
+                Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting");
                 continue;
             }
 
@@ -423,6 +486,30 @@ public class AppBannerModule {
 
             if (action.getType().equals("subscribe")) {
                 getCleverPushInstance().subscribe();
+            }
+
+            if (action.getType().equals("addTags")) {
+                getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
+            }
+
+            if (action.getType().equals("removeTags")) {
+                getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
+            }
+
+            if (action.getType().equals("addTopics")) {
+                Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+                topics.addAll(action.getTopics());
+                getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+            }
+
+            if (action.getType().equals("removeTopics")) {
+                Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+                topics.removeAll(action.getTopics());
+                getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+            }
+
+            if (action.getType().equals("setAttribute")) {
+                getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
             }
         });
 

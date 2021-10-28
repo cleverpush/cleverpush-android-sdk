@@ -21,6 +21,10 @@ public class BannerAction {
     private String urlType;
     private boolean dismiss;
 	private boolean openInWebView;
+    private List<String> tags;
+    private List<String> topics;
+    private String attributeId;
+    private String attributeValue;
 
     private BannerAction() {}
 
@@ -36,6 +40,14 @@ public class BannerAction {
 
     public boolean isOpenInWebView() { return openInWebView; }
 
+    public List<String> getTags() { return tags; }
+
+    public List<String> getTopics() { return topics; }
+
+    public String getAttributeId() { return attributeId; }
+
+    public String getAttributeValue() { return attributeValue; }
+
     public static BannerAction create(JSONObject json) throws JSONException {
         BannerAction banner = new BannerAction();
 
@@ -45,9 +57,33 @@ public class BannerAction {
             banner.url = json.optString("url");
             banner.urlType = json.optString("urlType");
             banner.dismiss = json.optBoolean("dismiss");
+
             if (json.has("openInWebview")) {
                 banner.openInWebView = json.optBoolean("openInWebview");
             }
+
+            JSONArray topicsArray = json.optJSONArray("topics");
+            if (topicsArray != null) {
+                for (int i = 0; i < topicsArray.length(); ++i) {
+                    String topic = topicsArray.optString(i);
+                    if (topic != null) {
+                        banner.topics.add(topic);
+                    }
+                }
+            }
+
+            JSONArray tagsArray = json.optJSONArray("tags");
+            if (tagsArray != null) {
+                for (int i = 0; i < tagsArray.length(); ++i) {
+                    String tag = tagsArray.optString(i);
+                    if (tag != null) {
+                        banner.tags.add(tag);
+                    }
+                }
+            }
+
+            banner.attributeId = json.optString("attributeId");
+            banner.attributeValue = json.optString("attributeValue");
         }
 
         return banner;

@@ -11,6 +11,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -39,6 +40,11 @@ public class Banner {
     private String content;
     private String contentType;
     private String positionType;
+    private List<String> tags;
+    private List<String> excludeTags;
+    private List<String> topics;
+    private List<String> excludeTopics;
+    private List<HashMap<String, String>> attributes;
 
     private Banner() {
     }
@@ -147,6 +153,26 @@ public class Banner {
         this.positionType = positionType;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public List<String> getExcludeTags() {
+        return excludeTags;
+    }
+
+    public List<String> getTopics() {
+        return topics;
+    }
+
+    public List<String> getExcludeTopics() {
+        return excludeTopics;
+    }
+
+    public List<HashMap<String, String>> getAttributes() {
+        return attributes;
+    }
+
     public static Banner create(JSONObject json) throws JSONException {
         Banner banner = new Banner();
 
@@ -203,6 +229,63 @@ public class Banner {
 
         banner.frequency = BannerFrequency.fromString(json.optString("frequency"));
         banner.positionType = json.optString("type");
+
+        JSONArray tagsArray = json.optJSONArray("tags");
+        if (tagsArray != null) {
+            for (int i = 0; i < tagsArray.length(); ++i) {
+                String tag = tagsArray.optString(i);
+                if (tag != null) {
+                    banner.tags.add(tag);
+                }
+            }
+        }
+
+        JSONArray excludeTagsArray = json.optJSONArray("excludeTags");
+        if (excludeTagsArray != null) {
+            for (int i = 0; i < excludeTagsArray.length(); ++i) {
+                String tag = excludeTagsArray.optString(i);
+                if (tag != null) {
+                    banner.excludeTags.add(tag);
+                }
+            }
+        }
+
+        JSONArray topicsArray = json.optJSONArray("topics");
+        if (topicsArray != null) {
+            for (int i = 0; i < topicsArray.length(); ++i) {
+                String topic = topicsArray.optString(i);
+                if (topic != null) {
+                    banner.topics.add(topic);
+                }
+            }
+        }
+
+        JSONArray excludeTopicsArray = json.optJSONArray("excludeTopics");
+        if (excludeTopicsArray != null) {
+            for (int i = 0; i < excludeTopicsArray.length(); ++i) {
+                String topic = excludeTopicsArray.optString(i);
+                if (topic != null) {
+                    banner.excludeTopics.add(topic);
+                }
+            }
+        }
+
+        JSONArray attributesArray = json.optJSONArray("attributes");
+        if (attributesArray != null) {
+            for (int i = 0; i < attributesArray.length(); ++i) {
+                JSONObject attribute = attributesArray.optJSONObject(i);
+                if (attribute != null) {
+                    String attributeId = attribute.optString("id");
+                    String attributeValue = attribute.optString("value");
+                    if (attributeId != null && attributeValue != null) {
+                        HashMap<String, String> attributeMap = new HashMap<>();
+                        attributeMap.put("id", attributeId);
+                        attributeMap.put("value", attributeValue);
+                        banner.attributes.add(attributeMap);
+                    }
+                }
+            }
+        }
 
         return banner;
     }

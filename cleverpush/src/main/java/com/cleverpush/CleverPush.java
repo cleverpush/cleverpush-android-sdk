@@ -1345,6 +1345,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return getSharedPreferences(getContext()).getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>());
     }
 
+    public boolean hasSubscriptionTopic(String topicId) {
+        return this.getSubscriptionTopics().contains(topicId);
+    }
+
     public boolean hasSubscriptionTopics() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS);
