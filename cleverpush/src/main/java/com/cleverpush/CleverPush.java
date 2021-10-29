@@ -2411,7 +2411,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             } catch (JSONException exception) {
                 exception.printStackTrace();
             }
-
         });
     }
 
@@ -2422,8 +2421,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return isNewTopicAdded(channelTopics) && (getLastAutoShowedTime() == 0 || secondsAfterLastUpdate > oneHour);
     }
 
-    private Boolean isNewTopicAdded(JSONArray channelTopics) {
-
+    private boolean isNewTopicAdded(JSONArray channelTopics) {
         for (int i = 0; i < channelTopics.length(); i++) {
             JSONObject topic = null;
             try {
@@ -2449,7 +2447,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         return true;
                     }
                 }
-
             } else {
                 Log.e("CleverPush", "topic is null");
             }
