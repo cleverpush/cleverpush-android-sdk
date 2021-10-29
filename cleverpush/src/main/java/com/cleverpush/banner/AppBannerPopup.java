@@ -6,52 +6,38 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Base64;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.webkit.JavascriptInterface;
-import android.webkit.WebView;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
-import androidx.annotation.RequiresApi;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.annotation.NonNull;
 import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
+import com.cleverpush.banner.models.BannerScreens;
 import com.cleverpush.banner.models.blocks.Alignment;
 import com.cleverpush.banner.models.blocks.BannerBackground;
-import com.cleverpush.banner.models.blocks.BannerBlock;
-import com.cleverpush.banner.models.blocks.BannerButtonBlock;
-import com.cleverpush.banner.models.blocks.BannerHTMLBlock;
-import com.cleverpush.banner.models.blocks.BannerImageBlock;
-import com.cleverpush.banner.models.blocks.BannerTextBlock;
 import com.cleverpush.listener.AppBannerOpenedListener;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,13 +45,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class AppBannerPopup {
-    private static final String CONTENT_TYPE_BLOCKS = "block";
-    private static final String CONTENT_TYPE_HTML = "html";
-
     private static final String POSITION_TYPE_TOP = "top";
     private static final String POSITION_TYPE_BOTTOM = "bottom";
-    private static final String POSITION_TYPE_CENTER = "center";
-
+    private static final String POSITION_TYPE_FULL = "full";
     private static final String TAG = "CleverPush/AppBanner";
 
     private static SpringForce getDefaultForce(float finalValue) {
@@ -92,6 +74,7 @@ public class AppBannerPopup {
 
     private PopupWindow popup;
     private View popupRoot;
+    private ViewPager2 viewPager2;
 
     private AppBannerOpenedListener openedListener;
 
@@ -107,12 +90,6 @@ public class AppBannerPopup {
 
     private View getRoot() {
         return activity.getWindow().getDecorView().getRootView();
-    }
-
-    private float getFontScale() {
-        float PT_TO_PX = 4.0f / 3.0f;
-
-        return PT_TO_PX * getPXScale();
     }
 
     private float getPXScale() {
@@ -139,66 +116,93 @@ public class AppBannerPopup {
 
         popupRoot = createLayout();
         LinearLayout body = popupRoot.findViewById(R.id.bannerBody);
+        FrameLayout frameLayout = popupRoot.findViewById(R.id.frameLayout);
         ImageView bannerBackGroundImage = popupRoot.findViewById(R.id.bannerBackgroundImage);
-
-        ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot.findViewById(R.id.parent);
-        ScrollView scrollView = popupRoot.findViewById(R.id.scrollView);
-
-        ConstraintSet set = new ConstraintSet();
-        set.clone(mConstraintLayout);
-
-        switch (data.getPositionType()) {
-            case POSITION_TYPE_TOP:
-                set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 20);
-                break;
-            case POSITION_TYPE_BOTTOM:
-                set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 20);
-                break;
-            default:
-                set.connect(scrollView.getId(), ConstraintSet.TOP, mConstraintLayout.getId(), ConstraintSet.TOP, 0);
-                set.connect(scrollView.getId(), ConstraintSet.BOTTOM, mConstraintLayout.getId(), ConstraintSet.BOTTOM, 0);
-                break;
+        if (data.isCarouselEnabled()) {
+            setUpBannerBlocks();
+        } else {
+            data.getScreens().clear();
+            BannerScreens bannerScreens = new BannerScreens();
+            bannerScreens.setBlocks(data.getBlocks());
+            data.getScreens().add(bannerScreens);
+            setUpBannerBlocks();
         }
 
-        set.applyTo(mConstraintLayout);
-
-        composeBackground(bannerBackGroundImage, body);
-        if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
-            composeHtmlBanner(body, data.getContent());
+        if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+            popup = new PopupWindow(
+                    popupRoot,
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    true
+            );
+            body.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            frameLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } else {
-            for (BannerBlock bannerBlock : data.getBlocks()) {
-                activity.runOnUiThread(new Runnable() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                    @Override
-                    public void run() {
-                        switch (bannerBlock.getType()) {
-                            case Text:
-                                composeTextBlock(body, (BannerTextBlock) bannerBlock);
-                                break;
-                            case Image:
-                                composeImageBlock(body, (BannerImageBlock) bannerBlock);
-                                break;
-                            case Button:
-                                composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
-                                break;
-                            case HTML:
-                                composeHtmlBLock(body, (BannerHTMLBlock) bannerBlock);
-                                break;
-                        }
-                    }
-                });
+            popup = new PopupWindow(
+                    popupRoot,
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    true
+            );
+            body.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            frameLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            switch (data.getPositionType()) {
+                case POSITION_TYPE_TOP:
+                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.TOP, 0, 0));
+                    break;
+                case POSITION_TYPE_BOTTOM:
+                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.BOTTOM, 0, 0));
+                    break;
+                default:
+                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.CENTER, 0, 0));
+                    break;
             }
         }
 
-        popup = new PopupWindow(
-                popupRoot,
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                true
-        );
+        composeBackground(bannerBackGroundImage, body);
         popup.setAnimationStyle(R.style.banner_animation);
 
+
         isInitialized = true;
+    }
+
+    private void setUpBannerBlocks() {
+        viewPager2 = popupRoot.findViewById(R.id.carousel_pager);
+        TabLayout tabLayout = popupRoot.findViewById(R.id.carousel_pager_tab_layout);
+        AppBannerCarouselAdapter appBannerCarouselAdapter = new AppBannerCarouselAdapter(activity, data, this, openedListener);
+        viewPager2.setAdapter(appBannerCarouselAdapter);
+        viewPager2.setPageTransformer(new ViewPager2.PageTransformer() {
+            @Override
+            public void transformPage(@NonNull View page, float position) {
+                if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+                    updatePagerHeightForChild(page, viewPager2);
+                }
+            }
+        });
+
+        if (data.getScreens().size() > 1) {
+            tabLayout.setVisibility(View.VISIBLE);
+            new TabLayoutMediator(tabLayout, viewPager2, new TabLayoutMediator.TabConfigurationStrategy() {
+                @Override
+                public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
+
+                }
+            }).attach();
+        }
+    }
+
+    private void updatePagerHeightForChild(View view, ViewPager2 viewPager2) {
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                int wMeasureSpec = View.MeasureSpec.makeMeasureSpec(view.getWidth(), View.MeasureSpec.EXACTLY);
+                int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+                view.measure(wMeasureSpec, hMeasureSpec);
+                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, view.getMeasuredHeight());
+                viewPager2.setLayoutParams(layoutParams);
+                viewPager2.invalidate();
+            }
+        });
     }
 
     private void toggleShowing(boolean isShowing) {
@@ -216,17 +220,6 @@ public class AppBannerPopup {
         new tryShowSafe().execute();
     }
 
-    private void tryShowSafe() {
-        if (this.isRootReady()) {
-            popupRoot.findViewById(R.id.bannerBody).setTranslationY(getRoot().getHeight());
-            popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
-
-            animateBody(getRoot().getHeight(), 0f);
-        } else {
-            runInMain(this::tryShowSafe, 20);
-        }
-    }
-
     public void dismiss() {
         if (!isInitialized) {
             Log.e(TAG, "Must be initialized");
@@ -239,6 +232,17 @@ public class AppBannerPopup {
             this.toggleShowing(false);
         }, 200);
 
+    }
+
+    public void moveToNextScreen() {
+        int currentPosition = viewPager2.getCurrentItem();
+        if (currentPosition < data.getScreens().size() - 1) {
+            viewPager2.setCurrentItem(currentPosition + 1);
+        }
+    }
+
+    public AppBannerOpenedListener getOpenedListener() {
+        return openedListener;
     }
 
     private View createLayout() {
@@ -255,6 +259,7 @@ public class AppBannerPopup {
             @Override
             public void onGlobalLayout() {
                 FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, body.getHeight());
+                layoutParams.setMargins(pxToDp(10), pxToDp(15), pxToDp(10), pxToDp(15));
                 bannerBackground.setLayoutParams(layoutParams);
                 if (observer.isAlive()) {
                     observer.removeGlobalOnLayoutListener(this);
@@ -280,172 +285,6 @@ public class AppBannerPopup {
                 }
             }).start();
         }
-    }
-
-    private void composeButtonBlock(LinearLayout body, BannerButtonBlock block) {
-        Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
-        button.setText(block.getText());
-        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
-        button.setTextColor(this.parseColor(block.getColor()));
-        Integer alignment = alignmentMap.get(block.getAlignment());
-        button.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setShape(GradientDrawable.RECTANGLE);
-        bg.setCornerRadius(block.getRadius() * getPXScale());
-        bg.setColor(this.parseColor(block.getBackground()));
-        button.setBackground(bg);
-
-        button.setOnClickListener(view -> {
-            if (block.getAction().isOpenInWebView()) {
-                WebViewActivity.launch(activity, block.getAction().getUrl());
-            } else {
-                if (block.getAction().getDismiss()) {
-                    dismiss();
-                }
-            }
-
-            if (this.openedListener != null) {
-                this.openedListener.opened((block.getAction()));
-            }
-        });
-        button.setOnTouchListener((view, motionEvent) -> {
-            int action = motionEvent.getAction();
-            if (action == MotionEvent.ACTION_DOWN) {
-                view.animate().cancel();
-                view.animate().scaleX(0.98f).setDuration(200).start();
-                view.animate().scaleY(0.98f).setDuration(200).start();
-                return false;
-            } else if (action == MotionEvent.ACTION_UP) {
-                view.animate().cancel();
-                view.animate().scaleX(1f).setDuration(200).start();
-                view.animate().scaleY(1f).setDuration(200).start();
-                return false;
-            }
-
-            return false;
-        });
-
-        body.addView(button);
-    }
-
-    private void composeTextBlock(LinearLayout body, BannerTextBlock block) {
-        TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
-        textView.setText(block.getText());
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
-        textView.setTextColor(this.parseColor(block.getColor()));
-
-        if (block.getFamily() != null) {
-            try {
-                Typeface font = Typeface.createFromAsset(activity.getAssets(), block.getFamily() + ".ttf");
-                textView.setTypeface(font);
-            } catch (Exception ex) {
-                Log.e(TAG, ex.getMessage(), ex);
-            }
-
-        }
-
-        Integer alignment = alignmentMap.get(block.getAlignment());
-        textView.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
-
-        body.addView(textView);
-    }
-
-    private void composeImageBlock(LinearLayout body, BannerImageBlock block) {
-        ConstraintLayout imageLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
-        ImageView img = imageLayout.findViewById(R.id.imageView);
-
-        ConstraintSet imgConstraints = new ConstraintSet();
-        imgConstraints.clone(imageLayout);
-        float widthPercentage = Math.min(100, Math.max(0, block.getScale())) / 100.0f;
-        imgConstraints.constrainPercentWidth(img.getId(), widthPercentage);
-        imgConstraints.applyTo(imageLayout);
-
-        body.addView(imageLayout);
-
-        new Thread(() -> {
-            try {
-                InputStream in = new URL(block.getImageUrl()).openStream();
-                Bitmap bitmap = BitmapFactory.decodeStream(in);
-                if (bitmap != null) {
-                    img.setImageBitmap(bitmap);
-                }
-            } catch (Exception ignored) {
-
-            }
-        }).start();
-
-        img.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (block.getAction().isOpenInWebView()) {
-                    WebViewActivity.launch(activity, block.getAction().getUrl());
-                }
-            }
-        });
-    }
-
-    private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
-        LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
-        WebView webView = webLayout.findViewById(R.id.webView);
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.setVerticalScrollBarEnabled(false);
-        webView.setHorizontalScrollBarEnabled(false);
-        webView.loadUrl(block.getUrl());
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                pxToDp(Integer.parseInt(block.getHeight()))
-        );
-        params.setMargins(0, 0, 0, 20);
-        webView.setLayoutParams(params);
-        webView.setBackgroundColor(Color.TRANSPARENT);
-        body.addView(webLayout);
-    }
-
-    public static int pxToDp(int px) {
-        return (int) (px * Resources.getSystem().getDisplayMetrics().density);
-    }
-
-    /**
-     * Will compose and add HTML Banner to the body of banner layout.
-     *
-     * @param body        parent layout to add HTML view
-     * @param htmlContent html content which will be displayed in banner
-     */
-    private void composeHtmlBanner(LinearLayout body, String htmlContent) {
-        activity.runOnUiThread(() -> {
-            String htmlWithJs = htmlContent.replace("</body>", "" +
-                    "<script type=\"text/javascript\">\n" +
-                    "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" +
-                    "var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" +
-                    "function onCloseClick() {\n" +
-                    "  try {\n" +
-                    "    htmlBannerInterface.close();\n" +
-                    "  } catch (error) {\n" +
-                    "    console.log('Caught error on closeBtn click', error);\n" +
-                    "  }\n" +
-                    "}\n" +
-                    "for (var i = 0; i < closeBtns.length; i++) {\n" +
-                    "  closeBtns[i].addEventListener('click', onCloseClick);\n" +
-                    "}\n" +
-                    "</script>\n" +
-                    "</body>");
-            ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
-            WebView webView = webLayout.findViewById(R.id.webView);
-            webView.getSettings().setJavaScriptEnabled(true);
-            webView.getSettings().setLoadsImagesAutomatically(true);
-            webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
-
-            String encodedHtml = null;
-            try {
-                encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            webView.loadData(encodedHtml, "text/html; charset=utf-8", "UTF-8");
-
-            body.addView(webLayout);
-        });
     }
 
     private void animateBody(float from, float to) {
@@ -483,16 +322,6 @@ public class AppBannerPopup {
         return color;
     }
 
-    /**
-     * Will provide javascript bridge to perform close button click in HTML.
-     */
-    public class HtmlBannerJavascriptInterface {
-        @JavascriptInterface
-        public void close() {
-            dismiss();
-        }
-    }
-
     public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
         @Override
         protected Boolean doInBackground(String... strings) {
@@ -521,5 +350,9 @@ public class AppBannerPopup {
             }
         }
 
+    }
+
+    public static int pxToDp(int px) {
+        return (int) (px * Resources.getSystem().getDisplayMetrics().density);
     }
 }

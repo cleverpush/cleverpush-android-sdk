@@ -167,6 +167,9 @@ public class AppBannerModule {
         JSONObject jsonBody = getJsonObject();
         try {
             jsonBody.put("bannerId", banner.getId());
+            if (banner.getTestId() != null) {
+                jsonBody.put("testId", banner.getTestId());
+            }
             jsonBody.put("channelId", channel);
             jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {

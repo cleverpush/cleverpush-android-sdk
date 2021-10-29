@@ -1,49 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:id="@+id/parent"
-    android:layout_alignWithParentIfMissing="false"
-    android:background="#26000000">
-    <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/scrollView"
-        android:elevation="4dp"
-        android:orientation="vertical"
-        app:layout_constrainedWidth="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.9"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.8">
-        <FrameLayout
-            android:id="@+id/FrameLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#26000000"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/bannerBackgroundImage"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:background="@drawable/cp_appbanner_layout"
+            android:scaleType="centerCrop" />
 
-            <ImageView
+        <LinearLayout
+            android:id="@+id/bannerBody"
+            style="@style/banner_body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:orientation="vertical">
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/carousel_pager"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                tools:context=".ui.screens.intro.IntroViewPagerFragment" />
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/carousel_pager_tab_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/bannerBackgroundImage"
-                android:background="@drawable/cp_appbanner_layout"
-                android:scaleType="centerCrop"
-                />
-
-            <LinearLayout
-                android:id="@+id/bannerBody"
-                style="@style/banner_body"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:paddingLeft="10dp"
-                android:paddingTop="15dp"
-                android:paddingRight="10dp"
-                android:paddingBottom="15dp"
-                android:orientation="vertical" />
-        </FrameLayout>
-
-    </ScrollView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+                android:layout_gravity="bottom"
+                android:background="@android:color/transparent"
+                android:visibility="gone"
+                app:tabBackground="@drawable/tab_pager_selector"
+                app:tabGravity="center"
+                app:tabIndicatorHeight="0dp"
+                app:tabPaddingStart="10dp" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>
