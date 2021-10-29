@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,6 +65,7 @@ public class BannerAction {
 
             JSONArray topicsArray = json.optJSONArray("topics");
             if (topicsArray != null) {
+                banner.topics = new ArrayList<>();
                 for (int i = 0; i < topicsArray.length(); ++i) {
                     String topic = topicsArray.optString(i);
                     if (topic != null) {
@@ -74,6 +76,7 @@ public class BannerAction {
 
             JSONArray tagsArray = json.optJSONArray("tags");
             if (tagsArray != null) {
+                banner.tags = new ArrayList<>();
                 for (int i = 0; i < tagsArray.length(); ++i) {
                     String tag = tagsArray.optString(i);
                     if (tag != null) {
