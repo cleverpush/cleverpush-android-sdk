@@ -19,11 +19,14 @@ public class Banner {
     private static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
 
     private String id;
+    private String testId;
     private String channel;
     private String name;
     private BannerType type;
     private BannerStatus status;
+    private boolean carouselEnabled;
     private List<BannerBlock> blocks;
+    private List<BannerScreens> screens;
     private BannerBackground background;
     private Date startAt;
     private BannerDismissType dismissType;
@@ -47,6 +50,10 @@ public class Banner {
         return id;
     }
 
+    public String getTestId() {
+        return testId;
+    }
+
     public String getChannel() {
         return channel;
     }
@@ -63,8 +70,16 @@ public class Banner {
         return status;
     }
 
+    public boolean isCarouselEnabled() {
+        return carouselEnabled;
+    }
+
     public List<BannerBlock> getBlocks() {
         return blocks;
+    }
+
+    public List<BannerScreens> getScreens() {
+        return screens;
     }
 
     public BannerBackground getBackground() {
@@ -151,17 +166,29 @@ public class Banner {
         Banner banner = new Banner();
 
         banner.id = json.getString("_id");
+        if (json.has("testId")) {
+            banner.testId = json.getString("testId");
+        }
         banner.channel = json.getString("channel");
         banner.name = json.getString("name");
         banner.type = BannerType.fromString(json.optString("type"));
         banner.status = BannerStatus.fromString(json.optString("status"));
         banner.blocks = new LinkedList<>();
+        banner.screens = new LinkedList<>();
         banner.content = json.optString("content");
         banner.contentType = json.optString("contentType");
+        banner.carouselEnabled = json.optBoolean("carouselEnabled");
 
         JSONArray blockArray = json.getJSONArray("blocks");
         for (int i = 0; i < blockArray.length(); ++i) {
             banner.blocks.add(BannerBlock.create(blockArray.getJSONObject(i)));
+        }
+
+        if (json.has("screens")) {
+            JSONArray screens = json.getJSONArray("screens");
+            for (int i = 0; i < screens.length(); ++i) {
+                banner.screens.add(BannerScreens.create(screens.getJSONObject(i)));
+            }
         }
 
         banner.background = BannerBackground.create(json.optJSONObject("background"));
@@ -182,10 +209,10 @@ public class Banner {
         banner.triggers = new LinkedList<>();
         JSONArray triggersArray = json.optJSONArray("triggers");
         if (triggersArray != null) {
-			for (int i = 0; i < triggersArray.length(); ++i) {
-				banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
-			}
-		}
+            for (int i = 0; i < triggersArray.length(); ++i) {
+                banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
+            }
+        }
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
