@@ -11,6 +11,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -19,11 +20,14 @@ public class Banner {
     private static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
 
     private String id;
+    private String testId;
     private String channel;
     private String name;
     private BannerType type;
     private BannerStatus status;
+    private boolean carouselEnabled;
     private List<BannerBlock> blocks;
+    private List<BannerScreens> screens;
     private BannerBackground background;
     private Date startAt;
     private BannerDismissType dismissType;
@@ -39,12 +43,21 @@ public class Banner {
     private String content;
     private String contentType;
     private String positionType;
+    private List<String> tags;
+    private List<String> excludeTags;
+    private List<String> topics;
+    private List<String> excludeTopics;
+    private List<HashMap<String, String>> attributes;
 
     private Banner() {
     }
 
     public String getId() {
         return id;
+    }
+
+    public String getTestId() {
+        return testId;
     }
 
     public String getChannel() {
@@ -63,8 +76,16 @@ public class Banner {
         return status;
     }
 
+    public boolean isCarouselEnabled() {
+        return carouselEnabled;
+    }
+
     public List<BannerBlock> getBlocks() {
         return blocks;
+    }
+
+    public List<BannerScreens> getScreens() {
+        return screens;
     }
 
     public BannerBackground getBackground() {
@@ -147,21 +168,53 @@ public class Banner {
         this.positionType = positionType;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public List<String> getExcludeTags() {
+        return excludeTags;
+    }
+
+    public List<String> getTopics() {
+        return topics;
+    }
+
+    public List<String> getExcludeTopics() {
+        return excludeTopics;
+    }
+
+    public List<HashMap<String, String>> getAttributes() {
+        return attributes;
+    }
+
     public static Banner create(JSONObject json) throws JSONException {
         Banner banner = new Banner();
 
         banner.id = json.getString("_id");
+        if (json.has("testId")) {
+            banner.testId = json.getString("testId");
+        }
         banner.channel = json.getString("channel");
         banner.name = json.getString("name");
         banner.type = BannerType.fromString(json.optString("type"));
         banner.status = BannerStatus.fromString(json.optString("status"));
         banner.blocks = new LinkedList<>();
+        banner.screens = new LinkedList<>();
         banner.content = json.optString("content");
         banner.contentType = json.optString("contentType");
+        banner.carouselEnabled = json.optBoolean("carouselEnabled");
 
         JSONArray blockArray = json.getJSONArray("blocks");
         for (int i = 0; i < blockArray.length(); ++i) {
             banner.blocks.add(BannerBlock.create(blockArray.getJSONObject(i)));
+        }
+
+        if (json.has("screens")) {
+            JSONArray screens = json.getJSONArray("screens");
+            for (int i = 0; i < screens.length(); ++i) {
+                banner.screens.add(BannerScreens.create(screens.getJSONObject(i)));
+            }
         }
 
         banner.background = BannerBackground.create(json.optJSONObject("background"));
@@ -182,10 +235,10 @@ public class Banner {
         banner.triggers = new LinkedList<>();
         JSONArray triggersArray = json.optJSONArray("triggers");
         if (triggersArray != null) {
-			for (int i = 0; i < triggersArray.length(); ++i) {
-				banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
-			}
-		}
+            for (int i = 0; i < triggersArray.length(); ++i) {
+                banner.triggers.add(BannerTrigger.create(triggersArray.getJSONObject(i)));
+            }
+        }
 
         try {
             SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
@@ -203,6 +256,63 @@ public class Banner {
 
         banner.frequency = BannerFrequency.fromString(json.optString("frequency"));
         banner.positionType = json.optString("type");
+
+        JSONArray tagsArray = json.optJSONArray("tags");
+        if (tagsArray != null) {
+            for (int i = 0; i < tagsArray.length(); ++i) {
+                String tag = tagsArray.optString(i);
+                if (tag != null) {
+                    banner.tags.add(tag);
+                }
+            }
+        }
+
+        JSONArray excludeTagsArray = json.optJSONArray("excludeTags");
+        if (excludeTagsArray != null) {
+            for (int i = 0; i < excludeTagsArray.length(); ++i) {
+                String tag = excludeTagsArray.optString(i);
+                if (tag != null) {
+                    banner.excludeTags.add(tag);
+                }
+            }
+        }
+
+        JSONArray topicsArray = json.optJSONArray("topics");
+        if (topicsArray != null) {
+            for (int i = 0; i < topicsArray.length(); ++i) {
+                String topic = topicsArray.optString(i);
+                if (topic != null) {
+                    banner.topics.add(topic);
+                }
+            }
+        }
+
+        JSONArray excludeTopicsArray = json.optJSONArray("excludeTopics");
+        if (excludeTopicsArray != null) {
+            for (int i = 0; i < excludeTopicsArray.length(); ++i) {
+                String topic = excludeTopicsArray.optString(i);
+                if (topic != null) {
+                    banner.excludeTopics.add(topic);
+                }
+            }
+        }
+
+        JSONArray attributesArray = json.optJSONArray("attributes");
+        if (attributesArray != null) {
+            for (int i = 0; i < attributesArray.length(); ++i) {
+                JSONObject attribute = attributesArray.optJSONObject(i);
+                if (attribute != null) {
+                    String attributeId = attribute.optString("id");
+                    String attributeValue = attribute.optString("value");
+                    if (attributeId != null && attributeValue != null) {
+                        HashMap<String, String> attributeMap = new HashMap<>();
+                        attributeMap.put("id", attributeId);
+                        attributeMap.put("value", attributeValue);
+                        banner.attributes.add(attributeMap);
+                    }
+                }
+            }
+        }
 
         return banner;
     }

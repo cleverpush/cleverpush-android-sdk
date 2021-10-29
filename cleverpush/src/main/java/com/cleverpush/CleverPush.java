@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 
@@ -48,6 +49,7 @@ import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.listener.TopicsDialogListener;
 import com.cleverpush.listener.TrackingConsentListener;
+import com.cleverpush.listener.WebViewClientListener;
 import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
@@ -119,6 +121,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
     private SessionListener sessionListener;
+    private WebViewClientListener webViewClientListener;
     private GoogleApiClient googleApiClient;
     private ArrayList<Geofence> geofenceList = new ArrayList<>();
     private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
@@ -904,8 +907,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.checkTags(url, params);
     }
 
+    public void autoTrackWebViewPages(String url) {
+        trackPageView(url);
+    }
+
+    public void setWebViewClientListener(WebView webView, WebViewClientListener webViewClientListener, Map<String, ?> params) {
+        this.webViewClientListener = webViewClientListener;
+        webView.setWebViewClient(new CleverPushWebViewClient(params, webViewClientListener, this));
+    }
+
     void trackSessionStart() {
-        // reset
         this.sessionVisits = 0;
         this.sessionStartedTimestamp = System.currentTimeMillis() / 1000L;
         this.waitForTrackingConsent(() -> this.getChannelConfig(config -> {
@@ -948,7 +959,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 updateServerSessionEnd();
             }
 
-            // reset
             this.sessionStartedTimestamp = 0;
             this.sessionVisits = 0;
         }));
@@ -1347,6 +1357,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public Set<String> getSubscriptionTopics() {
         return getSharedPreferences(getContext()).getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>());
+    }
+
+    public boolean hasSubscriptionTopic(String topicId) {
+        return this.getSubscriptionTopics().contains(topicId);
     }
 
     public boolean hasSubscriptionTopics() {
