@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -259,6 +260,7 @@ public class Banner {
 
         JSONArray tagsArray = json.optJSONArray("tags");
         if (tagsArray != null) {
+            banner.tags = new ArrayList<>();
             for (int i = 0; i < tagsArray.length(); ++i) {
                 String tag = tagsArray.optString(i);
                 if (tag != null) {
@@ -269,6 +271,7 @@ public class Banner {
 
         JSONArray excludeTagsArray = json.optJSONArray("excludeTags");
         if (excludeTagsArray != null) {
+            banner.excludeTags = new ArrayList<>();
             for (int i = 0; i < excludeTagsArray.length(); ++i) {
                 String tag = excludeTagsArray.optString(i);
                 if (tag != null) {
@@ -279,6 +282,7 @@ public class Banner {
 
         JSONArray topicsArray = json.optJSONArray("topics");
         if (topicsArray != null) {
+            banner.topics = new ArrayList<>();
             for (int i = 0; i < topicsArray.length(); ++i) {
                 String topic = topicsArray.optString(i);
                 if (topic != null) {
@@ -289,6 +293,7 @@ public class Banner {
 
         JSONArray excludeTopicsArray = json.optJSONArray("excludeTopics");
         if (excludeTopicsArray != null) {
+            banner.excludeTopics = new ArrayList<>();
             for (int i = 0; i < excludeTopicsArray.length(); ++i) {
                 String topic = excludeTopicsArray.optString(i);
                 if (topic != null) {
@@ -299,6 +304,7 @@ public class Banner {
 
         JSONArray attributesArray = json.optJSONArray("attributes");
         if (attributesArray != null) {
+            banner.attributes = new ArrayList<>();
             for (int i = 0; i < attributesArray.length(); ++i) {
                 JSONObject attribute = attributesArray.optJSONObject(i);
                 if (attribute != null) {
