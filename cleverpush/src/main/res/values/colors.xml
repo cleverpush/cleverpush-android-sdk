@@ -4,4 +4,5 @@
     <color name="cp_in_app_close_button_background">#e2e2e2</color>
 	<color name="cp_bannerBackground">#ffffff</color>
     <color name="cp_black_trans">#A6000000</color>
+    <color name="cp_black">#000</color>
 </resources>

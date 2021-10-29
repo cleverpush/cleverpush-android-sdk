@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -18,6 +19,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 
@@ -47,6 +49,7 @@ import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.listener.TopicsDialogListener;
 import com.cleverpush.listener.TrackingConsentListener;
+import com.cleverpush.listener.WebViewClientListener;
 import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
 import com.cleverpush.manager.SubscriptionManagerFCM;
@@ -77,6 +80,7 @@ import org.json.JSONObject;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,6 +97,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -116,6 +121,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
     private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
     private SessionListener sessionListener;
+    private WebViewClientListener webViewClientListener;
     private GoogleApiClient googleApiClient;
     private ArrayList<Geofence> geofenceList = new ArrayList<>();
     private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
@@ -152,6 +158,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
+    private boolean topicsDialogShowWhenNewAdded = false;
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -496,7 +503,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         }
         this.pendingInitFeaturesCall = false;
 
-        this.showPendingTopicsDialog();
+        this.showTopicDialogOnNewAdded();
         this.initAppReview();
         this.initGeoFences();
 
@@ -521,7 +528,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     /**
      * initialize the App review
      */
-     void initAppReview() {
+    void initAppReview() {
         this.getChannelConfig(config -> {
             if (config != null && config.optBoolean("appReviewEnabled")) {
                 try {
@@ -557,7 +564,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
     }
 
-     void showFiveStarsDialog(JSONObject config) {
+    void showFiveStarsDialog(JSONObject config) {
         FiveStarsDialog dialog = new FiveStarsDialog(
                 ActivityLifecycleListener.currentActivity,
                 config.optString("appReviewEmail")
@@ -793,7 +800,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * initialize Geo Fences
      */
     @SuppressWarnings("deprecation")
-     void initGeoFences() {
+    void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = getGoogleApiClient();
 
@@ -900,8 +907,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.checkTags(url, params);
     }
 
-     void trackSessionStart() {
-        // reset
+    public void autoTrackWebViewPages(String url) {
+        trackPageView(url);
+    }
+
+    public void setWebViewClientListener(WebView webView, WebViewClientListener webViewClientListener, Map<String, ?> params) {
+        this.webViewClientListener = webViewClientListener;
+        webView.setWebViewClient(new CleverPushWebViewClient(params, webViewClientListener, this));
+    }
+
+    void trackSessionStart() {
         this.sessionVisits = 0;
         this.sessionStartedTimestamp = System.currentTimeMillis() / 1000L;
         this.waitForTrackingConsent(() -> this.getChannelConfig(config -> {
@@ -944,7 +959,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 updateServerSessionEnd();
             }
 
-            // reset
             this.sessionStartedTimestamp = 0;
             this.sessionVisits = 0;
         }));
@@ -2085,6 +2099,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
             try {
                 JSONArray channelTopics = channelConfig.getJSONArray("channelTopics");
+                topicsDialogShowWhenNewAdded = channelConfig.getBoolean("topicsDialogShowWhenNewAdded");
+
                 if (channelTopics.length() == 0) {
                     Log.w("CleverPush", "CleverPush: showTopicsDialog: No topics found. Create some first in the CleverPush channel settings.");
                 }
@@ -2144,7 +2160,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         alertBuilder.setTitle(headerTitle);
         alertBuilder.setView(checkboxLayout);
 
-        alertBuilder.setOnDismissListener(dialogInterface -> showingTopicsDialog = false);
+        alertBuilder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                updateTopicLastCheckedTime();
+                showingTopicsDialog = false;
+            }
+        });
 
         alertBuilder.setNegativeButton(CleverPush.context.getResources().getString(R.string.cancel), (dialogInterface, i) -> {
             if (topicsDialogListener != null) {
@@ -2233,7 +2255,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * @param nightModeFlags      flag if there is night mode
      * @param selectedTopics      selectedTopics
      */
-     void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
+    void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
 
         parentLayout.removeAllViews();
 
@@ -2268,7 +2290,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     topicIds[i] = id;
 
                     CheckBox checkbox = new CheckBox(CleverPush.context);
-                    checkbox.setText(topic.optString("name"));
+                    setUpCheckBoxText(topic, checkbox);
 
                     if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
                         checkbox.setTextColor(Color.WHITE);
@@ -2327,7 +2349,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     });
                     checkedTopics[childIndex] = checkbox.isChecked();
 
-                    checkboxChild.setText(childTopic.optString("name"));
+                    setUpCheckBoxText(topic, checkbox);
 
                     if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
                         checkboxChild.setTextColor(Color.WHITE);
@@ -2363,6 +2385,102 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
         }
 
+    }
+
+    private void updateTopicLastCheckedTime() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        sharedPreferences.edit().putInt(CleverPushPreferences.TOPIC_LAST_CHECKED, (int) (System.currentTimeMillis() / 1000L)).apply();
+    }
+
+    private void setUpCheckBoxText(JSONObject topic, CheckBox checkbox) {
+        int oneHour = 60 * 60;
+        int topicLastChecked = getTopicLastChecked();
+        try {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = simpleDateFormat.parse(topic.optString("createdAt"));
+            int topicCreatedAt = (int) (date.getTime() / 1000);
+            if (topicsDialogShowWhenNewAdded && topicCreatedAt + oneHour > topicLastChecked) {
+                checkbox.setText(topic.optString("name") + " ●");
+            } else {
+                checkbox.setText(topic.optString("name"));
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showTopicDialogOnNewAdded() {
+        this.getChannelConfig(channelConfig -> {
+            try {
+                JSONArray channelTopics = channelConfig.getJSONArray("channelTopics");
+                topicsDialogShowWhenNewAdded = channelConfig.getBoolean("topicsDialogShowWhenNewAdded");
+                if (topicsDialogShowWhenNewAdded && hasNewTopicAfterOneHour(channelTopics)) {
+                    showTopicsDialog();
+                    updateLastAutoShowedTime();
+                } else {
+                    showPendingTopicsDialog();
+                }
+
+            } catch (JSONException exception) {
+                exception.printStackTrace();
+            }
+        });
+    }
+
+    private boolean hasNewTopicAfterOneHour(JSONArray channelTopics) {
+        int oneHour = 60 * 60;
+        int currentSec = (int) (System.currentTimeMillis() / 1000);
+        int secondsAfterLastUpdate = currentSec - getLastAutoShowedTime();
+        return isNewTopicAdded(channelTopics) && (getLastAutoShowedTime() == 0 || secondsAfterLastUpdate > oneHour);
+    }
+
+    private boolean isNewTopicAdded(JSONArray channelTopics) {
+        for (int i = 0; i < channelTopics.length(); i++) {
+            JSONObject topic = null;
+            try {
+                topic = channelTopics.getJSONObject(i);
+            } catch (JSONException exception) {
+                exception.printStackTrace();
+            }
+            if (topic != null) {
+                int oneHour = 60 * 60;
+                int topicLastChecked = getTopicLastChecked();
+                try {
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+                    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    Date date = simpleDateFormat.parse(topic.optString("createdAt"));
+                    int topicCreatedAt = (int) (date.getTime() / 1000);
+                    if (topicCreatedAt + oneHour > topicLastChecked) {
+                        return true;
+                    }
+                } catch (ParseException e) {
+                    Date date = new Date();
+                    int topicCreatedAt = (int) (date.getTime() / 1000);
+                    if (topicCreatedAt + oneHour > topicLastChecked) {
+                        return true;
+                    }
+                }
+            } else {
+                Log.e("CleverPush", "topic is null");
+            }
+        }
+        return false;
+    }
+
+    private int getTopicLastChecked() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        return sharedPreferences.getInt(CleverPushPreferences.TOPIC_LAST_CHECKED, 0);
+    }
+
+    private int getLastAutoShowedTime() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        return sharedPreferences.getInt(CleverPushPreferences.LAST_TIME_AUTO_SHOWED, 0);
+    }
+
+    private void updateLastAutoShowedTime() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+        sharedPreferences.edit().putInt(CleverPushPreferences.LAST_TIME_AUTO_SHOWED, (int) (System.currentTimeMillis() / 1000L)).apply();
     }
 
     public void setApiEndpoint(String apiEndpoint) {

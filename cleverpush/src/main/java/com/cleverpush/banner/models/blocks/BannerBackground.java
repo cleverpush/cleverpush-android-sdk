@@ -8,20 +8,35 @@ public class BannerBackground {
     private String color;
     private boolean dismiss;
 
-    private BannerBackground() {}
+    private BannerBackground() {
+    }
 
-    public String getImageUrl() { return imageUrl; }
+    public String getImageUrl() {
+        return imageUrl;
+    }
 
-    public String getColor() { return color; }
+    public String getColor() {
+        return color;
+    }
 
-    public boolean dismissOnClick() { return dismiss; }
+    public boolean dismissOnClick() {
+        return dismiss;
+    }
 
     public static BannerBackground create(JSONObject json) throws JSONException {
         BannerBackground bg = new BannerBackground();
 
-        bg.imageUrl = json.getString("imageUrl");
-        bg.color = json.getString("color");
-        bg.dismiss = json.getBoolean("dismiss");
+        if (json.has("imageUrl")) {
+            bg.imageUrl = json.getString("imageUrl");
+        }
+
+        if (json.has("color")) {
+            bg.color = json.getString("color");
+        }
+
+        if (json.has("dismiss")) {
+            bg.dismiss = json.getBoolean("dismiss");
+        }
 
         return bg;
     }
