@@ -30,5 +30,7 @@ public class CleverPushPreferences {
     public static final String APP_OPENED_STORIES = "openedStories";
     public static final String APP_BANNER_SHOWING = "appBannerShowing";
     public static final String UNSUBSCRIBED = "unsubscribed";
+    public static final String TOPIC_LAST_CHECKED = "topicLastChecked";
+    public static final String LAST_TIME_AUTO_SHOWED = "lastTimeAutoShowed";
 
 }
