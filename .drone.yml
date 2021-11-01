@@ -5,11 +5,8 @@ name: default
 steps:
 - name: deploy
   image: androidsdk/android-28
-  push:
-    commands:
-      - "./gradlew clean build"
-      - echo "${DRONE_BRANCH}"
-      - bash ./gradlew test --stacktrace
+  commands:
+    - bash ./gradlew test --stacktrace --warning-mode=all
   when:
     event:
     - push
