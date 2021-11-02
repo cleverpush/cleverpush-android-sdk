@@ -1,0 +1,12 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: unitTest
+  image: androidsdk/android-28
+  commands:
+    - bash ./gradlew test --stacktrace --warning-mode=all
+  when:
+    event:
+    - push
