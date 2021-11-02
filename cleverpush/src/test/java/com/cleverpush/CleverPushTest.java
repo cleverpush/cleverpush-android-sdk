@@ -1705,10 +1705,10 @@ class CleverPushTest {
     @Test
     void testSetSubscriptionTopics() {
         String[] topicIds = new String[]{"topicId"};
-      /*  doReturn(context).when(cleverPush).getContext();
+        doReturn(context).when(cleverPush).getContext();
         doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
         doReturn(editor).when(sharedPreferences).edit();
-        doReturn("channelId").when(cleverPush).getChannelId(context);*/
+        doReturn("channelId").when(cleverPush).getChannelId(context);
         when(sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0)).thenReturn(0);
 
         try {
