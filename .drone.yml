@@ -3,7 +3,7 @@ type: docker
 name: default
 
 steps:
-- name: deploy
+- name: unitTest
   image: androidsdk/android-28
   commands:
     - bash ./gradlew test --stacktrace --warning-mode=all
