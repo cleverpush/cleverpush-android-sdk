@@ -39,6 +39,7 @@ import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
+import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.listener.NotificationFromApiCallbackListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
@@ -159,6 +160,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
     private boolean topicsDialogShowWhenNewAdded = false;
+    private InitializeListener initializeListener;
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -409,6 +411,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
             }
             addOrUpdateChannelId(getContext(), this.channelId);
+            fireInitializeListener();
             // get channel config
             getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId);
         } else {
@@ -441,7 +444,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public void getChannelConfigFromBundleId(String url, boolean autoRegister) {
         CleverPush instance = this;
-        CleverPushHttpClient.get(url, new ChannelConfigFromBundleIdResponseHandler(instance).getResponseHandler(autoRegister));
+        CleverPushHttpClient.get(url, new ChannelConfigFromBundleIdResponseHandler(instance, initializeListener).getResponseHandler(autoRegister));
     }
 
     public void incrementAppOpens() {
@@ -2740,5 +2743,19 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public static void removeInstance() {
         instance = null;
+    }
+
+    public void setInitializeListener(InitializeListener initializeListener) {
+        this.initializeListener = initializeListener;
+    }
+
+    private void fireInitializeListener() {
+        if (initializeListener != null) {
+            initializeListener.onInitialized();
+        }
+    }
+
+    public NotificationOpenedListener getNotificationOpenedListener() {
+        return notificationOpenedListener;
     }
 }
