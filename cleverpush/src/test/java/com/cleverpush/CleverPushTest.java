@@ -293,6 +293,7 @@ class CleverPushTest {
         doReturn(context).when(cleverPush).getContext();
         doReturn("channelId").when(cleverPush).getChannelId(context);
         doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        doReturn(subscriptionManager).when(cleverPush).getSubscriptionManager();
         when(sharedPreferences.edit()).thenReturn(editor);
         when(editor.putString(CleverPushPreferences.CHANNEL_ID, "channelId")).thenReturn(editor);
         when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn(null);
@@ -301,6 +302,7 @@ class CleverPushTest {
 
         cleverPush.subscribeOrSync(true);
 
+        verify(subscriptionManager).checkChangedPushToken(any());
         verify(cleverPush).fireSubscribedListener("subscription_id");
         verify(cleverPush).setSubscriptionId("subscription_id");
     }
@@ -339,6 +341,21 @@ class CleverPushTest {
         Map<String, String> pendingAppBannerEvents = new HashMap<>();
         pendingAppBannerEvents.put("key", "value");
         doReturn(pendingAppBannerEvents).when(cleverPush).getPendingAppBannerEvents();
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+        };
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.initFeatures();
 
@@ -1186,11 +1203,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete(null);
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed(null);
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(false);
@@ -1217,11 +1234,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1256,11 +1273,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1295,11 +1312,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1340,11 +1357,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1387,11 +1404,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1435,11 +1452,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1475,11 +1492,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1508,11 +1525,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1541,11 +1558,11 @@ class CleverPushTest {
         };
 
         doAnswer((Answer<Void>) invocation -> {
-            SubscriptionManager.RegisteredHandler registeredHandler = invocation.getArgument(1);
-            registeredHandler.complete("subscriptionID");
+            SubscribedListener subscribedListener = invocation.getArgument(1);
+            subscribedListener.subscribed("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscriptionManager.RegisteredHandler.class));
+                .subscribe(anyObject(), any(SubscribedListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1830,7 +1847,8 @@ class CleverPushTest {
             public Void answer(InvocationOnMock invocation) {
                 ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
                 try {
-                    responseJson[0] = new JSONObject("{ \"trackAppStatistics\": true}");
+                    responseJson[0] = new JSONObject("{\n" +
+                            "\t\"trackAppStatistics\": true,\n" + "}");
                     callback.ready(responseJson[0]);
                 } catch (JSONException e) {
                     e.printStackTrace();
