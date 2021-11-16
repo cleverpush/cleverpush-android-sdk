@@ -29,5 +29,6 @@ public class CleverPushPreferences {
     public static final String UNSUBSCRIBED = "unsubscribed";
     public static final String TOPIC_LAST_CHECKED = "topicLastChecked";
     public static final String LAST_TIME_AUTO_SHOWED = "lastTimeAutoShowed";
+    public static final String NOTIFICATION_STYLE = "notificationStyle";
 
 }

@@ -196,8 +196,6 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
                         Log.e("CleverPush", "Caught InterruptedException", e);
                     }
                 }
-
-
             } catch (Throwable throwable) {
                 Log.e("CleverPush", "Unknown error getting FCM Token", throwable);
             }
@@ -214,7 +212,6 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
             }
 
             return token;
-
         } catch (IOException exception) {
             if (!ERROR_SERVICE_NOT_AVAILABLE.equals(exception.getMessage())) {
                 Log.e("CleverPush", "Error Getting FCM Token ", exception);

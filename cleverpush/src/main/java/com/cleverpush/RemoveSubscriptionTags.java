@@ -1,8 +1,6 @@
 package com.cleverpush;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.cleverpush.listener.RemoveTagCompletedListener;

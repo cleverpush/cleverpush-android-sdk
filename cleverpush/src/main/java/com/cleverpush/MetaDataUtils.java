@@ -6,7 +6,7 @@ import android.content.pm.PackageManager;
 
 public class MetaDataUtils {
     public static String getChannelId(Context paramContext) {
-        ApplicationInfo localApplicationInfo = null;
+        ApplicationInfo localApplicationInfo;
         try {
             localApplicationInfo = paramContext.getPackageManager().getApplicationInfo(paramContext.getPackageName(), 128);
         } catch (PackageManager.NameNotFoundException e) {

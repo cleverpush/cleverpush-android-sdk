@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -65,7 +64,6 @@ import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
@@ -119,12 +117,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private AppBannerOpenedListener appBannerOpenedListener;
     private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
     private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
-    private Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
+    private final Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
     private SessionListener sessionListener;
     private WebViewClientListener webViewClientListener;
     private GoogleApiClient googleApiClient;
-    private ArrayList<Geofence> geofenceList = new ArrayList<>();
-    private Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
+    private final ArrayList<Geofence> geofenceList = new ArrayList<>();
+    private final Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
     private Map<String, String> pendingAppBannerEvents = new HashMap<>();
     private String pendingShowAppBannerId = null;
     private String pendingShowAppBannerNotificationId = null;
@@ -144,7 +142,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
-    private int locationPermissionRequestCode = 101;
+    private final int locationPermissionRequestCode = 101;
 
     private boolean trackingConsentRequired = false;
     private boolean hasTrackingConsent = false;
@@ -176,32 +174,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             CleverPush.context = context.getApplicationContext();
         }
 
-        sessionListener = open -> {
-            if (open) {
-                this.trackSessionStart();
-
-                if (pendingRequestLocationPermissionCall) {
-                    this.requestLocationPermission();
-                }
-
-                if (pendingInitFeaturesCall) {
-                    this.initFeatures();
-                }
-
-                if (appBannerModule != null) {
-                    appBannerModule.initSession(channelId);
-                }
-
-                if (pendingPageViews.size() > 0) {
-                    for (PageView pageView : pendingPageViews) {
-                        this.trackPageView(pageView.getUrl(), pageView.getParams());
-                    }
-                    pendingPageViews = new ArrayList<>();
-                }
-            } else {
-                this.trackSessionEnd();
-            }
-        };
+        sessionListener = initSessionListener();
 
         if ((Application) getContext() != null) {
             ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) getContext(), sessionListener);
@@ -432,6 +405,35 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         incrementAppOpens();
     }
 
+    public SessionListener initSessionListener() {
+        return open -> {
+            if (open) {
+                this.trackSessionStart();
+
+                if (pendingRequestLocationPermissionCall) {
+                    this.requestLocationPermission();
+                }
+
+                if (pendingInitFeaturesCall) {
+                    this.initFeatures();
+                }
+
+                if (appBannerModule != null) {
+                    appBannerModule.initSession(channelId);
+                }
+
+                if (pendingPageViews.size() > 0) {
+                    for (PageView pageView : pendingPageViews) {
+                        this.trackPageView(pageView.getUrl(), pageView.getParams());
+                    }
+                    pendingPageViews = new ArrayList<>();
+                }
+            } else {
+                this.trackSessionEnd();
+            }
+        };
+    }
+
     public void getChannelConfigFromChannelId(boolean autoRegister, String storedChannelId, String storedSubscriptionId) {
         CleverPush instance = this;
         String configPath = "/channel/" + this.channelId + "/config";
@@ -610,11 +612,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * to check if app has location permission
      */
     public boolean hasLocationPermission() {
-        /*
-        if (android.os.Build.VERSION.SDK_INT >= 29 && ContextCompat.checkSelfPermission(CleverPush.context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-        */
         return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -859,12 +856,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private GoogleApiClient.OnConnectionFailedListener getOnConnectionFailedListener() {
-        return new GoogleApiClient.OnConnectionFailedListener() {
-            @Override
-            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                Log.d("CleverPush", "GoogleApiClient onConnectionFailed");
-            }
-        };
+        return connectionResult -> Log.d("CleverPush", "GoogleApiClient onConnectionFailed");
     }
 
     private GoogleApiClient.ConnectionCallbacks getConnectionCallbacks() {
@@ -1443,7 +1435,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return tags;
     }
 
-
     @Deprecated
     public Set<ChannelTag> getAvailableTags() {
         JSONObject channelConfig = this.getChannelConfig();
@@ -1555,11 +1546,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         };
     }
 
-
     public void removeSubscriptionTags(String[] tagIds) {
         removeSubscriptionTagTrackingConsent(tagIds);
     }
-
 
     public void removeSubscriptionTag(String tagId) {
         removeSubscriptionTagTrackingConsent(tagId);
@@ -2259,7 +2248,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * @param selectedTopics      selectedTopics
      */
     void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
-
         parentLayout.removeAllViews();
 
         this.getChannelConfig(channelConfig -> {
@@ -2275,7 +2263,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
 
         setUpParentTopicCheckBoxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, deselectAll, nightModeFlags, selectedTopics);
-
     }
 
     public void setUpParentTopicCheckBoxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
@@ -2387,7 +2374,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         } catch (JSONException e) {
             Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
         }
-
     }
 
     private void updateTopicLastCheckedTime() {
@@ -2528,7 +2514,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     public TopicsChangedListener getTopicsChangedListener() {
         return topicsChangedListener;
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -2738,5 +2723,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public static void removeInstance() {
         instance = null;
+    }
+
+    public void setNotificationStyle(NotificationStyle style) {
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(CleverPushPreferences.NOTIFICATION_STYLE, style.getCode());
+        editor.apply();
     }
 }

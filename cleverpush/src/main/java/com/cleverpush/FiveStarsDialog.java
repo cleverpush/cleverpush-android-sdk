@@ -15,6 +15,9 @@ import android.view.View;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.cleverpush.listener.NegativeReviewListener;
+import com.cleverpush.listener.ReviewListener;
+
 import java.lang.reflect.Field;
 
 public class FiveStarsDialog implements DialogInterface.OnClickListener {
@@ -56,15 +59,12 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         contentTextView = dialogView.findViewById(R.id.text_content);
         contentTextView.setText(textToAdd);
         ratingBar = dialogView.findViewById(R.id.ratingBar);
-        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            @Override
-            public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
-                Log.d(TAG, "Rating changed : " + v);
-                if (isForceMode && v >= upperBound) {
-                    openMarket();
-                    if (reviewListener != null)
-                        reviewListener.onReview((int) ratingBar.getRating());
-                }
+        ratingBar.setOnRatingBarChangeListener((ratingBar, v, b) -> {
+            Log.d(TAG, "Rating changed : " + v);
+            if (isForceMode && v >= upperBound) {
+                openMarket();
+                if (reviewListener != null)
+                    reviewListener.onReview((int) ratingBar.getRating());
             }
         });
 
@@ -105,7 +105,6 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         alertDialog.show();
     }
 
-
     @Override
     public void onClick(DialogInterface dialogInterface, int i) {
         if (i == DialogInterface.BUTTON_POSITIVE) {
@@ -134,7 +133,6 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
     public FiveStarsDialog setTitle(String title) {
         this.title = title;
         return this;
-
     }
 
     public FiveStarsDialog setSupportEmail(String supportEmail) {
