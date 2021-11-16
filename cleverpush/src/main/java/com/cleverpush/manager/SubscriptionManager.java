@@ -1,16 +1,20 @@
 package com.cleverpush.manager;
 
+import com.cleverpush.listener.SubscribedListener;
+
 import org.json.JSONObject;
 
 public interface SubscriptionManager {
 
-    interface RegisteredHandler {
-        void complete(String id);
-    }
+    enum SubscriptionManagerType {
+        FCM,
+        HMS,
+        ADM,
+    };
 
-    void subscribe(JSONObject channelConfig, RegisteredHandler callback);
+    void subscribe(JSONObject channelConfig, SubscribedListener callback);
 
-    void tokenCallback(String token);
+    void checkChangedPushToken(JSONObject channelConfig);
 
-    String getProviderName();
+    SubscriptionManagerType getType();
 }

@@ -3,7 +3,6 @@ package com.cleverpush.responsehandlers;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
@@ -24,7 +23,6 @@ public class RemoveSubscriptionTagResponseHandler {
                 if (removeTagCompletedListener != null) {
                     removeTagCompletedListener.tagRemoved(currentPositionOfTagToRemove);
                 }
-                Log.e("removedTag", tagId);
             }
 
             @Override

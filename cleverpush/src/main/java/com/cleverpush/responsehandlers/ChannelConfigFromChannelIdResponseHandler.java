@@ -14,7 +14,7 @@ import org.json.JSONObject;
 
 public class ChannelConfigFromChannelIdResponseHandler {
 
-    private CleverPush cleverPush;
+    private final CleverPush cleverPush;
 
     public ChannelConfigFromChannelIdResponseHandler(CleverPush instance) {
         this.cleverPush = instance;

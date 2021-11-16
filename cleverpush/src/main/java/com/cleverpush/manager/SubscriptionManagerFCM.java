@@ -1,60 +1,42 @@
 package com.cleverpush.manager;
 
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.WorkerThread;
 
+import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.SubscribedListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
+public class SubscriptionManagerFCM extends SubscriptionManagerBase {
+
+    private static final int REGISTRATION_RETRY_COUNT = 3;
+    private static final int REGISTRATION_RETRY_BACKOFF_MS = 10_000;
+
+    private static final String TOKEN_BLACKLISTED = "BLACKLISTED";
+    private static final String ERROR_SERVICE_NOT_AVAILABLE = "SERVICE_NOT_AVAILABLE";
+    private static final String THREAD_NAME = "FCM_GET_TOKEN";
 
     private FirebaseApp firebaseApp;
+    private Thread registerThread;
 
     public SubscriptionManagerFCM(Context context) {
-        super(context);
+        super(context, SubscriptionManagerType.FCM);
     }
 
-    public static void disableFirebaseInstanceIdService(Context context) {
-        String senderId = null;
-        Resources resources = context.getResources();
-        int bodyResId = resources.getIdentifier("gcm_defaultSenderId", "string", context.getPackageName());
-        if (bodyResId != 0) {
-            senderId = resources.getString(bodyResId);
-        }
 
-        int componentState = senderId == null ? PackageManager.COMPONENT_ENABLED_STATE_DISABLED : PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
-
-        PackageManager pm = context.getPackageManager();
-        try {
-            ComponentName componentName = new ComponentName(context, Class.forName("com.google.firebase.iid.FirebaseInstanceIdService"));
-            pm.setComponentEnabledSetting(componentName, componentState, PackageManager.DONT_KILL_APP);
-        } catch (Exception ignored) {
-
-        }
-    }
-
-    @Override
-    public void tokenCallback(String token) {
-
-    }
-
-    @Override
-    public String getProviderName() {
-        return "FCM";
-    }
-
-    @Override
-    String getToken(String senderId) throws Throwable {
+    private String getToken(String senderId) throws Throwable {
         initFirebaseApp(senderId);
 
         try {
@@ -97,7 +79,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
             exception = e;
         }
 
-        throw new Error("Reflection error on FirebaseInstanceId.getInstance(firebaseApp).getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE)", exception);
+        throw new Error("Reflection error in FirebaseInstanceId.getInstance(firebaseApp).getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE)", exception);
     }
 
     /**
@@ -124,5 +106,132 @@ public class SubscriptionManagerFCM extends SubscriptionManagerGoogle {
             exception = e;
         }
         throw exception;
+    }
+
+    private String getSenderIdFromConfig(JSONObject channelConfig) {
+        if (channelConfig == null) {
+            return null;
+        }
+
+        String senderId = channelConfig.optString("fcmId");
+        if (senderId == null || senderId.isEmpty() || !isValidSenderId(senderId)) {
+            return null;
+        }
+
+        return senderId;
+    }
+
+    @Override
+    public void subscribe(JSONObject channelConfig, SubscribedListener subscribedListener) {
+        String senderId = this.getSenderIdFromConfig(channelConfig);
+        if (senderId == null) {
+            Log.e("CleverPush", "SubscriptionManager: Getting FCM Sender ID failed");
+            subscribedListener.subscribed(null);
+            return;
+        }
+
+        try {
+            subscribeInBackground(senderId, subscribedListener);
+        } catch (Throwable t) {
+            Log.e("CleverPush",
+                    "Could not register with FCM due to an issue with your AndroidManifest.xml or with FCM.",
+                    t
+            );
+        }
+    }
+
+    @Override
+    public void checkChangedPushToken(JSONObject channelConfig) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+        String existingToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
+
+        if (existingToken == null) {
+            return;
+        }
+
+        new Thread(() -> {
+            String senderId = this.getSenderIdFromConfig(channelConfig);
+            if (senderId == null) {
+                Log.e("CleverPush", "SubscriptionManager: Getting FCM Sender ID failed");
+                return;
+            }
+
+            try {
+                String newToken = getTokenAttempt(senderId);
+                if (newToken != null && !newToken.equals(existingToken)) {
+                    this.syncSubscription(newToken, subscriptionId -> Log.i("CleverPush", "Synchronized new FCM token: " + newToken));
+                } else {
+                    Log.d("CleverPush", "FCM token has not changed: " + newToken);
+                }
+            } catch (Throwable throwable) {
+                Log.e("CleverPush", "Unknown error getting FCM Token", throwable);
+            }
+        }, THREAD_NAME).start();
+    }
+
+    private synchronized void subscribeInBackground(final String senderId, SubscribedListener subscribedListener) {
+        if (registerThread != null && registerThread.isAlive()) {
+            return;
+        }
+
+        registerThread = new Thread(() -> {
+            try {
+                for (int currentRetry = 0; currentRetry < REGISTRATION_RETRY_COUNT; currentRetry++) {
+                    String token = getTokenAttempt(senderId);
+                    if (token != null) {
+                        Log.i("CleverPush", "Device registered (FCM), push token: " + token);
+                        this.syncSubscription(token, subscribedListener, senderId);
+                        return;
+                    }
+
+                    if (currentRetry >= (REGISTRATION_RETRY_COUNT - 1)) {
+                        Log.e("CleverPush", "Retry count of " + REGISTRATION_RETRY_COUNT + " exceed! Could not get a FCM Token.");
+                    } else {
+                        Log.i("CleverPush", "FCM returned SERVICE_NOT_AVAILABLE error. Current retry count: " + currentRetry);
+                    }
+
+                    try {
+                        Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
+                    } catch (InterruptedException e) {
+                        Log.e("CleverPush", "Caught InterruptedException", e);
+                    }
+                }
+
+
+            } catch (Throwable throwable) {
+                Log.e("CleverPush", "Unknown error getting FCM Token", throwable);
+            }
+        }, THREAD_NAME);
+        registerThread.start();
+    }
+
+    private String getTokenAttempt(String senderId) throws Throwable {
+        try {
+            String token = getToken(senderId);
+
+            if (token == null || token.equals(TOKEN_BLACKLISTED)) {
+                throw new Error("Got invalid token from FCM");
+            }
+
+            return token;
+
+        } catch (IOException exception) {
+            if (!ERROR_SERVICE_NOT_AVAILABLE.equals(exception.getMessage())) {
+                Log.e("CleverPush", "Error Getting FCM Token ", exception);
+                throw exception;
+            }
+
+            return null;
+        }
+    }
+
+    private boolean isValidSenderId(String senderId) {
+        try {
+            Float.parseFloat(senderId);
+            return true;
+        } catch (Throwable t) {
+            Log.e("CleverPush", "Missing FCM Sender ID");
+            return false;
+        }
     }
 }
