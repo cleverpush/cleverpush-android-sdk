@@ -27,15 +27,15 @@ public class BannerBackground {
         BannerBackground bg = new BannerBackground();
 
         if (json.has("imageUrl")) {
-            bg.imageUrl = json.getString("imageUrl");
+            bg.imageUrl = json.optString("imageUrl");
         }
 
         if (json.has("color")) {
-            bg.color = json.getString("color");
+            bg.color = json.optString("color");
         }
 
         if (json.has("dismiss")) {
-            bg.dismiss = json.getBoolean("dismiss");
+            bg.dismiss = json.optBoolean("dismiss");
         }
 
         return bg;

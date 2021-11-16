@@ -1,6 +1,6 @@
 package com.cleverpush.banner;
 
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
@@ -24,7 +23,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.RecyclerView;
@@ -48,17 +46,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-
 public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCarouselAdapter.ViewHolder> {
     private static final String TAG = "CleverPush/AppBanner";
     private static final String CONTENT_TYPE_HTML = "html";
-    private static Map<Alignment, Integer> alignmentMap = new HashMap<>();
+    private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
 
-    private Activity activity;
-    private Banner data;
-    private List<BannerScreens> screens = new LinkedList<>();
-    private AppBannerPopup appBannerPopup;
-    private AppBannerOpenedListener openedListener;
+    private final Activity activity;
+    private final Banner data;
+    private final List<BannerScreens> screens = new LinkedList<>();
+    private final AppBannerPopup appBannerPopup;
 
     static {
         alignmentMap.put(Alignment.Left, View.TEXT_ALIGNMENT_TEXT_START);
@@ -70,7 +66,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         this.activity = activity;
         this.data = banner;
         this.appBannerPopup = appBannerPopup;
-        this.openedListener = openedListener;
         screens.addAll(data.getScreens());
     }
 
@@ -89,24 +84,20 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             composeHtmlBanner(body, data.getContent());
         } else {
             for (BannerBlock bannerBlock : data.getScreens().get(position).getBlocks()) {
-                activity.runOnUiThread(new Runnable() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                    @Override
-                    public void run() {
-                        switch (bannerBlock.getType()) {
-                            case Text:
-                                composeTextBlock(body, (BannerTextBlock) bannerBlock);
-                                break;
-                            case Image:
-                                composeImageBlock(body, (BannerImageBlock) bannerBlock);
-                                break;
-                            case Button:
-                                composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
-                                break;
-                            case HTML:
-                                composeHtmlBLock(body, (BannerHTMLBlock) bannerBlock);
-                                break;
-                        }
+                activity.runOnUiThread(() -> {
+                    switch (bannerBlock.getType()) {
+                        case Text:
+                            composeTextBlock(body, (BannerTextBlock) bannerBlock);
+                            break;
+                        case Image:
+                            composeImageBlock(body, (BannerImageBlock) bannerBlock);
+                            break;
+                        case Button:
+                            composeButtonBlock(body, (BannerButtonBlock) bannerBlock);
+                            break;
+                        case HTML:
+                            composeHtmlBLock(body, (BannerHTMLBlock) bannerBlock);
+                            break;
                     }
                 });
             }
@@ -138,21 +129,24 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         bg.setColor(this.parseColor(block.getBackground()));
         button.setBackground(bg);
 
-        button.setOnClickListener(view -> {
-            if (block.getAction().isOpenInWebView()) {
-                WebViewActivity.launch(activity, block.getAction().getUrl());
-            } else {
-                if (block.getAction().getDismiss()) {
-                    appBannerPopup.dismiss();
+        if (block.getAction() != null) {
+            button.setOnClickListener(view -> {
+                if (block.getAction().isOpenInWebView()) {
+                    WebViewActivity.launch(activity, block.getAction().getUrl());
                 } else {
-                    appBannerPopup.moveToNextScreen();
+                    if (block.getAction().getDismiss()) {
+                        appBannerPopup.dismiss();
+                    } else {
+                        appBannerPopup.moveToNextScreen();
+                    }
                 }
-            }
 
-            if (appBannerPopup.getOpenedListener() != null) {
-                appBannerPopup.getOpenedListener().opened((block.getAction()));
-            }
-        });
+                if (appBannerPopup.getOpenedListener() != null) {
+                    appBannerPopup.getOpenedListener().opened((block.getAction()));
+                }
+            });
+        }
+
         button.setOnTouchListener((view, motionEvent) -> {
             int action = motionEvent.getAction();
             if (action == MotionEvent.ACTION_DOWN) {
@@ -219,16 +213,16 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             }
         }).start();
 
-        img.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        if (block.getAction() != null) {
+            img.setOnClickListener(view -> {
                 if (block.getAction().isOpenInWebView()) {
                     WebViewActivity.launch(activity, block.getAction().getUrl());
                 }
-            }
-        });
+            });
+        }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
         LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
         WebView webView = webLayout.findViewById(R.id.webView);
@@ -271,6 +265,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
      * @param body        parent layout to add HTML view
      * @param htmlContent html content which will be displayed in banner
      */
+    @SuppressLint("SetJavaScriptEnabled")
     private void composeHtmlBanner(LinearLayout body, String htmlContent) {
         activity.runOnUiThread(() -> {
             String htmlWithJs = htmlContent.replace("</body>", "" +

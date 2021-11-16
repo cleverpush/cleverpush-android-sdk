@@ -62,10 +62,10 @@ public class AppBannerModule {
     private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
     private Map<String, String> events = new HashMap<>();
 
-    private HandlerThread handlerThread = new HandlerThread("AppBannerModule");
-    private Handler handler;
-    private SharedPreferences sharedPreferences;
-    private SharedPreferences.Editor editor;
+    private final HandlerThread handlerThread = new HandlerThread("AppBannerModule");
+    private final Handler handler;
+    private final SharedPreferences sharedPreferences;
+    private final SharedPreferences.Editor editor;
 
     private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
         this.channel = channel;
