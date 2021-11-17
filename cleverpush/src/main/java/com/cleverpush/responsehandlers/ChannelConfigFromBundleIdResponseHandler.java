@@ -53,7 +53,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
                     cleverPush.fireSubscribedListener(subscriptionId);
                     cleverPush.setSubscriptionId(subscriptionId);
                     cleverPush.setChannelConfig(null);
-                    fireInitializeListener();
+                    cleverPush.fireInitializeListener();
                 }
             }
         };
@@ -69,11 +69,5 @@ public class ChannelConfigFromBundleIdResponseHandler {
 
     public Logger getLogger() {
         return new Logger();
-    }
-
-    private void fireInitializeListener() {
-        if (initializeListener != null) {
-            initializeListener.onInitialized();
-        }
     }
 }

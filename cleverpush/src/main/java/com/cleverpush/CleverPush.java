@@ -2732,7 +2732,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.initializeListener = initializeListener;
     }
 
-    private void fireInitializeListener() {
+    public void fireInitializeListener() {
         if (initializeListener != null) {
             initializeListener.onInitialized();
         }
