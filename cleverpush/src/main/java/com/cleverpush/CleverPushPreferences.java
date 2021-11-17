@@ -2,11 +2,9 @@ package com.cleverpush;
 
 public class CleverPushPreferences {
 
-    public static final String SENT_TOKEN_TO_SERVER = "sentTokenToServer";
     public static final String FCM_TOKEN = "fcmToken";
     public static final String HMS_TOKEN = "hmsToken";
     public static final String ADM_TOKEN = "admToken";
-    public static final String REGISTRATION_COMPLETE = "registrationComplete";
     public static final String CHANNEL_ID = "channelId";
     public static final String SUBSCRIPTION_ID = "subscriptionId";
     public static final String SUBSCRIPTION_LAST_SYNC = "subscriptionLastSync";
@@ -17,7 +15,6 @@ public class CleverPushPreferences {
     public static final String SUBSCRIPTION_LANGUAGE = "subscriptionLanguage";
     public static final String SUBSCRIPTION_COUNTRY = "subscriptionCountry";
     public static final String SUBSCRIPTION_CREATED_AT = "subscriptionCreatedAt";
-    public static final String SHOWN_APP_BANNERS = "shownAppBanners";
     public static final String NOTIFICATIONS = "notifications"; // deprecated, now using NOTIFICATIONS_JSON
     public static final String NOTIFICATIONS_JSON = "notificationsJson";
     public static final String LAST_NOTIFICATION_ID = "lastNotificationId";
@@ -32,5 +29,6 @@ public class CleverPushPreferences {
     public static final String UNSUBSCRIBED = "unsubscribed";
     public static final String TOPIC_LAST_CHECKED = "topicLastChecked";
     public static final String LAST_TIME_AUTO_SHOWED = "lastTimeAutoShowed";
+    public static final String NOTIFICATION_STYLE = "notificationStyle";
 
 }

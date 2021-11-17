@@ -61,12 +61,14 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     }
 
     private void handleBundleData(Bundle extras) {
-        if (extras.containsKey("selectedPosition")) {
-            selectedPosition = extras.getInt("selectedPosition");
-        }
-        if (extras.containsKey("stories")) {
-            stories = (ArrayList<Story>) extras.getSerializable("stories");
-            loadStoryDetails();
+        if (extras != null) {
+            if (extras.containsKey("selectedPosition")) {
+                selectedPosition = extras.getInt("selectedPosition");
+            }
+            if (extras.containsKey("stories")) {
+                stories = (ArrayList<Story>) extras.getSerializable("stories");
+                loadStoryDetails();
+            }
         }
     }
 

@@ -43,9 +43,9 @@ public class CarouselNotificationIntentService extends IntentService {
         } catch (Exception ignore) {
         }
 
-        if (message == null || data == null) return;
-
-        Log.i("CleverPush", "CarouselNotificationIntentService: 2");
+        if (message == null || data == null) {
+            return;
+        }
 
         switch (action) {
             case ACTION_CAROUSEL_IMG_CHANGE:

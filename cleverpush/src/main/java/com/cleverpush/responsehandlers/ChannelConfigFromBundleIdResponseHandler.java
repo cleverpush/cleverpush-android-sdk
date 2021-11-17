@@ -15,8 +15,8 @@ import org.json.JSONObject;
 
 public class ChannelConfigFromBundleIdResponseHandler {
 
-    private CleverPush cleverPush;
     private InitializeListener initializeListener;
+    private final CleverPush cleverPush;
 
     public ChannelConfigFromBundleIdResponseHandler(CleverPush cleverPush, InitializeListener initializeListener) {
         this.cleverPush = cleverPush;
@@ -27,7 +27,6 @@ public class ChannelConfigFromBundleIdResponseHandler {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-
                 cleverPush.setInitialized(true);
                 try {
                     JSONObject responseJson = new JSONObject(response);

@@ -1,14 +1,8 @@
 package com.cleverpush.responsehandlers;
 
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
-import com.cleverpush.CleverPushPreferences;
-
-import org.json.JSONObject;
 
 public class TrackSessionStartResponseHandler {
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.18.0
+* Automatically re-sync when device token changes (might happen during development)
+* Add ability to specify custom Notification Styles
+
 ## 1.17.0
 * Updates for Android 12
 

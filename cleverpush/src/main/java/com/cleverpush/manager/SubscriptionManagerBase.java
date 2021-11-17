@@ -11,6 +11,7 @@ import android.util.Log;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.SubscribedListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,36 +24,30 @@ import java.util.Set;
 import java.util.TimeZone;
 
 abstract class SubscriptionManagerBase implements SubscriptionManager {
-    RegisteredHandler registeredHandler;
     Context context;
-    JSONObject channelConfig;
+    SubscriptionManagerType type;
 
-    SubscriptionManagerBase(Context context) {
+    SubscriptionManagerBase(Context context, SubscriptionManagerType type) {
         this.context = context;
+        this.type = type;
     }
 
-    @Override
-    public void subscribe(JSONObject channelConfig, RegisteredHandler callback) {
-        this.registeredHandler = callback;
-        this.channelConfig = channelConfig;
+    void syncSubscription(String token, SubscribedListener subscribedListener) {
+        syncSubscription(token, subscribedListener, null);
     }
 
-    void syncSubscription(String token) {
-        syncSubscription(token, null);
+    void syncSubscription(String token, SubscribedListener subscribedListener, String senderId) {
+        syncSubscription(token, subscribedListener, senderId, false);
     }
 
-    void syncSubscription(String token, String senderId) {
-        syncSubscription(token, senderId, false);
-    }
-
-    void syncSubscription(String token, String senderId, boolean retry) {
+    void syncSubscription(String token, SubscribedListener subscribedListener, String senderId, boolean isRetry) {
         Log.d("CleverPush", "syncSubscription");
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
 
-        if (this.getProviderName().equals("ADM")) {
+        if (this.type == SubscriptionManagerType.ADM) {
             sharedPreferences.edit().putString(CleverPushPreferences.ADM_TOKEN, token).apply();
-        } else if (this.getProviderName().equals("HMS")) {
+        } else if (this.type == SubscriptionManagerType.HMS) {
             sharedPreferences.edit().putString(CleverPushPreferences.HMS_TOKEN, token).apply();
         } else {
             sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
@@ -88,9 +83,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
         JSONObject jsonBody = new JSONObject();
         try {
-            if (this.getProviderName().equals("ADM")) {
+            if (this.type == SubscriptionManagerType.ADM) {
                 jsonBody.put("admToken", token);
-            } else if (this.getProviderName().equals("HMS")) {
+            } else if (this.type == SubscriptionManagerType.HMS) {
                 jsonBody.put("hmsToken", token);
                 jsonBody.put("hmsId", senderId);
             } else {
@@ -135,7 +130,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                         sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, newSubscriptionId).apply();
                         sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L)).apply();
 
-                        registeredHandler.complete(newSubscriptionId);
+                        subscribedListener.subscribed(newSubscriptionId);
                     }
                     if (responseJson.has("topics")) {
                         JSONArray topicsArray = responseJson.getJSONArray("topics");
@@ -168,15 +163,17 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable t) {
-                if (statusCode == 404 || statusCode == 410) {
-                    if (!retry) {
-                        sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
-                        syncSubscription(token, senderId, true);
-                        return;
-                    }
+                if ((statusCode == 404 || statusCode == 410) && !isRetry) {
+                    sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
+                    syncSubscription(token, subscribedListener, senderId, true);
+                    return;
                 }
                 Log.e("CleverPush", "Failed while sync subscription request - " + statusCode + " - " + response, t);
             }
         });
+    }
+
+    public SubscriptionManagerType getType() {
+        return this.type;
     }
 }

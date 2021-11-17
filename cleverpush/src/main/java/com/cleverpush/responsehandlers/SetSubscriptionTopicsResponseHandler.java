@@ -1,26 +1,17 @@
 package com.cleverpush.responsehandlers;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.util.Log;
-
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
-import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.util.Logger;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 
 public class SetSubscriptionTopicsResponseHandler {
 
-    private static CleverPush cleverPush;
+    private final CleverPush cleverPush;
 
     public SetSubscriptionTopicsResponseHandler(CleverPush cleverPush) {
         this.cleverPush = cleverPush;

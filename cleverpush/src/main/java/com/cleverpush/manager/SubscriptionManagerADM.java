@@ -4,19 +4,18 @@ import android.content.Context;
 import android.util.Log;
 
 import com.amazon.device.messaging.ADM;
+import com.cleverpush.listener.SubscribedListener;
 
 import org.json.JSONObject;
 
 public class SubscriptionManagerADM extends SubscriptionManagerBase {
 
     public SubscriptionManagerADM(Context context) {
-        super(context);
+        super(context, SubscriptionManagerType.ADM);
     }
 
     @Override
-    public void subscribe(JSONObject channelConfig, final RegisteredHandler callback) {
-        super.subscribe(channelConfig, callback);
-
+    public void subscribe(JSONObject channelConfig, final SubscribedListener subscribedListener) {
         Context context = this.context;
         new Thread(() -> {
             final ADM adm = new ADM(context);
@@ -25,18 +24,13 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
                 adm.startRegister();
             } else {
                 Log.d("CleverPush", "ADM Already registered with ID:" + registrationId);
-                this.syncSubscription(registrationId);
+                this.syncSubscription(registrationId, subscribedListener);
             }
         }).start();
     }
 
     @Override
-    public void tokenCallback(String token) {
+    public void checkChangedPushToken(JSONObject channelConfig) {
 
-    }
-
-    @Override
-    public String getProviderName() {
-        return "ADM";
     }
 }

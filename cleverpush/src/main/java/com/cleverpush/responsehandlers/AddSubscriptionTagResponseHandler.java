@@ -3,7 +3,6 @@ package com.cleverpush.responsehandlers;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
@@ -20,7 +19,6 @@ public class AddSubscriptionTagResponseHandler {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-
                 updateSubscriptionTags(tags);
                 if (addTagCompletedListener != null) {
                     addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);

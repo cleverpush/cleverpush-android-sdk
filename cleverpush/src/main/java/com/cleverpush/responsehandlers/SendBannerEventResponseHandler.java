@@ -1,17 +1,8 @@
 package com.cleverpush.responsehandlers;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
-import com.cleverpush.CleverPushPreferences;
-import com.cleverpush.listener.RemoveTagCompletedListener;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class SendBannerEventResponseHandler {
 
@@ -21,8 +12,7 @@ public class SendBannerEventResponseHandler {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-
-                Log.e(TAG, "App Banner Event success.");
+                Log.d(TAG, "App Banner Event success.");
             }
 
             @Override

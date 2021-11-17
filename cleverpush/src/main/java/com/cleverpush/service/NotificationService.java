@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -19,8 +20,10 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -34,12 +37,14 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.cleverpush.BadgeHelper;
 import com.cleverpush.CleverPush;
+import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
 import com.cleverpush.NotificationCategoryGroup;
 import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationOpenedReceiver;
+import com.cleverpush.NotificationStyle;
 import com.cleverpush.R;
 import com.cleverpush.Subscription;
 
@@ -60,7 +65,7 @@ import java.util.regex.Pattern;
 public class NotificationService {
     private static NotificationService sInstance;
 
-    private int GET_BITMAP_TIMEOUT = 20 * 1000;
+    private final int GET_BITMAP_TIMEOUT = 20 * 1000;
 
     private NotificationService() {
 
@@ -143,17 +148,19 @@ public class NotificationService {
         targetIntent.putExtra("subscription", subscriptionStr);
 
         PendingIntent contentIntent;
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
         if (isBroadcast) {
-            contentIntent = PendingIntent.getBroadcast(context, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            contentIntent = PendingIntent.getBroadcast(context, requestCode, targetIntent, flags);
         } else {
-            contentIntent = PendingIntent.getActivity(context, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            contentIntent = PendingIntent.getActivity(context, requestCode, targetIntent, flags);
         }
+
+        NotificationStyle notificationStyle = getNotificationStyle(context);
 
         Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
         NotificationCompat.Builder notificationBuilder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
             if (notification.getCategory() != null) {
                 NotificationCategory category = notification.getCategory();
 
@@ -253,29 +260,39 @@ public class NotificationService {
                 .setSound(soundUri);
 
         if (iconUrl != null && !iconUrl.isEmpty()) {
-			try {
-				Bitmap icon = getBitmapFromUrl(iconUrl);
-				if (icon != null) {
-					notificationBuilder = notificationBuilder.setLargeIcon(icon);
-				}
-			} catch (Exception ignored) {
-			}
+            try {
+                Bitmap icon = getBitmapFromUrl(iconUrl);
+                if (icon != null) {
+                    notificationBuilder = notificationBuilder.setLargeIcon(icon);
+                }
+            } catch (Exception ignored) {
+            }
         }
 
-        if (mediaUrl != null && !mediaUrl.isEmpty()) {
+        boolean hasMedia = mediaUrl != null && !mediaUrl.isEmpty();
+        boolean hasText = text != null && text.length() > 0;
+        if (notificationStyle == NotificationStyle.BIG_PICTURE || (
+                notificationStyle == NotificationStyle.AUTO && hasMedia
+        )) {
             try {
                 Bitmap media = getBitmapFromUrl(mediaUrl);
                 if (media != null) {
                     notificationBuilder = notificationBuilder.setStyle(
-						new NotificationCompat.BigPictureStyle().bigPicture(media)
+                            new NotificationCompat.BigPictureStyle().bigPicture(media)
                     );
                 }
             } catch (Exception ignored) {
             }
-        } else if (text != null && text.length() > 0) {
-            notificationBuilder.setStyle(
+        } else if (notificationStyle == NotificationStyle.BIG_TEXT || (
+                notificationStyle == NotificationStyle.AUTO && hasText
+        )) {
+            notificationBuilder = notificationBuilder.setStyle(
                     new NotificationCompat.BigTextStyle().bigText(text)
             );
+        } else if (notificationStyle == NotificationStyle.TEXT_WITH_IMAGE) {
+            RemoteViews remoteViews = this.getTextWithImageViews(context, notification, hasMedia);
+            notificationBuilder = notificationBuilder.setStyle(new NotificationCompat.DecoratedCustomViewStyle());
+            notificationBuilder = notificationBuilder.setCustomBigContentView(remoteViews);
         }
 
         // from NotificationExtenderService
@@ -284,6 +301,22 @@ public class NotificationService {
 		}
 
         return notificationBuilder;
+    }
+
+    private RemoteViews getTextWithImageViews(Context context, Notification notification, boolean hasMedia) {
+        RemoteViews expandedView = new RemoteViews(context.getPackageName(), R.layout.notification_text_image_layout);
+        expandedView.setTextViewText(R.id.notification_title, notification.getTitle());
+        expandedView.setTextViewText(R.id.notification_text, notification.getText());
+        if (hasMedia) {
+            try {
+                Bitmap media = getBitmapFromUrl(notification.getMediaUrl());
+                if (media != null) {
+                    expandedView.setImageViewBitmap(R.id.notification_image, media);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return expandedView;
     }
 
 	private static void applyTextColorToRemoteViews(RemoteViews remoteViews, View view, int color) {
@@ -328,13 +361,26 @@ public class NotificationService {
                     }
                 }
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
 
         }
 
         // We'll generate a random int and use it as the notification's request code.
 		Random random = new SecureRandom();
         return random.nextInt();
+    }
+
+    NotificationStyle getNotificationStyle(Context context) {
+        try {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            String notificationStyleCode = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_STYLE, null);
+            if (notificationStyleCode != null) {
+                return NotificationStyle.lookupByCode(notificationStyleCode);
+            }
+        } catch (Exception ignored) {
+
+        }
+        return NotificationStyle.AUTO;
     }
 
     int showNotification(Context context, Notification notification, Subscription subscription) {
@@ -511,28 +557,10 @@ public class NotificationService {
         return contentIntent;
     }
 
-    private void setBasicNotificationData(Context context, Notification message, RemoteViews contentView) {
-        if (message != null && contentView != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                contentView.setViewVisibility(R.id.icon_group, View.GONE);
-
-                int smallIconResId = this.getSmallIcon(context);
-                if (smallIconResId != 0) {
-                    contentView.setViewVisibility(R.id.notification_small_icon, View.VISIBLE);
-                    contentView.setImageViewResource(R.id.notification_small_icon, smallIconResId);
-                }
-            }
-
-            contentView.setTextViewText(R.id.notification_content_title, message.getTitle());
-            contentView.setTextViewText(R.id.notification_content_text, message.getText());
-
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-				contentView.setTextViewTextSize(R.id.notification_content_title, TypedValue.COMPLEX_UNIT_SP, 14);
-				contentView.setTextViewTextSize(R.id.notification_content_text, TypedValue.COMPLEX_UNIT_SP, 14);
-			} else {
-				contentView.setTextViewTextSize(R.id.notification_content_title, TypedValue.COMPLEX_UNIT_SP, 14);
-				contentView.setTextViewTextSize(R.id.notification_content_text, TypedValue.COMPLEX_UNIT_SP, 14);
-			}
+    private void setBasicNotificationData(Context context, Notification notification, RemoteViews contentView) {
+        if (notification != null && contentView != null) {
+            contentView.setTextViewText(R.id.notification_title, notification.getTitle());
+            contentView.setTextViewText(R.id.notification_text, notification.getText());
 		}
     }
 
