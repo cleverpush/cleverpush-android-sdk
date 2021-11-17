@@ -5,12 +5,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.text.TextUtils;
 import android.util.Log;
@@ -27,11 +22,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.Notification;
-import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.R;
 import com.cleverpush.listener.ChannelConfigListener;
-import com.cleverpush.listener.NotificationClickListener;
-import com.cleverpush.listener.NotificationOpenedListener;
+import com.cleverpush.stories.listener.OnItemClickListener;
 
 import org.json.JSONObject;
 
@@ -55,15 +48,13 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
     private Context context;
     private ArrayList<Notification> notificationArrayList;
     private TypedArray typedArray;
-    private NotificationClickListener notificationClickListener;
-    private NotificationOpenedListener notificationOpenedListener;
+    private OnItemClickListener onItemClickListener;
 
-    public InboxViewListAdapter(Context context, ArrayList<Notification> notifications, TypedArray typedArray, NotificationClickListener notificationClickListener, NotificationOpenedListener notificationOpenedListener) {
+    public InboxViewListAdapter(Context context, ArrayList<Notification> notifications, TypedArray typedArray, OnItemClickListener onItemClickListener) {
         this.context = context;
         this.notificationArrayList = notifications;
         this.typedArray = typedArray;
-        this.notificationClickListener = notificationClickListener;
-        this.notificationOpenedListener = notificationOpenedListener;
+        this.onItemClickListener = onItemClickListener;
     }
 
     @NonNull
@@ -86,7 +77,6 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
 
         loadImage(position, imageView);
 
-
         int notificationTextSize = typedArray.getDimensionPixelSize(R.styleable.InboxView_notification_text_size, 16);
         titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, notificationTextSize);
 
@@ -106,7 +96,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
 
         if (notificationArrayList.get(position).getRead()) {
             linearLayout.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_read_color, DEFAULT_BACKGROUND_COLOR));
-            titleTextView.setTypeface(titleTextView.getTypeface(), Typeface.NORMAL);
+            titleTextView.setTypeface(Typeface.create(titleTextView.getTypeface(), Typeface.NORMAL));
         } else {
             linearLayout.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_unread_color, DEFAULT_BACKGROUND_COLOR));
             titleTextView.setTypeface(titleTextView.getTypeface(), Typeface.BOLD);
@@ -115,15 +105,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
         linearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (notificationClickListener != null) {
-                    notificationClickListener.onClicked(notificationArrayList.get(position));
-                } else if (notificationOpenedListener != null) {
-                    NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
-                    notificationOpenedResult.setNotification(notificationArrayList.get(position));
-                    notificationOpenedListener.notificationOpened(notificationOpenedResult);
-                }
-                notificationArrayList.get(position).setRead(true);
-                notifyDataSetChanged();
+                onItemClickListener.onClicked(position);
             }
         });
 

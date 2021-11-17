@@ -1879,7 +1879,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return notifications;
     }
 
-    private void getReceivedNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
+    public void getReceivedNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
         String url = "/channel/" + this.channelId + "/received-notifications";
         ArrayList<String> subscriptionTopics = new ArrayList<String>(getSubscriptionTopics());
 
