@@ -1,4 +1,4 @@
-package com.cleverpush.inboxview;
+package com.cleverpush.inbox;
 
 import android.view.View;
 

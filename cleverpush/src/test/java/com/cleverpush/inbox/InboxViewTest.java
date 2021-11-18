@@ -1,4 +1,4 @@
-package com.cleverpush.inboxview;
+package com.cleverpush.inbox;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
