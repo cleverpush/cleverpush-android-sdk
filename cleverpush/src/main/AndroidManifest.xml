@@ -1,40 +1,55 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.cleverpush">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.cleverpush">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application>
-        <activity android:name="com.cleverpush.NotificationOpenedActivity"
+        <activity
+            android:name="com.cleverpush.NotificationOpenedActivity"
             android:exported="true"
             android:noHistory="true" />
 
-        <activity android:name=".stories.StoryDetailActivity"
+        <activity
+            android:name=".stories.StoryDetailActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
-        <activity android:name=".banner.WebViewActivity" />
+        <activity
+            android:name=".banner.WebViewActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
-        <service android:name="com.cleverpush.service.CarouselNotificationIntentService" android:exported="false" />
+        <service
+            android:name="com.cleverpush.service.CarouselNotificationIntentService"
+            android:exported="false" />
 
-		<service android:name="com.cleverpush.service.NotificationDismissIntentService" android:exported="false" />
+        <service
+            android:name="com.cleverpush.service.NotificationDismissIntentService"
+            android:exported="false" />
 
-        <service android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService" android:exported="false" />
+        <service
+            android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService"
+            android:exported="false" />
 
-        <service android:name="com.cleverpush.service.CleverPushFcmListenerService" android:exported="false">
+        <service
+            android:name="com.cleverpush.service.CleverPushFcmListenerService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
-        <service android:name="com.cleverpush.service.CleverPushHmsListenerService" android:exported="false">
+        <service
+            android:name="com.cleverpush.service.CleverPushHmsListenerService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.huawei.push.action.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
         <service
-            android:enabled="true"
             android:name="com.cleverpush.service.CleanUpService"
+            android:enabled="true"
             android:exported="false"
             android:stopWithTask="false" />
     </application>
