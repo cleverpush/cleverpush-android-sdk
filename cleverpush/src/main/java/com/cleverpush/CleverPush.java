@@ -2121,7 +2121,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             JSONArray channelTopics = channelConfig.optJSONArray("channelTopics");
             topicsDialogShowWhenNewAdded = channelConfig.optBoolean("topicsDialogShowWhenNewAdded");
 
-            if (channelTopics.length() == 0) {
+            if (channelTopics == null || channelTopics.length() == 0) {
                 Log.w("CleverPush", "CleverPush: showTopicsDialog: No topics found. Create some first in the CleverPush channel settings.");
             }
 
