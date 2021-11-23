@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.2
+* Fixed NullPointerException when opening App Banner URL in WebView
+
 ## 1.18.1
 * Added ability to set listeners outside of `init` methods
 
