@@ -358,9 +358,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
         this.channelId = channelId;
-        this.notificationReceivedListener = notificationReceivedListener;
-        this.notificationOpenedListener = notificationOpenedListener;
-        this.subscribedListener = subscribedListener;
+
+        if (notificationReceivedListener != null) {
+            this.setNotificationReceivedListener(notificationReceivedListener);
+        }
+        if (notificationOpenedListener != null) {
+            this.setNotificationOpenedListener(notificationOpenedListener);
+        }
+        if (subscribedListener != null) {
+            this.setSubscribedListener(subscribedListener);
+        }
 
         channelConfig = null;
 
@@ -391,14 +398,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             Log.d("CleverPush", "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: " + getContext().getPackageName());
             // get channel config
             getChannelConfigFromBundleId("/channel-config?bundleId=" + getContext().getPackageName() + "&platformName=Android", autoRegister);
-        }
-
-        // fire listeners for unprocessed open notifications
-        if (this.notificationOpenedListener != null) {
-            for (NotificationOpenedResult result : getUnprocessedOpenedNotifications()) {
-                fireNotificationOpenedListener(result);
-            }
-            unprocessedOpenedNotifications.clear();
         }
 
         // increment app opens
@@ -432,6 +431,26 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 this.trackSessionEnd();
             }
         };
+    }
+
+    public void setNotificationReceivedListener(@Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
+        this.notificationReceivedListener = notificationReceivedListener;
+    }
+
+    public void setNotificationOpenedListener(@Nullable final NotificationOpenedListener notificationOpenedListener) {
+        this.notificationOpenedListener = notificationOpenedListener;
+
+        // fire listeners for unprocessed open notifications
+        if (this.notificationOpenedListener != null) {
+            for (NotificationOpenedResult result : getUnprocessedOpenedNotifications()) {
+                fireNotificationOpenedListener(result);
+            }
+            unprocessedOpenedNotifications.clear();
+        }
+    }
+
+    public void setSubscribedListener(@Nullable final SubscribedListener subscribedListener) {
+        this.subscribedListener = subscribedListener;
     }
 
     public void getChannelConfigFromChannelId(boolean autoRegister, String storedChannelId, String storedSubscriptionId) {

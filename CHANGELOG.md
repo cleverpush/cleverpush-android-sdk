@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.1
+* Added ability to set listeners outside of `init` methods
+
 ## 1.18.0
 * Automatically re-sync when device token changes (might happen during development)
 * Add ability to specify custom Notification Styles
