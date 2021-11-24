@@ -38,6 +38,7 @@ import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
+import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.listener.NotificationFromApiCallbackListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
@@ -157,6 +158,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
     private boolean topicsDialogShowWhenNewAdded = false;
+    private InitializeListener initializeListener;
 
     private final String DATE_FORMAT_ISO = "yyyy-MM-dd HH:mm:ss z";
     private final int SYNC_SUBSCRIPTION_INTERVAL = 3 * 60 * 60 * 24;
@@ -392,6 +394,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
             }
             addOrUpdateChannelId(getContext(), this.channelId);
+            fireInitializeListener();
             // get channel config
             getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId);
         } else {
@@ -465,7 +468,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public void getChannelConfigFromBundleId(String url, boolean autoRegister) {
         CleverPush instance = this;
-        CleverPushHttpClient.get(url, new ChannelConfigFromBundleIdResponseHandler(instance).getResponseHandler(autoRegister));
+        CleverPushHttpClient.get(url, new ChannelConfigFromBundleIdResponseHandler(instance, initializeListener).getResponseHandler(autoRegister));
     }
 
     public void incrementAppOpens() {
@@ -1897,7 +1900,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return notifications;
     }
 
-    private void getReceivedNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
+    public void getReceivedNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
         String url = "/channel/" + this.channelId + "/received-notifications";
         ArrayList<String> subscriptionTopics = new ArrayList<String>(getSubscriptionTopics());
 
@@ -2742,6 +2745,20 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public static void removeInstance() {
         instance = null;
+    }
+
+    public void setInitializeListener(InitializeListener initializeListener) {
+        this.initializeListener = initializeListener;
+    }
+
+    public void fireInitializeListener() {
+        if (initializeListener != null) {
+            initializeListener.onInitialized();
+        }
+    }
+
+    public NotificationOpenedListener getNotificationOpenedListener() {
+        return notificationOpenedListener;
     }
 
     public void setNotificationStyle(NotificationStyle style) {

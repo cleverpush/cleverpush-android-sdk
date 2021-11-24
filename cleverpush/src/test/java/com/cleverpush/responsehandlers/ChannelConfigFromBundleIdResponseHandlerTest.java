@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.util.Logger;
 
 import org.json.JSONObject;
@@ -58,12 +59,15 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
     @Mock
     Logger logger;
 
+    @Mock
+    InitializeListener initializeListener;
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         mockWebServer = new MockWebServer();
         cleverPush = Mockito.spy(new CleverPush(context));
-        channelConfigFromBundleIdResponseHandler = Mockito.spy(new ChannelConfigFromBundleIdResponseHandler(cleverPush));
+        channelConfigFromBundleIdResponseHandler = Mockito.spy(new ChannelConfigFromBundleIdResponseHandler(cleverPush, initializeListener));
         try {
             mockWebServer.start();
         } catch (IOException e) {

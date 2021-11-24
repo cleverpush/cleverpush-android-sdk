@@ -8,16 +8,19 @@ import android.util.Log;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.util.Logger;
 
 import org.json.JSONObject;
 
 public class ChannelConfigFromBundleIdResponseHandler {
 
+    private InitializeListener initializeListener;
     private final CleverPush cleverPush;
 
-    public ChannelConfigFromBundleIdResponseHandler(CleverPush cleverPush) {
+    public ChannelConfigFromBundleIdResponseHandler(CleverPush cleverPush, InitializeListener initializeListener) {
         this.cleverPush = cleverPush;
+        this.initializeListener = initializeListener;
     }
 
     public CleverPushHttpClient.ResponseHandler getResponseHandler(boolean autoRegister) {
@@ -50,6 +53,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
                     cleverPush.fireSubscribedListener(subscriptionId);
                     cleverPush.setSubscriptionId(subscriptionId);
                     cleverPush.setChannelConfig(null);
+                    cleverPush.fireInitializeListener();
                 }
             }
         };

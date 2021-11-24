@@ -9,4 +9,17 @@
         <attr name="font_family" format="string" />
         <attr name="widget_id" format="string" />
     </declare-styleable>
+
+    <declare-styleable name="InboxView">
+        <attr name="combine_with_api" format="boolean"/>
+        <attr name="read_color" format="color"/>
+        <attr name="unread_color" format="color"/>
+        <attr name="notification_text_color" format="color"/>
+        <attr name="notification_text_font_family" format="string" />
+        <attr name="notification_text_size" format="dimension" />
+        <attr name="date_text_color" format="color"/>
+        <attr name="date_text_font_family" format="string" />
+        <attr name="date_text_size" format="dimension" />
+        <attr name="divider_colour" format="color" />
+    </declare-styleable>
 </resources>

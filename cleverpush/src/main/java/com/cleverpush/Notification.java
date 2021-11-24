@@ -45,6 +45,7 @@ public class Notification implements Serializable {
     String createdAt;
     @SerializedName("appBanner")
     String appBanner;
+    Boolean read = false;
 
     transient NotificationCompat.Extender extender;
 	String rawPayload;
@@ -193,5 +194,13 @@ public class Notification implements Serializable {
 
     public String getAppBanner() {
         return appBanner;
+    }
+
+    public Boolean getRead() {
+        return read;
+    }
+
+    public void setRead(Boolean read) {
+        this.read = read;
     }
 }
