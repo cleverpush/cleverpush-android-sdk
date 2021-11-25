@@ -65,6 +65,7 @@ import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.TagsMatcher;
+import com.cleverpush.util.NotificationCategorySetUp;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
@@ -405,6 +406,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
         // increment app opens
         incrementAppOpens();
+
+        setUpNotificationCategoryGroups();
     }
 
     public SessionListener initSessionListener() {
@@ -2766,5 +2769,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(CleverPushPreferences.NOTIFICATION_STYLE, style.getCode());
         editor.apply();
+    }
+
+    public void setUpNotificationCategoryGroups() {
+        getChannelConfig(new ChannelConfigListener() {
+            @Override
+            public void ready(JSONObject channelConfig) {
+                NotificationCategorySetUp.setNotificationCategoryFromChannelConfig(getContext(), channelConfig);
+            }
+        });
     }
 }

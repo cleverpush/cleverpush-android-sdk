@@ -45,6 +45,7 @@ import com.cleverpush.NotificationOpenedReceiver;
 import com.cleverpush.NotificationStyle;
 import com.cleverpush.R;
 import com.cleverpush.Subscription;
+import com.cleverpush.util.NotificationCategorySetUp;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -54,6 +55,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -162,65 +164,20 @@ public class NotificationService {
             if (notification.getCategory() != null) {
                 NotificationCategory category = notification.getCategory();
 
-                NotificationChannel channel = new NotificationChannel(category.getId(), category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
+                ArrayList<NotificationCategory> notificationCategories = new ArrayList<>();
+                notificationCategories.add(category);
 
-                String description = category.getDescription();
-                if (description != null) {
-					channel.setDescription(description);
-				}
+                NotificationCategorySetUp.setNotificationCategory(context, notificationCategories);
 
-				String importance = category.getImportance();
-                if (importance != null) {
-                	if (importance.equalsIgnoreCase("URGENT")) {
-						channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
-					} else if (importance.equalsIgnoreCase("HIGH")) {
-						channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
-					} else if (importance.equalsIgnoreCase("MEDIUM")) {
-						channel.setImportance(NotificationManager.IMPORTANCE_DEFAULT);
-					} else if (importance.equalsIgnoreCase("LOW")) {
-						channel.setImportance(NotificationManager.IMPORTANCE_LOW);
-					}
-				}
+                notificationBuilder = new NotificationCompat.Builder(context, category.getId());
 
-                String lockScreen = category.getLockScreen();
-                if (lockScreen != null) {
-					if (lockScreen.equalsIgnoreCase("PUBLIC")) {
-						channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
-					} else if (lockScreen.equalsIgnoreCase("PRIVATE")) {
-						channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
-					} else if (lockScreen.equalsIgnoreCase("SECRET")) {
-						channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_SECRET);
-					}
-				}
-
-				String ledColor = category.getLedColor();
-				if (category.getLedColorEnabled() && ledColor != null) {
-					int parsedLedColor = parseColor(ledColor);
-					if (parsedLedColor > 0) {
-						channel.setLightColor(parsedLedColor);
-					}
-				}
-
-                NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-
-				NotificationCategoryGroup categoryGroup = category.getGroup();
-				if (categoryGroup != null) {
-					NotificationChannelGroup group = new NotificationChannelGroup(categoryGroup.getId(), categoryGroup.getName());
-					notificationManager.createNotificationChannelGroup(group);
-					channel.setGroup(group.getId());
-				}
-
-                notificationManager.createNotificationChannel(channel);
-
-				notificationBuilder = new NotificationCompat.Builder(context, category.getId());
-
-				String foregroundColor = category.getForegroundColor();
-				if (foregroundColor != null) {
-					int parsedForegroundColor = parseColor(foregroundColor);
-					if (parsedForegroundColor != 0) {
-						notificationBuilder.setColor(parsedForegroundColor);
-					}
-				}
+                String foregroundColor = category.getForegroundColor();
+                if (foregroundColor != null) {
+                    int parsedForegroundColor = parseColor(foregroundColor);
+                    if (parsedForegroundColor != 0) {
+                        notificationBuilder.setColor(parsedForegroundColor);
+                    }
+                }
 
             } else {
                 int importance = NotificationManager.IMPORTANCE_DEFAULT;
@@ -229,7 +186,7 @@ public class NotificationService {
                 NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
                 notificationManager.createNotificationChannel(channel);
 
-				notificationBuilder = new NotificationCompat.Builder(context,"default");
+                notificationBuilder = new NotificationCompat.Builder(context, "default");
             }
 
         } else {
@@ -250,7 +207,7 @@ public class NotificationService {
 
         notificationBuilder = notificationBuilder
                 .setContentIntent(contentIntent)
-				.setDeleteIntent(this.getNotificationDeleteIntent(context))
+                .setDeleteIntent(this.getNotificationDeleteIntent(context))
                 .setContentTitle(title)
                 .setContentText(text)
                 .setSmallIcon(getSmallIcon(context))
@@ -295,8 +252,8 @@ public class NotificationService {
 
         // from NotificationExtenderService
         if (notification.getExtender() != null) {
-			notificationBuilder.extend(notification.getExtender());
-		}
+            notificationBuilder.extend(notification.getExtender());
+        }
 
         return notificationBuilder;
     }
@@ -317,39 +274,39 @@ public class NotificationService {
         return expandedView;
     }
 
-	private static void applyTextColorToRemoteViews(RemoteViews remoteViews, View view, int color) {
-		if (view instanceof ViewGroup) {
-			ViewGroup vg = (ViewGroup) view;
-			for (int i = 0, count = vg.getChildCount(); i < count; i++) {
-				applyTextColorToRemoteViews(remoteViews, vg.getChildAt(i), color);
-			}
-		} else if (view instanceof TextView) {
-			remoteViews.setTextColor(view.getId(), color);
-		}
-	}
+    private static void applyTextColorToRemoteViews(RemoteViews remoteViews, View view, int color) {
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            for (int i = 0, count = vg.getChildCount(); i < count; i++) {
+                applyTextColorToRemoteViews(remoteViews, vg.getChildAt(i), color);
+            }
+        } else if (view instanceof TextView) {
+            remoteViews.setTextColor(view.getId(), color);
+        }
+    }
 
     int parseColor(String hexStr) {
-    	if (hexStr == null) {
-    		return 0;
-		}
+        if (hexStr == null) {
+            return 0;
+        }
 
-		if (hexStr.startsWith("rgb(")) {
-			Pattern c = Pattern.compile("rgb *\\( *([0-9]+), *([0-9]+), *([0-9]+) *\\)");
-			Matcher m = c.matcher(hexStr);
-			if (m.matches()) {
-				hexStr = String.format("#%02x%02x%02x",  Integer.parseInt(m.group(1)),  Integer.parseInt(m.group(2)),  Integer.parseInt(m.group(3)));
-			}
-		}
+        if (hexStr.startsWith("rgb(")) {
+            Pattern c = Pattern.compile("rgb *\\( *([0-9]+), *([0-9]+), *([0-9]+) *\\)");
+            Matcher m = c.matcher(hexStr);
+            if (m.matches()) {
+                hexStr = String.format("#%02x%02x%02x", Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
+            }
+        }
 
-    	if (!hexStr.startsWith("#")) {
-			hexStr = "#" + hexStr;
-		}
+        if (!hexStr.startsWith("#")) {
+            hexStr = "#" + hexStr;
+        }
 
-    	return Color.parseColor(hexStr);
-	}
+        return Color.parseColor(hexStr);
+    }
 
-	int getRequestId(Context context, Notification notification) {
-    	// check for existing notifications which have the same tag and should be replaced. If found, use their request code.
+    int getRequestId(Context context, Notification notification) {
+        // check for existing notifications which have the same tag and should be replaced. If found, use their request code.
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 StatusBarNotification[] activeNotifs = BadgeHelper.getActiveNotifications(context);
@@ -364,7 +321,7 @@ public class NotificationService {
         }
 
         // We'll generate a random int and use it as the notification's request code.
-		Random random = new SecureRandom();
+        Random random = new SecureRandom();
         return random.nextInt();
     }
 
@@ -382,20 +339,20 @@ public class NotificationService {
     }
 
     int showNotification(Context context, Notification notification, Subscription subscription) {
-    	String notificationStr = notification.getRawPayload();
-    	String subscriptionStr = subscription.getRawPayload();
+        String notificationStr = notification.getRawPayload();
+        String subscriptionStr = subscription.getRawPayload();
 
-    	int requestId;
-		if (notification.getCarouselLength() > 0 && notification.isCarouselEnabled()) {
-			requestId = NotificationService.getInstance().createAndShowCarousel(context, notification, notificationStr, subscriptionStr);
-		} else {
-			requestId = NotificationService.getInstance().sendNotification(context, notification, notificationStr, subscriptionStr);
-		}
+        int requestId;
+        if (notification.getCarouselLength() > 0 && notification.isCarouselEnabled()) {
+            requestId = NotificationService.getInstance().createAndShowCarousel(context, notification, notificationStr, subscriptionStr);
+        } else {
+            requestId = NotificationService.getInstance().sendNotification(context, notification, notificationStr, subscriptionStr);
+        }
 
-		BadgeHelper.update(context, CleverPush.getInstance(context).getIncrementBadge());
+        BadgeHelper.update(context, CleverPush.getInstance(context).getIncrementBadge());
 
-		return requestId;
-	}
+        return requestId;
+    }
 
     int sendNotification(Context context, Notification notification, String notificationStr, String subscriptionStr) {
         int requestId = getRequestId(context, notification);
@@ -418,9 +375,9 @@ public class NotificationService {
         if (builder != null) {
             android.app.Notification notification = builder.build();
 
-			notification.bigContentView = getCarouselImage(context, message, notificationStr, subscriptionStr, targetIndex, requestId);
+            notification.bigContentView = getCarouselImage(context, message, notificationStr, subscriptionStr, targetIndex, requestId);
 
-			builder.setDeleteIntent(getCarouselNotificationDeleteIntent(context, message, notificationStr, subscriptionStr));
+            builder.setDeleteIntent(getCarouselNotificationDeleteIntent(context, message, notificationStr, subscriptionStr));
 
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
@@ -429,10 +386,10 @@ public class NotificationService {
         }
     }
 
-	private PendingIntent getNotificationDeleteIntent(Context context) {
-		Intent delIntent = new Intent(context, NotificationDismissIntentService.class);
-		return PendingIntent.getService(context, (int) System.currentTimeMillis(), delIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
-	}
+    private PendingIntent getNotificationDeleteIntent(Context context) {
+        Intent delIntent = new Intent(context, NotificationDismissIntentService.class);
+        return PendingIntent.getService(context, (int) System.currentTimeMillis(), delIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+    }
 
     private PendingIntent getCarouselNotificationDeleteIntent(Context context, Notification message, String notificationStr, String subscriptionStr) {
         Intent delIntent = new Intent(context, CarouselNotificationIntentService.class);
@@ -559,7 +516,7 @@ public class NotificationService {
         if (notification != null && contentView != null) {
             contentView.setTextViewText(R.id.notification_title, notification.getTitle());
             contentView.setTextViewText(R.id.notification_text, notification.getText());
-		}
+        }
     }
 
     private static String getImageFileName(String url) {
