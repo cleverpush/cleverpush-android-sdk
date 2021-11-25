@@ -120,7 +120,7 @@ public class AppBannerModule {
         CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-                setLoading(true);
+                setLoading(false);
                 banners = new LinkedList<>();
                 try {
                     JSONObject responseJson = new JSONObject(response);
