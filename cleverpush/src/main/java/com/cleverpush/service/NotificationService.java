@@ -2,7 +2,6 @@ package com.cleverpush.service;
 
 import android.app.ActivityManager;
 import android.app.NotificationChannel;
-import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
@@ -13,7 +12,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.media.RingtoneManager;
@@ -39,7 +37,6 @@ import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
-import com.cleverpush.NotificationCategoryGroup;
 import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationOpenedReceiver;
 import com.cleverpush.NotificationStyle;
@@ -59,8 +56,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class NotificationService {
     private static NotificationService sInstance;
@@ -173,7 +168,7 @@ public class NotificationService {
 
                 String foregroundColor = category.getForegroundColor();
                 if (foregroundColor != null) {
-                    int parsedForegroundColor = parseColor(foregroundColor);
+                    int parsedForegroundColor = NotificationCategorySetUp.parseColor(foregroundColor);
                     if (parsedForegroundColor != 0) {
                         notificationBuilder.setColor(parsedForegroundColor);
                     }
@@ -283,26 +278,6 @@ public class NotificationService {
         } else if (view instanceof TextView) {
             remoteViews.setTextColor(view.getId(), color);
         }
-    }
-
-    int parseColor(String hexStr) {
-        if (hexStr == null) {
-            return 0;
-        }
-
-        if (hexStr.startsWith("rgb(")) {
-            Pattern c = Pattern.compile("rgb *\\( *([0-9]+), *([0-9]+), *([0-9]+) *\\)");
-            Matcher m = c.matcher(hexStr);
-            if (m.matches()) {
-                hexStr = String.format("#%02x%02x%02x", Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
-            }
-        }
-
-        if (!hexStr.startsWith("#")) {
-            hexStr = "#" + hexStr;
-        }
-
-        return Color.parseColor(hexStr);
     }
 
     int getRequestId(Context context, Notification notification) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.18.3
+* Automatically set up notification categories on init
+* Fixed NullPointerException in App Banners when Activity is null
+
 ## 1.18.2
 * Fixed NullPointerException when opening App Banner URL in WebView
 

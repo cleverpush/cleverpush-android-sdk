@@ -1,11 +1,10 @@
 package com.cleverpush.util;
 
-import static android.graphics.Color.parseColor;
-
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Build;
 
 import com.cleverpush.NotificationCategory;
@@ -16,6 +15,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NotificationCategorySetUp {
 
@@ -114,5 +115,25 @@ public class NotificationCategorySetUp {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public static int parseColor(String hexStr) {
+        if (hexStr == null) {
+            return 0;
+        }
+
+        if (hexStr.startsWith("rgb(")) {
+            Pattern c = Pattern.compile("rgb *\\( *([0-9]+), *([0-9]+), *([0-9]+) *\\)");
+            Matcher m = c.matcher(hexStr);
+            if (m.matches()) {
+                hexStr = String.format("#%02x%02x%02x", Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
+            }
+        }
+
+        if (!hexStr.startsWith("#")) {
+            hexStr = "#" + hexStr;
+        }
+
+        return Color.parseColor(hexStr);
     }
 }
