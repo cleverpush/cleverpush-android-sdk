@@ -532,6 +532,10 @@ public class AppBannerModule {
     }
 
     void bannerIsShown(String id) {
+        if (getCurrentActivity() == null) {
+            return;
+        }
+
         SharedPreferences sharedPreferences = getCurrentActivity().getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
