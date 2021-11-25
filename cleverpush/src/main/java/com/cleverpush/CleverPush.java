@@ -2754,7 +2754,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         editor.apply();
     }
 
-    private void setUpNotificationCategoryGroups() {
+    public void setUpNotificationCategoryGroups() {
         getChannelConfig(new ChannelConfigListener() {
             @Override
             public void ready(JSONObject channelConfig) {

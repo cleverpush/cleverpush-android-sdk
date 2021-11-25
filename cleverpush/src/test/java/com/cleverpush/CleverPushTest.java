@@ -173,6 +173,7 @@ class CleverPushTest {
         doReturn(null).when(cleverPush).getChannelId(context);
         doReturn(context).when(cleverPush).getContext();
         doNothing().when(cleverPush).incrementAppOpens();
+        doNothing().when(cleverPush).setUpNotificationCategoryGroups();
         when(context.getResources()).thenReturn(resources);
         cleverPush.init(null, null, null, null, true);
         verify(cleverPush).getChannelId(context);
@@ -185,6 +186,7 @@ class CleverPushTest {
         when(context.getResources()).thenReturn(resources);
         when(context.getPackageName()).thenReturn("com.test");
         doNothing().when(cleverPush).incrementAppOpens();
+        doNothing().when(cleverPush).setUpNotificationCategoryGroups();
         cleverPush.init(null, null, null, null, true);
         verify(cleverPush).getChannelConfigFromBundleId("/channel-config?bundleId=com.test&platformName=Android", true);
     }
@@ -197,6 +199,7 @@ class CleverPushTest {
         when(context.getResources()).thenReturn(resources);
         doNothing().when(cleverPush).addOrUpdateChannelId(context, "channelId");
         doNothing().when(cleverPush).incrementAppOpens();
+        doNothing().when(cleverPush).setUpNotificationCategoryGroups();
         cleverPush.init("channelId", null, null, null, true);
         verify(cleverPush).getChannelConfigFromChannelId(true, "channelId", "subscriptionId");
     }
@@ -210,6 +213,7 @@ class CleverPushTest {
         when(context.getResources()).thenReturn(resources);
         doNothing().when(cleverPush).addOrUpdateChannelId(context, "channelIdChanged");
         doNothing().when(cleverPush).incrementAppOpens();
+        doNothing().when(cleverPush).setUpNotificationCategoryGroups();
         cleverPush.init("channelIdChanged", null, null, null, true);
         verify(cleverPush).clearSubscriptionData();
     }
@@ -219,6 +223,7 @@ class CleverPushTest {
         doReturn(null).when(cleverPush).getChannelId(context);
         doReturn(context).when(cleverPush).getContext();
         doNothing().when(cleverPush).incrementAppOpens();
+        doNothing().when(cleverPush).setUpNotificationCategoryGroups();
         when(context.getResources()).thenReturn(resources);
         cleverPush.init(null, null, null, null, true);
         verify(cleverPush, never()).fireNotificationOpenedListener(notificationOpenedResult);
@@ -229,6 +234,7 @@ class CleverPushTest {
         doReturn(null).when(cleverPush).getChannelId(context);
         doReturn(context).when(cleverPush).getContext();
         doNothing().when(cleverPush).incrementAppOpens();
+        doNothing().when(cleverPush).setUpNotificationCategoryGroups();
         when(context.getResources()).thenReturn(resources);
         when(notificationOpenedResult.getNotification()).thenReturn(notification);
         when(notification.getAppBanner()).thenReturn(null);
