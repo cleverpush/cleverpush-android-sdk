@@ -2758,46 +2758,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         getChannelConfig(new ChannelConfigListener() {
             @Override
             public void ready(JSONObject channelConfig) {
-                try {
-                    ArrayList<NotificationCategory> notificationCategories = new ArrayList<>();
-                    JSONArray notificationCategoryGroups = channelConfig.getJSONArray("notificationCategoryGroups");
-                    for (int i = 0; i < notificationCategoryGroups.length(); i++) {
-                        JSONObject notificationCategoryGroupJSONObject = notificationCategoryGroups.getJSONObject(i);
-                        NotificationCategoryGroup notificationCategoryGroup = new NotificationCategoryGroup();
-                        notificationCategoryGroup.setId(notificationCategoryGroupJSONObject.optString("_id"));
-                        notificationCategoryGroup.setName(notificationCategoryGroupJSONObject.optString("name"));
-                        JSONArray categories = notificationCategoryGroupJSONObject.getJSONArray("categories");
-                        for (int j = 0; j < categories.length(); j++) {
-                            JSONObject notificationCategoryJSONObject = categories.getJSONObject(j);
-
-                            NotificationCategory notificationCategory = new NotificationCategory();
-
-                            notificationCategory.setId(notificationCategoryJSONObject.optString("_id"));
-                            notificationCategory.setGroup(notificationCategoryGroup);
-                            notificationCategory.setName(notificationCategoryJSONObject.optString("name"));
-                            notificationCategory.setDescription(notificationCategoryJSONObject.optString("description"));
-                            notificationCategory.setSoundEnabled(notificationCategoryJSONObject.optBoolean("soundEnabled"));
-                            notificationCategory.setSoundFilename(notificationCategoryJSONObject.optString("soundFilename"));
-                            notificationCategory.setVibrationEnabled(notificationCategoryJSONObject.optBoolean("vibrationEnabled"));
-                            notificationCategory.setVibrationPattern(notificationCategoryJSONObject.optString("vibrationPattern"));
-                            notificationCategory.setLedColorEnabled(notificationCategoryJSONObject.optBoolean("ledColorEnabled"));
-                            notificationCategory.setLedColor(notificationCategoryJSONObject.optString("ledColor"));
-                            notificationCategory.setLockScreen(notificationCategoryJSONObject.optString("lockScreen"));
-                            notificationCategory.setImportance(notificationCategoryJSONObject.optString("importance"));
-                            notificationCategory.setBadgesEnabled(notificationCategoryJSONObject.optBoolean("badgesEnabled"));
-                            notificationCategory.setBackgroundColor(notificationCategoryJSONObject.optString("backgroundColor"));
-                            notificationCategory.setForegroundColor(notificationCategoryJSONObject.optString("foregroundColor"));
-
-                            notificationCategories.add(notificationCategory);
-                        }
-                    }
-
-                    NotificationCategorySetUp notificationCategorySetUp = new NotificationCategorySetUp(getContext(), notificationCategories);
-                    notificationCategorySetUp.setNotificationCategory();
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                NotificationCategorySetUp.setNotificationCategoryFromChannelConfig(getContext(), channelConfig);
             }
         });
     }

@@ -11,19 +11,15 @@ import android.os.Build;
 import com.cleverpush.NotificationCategory;
 import com.cleverpush.NotificationCategoryGroup;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 public class NotificationCategorySetUp {
-    private ArrayList<NotificationCategory> notificationCategories;
-    private Context context;
 
-    public NotificationCategorySetUp(Context context, ArrayList<NotificationCategory> notificationCategories) {
-        this.notificationCategories = notificationCategories;
-        this.context = context;
-    }
-
-    public void setNotificationCategory() {
-
+    public static void setNotificationCategory(Context context, ArrayList<NotificationCategory> notificationCategories) {
         for (int i = 0; i < notificationCategories.size(); i++) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationCategory category = notificationCategories.get(i);
@@ -59,7 +55,7 @@ public class NotificationCategorySetUp {
                 }
 
                 String ledColor = category.getLedColor();
-                if (category.getLedColorEnabled() && ledColor != null) {
+                if (category.getLedColorEnabled() && ledColor != null && !ledColor.equalsIgnoreCase("")) {
                     int parsedLedColor = parseColor(ledColor);
                     if (parsedLedColor > 0) {
                         channel.setLightColor(parsedLedColor);
@@ -78,6 +74,45 @@ public class NotificationCategorySetUp {
                 notificationManager.createNotificationChannel(channel);
             }
         }
+    }
 
+    public static void setNotificationCategoryFromChannelConfig(Context context, JSONObject channelConfig) {
+        try {
+            ArrayList<NotificationCategory> notificationCategories = new ArrayList<>();
+            JSONArray notificationCategoryGroups = channelConfig.getJSONArray("notificationCategoryGroups");
+            for (int i = 0; i < notificationCategoryGroups.length(); i++) {
+                JSONObject notificationCategoryGroupJSONObject = notificationCategoryGroups.getJSONObject(i);
+                NotificationCategoryGroup notificationCategoryGroup = new NotificationCategoryGroup();
+                notificationCategoryGroup.setId(notificationCategoryGroupJSONObject.optString("_id"));
+                notificationCategoryGroup.setName(notificationCategoryGroupJSONObject.optString("name"));
+                JSONArray categories = notificationCategoryGroupJSONObject.getJSONArray("categories");
+                for (int j = 0; j < categories.length(); j++) {
+                    JSONObject notificationCategoryJSONObject = categories.getJSONObject(j);
+
+                    NotificationCategory notificationCategory = new NotificationCategory();
+
+                    notificationCategory.setId(notificationCategoryJSONObject.optString("_id"));
+                    notificationCategory.setGroup(notificationCategoryGroup);
+                    notificationCategory.setName(notificationCategoryJSONObject.optString("name"));
+                    notificationCategory.setDescription(notificationCategoryJSONObject.optString("description"));
+                    notificationCategory.setSoundEnabled(notificationCategoryJSONObject.optBoolean("soundEnabled"));
+                    notificationCategory.setSoundFilename(notificationCategoryJSONObject.optString("soundFilename"));
+                    notificationCategory.setVibrationEnabled(notificationCategoryJSONObject.optBoolean("vibrationEnabled"));
+                    notificationCategory.setVibrationPattern(notificationCategoryJSONObject.optString("vibrationPattern"));
+                    notificationCategory.setLedColorEnabled(notificationCategoryJSONObject.optBoolean("ledColorEnabled"));
+                    notificationCategory.setLedColor(notificationCategoryJSONObject.optString("ledColor"));
+                    notificationCategory.setLockScreen(notificationCategoryJSONObject.optString("lockScreen"));
+                    notificationCategory.setImportance(notificationCategoryJSONObject.optString("importance"));
+                    notificationCategory.setBadgesEnabled(notificationCategoryJSONObject.optBoolean("badgesEnabled"));
+                    notificationCategory.setBackgroundColor(notificationCategoryJSONObject.optString("backgroundColor"));
+                    notificationCategory.setForegroundColor(notificationCategoryJSONObject.optString("foregroundColor"));
+
+                    notificationCategories.add(notificationCategory);
+                }
+            }
+            setNotificationCategory(context, notificationCategories);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }

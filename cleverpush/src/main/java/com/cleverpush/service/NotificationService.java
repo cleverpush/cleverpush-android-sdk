@@ -167,8 +167,7 @@ public class NotificationService {
                 ArrayList<NotificationCategory> notificationCategories = new ArrayList<>();
                 notificationCategories.add(category);
 
-                NotificationCategorySetUp notificationCategorySetUp = new NotificationCategorySetUp(context, notificationCategories);
-                notificationCategorySetUp.setNotificationCategory();
+                NotificationCategorySetUp.setNotificationCategory(context, notificationCategories);
 
                 notificationBuilder = new NotificationCompat.Builder(context, category.getId());
 
