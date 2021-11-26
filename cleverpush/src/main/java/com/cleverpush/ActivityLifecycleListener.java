@@ -13,6 +13,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.service.CleanUpService;
 
@@ -23,6 +24,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
     private int counter = 0;
     private static SessionListener sessionListener;
+    private static ActivityInitializedListener activityInitializedListener;
 
     public ActivityLifecycleListener(SessionListener sessionListener) {
         this.sessionListener = sessionListener;
@@ -63,6 +65,8 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         if (counter == 0 && sessionListener != null) {
             sessionListener.stateChanged(true);
         }
+
+        activityInitializedListener.initialized();
         counter++;
     }
 
@@ -107,6 +111,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     public static void clearSessionListener() {
         sessionListener = null;
         currentActivity = null;
+        activityInitializedListener = null;
     }
 
     private boolean isServiceRunning(Class<?> serviceClass) {
@@ -117,5 +122,9 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
             }
         }
         return false;
+    }
+
+    public static void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
+        ActivityLifecycleListener.activityInitializedListener = activityInitializedListener;
     }
 }

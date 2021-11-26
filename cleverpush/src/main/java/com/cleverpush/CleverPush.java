@@ -30,6 +30,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
@@ -1250,6 +1251,15 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
+        if (openedResult.getNotification().getAppBanner() != null) {
+            ActivityLifecycleListener.setActivityInitializedListener(new ActivityInitializedListener() {
+                @Override
+                public void initialized() {
+                    showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
+                }
+            });
+        }
+
         if (openedResult.getNotification().getAppBanner() != null) {
             showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
         }
