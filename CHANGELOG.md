@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.4
+* Fixed another NullPointerException in App Banners when Activity is null
+
 ## 1.18.3
 * Automatically set up notification categories on init
 * Fixed NullPointerException in App Banners when Activity is null
