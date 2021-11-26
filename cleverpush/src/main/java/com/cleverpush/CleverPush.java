@@ -104,7 +104,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.18.4";
+    public static final String SDK_VERSION = "1.18.5";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -2432,6 +2432,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private void showTopicDialogOnNewAdded() {
         this.getChannelConfig(channelConfig -> {
+            if (channelConfig == null) {
+                return;
+            }
             JSONArray channelTopics = channelConfig.optJSONArray("channelTopics");
             topicsDialogShowWhenNewAdded = channelConfig.optBoolean("topicsDialogShowWhenNewAdded");
             if (topicsDialogShowWhenNewAdded && hasNewTopicAfterOneHour(channelTopics)) {
@@ -2778,11 +2781,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void setUpNotificationCategoryGroups() {
-        getChannelConfig(new ChannelConfigListener() {
-            @Override
-            public void ready(JSONObject channelConfig) {
-                NotificationCategorySetUp.setNotificationCategoryFromChannelConfig(getContext(), channelConfig);
+        getChannelConfig(config -> {
+            if (config == null) {
+                return;
             }
+            NotificationCategorySetUp.setNotificationCategoryFromChannelConfig(getContext(), config);
         });
     }
 }

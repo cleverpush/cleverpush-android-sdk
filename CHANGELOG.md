@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.5
+* Optimized setUpNotificationCategoryGroups function to prevent exception
+
 ## 1.18.4
 * Fixed another NullPointerException in App Banners when Activity is null
 
