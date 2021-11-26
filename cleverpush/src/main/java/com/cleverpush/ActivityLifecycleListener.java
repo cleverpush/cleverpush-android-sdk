@@ -66,7 +66,10 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
             sessionListener.stateChanged(true);
         }
 
-        activityInitializedListener.initialized();
+        if (activityInitializedListener != null) {
+            activityInitializedListener.initialized();
+        }
+
         counter++;
     }
 
@@ -125,6 +128,10 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     }
 
     public static void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
-        ActivityLifecycleListener.activityInitializedListener = activityInitializedListener;
+        if (currentActivity == null) {
+            ActivityLifecycleListener.activityInitializedListener = activityInitializedListener;
+        } else {
+            activityInitializedListener.initialized();
+        }
     }
 }

@@ -1260,10 +1260,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             });
         }
 
-        if (openedResult.getNotification().getAppBanner() != null) {
-            showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
-        }
-
         if (notificationOpenedListener == null) {
             unprocessedOpenedNotifications.add(openedResult);
             return false;
