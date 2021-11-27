@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.6
+* Fixed Release
+
 ## 1.18.5
 * Optimized setUpNotificationCategoryGroups function to prevent exception
 
