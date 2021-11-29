@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.7
+* Optimized getInstance calls to CleverPush main class from AppBannerModule
+
 ## 1.18.6
 * Fixed Release
 
