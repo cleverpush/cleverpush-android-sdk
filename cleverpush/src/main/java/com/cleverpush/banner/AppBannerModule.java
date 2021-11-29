@@ -588,7 +588,7 @@ public class AppBannerModule {
     }
 
     public CleverPush getCleverPushInstance() {
-        return CleverPush.getInstance(getCurrentActivity());
+        return CleverPush.getInstance(getCurrentActivity(), true);
     }
 
     public Collection<AppBannersListener> getBannersListeners() {
@@ -616,6 +616,9 @@ public class AppBannerModule {
     }
 
     public Activity getCurrentActivity() {
+        if (ActivityLifecycleListener.currentActivity == null) {
+            return (Activity) CleverPush.context;
+        }
         return ActivityLifecycleListener.currentActivity;
     }
 }

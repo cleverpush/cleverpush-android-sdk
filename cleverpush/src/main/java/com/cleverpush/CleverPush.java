@@ -2659,6 +2659,19 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return instance;
     }
 
+    public static CleverPush getInstance(Context context, boolean isNullAllowed) {
+        if (!isNullAllowed) {
+            if (context == null) {
+                throw new NullPointerException();
+            }
+        }
+
+        if (instance == null) {
+            instance = new CleverPush(context);
+        }
+        return instance;
+    }
+
     public Context getContext() {
         return CleverPush.context;
     }
