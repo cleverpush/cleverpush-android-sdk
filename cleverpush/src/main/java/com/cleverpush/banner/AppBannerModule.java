@@ -21,6 +21,7 @@ import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
+import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 
@@ -392,7 +393,12 @@ public class AppBannerModule {
             }
 
             if (!contains) {
-                popups.add(new AppBannerPopup(getCurrentActivity(), banner));
+                ActivityLifecycleListener.setActivityInitializedListener(new ActivityInitializedListener() {
+                    @Override
+                    public void initialized() {
+                        popups.add(new AppBannerPopup(getCurrentActivity(), banner));
+                    }
+                });
             }
         }
     }
@@ -432,22 +438,27 @@ public class AppBannerModule {
     }
 
     public void showBannerById(String bannerId, String notificationId) {
-        Log.d(TAG, "showBannerById: " + bannerId);
-        this.getBanners(banners -> {
-            for (Banner banner : banners) {
-                if (banner.getId().equals(bannerId)) {
-                    AppBannerPopup popup = getAppBannerPopup(banner);
+        ActivityLifecycleListener.setActivityInitializedListener(new ActivityInitializedListener() {
+            @Override
+            public void initialized() {
+                Log.d(TAG, "showBannerById: " + bannerId);
+                getBanners(banners -> {
+                    for (Banner banner : banners) {
+                        if (banner.getId().equals(bannerId)) {
+                            AppBannerPopup popup = getAppBannerPopup(banner);
 
-                    if (getCleverPushInstance().isAppBannersDisabled()) {
-                        pendingBanners.add(popup);
-                        break;
+                            if (getCleverPushInstance().isAppBannersDisabled()) {
+                                pendingBanners.add(popup);
+                                break;
+                            }
+
+                            getHandler().post(() -> showBanner(popup));
+                            break;
+                        }
                     }
-
-                    getHandler().post(() -> showBanner(popup));
-                    break;
-                }
+                }, notificationId);
             }
-        }, notificationId);
+        });
     }
 
     public AppBannerPopup getAppBannerPopup(Banner banner) {
@@ -469,7 +480,12 @@ public class AppBannerModule {
         bannerPopup.show();
 
         if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
-            bannerIsShown(bannerPopup.getData().getId());
+            ActivityLifecycleListener.setActivityInitializedListener(new ActivityInitializedListener() {
+                @Override
+                public void initialized() {
+                    bannerIsShown(bannerPopup.getData().getId());
+                }
+            });
         }
 
         if (bannerPopup.getData().getDismissType() == BannerDismissType.Timeout) {
@@ -532,10 +548,6 @@ public class AppBannerModule {
     }
 
     void bannerIsShown(String id) {
-        if (getCurrentActivity() == null) {
-            return;
-        }
-
         SharedPreferences sharedPreferences = getCurrentActivity().getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
@@ -616,9 +628,6 @@ public class AppBannerModule {
     }
 
     public Activity getCurrentActivity() {
-        if (ActivityLifecycleListener.currentActivity == null) {
-            return (Activity) CleverPush.context;
-        }
         return ActivityLifecycleListener.currentActivity;
     }
 }
