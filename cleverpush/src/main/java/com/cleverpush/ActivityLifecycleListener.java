@@ -17,6 +17,8 @@ import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.service.CleanUpService;
 
+import java.util.ArrayList;
+
 public class ActivityLifecycleListener implements Application.ActivityLifecycleCallbacks {
 
     @SuppressLint("StaticFieldLeak")
@@ -24,7 +26,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
     private int counter = 0;
     private static SessionListener sessionListener;
-    private static ActivityInitializedListener activityInitializedListener;
+    private static ArrayList<ActivityInitializedListener> activityInitializedListeners = new ArrayList<>();
 
     public ActivityLifecycleListener(SessionListener sessionListener) {
         this.sessionListener = sessionListener;
@@ -66,8 +68,11 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
             sessionListener.stateChanged(true);
         }
 
-        if (activityInitializedListener != null) {
-            activityInitializedListener.initialized();
+        if (activityInitializedListeners.size() > 0) {
+            for (ActivityInitializedListener listener : activityInitializedListeners) {
+                listener.initialized();
+            }
+            activityInitializedListeners.clear();
         }
 
         counter++;
@@ -114,7 +119,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     public static void clearSessionListener() {
         sessionListener = null;
         currentActivity = null;
-        activityInitializedListener = null;
+        activityInitializedListeners = null;
     }
 
     private boolean isServiceRunning(Class<?> serviceClass) {
@@ -129,7 +134,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
     public static void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
         if (currentActivity == null) {
-            ActivityLifecycleListener.activityInitializedListener = activityInitializedListener;
+            activityInitializedListeners.add(activityInitializedListener);
         } else {
             activityInitializedListener.initialized();
         }
