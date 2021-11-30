@@ -104,7 +104,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.18.8";
+    public static final String SDK_VERSION = "1.18.9";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -156,6 +156,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean autoClearBadge = false;
 
     private boolean developmentMode = false;
+
+    private boolean disableNightModeAdaption = false;
 
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
@@ -2242,7 +2244,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private CheckBox getCheckBox(int nightModeFlags, CharSequence text) {
         CheckBox checkBox = new CheckBox(CleverPush.context);
         checkBox.setText(text);
-        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+        if (!this.disableNightModeAdaption && nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
             checkBox.setTextColor(Color.WHITE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 checkBox.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
@@ -2313,7 +2315,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     CheckBox checkbox = new CheckBox(CleverPush.context);
                     setUpCheckBoxText(topic, checkbox);
 
-                    if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+                    if (!this.disableNightModeAdaption && nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
                         checkbox.setTextColor(Color.WHITE);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             checkbox.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
@@ -2372,7 +2374,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                     setUpCheckBoxText(topic, checkbox);
 
-                    if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+                    if (!this.disableNightModeAdaption && nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
                         checkboxChild.setTextColor(Color.WHITE);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             checkboxChild.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
@@ -2579,6 +2581,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public boolean isDevelopmentModeEnabled() {
         return this.developmentMode;
+    }
+
+    public void disableNightModeAdaption() {;
+        this.disableNightModeAdaption = true;
+    }
+
+    public boolean isNightModeAdaptionDisabled() {
+        return this.disableNightModeAdaption;
     }
 
     public void clearSubscriptionData() {

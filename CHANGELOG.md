@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.9
+* Added ability to disable nightmode adaption via `disableNightModeAdaption()` (e.g. for topics dialog checkboxes)
+
 ## 1.18.8
 * Further optimized getInstance calls to CleverPush main class from AppBannerModule
 
