@@ -393,7 +393,7 @@ public class AppBannerModule {
             }
 
             if (!contains) {
-                ActivityLifecycleListener.setActivityInitializedListener(new ActivityInitializedListener() {
+                getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
                     @Override
                     public void initialized() {
                         popups.add(new AppBannerPopup(getCurrentActivity(), banner));
@@ -438,7 +438,7 @@ public class AppBannerModule {
     }
 
     public void showBannerById(String bannerId, String notificationId) {
-        ActivityLifecycleListener.setActivityInitializedListener(new ActivityInitializedListener() {
+        getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
             @Override
             public void initialized() {
                 Log.d(TAG, "showBannerById: " + bannerId);
@@ -480,7 +480,7 @@ public class AppBannerModule {
         bannerPopup.show();
 
         if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
-            ActivityLifecycleListener.setActivityInitializedListener(new ActivityInitializedListener() {
+            getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
                 @Override
                 public void initialized() {
                     bannerIsShown(bannerPopup.getData().getId());
@@ -548,6 +548,10 @@ public class AppBannerModule {
     }
 
     void bannerIsShown(String id) {
+        if (getCurrentActivity() == null) {
+            return;
+        }
+
         SharedPreferences sharedPreferences = getCurrentActivity().getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
         Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
 
@@ -629,5 +633,9 @@ public class AppBannerModule {
 
     public Activity getCurrentActivity() {
         return ActivityLifecycleListener.currentActivity;
+    }
+
+    public ActivityLifecycleListener getActivityLifecycleListener() {
+        return ActivityLifecycleListener.getInstance();
     }
 }
