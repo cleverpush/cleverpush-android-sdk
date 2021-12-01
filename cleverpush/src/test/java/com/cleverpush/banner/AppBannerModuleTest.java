@@ -1,13 +1,17 @@
 package com.cleverpush.banner;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.util.Log;
 
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
+import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannersListener;
 
@@ -181,6 +185,9 @@ class AppBannerModuleTest {
 
     @Mock
     AppBannerPopup appBannerPopup;
+
+    @Mock
+    ActivityLifecycleListener activityLifecycleListener;
 
     @Mock
     Banner banner;
@@ -747,6 +754,7 @@ class AppBannerModuleTest {
             Collection<Banner> banners = new LinkedList<>();
             banners.add(banner);
             doReturn(banners).when(appBannerModule).getListOfBanners();
+            doReturn(activityLifecycleListener).when(appBannerModule).getActivityLifecycleListener();
             doReturn(activity).when(appBannerModule).getCurrentActivity();
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
             doReturn(true).when(cleverPush).isAppBannersDisabled();
@@ -758,8 +766,15 @@ class AppBannerModuleTest {
                     return null;
                 }
             };
-
+            Answer<Void> activityInitializedListenerAnswer = new Answer<Void>() {
+                public Void answer(InvocationOnMock invocation) {
+                    ActivityInitializedListener callback = (ActivityInitializedListener) invocation.getArguments()[0];
+                    callback.initialized();
+                    return null;
+                }
+            };
             doAnswer(appBannersListenerAnswer).when(appBannerModule).getBanners(any(AppBannersListener.class));
+            doAnswer(activityInitializedListenerAnswer).when(activityLifecycleListener).setActivityInitializedListener(any(ActivityInitializedListener.class));
         } catch (JSONException exception) {
             exception.printStackTrace();
         }
@@ -779,6 +794,7 @@ class AppBannerModuleTest {
             banners.add(banner);
 
             doReturn(banners).when(appBannerModule).getListOfBanners();
+            doReturn(activityLifecycleListener).when(appBannerModule).getActivityLifecycleListener();
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
             doReturn(false).when(cleverPush).isAppBannersDisabled();
             doReturn(handler).when(appBannerModule).getHandler();
@@ -793,7 +809,16 @@ class AppBannerModuleTest {
                 }
             };
 
+            Answer<Void> activityInitializedListenerAnswer = new Answer<Void>() {
+                public Void answer(InvocationOnMock invocation) {
+                    ActivityInitializedListener callback = (ActivityInitializedListener) invocation.getArguments()[0];
+                    callback.initialized();
+                    return null;
+                }
+            };
+
             doAnswer(appBannersListenerAnswer).when(appBannerModule).getBanners(any(AppBannersListener.class));
+            doAnswer(activityInitializedListenerAnswer).when(activityLifecycleListener).setActivityInitializedListener(any(ActivityInitializedListener.class));
 
             when(handler.post(any(Runnable.class))).thenAnswer((Answer) invocation -> {
                 ((Runnable) invocation.getArgument(0)).run();
@@ -872,7 +897,17 @@ class AppBannerModuleTest {
             doReturn(editor).when(sharedPreferences).edit();
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
             when(cleverPush.isSubscribed()).thenReturn(true);
+            doReturn(activityLifecycleListener).when(appBannerModule).getActivityLifecycleListener();
+            ;
 
+            Answer<Void> activityInitializedListenerAnswer = new Answer<Void>() {
+                public Void answer(InvocationOnMock invocation) {
+                    ActivityInitializedListener callback = (ActivityInitializedListener) invocation.getArguments()[0];
+                    callback.initialized();
+                    return null;
+                }
+            };
+            doAnswer(activityInitializedListenerAnswer).when(activityLifecycleListener).setActivityInitializedListener(any(ActivityInitializedListener.class));
         } catch (JSONException exception) {
             exception.printStackTrace();
         }
@@ -1029,6 +1064,7 @@ class AppBannerModuleTest {
             bannerAction = BannerAction.create(action);
 
             when(appBannerPopup.getData()).thenReturn(banner);
+            doReturn(activityLifecycleListener).when(appBannerModule).getActivityLifecycleListener();
             doReturn(editor).when(sharedPreferences).edit();
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
             doReturn(appBannerOpenedListener).when(cleverPush).getAppBannerOpenedListener();
@@ -1043,7 +1079,16 @@ class AppBannerModuleTest {
                 }
             };
 
+            Answer<Void> activityInitializedListenerAnswer = new Answer<Void>() {
+                public Void answer(InvocationOnMock invocation) {
+                    ActivityInitializedListener callback = (ActivityInitializedListener) invocation.getArguments()[0];
+                    callback.initialized();
+                    return null;
+                }
+            };
             doAnswer(appBannerOpenedListenerAnswer).when(appBannerPopup).setOpenedListener(any(AppBannerOpenedListener.class));
+            doAnswer(activityInitializedListenerAnswer).when(activityLifecycleListener).setActivityInitializedListener(any(ActivityInitializedListener.class));
+
         } catch (JSONException exception) {
             exception.printStackTrace();
         }
@@ -1125,10 +1170,12 @@ class AppBannerModuleTest {
             when(appBannerPopup.getData()).thenReturn(banner);
             doReturn(editor).when(sharedPreferences).edit();
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
+            doReturn(activityLifecycleListener).when(appBannerModule).getActivityLifecycleListener();
             doReturn(null).when(cleverPush).getAppBannerOpenedListener();
             when(cleverPush.isSubscribed()).thenReturn(true);
 
             BannerAction finalBannerAction = bannerAction;
+
             Answer<Void> appBannerOpenedListenerAnswer = new Answer<Void>() {
                 public Void answer(InvocationOnMock invocation) {
                     AppBannerOpenedListener callback = (AppBannerOpenedListener) invocation.getArguments()[0];
@@ -1137,7 +1184,16 @@ class AppBannerModuleTest {
                 }
             };
 
+            Answer<Void> activityInitializedListenerAnswer = new Answer<Void>() {
+                public Void answer(InvocationOnMock invocation) {
+                    ActivityInitializedListener callback = (ActivityInitializedListener) invocation.getArguments()[0];
+                    callback.initialized();
+                    return null;
+                }
+            };
+
             doAnswer(appBannerOpenedListenerAnswer).when(appBannerPopup).setOpenedListener(any(AppBannerOpenedListener.class));
+            doAnswer(activityInitializedListenerAnswer).when(activityLifecycleListener).setActivityInitializedListener(any(ActivityInitializedListener.class));
         } catch (JSONException exception) {
             exception.printStackTrace();
         }

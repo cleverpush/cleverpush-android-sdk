@@ -132,11 +132,16 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         return false;
     }
 
-    public static void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
+    public void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
         if (currentActivity == null) {
             activityInitializedListeners.add(activityInitializedListener);
         } else {
             activityInitializedListener.initialized();
         }
+    }
+
+    @Nullable
+    public static ActivityLifecycleListener getInstance() {
+        return instance;
     }
 }
