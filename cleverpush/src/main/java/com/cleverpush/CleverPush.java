@@ -2584,7 +2584,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void disableNightModeAdaption() {
-        ;
         this.disableNightModeAdaption = true;
     }
 
