@@ -2177,12 +2177,15 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private AlertDialog.Builder getAlertBuilder(Context dialogActivity, TopicsDialogListener topicsDialogListener, int themeResId, JSONObject channelConfig, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean hasDeSelectAllInitial, LinearLayout checkboxLayout, CheckBox checkboxDeSelectAll, Set<String> selectedTopics) {
         AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity, themeResId);
 
-        String headerTitle = CleverPush.context.getResources().getString(R.string.topics_dialog_title);
+        String headerTitle = null;
         if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
             try {
                 headerTitle = channelConfig.getString("confirmAlertSelectTopicsLaterTitle");
             } catch (Exception ignored) {
             }
+        }
+        if (headerTitle == null || headerTitle.isEmpty()) {
+            headerTitle = CleverPush.context.getResources().getString(R.string.topics_dialog_title);
         }
 
         alertBuilder.setTitle(headerTitle);
