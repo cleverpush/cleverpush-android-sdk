@@ -1254,7 +1254,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
         if (openedResult.getNotification().getAppBanner() != null) {
-            ActivityLifecycleListener.setActivityInitializedListener(new ActivityInitializedListener() {
+            getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
                 @Override
                 public void initialized() {
                     showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
@@ -2583,7 +2583,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return this.developmentMode;
     }
 
-    public void disableNightModeAdaption() {;
+    public void disableNightModeAdaption() {
         this.disableNightModeAdaption = true;
     }
 
@@ -2810,5 +2810,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             }
             NotificationCategorySetUp.setNotificationCategoryFromChannelConfig(getContext(), config);
         });
+    }
+
+    public ActivityLifecycleListener getActivityLifecycleListener() {
+       return ActivityLifecycleListener.getInstance();
     }
 }

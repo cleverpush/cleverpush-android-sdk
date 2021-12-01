@@ -94,25 +94,13 @@ class CleverPushTest {
     NotificationOpenedListener notificationOpenedListener;
 
     @Mock
-    ActivityLifecycleListener activityLifecycleListener;
-
-    @Mock
-    SessionListener sessionListener;
-
-    @Mock
     GoogleApiClient googleApiClient;
 
     @Mock
     AppBannerModule appBannerModule;
 
     @Mock
-    ActivityCompat activityCompat;
-
-    @Mock
     Activity activity;
-
-    @Mock
-    ContextCompat contextCompat;
 
     @Mock
     SubscribedListener subscribedListener;
@@ -153,7 +141,6 @@ class CleverPushTest {
         MockitoAnnotations.openMocks(this);
         cleverPush = Mockito.spy(new CleverPush(context));
         handler = Mockito.spy(new Handler(getMainLooper()));
-        activityLifecycleListener = Mockito.spy(new ActivityLifecycleListener(sessionListener));
         mockWebServer = new MockWebServer();
     }
 
