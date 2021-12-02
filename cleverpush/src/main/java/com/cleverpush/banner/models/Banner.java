@@ -49,6 +49,8 @@ public class Banner {
     private List<String> topics;
     private List<String> excludeTopics;
     private List<HashMap<String, String>> attributes;
+    private boolean marginEnabled;
+    private boolean closeButtonEnabled;
 
     private Banner() {
     }
@@ -189,6 +191,14 @@ public class Banner {
         return attributes;
     }
 
+    public boolean isMarginEnabled() {
+        return marginEnabled;
+    }
+
+    public boolean isCloseButtonEnabled() {
+        return closeButtonEnabled;
+    }
+
     public static Banner create(JSONObject json) throws JSONException {
         Banner banner = new Banner();
 
@@ -318,6 +328,14 @@ public class Banner {
                     }
                 }
             }
+        }
+
+        if (json.has("marginEnabled")) {
+            banner.marginEnabled = json.optBoolean("marginEnabled");
+        }
+
+        if (json.has("closeButtonEnabled")) {
+            banner.closeButtonEnabled = json.optBoolean("closeButtonEnabled");
         }
 
         return banner;
