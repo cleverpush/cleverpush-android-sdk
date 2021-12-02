@@ -34,10 +34,7 @@
             android:layout_height="wrap_content"
             android:clickable="true"
             android:orientation="vertical"
-            android:paddingLeft="15dp"
-            android:paddingTop="15dp"
-            android:paddingRight="15dp"
-            android:paddingBottom="15dp">
+           android:padding="15dp">
 
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/carousel_pager"

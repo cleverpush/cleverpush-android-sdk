@@ -53,6 +53,8 @@ public class AppBannerPopup {
     private static final String POSITION_TYPE_BOTTOM = "bottom";
     private static final String POSITION_TYPE_FULL = "full";
     private static final String TAG = "CleverPush/AppBanner";
+    private final int TAB_LAYOUT_DEFAULT_HEIGHT = 48;
+    private final int MAIN_LAYOUT_PADDING = 15;
 
     private static SpringForce getDefaultForce(float finalValue) {
         SpringForce force = new SpringForce(finalValue);
@@ -396,7 +398,7 @@ public class AppBannerPopup {
             int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             LinearLayout.LayoutParams layoutParams;
             view.measure(wMeasureSpec, hMeasureSpec);
-            if (popupRoot.getMeasuredHeight() > view.getMeasuredHeight()) {
+            if (popupRoot.getMeasuredHeight() > view.getMeasuredHeight() + TAB_LAYOUT_DEFAULT_HEIGHT + MAIN_LAYOUT_PADDING) {
                 layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, view.getMeasuredHeight());
             } else {
                 int height = (int) (activity.getResources().getDisplayMetrics().heightPixels * 0.77);
