@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.18.10
+* Do not use Topics Dialog title from config if it's empty
+* Optimized displaying of app banners - wait until root view is ready
+
 ## 1.18.9
 * Added ability to disable nightmode adaption via `disableNightModeAdaption()` (e.g. for topics dialog checkboxes)
 
