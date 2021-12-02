@@ -17,10 +17,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.ScrollView;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
@@ -79,6 +79,7 @@ public class AppBannerPopup {
     private PopupWindow popup;
     private View popupRoot;
     private ViewPager2 viewPager2;
+    private LinearLayout body;
 
     private AppBannerOpenedListener openedListener;
 
@@ -121,19 +122,8 @@ public class AppBannerPopup {
         int layoutId = R.layout.app_banner;
 
         popupRoot = createLayout(layoutId);
-        LinearLayout body = popupRoot.findViewById(R.id.bannerBody);
-        ScrollView scrollView = popupRoot.findViewById(R.id.scrollView);
-        FrameLayout frameLayout = popupRoot.findViewById(R.id.frameLayout);
+        body = popupRoot.findViewById(R.id.bannerBody);
         ImageView bannerBackGroundImage = popupRoot.findViewById(R.id.bannerBackgroundImage);
-        if (data.isCarouselEnabled()) {
-            setUpBannerBlocks();
-        } else {
-            data.getScreens().clear();
-            BannerScreens bannerScreens = new BannerScreens();
-            bannerScreens.setBlocks(data.getBlocks());
-            data.getScreens().add(bannerScreens);
-            setUpBannerBlocks();
-        }
 
         popup = new PopupWindow(
                 popupRoot,
@@ -142,85 +132,17 @@ public class AppBannerPopup {
                 true
         );
 
-        if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
-            ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
-            ConstraintSet mConstraintSet = new ConstraintSet();
-            mConstraintSet.clone(mConstraintLayout);
-            mConstraintSet.constrainPercentWidth(R.id.scrollView, 1.0f);
-            mConstraintSet.constrainPercentHeight(R.id.scrollView, 1.0f);
-            mConstraintSet.constrainHeight(R.id.scrollView, ConstraintSet.MATCH_CONSTRAINT);
-            mConstraintSet.applyTo(mConstraintLayout);
-
-            scrollView.setFillViewport(true);
-
-            body.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            frameLayout.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        } else {
-            body.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            frameLayout.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-            ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
-            ConstraintSet mConstraintSet = new ConstraintSet();
-
-            switch (data.getPositionType()) {
-                case POSITION_TYPE_TOP:
-                    mConstraintSet.clone(mConstraintLayout);
-                    mConstraintSet.clear(R.id.scrollView, ConstraintSet.TOP);
-                    mConstraintSet.clear(R.id.scrollView, ConstraintSet.BOTTOM);
-                    mConstraintSet.connect(R.id.scrollView, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 50);
-                    mConstraintSet.applyTo(mConstraintLayout);
-
-                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.TOP, 0, 0));
-                    break;
-                case POSITION_TYPE_BOTTOM:
-                    mConstraintSet.clone(mConstraintLayout);
-                    mConstraintSet.clear(R.id.scrollView, ConstraintSet.TOP);
-                    mConstraintSet.clear(R.id.scrollView, ConstraintSet.BOTTOM);
-                    mConstraintSet.connect(R.id.scrollView, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 50);
-                    mConstraintSet.applyTo(mConstraintLayout);
-
-                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.BOTTOM, 0, 0));
-                    break;
-                default:
-                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.CENTER, 0, 0));
-                    break;
-            }
-        }
-
         composeBackground(bannerBackGroundImage, body);
         popup.setAnimationStyle(R.style.banner_animation);
 
-        isInitialized = true;
-    }
-
-    private void setUpBannerBlocks() {
-        viewPager2 = popupRoot.findViewById(R.id.carousel_pager);
-        TabLayout tabLayout = popupRoot.findViewById(R.id.carousel_pager_tab_layout);
-        AppBannerCarouselAdapter appBannerCarouselAdapter = new AppBannerCarouselAdapter(activity, data, this, openedListener);
-        viewPager2.setAdapter(appBannerCarouselAdapter);
-        viewPager2.setPageTransformer((page, position) -> {
-            if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
-                updatePagerHeightForChild(page, viewPager2);
+        popup.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                toggleShowing(false);
             }
         });
 
-        if (data.getScreens().size() > 1) {
-            tabLayout.setVisibility(View.VISIBLE);
-            new TabLayoutMediator(tabLayout, viewPager2, (tab, position) -> {
-
-            }).attach();
-        }
-    }
-
-    private void updatePagerHeightForChild(View view, ViewPager2 viewPager2) {
-        view.post(() -> {
-            int wMeasureSpec = View.MeasureSpec.makeMeasureSpec(view.getWidth(), View.MeasureSpec.EXACTLY);
-            int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-            view.measure(wMeasureSpec, hMeasureSpec);
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, view.getMeasuredHeight());
-            viewPager2.setLayoutParams(layoutParams);
-            viewPager2.invalidate();
-        });
+        isInitialized = true;
     }
 
     private void toggleShowing(boolean isShowing) {
@@ -234,7 +156,6 @@ public class AppBannerPopup {
         if (!isInitialized) {
             throw new IllegalStateException("Must be initialized");
         }
-        this.toggleShowing(true);
         new tryShowSafe().execute();
     }
 
@@ -277,7 +198,6 @@ public class AppBannerPopup {
             @Override
             public void onGlobalLayout() {
                 FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, body.getHeight());
-                // layoutParams.setMargins(pxToDp(10), pxToDp(15), pxToDp(10), pxToDp(15));
                 bannerBackground.setLayoutParams(layoutParams);
                 if (observer.isAlive()) {
                     observer.removeGlobalOnLayoutListener(this);
@@ -369,15 +289,122 @@ public class AppBannerPopup {
         protected void onPostExecute(Boolean isRootReady) {
             super.onPostExecute(isRootReady);
             if (isRootReady) {
-                popupRoot.findViewById(R.id.bannerBody).setTranslationY(getRoot().getHeight());
-                popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
-
+                displayBanner(body);
                 animateBody(getRoot().getHeight(), 0f);
             }
         }
     }
 
-    public static int pxToDp(int px) {
-        return (int) (px * Resources.getSystem().getDisplayMetrics().density);
+    private void displayBanner(LinearLayout body) {
+        if (!data.isCarouselEnabled()) {
+            data.getScreens().clear();
+            BannerScreens bannerScreens = new BannerScreens();
+            bannerScreens.setBlocks(data.getBlocks());
+            data.getScreens().add(bannerScreens);
+        }
+        setUpBannerBlocks();
+
+        if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+            ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
+            ConstraintSet mConstraintSet = new ConstraintSet();
+            mConstraintSet.clone(mConstraintLayout);
+
+            if (data.isMarginEnabled()) {
+                mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.9f);
+                mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.9f);
+            } else {
+                mConstraintSet.constrainPercentWidth(R.id.frameLayout, 1.0f);
+                mConstraintSet.constrainPercentHeight(R.id.frameLayout, 1.0f);
+            }
+
+            mConstraintSet.constrainHeight(R.id.frameLayout, ConstraintSet.MATCH_CONSTRAINT);
+            mConstraintSet.applyTo(mConstraintLayout);
+
+            body.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            runInMain(() -> popup.showAtLocation(popupRoot, Gravity.TOP, 0, 0));
+        } else {
+            body.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
+            ConstraintSet mConstraintSet = new ConstraintSet();
+
+            switch (data.getPositionType()) {
+                case POSITION_TYPE_TOP:
+                    mConstraintSet.clone(mConstraintLayout);
+                    mConstraintSet.clear(R.id.frameLayout, ConstraintSet.TOP);
+                    mConstraintSet.clear(R.id.frameLayout, ConstraintSet.BOTTOM);
+                    mConstraintSet.connect(R.id.frameLayout, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 40);
+                    mConstraintSet.applyTo(mConstraintLayout);
+
+                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.TOP, 0, 0));
+                    break;
+                case POSITION_TYPE_BOTTOM:
+                    mConstraintSet.clone(mConstraintLayout);
+                    mConstraintSet.clear(R.id.frameLayout, ConstraintSet.TOP);
+                    mConstraintSet.clear(R.id.frameLayout, ConstraintSet.BOTTOM);
+                    mConstraintSet.connect(R.id.frameLayout, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 40);
+                    mConstraintSet.applyTo(mConstraintLayout);
+
+                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.BOTTOM, 0, 0));
+                    break;
+                default:
+                    runInMain(() -> popup.showAtLocation(popupRoot, Gravity.CENTER, 0, 0));
+                    break;
+            }
+        }
+    }
+
+    private void setUpBannerBlocks() {
+        viewPager2 = popupRoot.findViewById(R.id.carousel_pager);
+        TabLayout tabLayout = popupRoot.findViewById(R.id.carousel_pager_tab_layout);
+        ImageButton buttonClose = popupRoot.findViewById(R.id.buttonClose);
+
+        if (data.isCloseButtonEnabled()) {
+            buttonClose.setVisibility(View.VISIBLE);
+            buttonClose.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    dismiss();
+                }
+            });
+        }
+
+        if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1.0f);
+            viewPager2.setLayoutParams(layoutParams);
+        }
+
+        AppBannerCarouselAdapter appBannerCarouselAdapter = new AppBannerCarouselAdapter(activity, data, this, openedListener);
+        viewPager2.setAdapter(appBannerCarouselAdapter);
+        if (data.getScreens().size() > 1) {
+            tabLayout.setVisibility(View.VISIBLE);
+            new TabLayoutMediator(tabLayout, viewPager2, (tab, position) -> {
+
+            }).attach();
+        }
+        viewPager2.setPageTransformer((page, position) -> {
+            if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+                updatePagerHeightForChild(page, viewPager2);
+            }
+        });
+
+    }
+
+    private void updatePagerHeightForChild(View view, ViewPager2 viewPager2) {
+        view.post(() -> {
+            int wMeasureSpec = View.MeasureSpec.makeMeasureSpec(view.getWidth(), View.MeasureSpec.EXACTLY);
+            int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+            LinearLayout.LayoutParams layoutParams;
+            view.measure(wMeasureSpec, hMeasureSpec);
+            if (popupRoot.getMeasuredHeight() > view.getMeasuredHeight()) {
+                layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, view.getMeasuredHeight());
+            } else {
+                int height = (int) (activity.getResources().getDisplayMetrics().heightPixels * 0.77);
+                layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height);
+            }
+
+            viewPager2.setLayoutParams(layoutParams);
+            viewPager2.invalidate();
+        });
     }
 }
