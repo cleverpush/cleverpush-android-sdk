@@ -203,4 +203,8 @@ public class Notification implements Serializable {
     public void setRead(Boolean read) {
         this.read = read;
     }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
 }
