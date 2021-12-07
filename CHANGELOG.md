@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.11
+* Optimized `createdAt` field for `Notification` class
+
 ## 1.18.10
 * Do not use Topics Dialog title from config if it's empty
 * Optimized displaying of app banners - wait until root view is ready
