@@ -73,6 +73,7 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
@@ -1946,6 +1947,17 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
     }
 
+    public void removeNotification(String notificationId) {
+        List<Notification> notifications = new ArrayList<Notification>(getNotificationsFromLocal());
+        for (int i = 0; i < notifications.size(); i++) {
+            if (notificationId.equalsIgnoreCase(notifications.get(i).id)) {
+                notifications.remove(i);
+            }
+        }
+        getSharedPreferences(getContext()).edit().putString(CleverPushPreferences.NOTIFICATIONS_JSON, new Gson().toJson(notifications, new TypeToken<List<Notification>>() {
+        }.getType())).commit();
+    }
+
     public void trackEvent(String eventName) {
         this.trackEvent(eventName, null);
     }
@@ -2816,6 +2828,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public ActivityLifecycleListener getActivityLifecycleListener() {
-       return ActivityLifecycleListener.getInstance();
+        return ActivityLifecycleListener.getInstance();
     }
 }
