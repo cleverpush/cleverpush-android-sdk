@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.12
+* Added `removeNotification(id)` method
+
 ## 1.18.11
 * Optimized `createdAt` field for `Notification` class
 
