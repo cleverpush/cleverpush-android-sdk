@@ -44,6 +44,7 @@ public class Banner {
     private String content;
     private String contentType;
     private String positionType;
+    private BannerSubscribedType subscribedType;
     private List<String> tags;
     private List<String> excludeTags;
     private List<String> topics;
@@ -171,6 +172,14 @@ public class Banner {
         this.positionType = positionType;
     }
 
+    public void setSubscribedType(BannerSubscribedType subscribedType) {
+        this.subscribedType = subscribedType;
+    }
+
+    public BannerSubscribedType getSubscribedType() {
+        return subscribedType;
+    }
+
     public List<String> getTags() {
         return tags;
     }
@@ -267,6 +276,8 @@ public class Banner {
 
         banner.frequency = BannerFrequency.fromString(json.optString("frequency"));
         banner.positionType = json.optString("type");
+
+        banner.subscribedType = BannerSubscribedType.fromString(json.optString("subscribedType"));
 
         JSONArray tagsArray = json.optJSONArray("tags");
         if (tagsArray != null) {

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.13
+* Added App Banner targeting filter: subscribed state
+
 ## 1.18.12
 * Added `removeNotification(id)` method
 

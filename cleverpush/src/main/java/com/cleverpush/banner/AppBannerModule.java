@@ -17,6 +17,7 @@ import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
 import com.cleverpush.banner.models.BannerStopAtType;
+import com.cleverpush.banner.models.BannerSubscribedType;
 import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
@@ -268,6 +269,14 @@ public class AppBannerModule {
         }
 
         boolean allowed = true;
+
+        if (banner.getSubscribedType() == BannerSubscribedType.Subscribed && !getCleverPushInstance().isSubscribed()) {
+            allowed = false;
+        }
+
+        if (banner.getSubscribedType() == BannerSubscribedType.Unsubscribed && getCleverPushInstance().isSubscribed()) {
+            allowed = false;
+        }
 
         if (banner.getTags() != null && banner.getTags().size() > 0) {
             allowed = false;
