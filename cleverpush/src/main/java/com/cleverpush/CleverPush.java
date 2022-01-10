@@ -32,6 +32,7 @@ import androidx.core.content.ContextCompat;
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
+import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
 import com.cleverpush.listener.ChannelTagsListener;
@@ -2829,5 +2830,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public ActivityLifecycleListener getActivityLifecycleListener() {
         return ActivityLifecycleListener.getInstance();
+    }
+
+    public void getAppBanners(AppBannersListener listener, String channelId) {
+        appBannerModule.getBannerList(listener, channelId);
     }
 }

@@ -97,17 +97,21 @@ public class AppBannerModule {
         return instance;
     }
 
-    private void loadBanners() {
-        loadBanners(null);
+    private void loadBanners(String channelId) {
+        loadBanners(null, channelId);
     }
 
-    void loadBanners(String notificationId) {
+    private void loadBanners() {
+        loadBanners(null, channel);
+    }
+
+    void loadBanners(String notificationId, String channelId) {
         if (isLoading()) {
             return;
         }
         setLoading(true);
 
-        String bannersPath = "/channel/" + channel + "/app-banners?platformName=Android";
+        String bannersPath = "/channel/" + channelId + "/app-banners?platformName=Android";
 
         if (getCleverPushInstance().isDevelopmentModeEnabled()) {
             bannersPath += "&t=" + System.currentTimeMillis();
@@ -220,6 +224,19 @@ public class AppBannerModule {
         this.startup();
     }
 
+    public void getBannerList(AppBannersListener listener, String channelId) {
+        if (listener == null) {
+            return;
+        }
+        if (channelId != null) {
+            bannersListeners.add(listener);
+
+            getHandler().post(() -> {
+                this.loadBanners(channelId);
+            });
+        }
+    }
+
     public void getBanners(AppBannersListener listener) {
         this.getBanners(listener, null);
     }
@@ -233,7 +250,7 @@ public class AppBannerModule {
             bannersListeners.add(listener);
 
             getHandler().post(() -> {
-                this.loadBanners(notificationId);
+                this.loadBanners(notificationId, channel);
             });
         } else {
             if (getListOfBanners() == null) {
@@ -646,5 +663,9 @@ public class AppBannerModule {
 
     public ActivityLifecycleListener getActivityLifecycleListener() {
         return ActivityLifecycleListener.getInstance();
+    }
+
+    public String getChannel() {
+        return channel;
     }
 }
