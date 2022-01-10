@@ -2832,7 +2832,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return ActivityLifecycleListener.getInstance();
     }
 
-    public void getBanners(AppBannersListener listener, String channelId) {
+    public void getAppBanners(AppBannersListener listener, String channelId) {
         appBannerModule.getBannerList(listener, channelId);
     }
 }
