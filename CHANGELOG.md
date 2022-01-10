@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.14
+* Added `getAppBanners` method
+
 ## 1.18.13
 * Added App Banner targeting filter: subscribed state
 
