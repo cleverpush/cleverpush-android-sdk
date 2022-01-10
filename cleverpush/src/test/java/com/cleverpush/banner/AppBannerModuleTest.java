@@ -235,7 +235,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners(null);
+        appBannerModule.loadBanners(null, "channelId");
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -257,7 +257,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners(null);
+        appBannerModule.loadBanners(null, "channelId");
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -279,7 +279,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("");
+        appBannerModule.loadBanners("","");
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -301,7 +301,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("notificationId");
+        appBannerModule.loadBanners("notificationId","channelId");
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -323,7 +323,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("notificationId");
+        appBannerModule.loadBanners("notificationId","channelId");
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -345,7 +345,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody(bannerResponse).setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("notificationId");
+        appBannerModule.loadBanners("notificationId","channelId");
 
         try {
             sleep(600);
@@ -369,7 +369,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody(bannerResponse).setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("notificationId");
+        appBannerModule.loadBanners("notificationId","channelId");
 
         try {
             sleep(600);
@@ -470,7 +470,7 @@ class AppBannerModuleTest {
         appBannerModule.getBanners(appBannersListener, "notificationId");
 
         assertThat(appBannerModule.getBannersListeners().size()).isEqualTo(1);
-        verify(appBannerModule).loadBanners("notificationId");
+        verify(appBannerModule).loadBanners("notificationId","channelId");
     }
 
     @Test
@@ -799,6 +799,7 @@ class AppBannerModuleTest {
             doReturn(false).when(cleverPush).isAppBannersDisabled();
             doReturn(handler).when(appBannerModule).getHandler();
             doReturn(appBannerPopup).when(appBannerModule).getAppBannerPopup(banner);
+            doReturn("channelId").when(appBannerModule).getChannel();
             doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
             Answer<Void> appBannersListenerAnswer = new Answer<Void>() {
