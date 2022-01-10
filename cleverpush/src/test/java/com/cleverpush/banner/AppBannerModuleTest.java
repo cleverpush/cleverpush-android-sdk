@@ -279,7 +279,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("","");
+        appBannerModule.loadBanners("", "");
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -301,7 +301,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("notificationId","channelId");
+        appBannerModule.loadBanners("notificationId", "channelId");
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -323,7 +323,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("notificationId","channelId");
+        appBannerModule.loadBanners("notificationId", "channelId");
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -345,7 +345,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody(bannerResponse).setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("notificationId","channelId");
+        appBannerModule.loadBanners("notificationId", "channelId");
 
         try {
             sleep(600);
@@ -369,7 +369,7 @@ class AppBannerModuleTest {
         MockResponse mockResponse = new MockResponse().setBody(bannerResponse).setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        appBannerModule.loadBanners("notificationId","channelId");
+        appBannerModule.loadBanners("notificationId", "channelId");
 
         try {
             sleep(600);
@@ -470,7 +470,7 @@ class AppBannerModuleTest {
         appBannerModule.getBanners(appBannersListener, "notificationId");
 
         assertThat(appBannerModule.getBannersListeners().size()).isEqualTo(1);
-        verify(appBannerModule).loadBanners("notificationId","channelId");
+        verify(appBannerModule).loadBanners("notificationId", "channelId");
     }
 
     @Test
