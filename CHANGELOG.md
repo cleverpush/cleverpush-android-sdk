@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.15
+* Added safety check in ActivityLifecycleListener to prevent NPE
+
 ## 1.18.14
 * Added `getAppBanners` method
 
