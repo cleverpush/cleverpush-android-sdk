@@ -106,7 +106,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.18.15";
+    public static final String SDK_VERSION = "1.18.16";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -1849,10 +1849,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void getNotifications(boolean combineWithApi, NotificationsCallbackListener notificationsCallbackListener) {
+        getNotifications(combineWithApi, 50, 0, notificationsCallbackListener);
+    }
+
+    public void getNotifications(boolean combineWithApi, int limit, int skip, NotificationsCallbackListener notificationsCallbackListener) {
         Set<Notification> localNotifications = getNotificationsFromLocal();
 
         if (combineWithApi) {
-            getReceivedNotificationsFromApi(new NotificationFromApiCallbackListener() {
+            getReceivedNotificationsFromApi(limit, skip, new NotificationFromApiCallbackListener() {
                 @Override
                 public void ready(List<Notification> remoteNotifications) {
                     List<Notification> allNotifications = new ArrayList<>();
@@ -1913,17 +1917,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return notifications;
     }
 
-    public void getReceivedNotificationsFromApi(NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
-        String url = "/channel/" + this.channelId + "/received-notifications";
+    public void getReceivedNotificationsFromApi(int limit, int skip, NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
+        String url = "/channel/" + this.channelId + "/received-notifications?limit=" + limit + "&skip=" + skip;
         ArrayList<String> subscriptionTopics = new ArrayList<String>(getSubscriptionTopics());
 
         for (int i = 0; i < subscriptionTopics.size(); i++) {
-            if (i == 0) {
-                url += "?";
-            } else {
-                url += "&";
-            }
-            url += "topics[]=" + subscriptionTopics.get(i);
+            url += "&topics[]=" + subscriptionTopics.get(i);
         }
 
         CleverPushHttpClient.get(url, new CleverPushHttpClient.ResponseHandler() {
