@@ -2663,7 +2663,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return getSharedPreferences(context).getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         } catch (Exception e) {
             Log.e("CleverPush", e.getLocalizedMessage());
-            return "";
+            return null;
         }
     }
 
