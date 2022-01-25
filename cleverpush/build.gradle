@@ -102,6 +102,5 @@ dependencies {
     testImplementation 'org.json:json:20180813'
 
     testImplementation 'org.awaitility:awaitility:4.1.0'
-
 }
 
