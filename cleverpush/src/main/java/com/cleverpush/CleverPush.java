@@ -1861,6 +1861,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 public void ready(List<Notification> remoteNotifications) {
                     List<Notification> allNotifications = new ArrayList<>();
                     List<Notification> notifications = new ArrayList<>();
+                    List<Notification> resultNotifications = new ArrayList<>();
                     allNotifications.addAll(localNotifications);
                     allNotifications.addAll(remoteNotifications);
 
@@ -1883,7 +1884,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         }
                     });
 
-                    notificationsCallbackListener.ready(new HashSet<>(notifications));
+                    for (int i = 0; i < limit; i++) {
+                        if (notifications.size() == i) {
+                            break;
+                        }
+                        resultNotifications.add(notifications.get(i));
+                    }
+
+                    notificationsCallbackListener.ready(new HashSet<>(resultNotifications));
                 }
             });
         } else {
