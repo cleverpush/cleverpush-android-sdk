@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.19.0
+* Updated several dependencies (AndroidX, maximum FCM & Google play services versions)
+* Added more try-catch handlers to prevent crashes in edge cases
+
 ## 1.18.15
 * Added safety check in ActivityLifecycleListener to prevent NPE
 

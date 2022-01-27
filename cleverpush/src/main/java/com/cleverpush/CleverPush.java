@@ -106,7 +106,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.18.16";
+    public static final String SDK_VERSION = "1.19.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -2659,7 +2659,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public String getSubscriptionId(Context context) {
-        return getSharedPreferences(context).getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        try {
+            return getSharedPreferences(context).getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        } catch (Exception e) {
+            Log.e("CleverPush", e.getLocalizedMessage());
+            return null;
+        }
     }
 
     public SharedPreferences getSharedPreferences(Context context) {

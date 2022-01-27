@@ -1,5 +1,7 @@
 package com.cleverpush;
 
+import android.util.Log;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -12,6 +14,7 @@ import org.json.JSONObject;
 public class CleverPushHttpClient {
     public interface ResponseHandler {
         void onSuccess(String response);
+
         void onFailure(int statusCode, String response, Throwable throwable);
     }
 
@@ -19,7 +22,11 @@ public class CleverPushHttpClient {
     private static final int TIMEOUT = 120000;
 
     public static void post(final String url, final JSONObject jsonBody, final ResponseHandler responseHandler) {
-        new Thread(() -> makeRequest(url, "POST", jsonBody, responseHandler)).start();
+        try {
+            new Thread(() -> makeRequest(url, "POST", jsonBody, responseHandler)).start();
+        } catch (Exception e) {
+            Log.e("CleverPushHttpClient", e.getLocalizedMessage());
+        }
     }
 
     public static void get(final String url, final ResponseHandler responseHandler) {
@@ -48,7 +55,8 @@ public class CleverPushHttpClient {
                 if (jsonBody != null) {
                     try {
                         language = jsonBody.getString("language");
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
                 if (language == null) {
                     language = Locale.getDefault().getLanguage();

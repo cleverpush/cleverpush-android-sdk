@@ -291,8 +291,12 @@ public class AppBannerPopup {
         protected void onPostExecute(Boolean isRootReady) {
             super.onPostExecute(isRootReady);
             if (isRootReady) {
-                displayBanner(body);
-                animateBody(getRoot().getHeight(), 0f);
+                try {
+                    displayBanner(body);
+                    animateBody(getRoot().getHeight(), 0f);
+                } catch (Exception e) {
+                    Log.e(TAG, e.getLocalizedMessage());
+                }
             }
         }
     }
