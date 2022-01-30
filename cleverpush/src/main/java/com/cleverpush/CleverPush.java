@@ -66,6 +66,8 @@ import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
+import com.cleverpush.service.StoredNotificationsCursor;
+import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
 import com.cleverpush.util.NotificationCategorySetUp;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -106,7 +108,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.19.0";
+    public static final String SDK_VERSION = "1.19.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -1845,110 +1847,23 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public Set<Notification> getNotifications() {
-        return getNotificationsFromLocal();
+        return StoredNotificationsService.getNotifications(getSharedPreferences(getContext()));
     }
 
-    public void getNotifications(boolean combineWithApi, NotificationsCallbackListener notificationsCallbackListener) {
-        getNotifications(combineWithApi, 50, 0, notificationsCallbackListener);
+    public void getNotifications(NotificationsCallbackListener notificationsCallbackListener) {
+        StoredNotificationsService.getNotifications(getSharedPreferences(getContext()), notificationsCallbackListener);
     }
 
-    public void getNotifications(boolean combineWithApi, int limit, int skip, NotificationsCallbackListener notificationsCallbackListener) {
-        Set<Notification> localNotifications = getNotificationsFromLocal();
-
-        if (combineWithApi) {
-            getReceivedNotificationsFromApi(limit, skip, new NotificationFromApiCallbackListener() {
-                @Override
-                public void ready(List<Notification> remoteNotifications) {
-                    List<Notification> allNotifications = new ArrayList<>();
-                    List<Notification> notifications = new ArrayList<>();
-                    allNotifications.addAll(localNotifications);
-                    allNotifications.addAll(remoteNotifications);
-
-                    for (Notification notification : allNotifications) {
-                        boolean isFound = false;
-                        for (Notification e : notifications) {
-                            if (e.getId().equals(notification.getId())) {
-                                isFound = true;
-                                break;
-                            }
-                        }
-                        if (!isFound) {
-                            notifications.add(notification);
-                        }
-                    }
-
-                    Collections.sort(notifications, new Comparator<Notification>() {
-                        public int compare(Notification notification1, Notification notification2) {
-                            return notification1.createdAt.compareTo(notification2.createdAt);
-                        }
-                    });
-
-                    notificationsCallbackListener.ready(new HashSet<>(notifications));
-                }
-            });
-        } else {
-            notificationsCallbackListener.ready(localNotifications);
-        }
+    public void getNotifications(@Deprecated boolean combineWithApi, NotificationsCallbackListener notificationsCallbackListener) {
+        StoredNotificationsService.getNotifications(getSharedPreferences(getContext()), notificationsCallbackListener);
     }
 
-    public Set<Notification> getNotificationsFromLocal() {
-        Gson gson = new Gson();
-        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-
-        String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
-        if (notificationsJson != null) {
-            try {
-                List<Notification> notifications = gson.fromJson(notificationsJson, NotificationList.class);
-                return new HashSet<>(notifications);
-            } catch (Exception ex) {
-                Log.e("CleverPush", "error while getting stored notifications", ex);
-            }
-        }
-
-        // deprecated
-        Set<String> encodedNotifications = sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
-        Set<Notification> notifications = new HashSet<>();
-        if (encodedNotifications != null) {
-            for (String encodedNotification : encodedNotifications) {
-                Notification notification = gson.fromJson(encodedNotification, Notification.class);
-                notifications.add(notification);
-            }
-        }
-        return notifications;
-    }
-
-    public void getReceivedNotificationsFromApi(int limit, int skip, NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
-        String url = "/channel/" + this.channelId + "/received-notifications?limit=" + limit + "&skip=" + skip;
-        ArrayList<String> subscriptionTopics = new ArrayList<String>(getSubscriptionTopics());
-
-        for (int i = 0; i < subscriptionTopics.size(); i++) {
-            url += "&topics[]=" + subscriptionTopics.get(i);
-        }
-
-        CleverPushHttpClient.get(url, new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-                if (response != null) {
-                    Gson gson = new Gson();
-                    try {
-                        JSONObject notificationObject = new JSONObject(response);
-                        List<Notification> notifications = gson.fromJson(notificationObject.getJSONArray("notifications").toString(), NotificationList.class);
-                        notificationFromApiCallbackListener.ready(notifications);
-                    } catch (Exception ex) {
-                        Log.e("CleverPush", "error while getting stored notifications", ex);
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error got Response - HTTP " + statusCode);
-            }
-        });
+    public StoredNotificationsCursor getCombinedNotifications(int pageSize) {
+        return StoredNotificationsService.getCombinedNotifications(this.channelId, getSharedPreferences(getContext()), pageSize);
     }
 
     public void removeNotification(String notificationId) {
-        List<Notification> notifications = new ArrayList<Notification>(getNotificationsFromLocal());
+        List<Notification> notifications = new ArrayList<Notification>(StoredNotificationsService.getNotificationsFromLocal(getSharedPreferences(getContext())));
         for (int i = 0; i < notifications.size(); i++) {
             if (notificationId.equalsIgnoreCase(notifications.get(i).id)) {
                 notifications.remove(i);

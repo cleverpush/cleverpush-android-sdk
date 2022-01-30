@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.1
+* Added pagination cursor for `getNotifications` call
+
 ## 1.19.0
 * Updated several dependencies (AndroidX, maximum FCM & Google play services versions)
 * Added more try-catch handlers to prevent crashes in edge cases

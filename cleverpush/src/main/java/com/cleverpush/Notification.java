@@ -5,6 +5,7 @@ import androidx.core.app.NotificationCompat;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -46,6 +47,7 @@ public class Notification implements Serializable {
     @SerializedName("appBanner")
     String appBanner;
     Boolean read = false;
+    Boolean fromApi = false;
 
     transient NotificationCompat.Extender extender;
 	String rawPayload;
@@ -190,6 +192,15 @@ public class Notification implements Serializable {
 
 	public void setRawPayload(String rawPayload) {
     	this.rawPayload = rawPayload;
+
+    	try {
+            if (this.createdAt == null) {
+                DateFormat date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+                setCreatedAt(date.format(new Date()));
+            }
+        } catch (Exception ignored) {
+
+        }
 	}
 
     public String getAppBanner() {
@@ -202,6 +213,14 @@ public class Notification implements Serializable {
 
     public void setRead(Boolean read) {
         this.read = read;
+    }
+
+    public Boolean getFromApi() {
+        return fromApi;
+    }
+
+    public void setFromApi(Boolean fromApi) {
+        this.fromApi = fromApi;
     }
 
     public void setCreatedAt(String createdAt) {
