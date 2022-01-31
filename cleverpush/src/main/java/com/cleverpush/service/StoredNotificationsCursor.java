@@ -3,12 +3,11 @@ package com.cleverpush.service;
 import android.content.SharedPreferences;
 
 import com.cleverpush.Notification;
-import com.cleverpush.listener.NotificationsCallbackListener;
+import com.cleverpush.listener.NotificationsPageCallbackListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -30,7 +29,7 @@ public class StoredNotificationsCursor {
         this.localNotifications = StoredNotificationsService.getNotificationsFromLocal(sharedPreferences);
     }
 
-    public void getNextPage(NotificationsCallbackListener notificationsCallbackListener) {
+    public void getNextPage(NotificationsPageCallbackListener notificationsCallbackListener) {
         StoredNotificationsService.getReceivedNotificationsFromApi(this.channelId, sharedPreferences, limit + localOffset, remoteOffset, (remoteNotifications) -> {
             this.returnCombinedNotifications(notificationsCallbackListener, localNotifications, remoteNotifications);
         });
@@ -41,36 +40,60 @@ public class StoredNotificationsCursor {
     }
 
     private List<Notification> safeSubList(List<Notification> list, int fromIndex, int toIndex) {
+        if (fromIndex > toIndex) {
+            return list;
+        }
         try {
             return list.subList(fromIndex, toIndex);
         } catch (IndexOutOfBoundsException ex) {
-            return list.subList(fromIndex, list.size() - fromIndex);
+            int newToIndex = list.size() - fromIndex;
+            if (fromIndex > newToIndex) {
+                return new ArrayList<>();
+            }
+            return list.subList(fromIndex, newToIndex);
         }
     }
 
-    private void returnCombinedNotifications(NotificationsCallbackListener notificationsCallbackListener, Set<Notification> localNotifications, List<Notification> remoteNotifications) {
-        List<Notification> localNotificationsOffseted = this.safeSubList(new ArrayList<>(localNotifications), localOffset, localNotifications.size());
-        List<Notification> uniqueNotifications = new ArrayList<>(localNotificationsOffseted);
-
-        for (Notification notification : remoteNotifications) {
-            boolean isFound = false;
-            for (Notification tryNotification : uniqueNotifications) {
-                if (tryNotification.getId().equals(notification.getId())) {
-                    isFound = true;
-                    break;
-                }
+    private void sortNotifications(List<Notification> notifications) {
+        Collections.sort(notifications, new Comparator<Notification>() {
+            public int compare(Notification notification1, Notification notification2) {
+                return notification2.getCreatedAtDate().compareTo(notification1.getCreatedAtDate());
             }
-            if (!isFound && !alreadyReturnedIds.contains(notification.getId())) {
-                notification.setFromApi(true);
+        });
+    }
+
+    private void returnCombinedNotifications(NotificationsPageCallbackListener notificationsCallbackListener, Set<Notification> localNotifications, List<Notification> remoteNotifications) {
+        List<Notification> localNotificationsList = new ArrayList<>(localNotifications);
+        List<Notification> uniqueNotifications = new ArrayList<>();
+
+        for (Notification notification : localNotificationsList) {
+            if (notification.getCreatedAtTime() > 0) {
                 uniqueNotifications.add(notification);
             }
         }
 
-        Collections.sort(uniqueNotifications, new Comparator<Notification>() {
-            public int compare(Notification notification1, Notification notification2) {
-                return notification2.getCreatedAt().compareTo(notification1.getCreatedAt());
+        this.sortNotifications(uniqueNotifications);
+
+        uniqueNotifications = this.safeSubList(uniqueNotifications, localOffset + 1, localNotifications.size());
+
+        for (Notification remoteNotification : remoteNotifications) {
+            boolean isFound = false;
+            for (Notification localNotification : uniqueNotifications) {
+                if (
+                        (localNotification.getTag() != null && localNotification.getTag().equals(remoteNotification.getId()))
+                        || localNotification.getId().equals(remoteNotification.getId())
+                ) {
+                    isFound = true;
+                    break;
+                }
             }
-        });
+            if (!isFound && !alreadyReturnedIds.contains(remoteNotification.getId())) {
+                remoteNotification.setFromApi(true);
+                uniqueNotifications.add(remoteNotification);
+            }
+        }
+
+        this.sortNotifications(uniqueNotifications);
 
         List<Notification> finalNotifications = this.safeSubList(uniqueNotifications, 0, this.limit);
         for (Notification notification : finalNotifications) {
@@ -84,6 +107,6 @@ public class StoredNotificationsCursor {
 
         hasNextPage = uniqueNotifications.size() >= this.limit;
 
-        notificationsCallbackListener.ready(new HashSet<>(finalNotifications));
+        notificationsCallbackListener.ready(finalNotifications);
     }
 }

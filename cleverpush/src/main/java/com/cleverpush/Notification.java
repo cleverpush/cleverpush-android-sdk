@@ -123,13 +123,24 @@ public class Notification implements Serializable {
     public int getCreatedAtTime() {
         if (this.getCreatedAt() != null) {
             try {
-                Date date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).parse(this.getCreatedAt());
+                Date date = this.getCreatedAtDate();
                 return (int) (date.getTime() / 1000);
-            } catch (Exception err) {
+            } catch (Exception ignored) {
 
             }
         }
         return 0;
+    }
+
+    public Date getCreatedAtDate() {
+        if (this.getCreatedAt() != null) {
+            try {
+                return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).parse(this.getCreatedAt());
+            } catch (Exception ignored) {
+
+            }
+        }
+        return null;
     }
 
     public NotificationCarouselItem[] getCarouselItems() {

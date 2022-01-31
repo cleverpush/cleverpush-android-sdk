@@ -108,7 +108,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.19.1";
+    public static final String SDK_VERSION = "1.19.2";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -2358,7 +2358,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 checkbox.setText(topic.optString("name"));
             }
         } catch (ParseException e) {
-            e.printStackTrace();
+            checkbox.setText(topic.optString("name"));
         }
     }
 

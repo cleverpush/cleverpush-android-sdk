@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.2
+* Optimized cursor pagination for `getNotificationsCombined`
+
 ## 1.19.1
 * Added pagination cursor for `getNotifications` call
 
