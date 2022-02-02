@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.4
+* Reverted SerializedName change in Notification class
+
 ## 1.19.3
 * Further optimized cursor pagination for `getNotificationsCombined`
 
