@@ -42,7 +42,7 @@ public class Notification implements Serializable {
     String soundFilename;
 	@SerializedName("silent")
 	Boolean silent;
-    @SerializedName("createdAt")
+    @SerializedName(value="queuedAt", alternate={"createdAt"})
     String createdAt;
     @SerializedName("appBanner")
     String appBanner;

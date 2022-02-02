@@ -64,11 +64,11 @@ public class StoredNotificationsService {
         StringBuilder url = new StringBuilder("/channel/" + channelId + "/received-notifications?limit=" + limit + "&skip=" + skip);
         ArrayList<String> subscriptionTopics = new ArrayList<String>(StoredNotificationsService.getSubscriptionTopics(sharedPreferences));
 
+        Log.d("CleverPush", "getReceivedNotificationsFromApi: " + url);
+
         for (int i = 0; i < subscriptionTopics.size(); i++) {
             url.append("&topics[]=").append(subscriptionTopics.get(i));
         }
-
-        Log.d("CleverPush", "getReceivedNotificationsFromApi: " + url);
 
         CleverPushHttpClient.get(url.toString(), new CleverPushHttpClient.ResponseHandler() {
             @Override

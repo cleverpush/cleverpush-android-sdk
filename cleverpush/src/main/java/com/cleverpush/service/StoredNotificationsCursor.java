@@ -1,6 +1,7 @@
 package com.cleverpush.service;
 
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.cleverpush.Notification;
 import com.cleverpush.listener.NotificationsPageCallbackListener;
@@ -68,13 +69,14 @@ public class StoredNotificationsCursor {
 
         for (Notification notification : localNotificationsList) {
             if (notification.getCreatedAtTime() > 0) {
+                alreadyReturnedIds.add(notification.getId());
                 uniqueNotifications.add(notification);
             }
         }
 
         this.sortNotifications(uniqueNotifications);
 
-        uniqueNotifications = this.safeSubList(uniqueNotifications, localOffset + 1, localNotifications.size());
+        uniqueNotifications = this.safeSubList(uniqueNotifications, localOffset, localNotifications.size());
 
         for (Notification remoteNotification : remoteNotifications) {
             boolean isFound = false;
