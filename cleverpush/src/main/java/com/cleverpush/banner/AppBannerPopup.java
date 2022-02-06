@@ -1,6 +1,5 @@
 package com.cleverpush.banner;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -37,6 +36,7 @@ import com.cleverpush.banner.models.BannerScreens;
 import com.cleverpush.banner.models.blocks.Alignment;
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.listener.AppBannerOpenedListener;
+import com.cleverpush.util.ColorUtils;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -213,7 +213,7 @@ public class AppBannerPopup {
                 drawableBG.setCornerRadius(10 * getPXScale());
             }
             if (bg.getColor() != null) {
-                drawableBG.setColor(this.parseColor(bg.getColor()));
+                drawableBG.setColor(ColorUtils.parseColor(bg.getColor()));
             } else {
                 drawableBG.setColor(Color.WHITE);
             }
@@ -255,19 +255,6 @@ public class AppBannerPopup {
         } else {
             mainHandler.postDelayed(runnable, delay);
         }
-    }
-
-    private int parseColor(String colorStr) {
-        if (colorStr.charAt(0) == '#' && colorStr.length() == 4) {
-            colorStr = "#" + colorStr.charAt(1) + colorStr.charAt(1) + colorStr.charAt(2) + colorStr.charAt(2) + colorStr.charAt(3) + colorStr.charAt(3);
-        }
-        int color = Color.BLACK;
-        try {
-            color = Color.parseColor(colorStr);
-        } catch (Exception ex) {
-
-        }
-        return color;
     }
 
     public class tryShowSafe extends AsyncTask<String, Void, Boolean> {

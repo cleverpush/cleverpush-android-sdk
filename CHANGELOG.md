@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.5
+* Optimized edge case in parseColor utility method
+
 ## 1.19.4
 * Reverted SerializedName change in Notification class
 

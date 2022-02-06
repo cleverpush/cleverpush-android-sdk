@@ -37,6 +37,7 @@ import com.cleverpush.banner.models.blocks.BannerHTMLBlock;
 import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
 import com.cleverpush.listener.AppBannerOpenedListener;
+import com.cleverpush.util.ColorUtils;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -119,14 +120,14 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
         button.setText(block.getText());
         button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
-        button.setTextColor(this.parseColor(block.getColor()));
+        button.setTextColor(ColorUtils.parseColor(block.getColor()));
         Integer alignment = alignmentMap.get(block.getAlignment());
         button.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
 
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.RECTANGLE);
         bg.setCornerRadius(block.getRadius() * getPXScale());
-        bg.setColor(this.parseColor(block.getBackground()));
+        bg.setColor(ColorUtils.parseColor(block.getBackground()));
         button.setBackground(bg);
 
         if (block.getAction() != null) {
@@ -171,7 +172,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
         textView.setText(block.getText());
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
-        textView.setTextColor(this.parseColor(block.getColor()));
+        textView.setTextColor(ColorUtils.parseColor(block.getColor()));
 
         if (block.getFamily() != null) {
             try {
@@ -244,19 +245,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
 
         return Math.max(Math.min(screenWidth / 400.0f, 10f), 1.0f);
-    }
-
-    private int parseColor(String colorStr) {
-        if (colorStr.charAt(0) == '#' && colorStr.length() == 4) {
-            colorStr = "#" + colorStr.charAt(1) + colorStr.charAt(1) + colorStr.charAt(2) + colorStr.charAt(2) + colorStr.charAt(3) + colorStr.charAt(3);
-        }
-        int color = Color.BLACK;
-        try {
-            color = Color.parseColor(colorStr);
-        } catch (Exception ex) {
-
-        }
-        return color;
     }
 
     /**
