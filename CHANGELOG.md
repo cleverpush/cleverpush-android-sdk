@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.6
+* Added condition in ActivityLifecycleListener to prevent NPE in Android 7
+
 ## 1.19.5
 * Optimized edge case in parseColor utility method
 
