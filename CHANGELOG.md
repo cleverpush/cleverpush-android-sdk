@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.7
+* Optimized Notification category setup
+
 ## 1.19.6
 * Added condition in ActivityLifecycleListener to prevent NPE in Android 7
 

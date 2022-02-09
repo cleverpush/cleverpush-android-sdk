@@ -24,6 +24,11 @@ public class NotificationCategorySetUp {
         for (int i = 0; i < notificationCategories.size(); i++) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationCategory category = notificationCategories.get(i);
+
+                if (category.getId() == null || category.getId().isEmpty() || category.getName() == null || category.getName().isEmpty()) {
+                    continue;
+                }
+
                 NotificationChannel channel = new NotificationChannel(category.getId(), category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
 
                 String description = category.getDescription();
