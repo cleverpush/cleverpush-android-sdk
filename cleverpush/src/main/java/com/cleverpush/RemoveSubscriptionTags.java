@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.cleverpush.listener.RemoveTagCompletedListener;
 import com.cleverpush.responsehandlers.RemoveSubscriptionTagResponseHandler;
+import com.cleverpush.util.ArrayUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,9 +16,10 @@ import java.util.Set;
 public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
 
     private String[] tagIds;
-    private String subscriptionId;
-    private String channelId;
-    private SharedPreferences sharedPreferences;
+    private final String subscriptionId;
+    private final String channelId;
+    private final SharedPreferences sharedPreferences;
+    private boolean finished = false;
     Set<String> tags;
 
     public RemoveSubscriptionTags(String subscriptionId, String channelId, SharedPreferences sharedPreferences, String... tagIds) {
@@ -31,7 +33,17 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
     public void tagRemoved(int currentPositionOfTagToRemove) {
         if (currentPositionOfTagToRemove != tagIds.length - 1) {
             removeSubscriptionTag(this, currentPositionOfTagToRemove + 1);
+        } else {
+            this.finished = true;
         }
+    }
+
+    public boolean isFinished() {
+        return this.finished;
+    }
+
+    public void addTagIds(String... newTagIds) {
+        this.tagIds = ArrayUtils.concatenateArrays(this.tagIds, newTagIds);
     }
 
     public void removeSubscriptionTags() {

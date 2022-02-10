@@ -68,6 +68,7 @@ import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
+import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -105,7 +106,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.19.7";
+    public static final String SDK_VERSION = "1.19.8";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -164,6 +165,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean confirmAlertShown = false;
     private boolean topicsDialogShowWhenNewAdded = false;
     private InitializeListener initializeListener;
+
+    private AddSubscriptionTags addSubscriptionTagsHelper;
+    private RemoveSubscriptionTags removeSubscriptionTagsHelper;
 
     private final String DATE_FORMAT_ISO = "yyyy-MM-dd HH:mm:ss z";
     private final int SYNC_SUBSCRIPTION_INTERVAL = 3 * 60 * 60 * 24;
@@ -1224,6 +1228,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
         if (subscriptionId != null) {
             for (SubscribedListener listener : getSubscriptionIdListeners) {
+                if (listener == null) {
+                    continue;
+                }
                 listener.subscribed(subscriptionId);
             }
             getSubscriptionIdListeners = new ArrayList<>();
@@ -1575,7 +1582,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private SubscribedListener getAddSubscriptionTagsSubscribedListener(String... tagIds) {
         return subscriptionId -> {
-            AddSubscriptionTags addSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), tagIds);
+            if (addSubscriptionTagsHelper != null && !addSubscriptionTagsHelper.isFinished()) {
+                addSubscriptionTagsHelper.addTagIds(tagIds);
+                return;
+            }
+            addSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), tagIds);
             addSubscriptionTagsHelper.addSubscriptionTags();
         };
     }
@@ -1594,8 +1605,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private SubscribedListener getRemoveSubscriptionTagSubscribedListener(String... tagIds) {
         return subscriptionId -> {
-            RemoveSubscriptionTags removeSubscriptionTags = new RemoveSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), tagIds);
-            removeSubscriptionTags.removeSubscriptionTags();
+            if (removeSubscriptionTagsHelper != null && !removeSubscriptionTagsHelper.isFinished()) {
+                removeSubscriptionTagsHelper.addTagIds(tagIds);
+                return;
+            }
+            removeSubscriptionTagsHelper = new RemoveSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), tagIds);
+            removeSubscriptionTagsHelper.removeSubscriptionTags();
         };
     }
 

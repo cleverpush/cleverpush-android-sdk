@@ -1,4 +1,4 @@
-package com.cleverpush;
+package com.cleverpush.util;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.8
+* Make sure tags are added and removed one after another to prevent race conditions
+
 ## 1.19.7
 * Optimized Notification category setup
 
