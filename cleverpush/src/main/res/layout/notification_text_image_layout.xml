@@ -42,6 +42,7 @@
             android:maxHeight="256dp"
             android:scaleType="centerCrop"
             android:layout_marginTop="16dp"
+            android:adjustViewBounds="true"
             />
     </FrameLayout>
 

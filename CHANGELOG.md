@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.9
+* Keep image aspect ratio in TEXT_WITH_IMAGE notification style
+
 ## 1.19.8
 * Make sure tags are added and removed one after another to prevent race conditions
 
