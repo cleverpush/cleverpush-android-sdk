@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.20.0
+* Optimized topics dialog behaviour
+* Fixed a race condition when adding tag directly after subscribing
+
 ## 1.19.9
 * Keep image aspect ratio in TEXT_WITH_IMAGE notification style
 

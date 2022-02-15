@@ -38,6 +38,8 @@ public class CleverPushHttpClient {
         int httpResponse = -1;
         String json = null;
 
+        Log.d("CleverPush", "[HTTP] " + (method == null ? "GET" : method) + ": " + url + (jsonBody != null ? (" " + jsonBody.toString()) : ""));
+
         try {
             con = (HttpURLConnection) new URL(BASE_URL + url).openConnection();
             con.setUseCaches(false);

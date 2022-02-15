@@ -106,7 +106,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.19.9";
+    public static final String SDK_VERSION = "1.20.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -647,7 +647,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     public boolean hasLocationPermission() {
         return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
-
 
     private void savePreferencesMap(String mapKey, Map<String, Integer> inputMap) {
         Log.d("CleverPush", "savePreferencesMap: " + mapKey + " - " + inputMap.toString());
@@ -2038,7 +2037,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void showTopicsDialog() {
-        showTopicsDialog(ActivityLifecycleListener.currentActivity);
+        getActivityLifecycleListener().setActivityInitializedListener(() -> showTopicsDialog(ActivityLifecycleListener.currentActivity));
     }
 
     public void showTopicsDialog(Activity dialogActivity) {
@@ -2076,28 +2075,27 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
             if (channelTopics == null || channelTopics.length() == 0) {
                 Log.w("CleverPush", "CleverPush: showTopicsDialog: No topics found. Create some first in the CleverPush channel settings.");
+                return;
             }
 
             dialogActivity.runOnUiThread(() -> {
-                final boolean[] checkedTopics = new boolean[channelTopics.length()];
-                String[] topicIds = new String[channelTopics.length()];
-
                 final boolean hasDeSelectAllInitial = this.hasDeSelectAll();
-
-                LinearLayout checkboxLayout = getCheckboxLayout();
-
-                LinearLayout parentLayout = getParentLayout();
-
-                CheckBox checkboxDeSelectAll = getCheckBox(getNightModeFlags(), context.getText(R.string.deselect_all));
-
                 Set<String> selectedTopics = instance.getSubscriptionTopics();
+                boolean showUnsubscribeCheckbox = channelConfig.optBoolean("topicsDialogShowUnsubscribe", false);
 
-                setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, hasDeSelectAll(), getNightModeFlags(), selectedTopics);
+                LinearLayout checkboxLayout = getTopicCheckboxLayout();
+                LinearLayout parentLayout = getTopicParentLayout();
+
+                CheckBox unsubscribeCheckbox = null;
+                if (showUnsubscribeCheckbox) {
+                    unsubscribeCheckbox = getTopicCheckbox(getNightModeFlags(), context.getText(R.string.deselect_all));
+                }
+
+                setTopicCheckboxList(parentLayout, channelTopics, unsubscribeCheckbox, hasDeSelectAll(), getNightModeFlags(), selectedTopics);
 
                 checkboxLayout.addView(parentLayout);
 
-                AlertDialog.Builder alertBuilder = getAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics, checkedTopics, topicIds, hasDeSelectAllInitial, checkboxLayout, checkboxDeSelectAll, selectedTopics);
-
+                AlertDialog.Builder alertBuilder = getTopicAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics, hasDeSelectAllInitial, checkboxLayout, unsubscribeCheckbox, selectedTopics);
                 AlertDialog alert = alertBuilder.create();
                 alert.setOnShowListener(dialog -> {
                     Log.d("CleverPush", "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
@@ -2113,7 +2111,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return getContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
     }
 
-    private AlertDialog.Builder getAlertBuilder(Context dialogActivity, TopicsDialogListener topicsDialogListener, int themeResId, JSONObject channelConfig, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean hasDeSelectAllInitial, LinearLayout checkboxLayout, CheckBox checkboxDeSelectAll, Set<String> selectedTopics) {
+    private AlertDialog.Builder getTopicAlertBuilder(Context dialogActivity, TopicsDialogListener topicsDialogListener, int themeResId, JSONObject channelConfig, JSONArray channelTopics, boolean hasDeSelectAllInitial, LinearLayout checkboxLayout, CheckBox unsubscribeCheckbox, Set<String> selectedTopics) {
         AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity, themeResId);
 
         String headerTitle = null;
@@ -2143,34 +2141,30 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
 
         alertBuilder.setPositiveButton(CleverPush.context.getResources().getString(R.string.save), (dialogInterface, i) -> {
-            if (checkboxDeSelectAll.isChecked()) {
+            if (unsubscribeCheckbox != null && unsubscribeCheckbox.isChecked()) {
                 unsubscribe();
                 setDeSelectAll(true);
+                selectedTopics.clear();
                 for (int j = 0; j < channelTopics.length(); j++) {
                     try {
                         JSONObject channelTopic = (JSONObject) channelTopics.get(j);
                         channelTopic.put("defaultUnchecked", true);
-                        selectedTopics.clear();
-                        checkedTopics[j] = false;
                     } catch (JSONException e) {
                         Log.e("CleverPush", e.getLocalizedMessage());
                     }
                 }
             } else {
-                if (hasDeSelectAllInitial) {
+                if (unsubscribeCheckbox != null && hasDeSelectAllInitial) {
                     setDeSelectAll(false);
                     subscriptionId = null;
                     isSubscribeForTopicsDialog = true;
-                    this.subscribe(subscriptionId == null);
+                    this.subscribe(true);
+                } else if (unsubscribeCheckbox == null && subscriptionId == null) {
+                    isSubscribeForTopicsDialog = true;
+                    this.subscribe(true);
                 }
 
-                Set<String> selectedTopicIds = new HashSet<>();
-                for (int j = 0; j < topicIds.length; j++) {
-                    if (checkedTopics[j]) {
-                        selectedTopicIds.add(topicIds[j]);
-                    }
-                }
-                CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopicIds.toArray(new String[0]));
+                CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopics.toArray(new String[0]));
             }
 
             dialogInterface.dismiss();
@@ -2183,7 +2177,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return alertBuilder;
     }
 
-    private CheckBox getCheckBox(int nightModeFlags, CharSequence text) {
+    private CheckBox getTopicCheckbox(int nightModeFlags, CharSequence text) {
         CheckBox checkBox = new CheckBox(CleverPush.context);
         checkBox.setText(text);
         if (!this.disableNightModeAdaption && nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
@@ -2195,7 +2189,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return checkBox;
     }
 
-    private LinearLayout getParentLayout() {
+    private LinearLayout getTopicParentLayout() {
         LinearLayout parentLayout = new LinearLayout(context);
         LinearLayout.LayoutParams parentLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         parentLayoutParams.setMargins(45, 45, 45, 45);
@@ -2204,7 +2198,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return parentLayout;
     }
 
-    private LinearLayout getCheckboxLayout() {
+    private LinearLayout getTopicCheckboxLayout() {
         LinearLayout checkboxLayout = new LinearLayout(context);
         checkboxLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         checkboxLayout.setOrientation(LinearLayout.VERTICAL);
@@ -2215,57 +2209,48 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * Will create list of checkbox for the topics.
      *
      * @param parentLayout        parent layout to add checkboxes
-     * @param checkboxDeSelectAll checkBox to deselect all the topis
      * @param channelTopics       topics from the channel
-     * @param checkedTopics       userSelectedTopics
      * @param deselectAll         is deselectall checkbox is checked or not
      * @param nightModeFlags      flag if there is night mode
      * @param selectedTopics      selectedTopics
      */
-    void setCheckboxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
+    void setTopicCheckboxList(LinearLayout parentLayout, JSONArray channelTopics, CheckBox unsubscribeCheckbox, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
         parentLayout.removeAllViews();
 
-        this.getChannelConfig(channelConfig -> {
-            if (channelConfig.optBoolean("topicsDialogShowUnsubscribe", false)) {
-                checkboxDeSelectAll.setChecked(deselectAll);
-                parentLayout.addView(checkboxDeSelectAll);
-                checkboxDeSelectAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                    if (isChecked) {
-                        setCheckboxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, true, nightModeFlags, selectedTopics);
-                    }
-                });
-            }
-        });
+        if (unsubscribeCheckbox != null) {
+            unsubscribeCheckbox.setChecked(deselectAll);
+            parentLayout.addView(unsubscribeCheckbox);
+            unsubscribeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    setTopicCheckboxList(parentLayout, channelTopics, unsubscribeCheckbox, true, nightModeFlags, selectedTopics);
+                }
+            });
+        }
 
-        setUpParentTopicCheckBoxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, topicIds, deselectAll, nightModeFlags, selectedTopics);
+        setupTopicParentCheckboxes(parentLayout, unsubscribeCheckbox, channelTopics, deselectAll, nightModeFlags, selectedTopics);
     }
 
-    public void setUpParentTopicCheckBoxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, String[] topicIds, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
+    private boolean isTopicCheckboxChecked(Set<String> selectedTopics, JSONObject topic) {
+        String id = topic.optString("_id");
+        boolean defaultUnchecked = false;
+        try {
+            defaultUnchecked = topic.optBoolean("defaultUnchecked");
+        } catch (Exception ignored) {
+        }
+        boolean defaultUncheckedAndEmptyTopics = selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked;
+        return defaultUncheckedAndEmptyTopics || selectedTopics.contains(id);
+    }
+
+    public void setupTopicParentCheckboxes(LinearLayout parentLayout, CheckBox unsubscribeCheckbox, JSONArray channelTopics, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
         try {
             for (int i = 0; i < channelTopics.length(); i++) {
-                final int parentIndex = i;
                 JSONObject topic = channelTopics.getJSONObject(i);
                 if (topic != null) {
-                    boolean defaultUnchecked = false;
-                    try {
-                        defaultUnchecked = topic.optBoolean("defaultUnchecked");
-                    } catch (Exception ignored) {
-                    }
                     String id = topic.getString("_id");
-                    topicIds[i] = id;
 
-                    CheckBox checkbox = new CheckBox(CleverPush.context);
-                    setUpCheckBoxText(topic, checkbox);
-
-                    if (!this.disableNightModeAdaption && nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-                        checkbox.setTextColor(Color.WHITE);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            checkbox.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
-                        }
-                    }
-
+                    CheckBox checkbox = getTopicCheckbox(nightModeFlags, getTopicCheckboxText(topic));
                     if (!hasDeSelectAll() && !deselectAll) {
-                        checkbox.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked) || selectedTopics.contains(id));
+                        checkbox.setChecked(this.isTopicCheckboxChecked(selectedTopics, topic));
                     }
 
                     if (topic.has("parentTopic") && topic.optString("parentTopic").length() > 0) {
@@ -2273,9 +2258,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     }
 
                     parentLayout.addView(checkbox);
-
-                    setUpChildTopicCheckBoxList(parentLayout, checkboxDeSelectAll, channelTopics, checkedTopics, deselectAll, nightModeFlags, selectedTopics, parentIndex, topic, id, checkbox);
-
+                    setupTopicChildCheckboxes(parentLayout, unsubscribeCheckbox, channelTopics, deselectAll, nightModeFlags, selectedTopics, id, checkbox);
                 } else {
                     Log.e("CleverPush", "topic is null");
                 }
@@ -2285,65 +2268,64 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         }
     }
 
-    private void setUpChildTopicCheckBoxList(LinearLayout parentLayout, CheckBox checkboxDeSelectAll, JSONArray channelTopics, boolean[] checkedTopics, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics, int parentIndex, JSONObject topic, String id, CheckBox checkbox) {
+    private void toggleCheckedTopic(Set<String> selectedTopics, String id, boolean isChecked, CheckBox unsubscribeCheckbox, Set<String> childTopicIds) {
+        if (isChecked) {
+            selectedTopics.add(id);
+            if (unsubscribeCheckbox != null) {
+                unsubscribeCheckbox.setChecked(false);
+            }
+        } else {
+            selectedTopics.remove(id);
+            if (childTopicIds != null) {
+                for (String childId : childTopicIds) {
+                    selectedTopics.remove(childId);
+                }
+            }
+        }
+        if (selectedTopics.size() == 0 && unsubscribeCheckbox != null) {
+            unsubscribeCheckbox.setChecked(true);
+        }
+    }
+
+    private void setupTopicChildCheckboxes(LinearLayout parentLayout, CheckBox unsubscribeCheckbox, JSONArray channelTopics, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics, String id, CheckBox checkbox) {
         try {
-            int addedChildren = 0;
+            Set<String> childTopicIds = new HashSet<>();
             final LinearLayout childLayout = new LinearLayout(context);
             for (int j = 0; j < channelTopics.length(); j++) {
-                final int childIndex = j;
                 JSONObject childTopic = channelTopics.getJSONObject(j);
                 if (childTopic != null && childTopic.optString("parentTopic").equals(id)) {
-                    String childId = childTopic.getString("_id");
-                    boolean childDefaultUnchecked = false;
-                    try {
-                        childDefaultUnchecked = topic.optBoolean("defaultUnchecked");
-                    } catch (Exception ignored) {
-                    }
-
-                    addedChildren++;
+                    String childId = childTopic.optString("_id");
+                    childTopicIds.add(childId);
 
                     LinearLayout.LayoutParams childLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                     childLayoutParams.setMargins(65, 0, 0, 20);
                     childLayout.setLayoutParams(childLayoutParams);
                     childLayout.setOrientation(LinearLayout.VERTICAL);
 
-                    CheckBox checkboxChild = new CheckBox(CleverPush.context);
+                    CheckBox checkboxChild = getTopicCheckbox(nightModeFlags, getTopicCheckboxText(childTopic));
+
                     checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                        checkedTopics[childIndex] = isChecked;
-                        checkboxDeSelectAll.setChecked(false);
+                        toggleCheckedTopic(selectedTopics, childId, isChecked, unsubscribeCheckbox, null);
                     });
-                    checkedTopics[childIndex] = checkbox.isChecked();
-
-                    setUpCheckBoxText(topic, checkbox);
-
-                    if (!this.disableNightModeAdaption && nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-                        checkboxChild.setTextColor(Color.WHITE);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            checkboxChild.setButtonTintList(ColorStateList.valueOf(Color.WHITE));
-                        }
-                    }
 
                     if (!hasDeSelectAll() && !deselectAll) {
-                        checkboxChild.setChecked((selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !childDefaultUnchecked) || selectedTopics.contains(childId));
+                        checkboxChild.setChecked(this.isTopicCheckboxChecked(selectedTopics, childTopic));
                     }
 
                     childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
-
                     childLayout.addView(checkboxChild);
                 }
             }
 
-            checkedTopics[parentIndex] = checkbox.isChecked();
-            final boolean hasChildren = addedChildren > 0;
+            final boolean hasChildren = childTopicIds.size() > 0;
             checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                checkboxDeSelectAll.setChecked(false);
-                checkedTopics[parentIndex] = isChecked;
+                toggleCheckedTopic(selectedTopics, id, isChecked, unsubscribeCheckbox, childTopicIds);
                 if (hasChildren) {
                     childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
                 }
             });
 
-            if (addedChildren > 0) {
+            if (childTopicIds.size() > 0) {
                 parentLayout.addView(childLayout);
             }
         } catch (JSONException e) {
@@ -2356,7 +2338,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         sharedPreferences.edit().putInt(CleverPushPreferences.TOPIC_LAST_CHECKED, (int) (System.currentTimeMillis() / 1000L)).apply();
     }
 
-    private void setUpCheckBoxText(JSONObject topic, CheckBox checkbox) {
+    private String getTopicCheckboxText(JSONObject topic) {
         int oneHour = 60 * 60;
         int topicLastChecked = getTopicLastChecked();
         try {
@@ -2365,12 +2347,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             Date date = simpleDateFormat.parse(topic.optString("createdAt"));
             int topicCreatedAt = (int) (date.getTime() / 1000);
             if (topicsDialogShowWhenNewAdded && topicCreatedAt + oneHour > topicLastChecked) {
-                checkbox.setText(topic.optString("name") + " ●");
+                return topic.optString("name") + " ●";
             } else {
-                checkbox.setText(topic.optString("name"));
+                return topic.optString("name");
             }
         } catch (ParseException e) {
-            checkbox.setText(topic.optString("name"));
+            return topic.optString("name");
         }
     }
 
@@ -2534,6 +2516,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void clearSubscriptionData() {
+        subscriptionId = null;
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
@@ -2543,7 +2526,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
         editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
         editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
-        editor.apply();
+        editor.commit();
     }
 
     public boolean isAppBannersDisabled() {
