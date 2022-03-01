@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.20.1
+* Implemented `setIgnoreDisabledNotificationPermission` to subscribe users, even when the notification permission has not been accepted (disabled by default).
+
 ## 1.20.0
 * Optimized topics dialog behaviour
 * Fixed a race condition when adding tag directly after subscribing

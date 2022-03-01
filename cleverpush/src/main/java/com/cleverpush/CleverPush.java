@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
@@ -106,7 +107,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.20.0";
+    public static final String SDK_VERSION = "1.20.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -156,6 +157,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private boolean incrementBadge = false;
     private boolean autoClearBadge = false;
+    private boolean ignoreDisabledNotificationPermission = false;
 
     private boolean developmentMode = false;
 
@@ -511,6 +513,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         if (shouldAutoSubscribe(sharedPreferences, autoRegister, subscriptionId)) {
             boolean newSubscription = subscriptionId == null;
             this.subscribe(newSubscription);
+        } else if (subscriptionId != null && !this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
+            Log.d("CleverPush", "notification authorization revoked, unsubscribing");
+            this.unsubscribe();
         } else {
             if (subscriptionId != null) {
                 Date nextSyncDate = new Date(getNextSync(sharedPreferences) * MILLISECONDS_PER_SECOND);
@@ -2427,6 +2432,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         sharedPreferences.edit().putInt(CleverPushPreferences.LAST_TIME_AUTO_SHOWED, (int) (System.currentTimeMillis() / 1000L)).apply();
     }
 
+    private boolean areNotificationsEnabled() {
+        try {
+            return NotificationManagerCompat.from(CleverPush.context).areNotificationsEnabled();
+        } catch (Exception ignored) {}
+        return true;
+    }
+
     public void setApiEndpoint(String apiEndpoint) {
         CleverPushHttpClient.BASE_URL = apiEndpoint;
     }
@@ -2496,6 +2508,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public boolean getIncrementBadge() {
         return this.incrementBadge;
+    }
+
+    public void setIgnoreDisabledNotificationPermission(boolean ignore) {
+        this.ignoreDisabledNotificationPermission = ignore;
     }
 
     public void enableDevelopmentMode() {
