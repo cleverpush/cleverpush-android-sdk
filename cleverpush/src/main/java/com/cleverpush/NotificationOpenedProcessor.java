@@ -5,9 +5,6 @@ import android.content.Intent;
 
 import com.google.gson.Gson;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class NotificationOpenedProcessor {
 
     public static void processIntent(Context context, Intent intent) {

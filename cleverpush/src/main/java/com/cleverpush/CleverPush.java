@@ -107,7 +107,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.20.1";
+    public static final String SDK_VERSION = "1.20.2";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -912,7 +912,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     GeofencingRequest geofenceRequest = builder.build();
 
                     Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
-                    // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addgeoFences()
+                    // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addGeofences()
                     PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
                     try {
@@ -2085,7 +2085,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
             dialogActivity.runOnUiThread(() -> {
                 final boolean hasDeSelectAllInitial = this.hasDeSelectAll();
-                Set<String> selectedTopics = instance.getSubscriptionTopics();
+                Set<String> selectedTopics = new HashSet<>(instance.getSubscriptionTopics());
                 boolean showUnsubscribeCheckbox = channelConfig.optBoolean("topicsDialogShowUnsubscribe", false);
 
                 LinearLayout checkboxLayout = getTopicCheckboxLayout();
@@ -2508,6 +2508,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public boolean getIncrementBadge() {
         return this.incrementBadge;
+    }
+
+    public boolean notificationOpenShouldStartActivity() {
+        return !MetaDataUtils.getManifestMetaBoolean(getContext(), "com.cleverpush.notification_open_activity_disabled");
     }
 
     public void setIgnoreDisabledNotificationPermission(boolean ignore) {
