@@ -1,6 +1,7 @@
 package com.cleverpush.service;
 
-import android.app.ActivityManager;
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -8,7 +9,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,9 +24,7 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.RemoteViews;
-import android.widget.TextView;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -38,7 +36,6 @@ import com.cleverpush.Notification;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
 import com.cleverpush.NotificationOpenedActivity;
-import com.cleverpush.NotificationOpenedReceiver;
 import com.cleverpush.NotificationStyle;
 import com.cleverpush.R;
 import com.cleverpush.Subscription;
@@ -54,7 +51,6 @@ import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 
 public class NotificationService {
@@ -97,58 +93,48 @@ public class NotificationService {
             InputStream input = connection.getInputStream();
             return BitmapFactory.decodeStream(input);
         } catch (Exception exception) {
-            Log.d("CleverPush", "NotificationService: Exception while loading image", exception);
+            Log.d(LOG_TAG, "NotificationService: Exception while loading image", exception);
             return null;
         }
     }
 
-    boolean applicationInForeground(Context context) {
-        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningAppProcessInfo> services = activityManager.getRunningAppProcesses();
-        boolean isActivityFound = false;
+    private Intent getTargetIntent(Context context) {
+        Intent targetIntent = new Intent(context, NotificationOpenedActivity.class);
+        targetIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        return targetIntent;
+    }
 
-        if (services.get(0).processName
-                .equalsIgnoreCase(context.getPackageName()) && services.get(0).importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-            isActivityFound = true;
+    private int getPendingIntentFlags() {
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
         }
+        return flags;
+    }
 
-        return isActivityFound;
+    private int getDeleteIntentFlags() {
+        int flags = PendingIntent.FLAG_ONE_SHOT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        return flags;
+    }
+
+    private int generateRequestCode() {
+        return (int) System.currentTimeMillis();
     }
 
     private NotificationCompat.Builder createBasicNotification(Context context, String notificationStr, String subscriptionStr, Notification notification, int requestCode) {
-        boolean isBroadcast = false;
-        Class<?> notificationOpenedClass;
-
-        PackageManager packageManager = context.getPackageManager();
-        Intent intent = new Intent(context, NotificationOpenedReceiver.class);
-        intent.setPackage(context.getPackageName());
-        if (packageManager.queryBroadcastReceivers(intent, 0).size() > 0) {
-            isBroadcast = true;
-            notificationOpenedClass = NotificationOpenedReceiver.class;
-        } else {
-            notificationOpenedClass = NotificationOpenedActivity.class;
-        }
-
         String title = notification.getTitle();
         String text = notification.getText();
         String iconUrl = notification.getIconUrl();
         String mediaUrl = notification.getMediaUrl();
 
-        Intent targetIntent = new Intent(context, notificationOpenedClass);
-        if (!isBroadcast) {
-            targetIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        }
-
+        Intent targetIntent = this.getTargetIntent(context);
         targetIntent.putExtra("notification", notificationStr);
         targetIntent.putExtra("subscription", subscriptionStr);
 
-        PendingIntent contentIntent;
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
-        if (isBroadcast) {
-            contentIntent = PendingIntent.getBroadcast(context, requestCode, targetIntent, flags);
-        } else {
-            contentIntent = PendingIntent.getActivity(context, requestCode, targetIntent, flags);
-        }
+        PendingIntent contentIntent = PendingIntent.getActivity(context, requestCode, targetIntent, this.getPendingIntentFlags());
 
         NotificationStyle notificationStyle = getNotificationStyle(context);
 
@@ -269,25 +255,14 @@ public class NotificationService {
         return expandedView;
     }
 
-    private static void applyTextColorToRemoteViews(RemoteViews remoteViews, View view, int color) {
-        if (view instanceof ViewGroup) {
-            ViewGroup vg = (ViewGroup) view;
-            for (int i = 0, count = vg.getChildCount(); i < count; i++) {
-                applyTextColorToRemoteViews(remoteViews, vg.getChildAt(i), color);
-            }
-        } else if (view instanceof TextView) {
-            remoteViews.setTextColor(view.getId(), color);
-        }
-    }
-
     int getRequestId(Context context, Notification notification) {
         // check for existing notifications which have the same tag and should be replaced. If found, use their request code.
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                StatusBarNotification[] activeNotifs = BadgeHelper.getActiveNotifications(context);
-                for (StatusBarNotification activeNotif : activeNotifs) {
-                    if (activeNotif.getTag() != null && notification.getTag() != null && activeNotif.getTag().equals(notification.getTag())) {
-                        return activeNotif.getId();
+                StatusBarNotification[] activeNotifications = BadgeHelper.getActiveNotifications(context);
+                for (StatusBarNotification activeNotification : activeNotifications) {
+                    if (activeNotification.getTag() != null && notification.getTag() != null && activeNotification.getTag().equals(notification.getTag())) {
+                        return activeNotification.getId();
                     }
                 }
             }
@@ -345,7 +320,7 @@ public class NotificationService {
     }
 
     void createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr, int targetIndex, int requestId) {
-        Log.i("CleverPush", "NotificationService: createAndShowCarousel");
+        Log.d(LOG_TAG, "NotificationService: createAndShowCarousel");
         NotificationCompat.Builder builder = createBasicNotification(context, notificationStr, subscriptionStr, message, requestId);
         if (builder != null) {
             android.app.Notification notification = builder.build();
@@ -363,7 +338,7 @@ public class NotificationService {
 
     private PendingIntent getNotificationDeleteIntent(Context context) {
         Intent delIntent = new Intent(context, NotificationDismissIntentService.class);
-        return PendingIntent.getService(context, (int) System.currentTimeMillis(), delIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+        return PendingIntent.getService(context, this.generateRequestCode(), delIntent, this.getDeleteIntentFlags());
     }
 
     private PendingIntent getCarouselNotificationDeleteIntent(Context context, Notification message, String notificationStr, String subscriptionStr) {
@@ -377,7 +352,7 @@ public class NotificationService {
         delIntent.putExtra("notification", message);
         delIntent.putExtra("data", data);
 
-        return PendingIntent.getService(context, (int) System.currentTimeMillis(), delIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+        return PendingIntent.getService(context, this.generateRequestCode(), delIntent, this.getDeleteIntentFlags());
     }
 
     private RemoteViews getCarouselImage(Context context, Notification message, String notificationStr, String subscriptionStr, int currentIndex, int requestId) {
@@ -385,7 +360,7 @@ public class NotificationService {
 
         contentView = new RemoteViews(context.getPackageName(), R.layout.notification_carousel_layout);
 
-        setBasicNotificationData(context, message, contentView);
+        setBasicNotificationData(message, contentView);
 
         if (message != null && message.getCarouselLength() > 0) {
             contentView.setViewVisibility(R.id.big_picture, View.VISIBLE);
@@ -432,7 +407,7 @@ public class NotificationService {
     }
 
     private PendingIntent getNavigationPendingIntent(Context context, Notification message, String notificationStr, String subscriptionStr, int targetIndex, int requestId) {
-        Log.i("CleverPush", "NotificationService: getNavigationPendingIntent");
+        Log.i(LOG_TAG, "NotificationService: getNavigationPendingIntent");
 
         Intent intent = new Intent(context, CarouselNotificationIntentService.class);
         intent.setAction(CarouselNotificationIntentService.ACTION_CAROUSEL_IMG_CHANGE);
@@ -446,7 +421,7 @@ public class NotificationService {
         data.put("subscription", subscriptionStr);
         intent.putExtra("data", data);
 
-        return PendingIntent.getService(context, requestId, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        return PendingIntent.getService(context, requestId, intent, this.getPendingIntentFlags());
     }
 
     private PendingIntent getCarouselImageClickPendingIntent(Context context, Notification message, String notificationStr, String subscriptionStr, NotificationCarouselItem element, int requestId) {
@@ -454,40 +429,15 @@ public class NotificationService {
         bundle.putInt("notificationId", requestId);
         bundle.putSerializable("notification", message);
 
-        boolean isBroadcast = false;
-        Class<?> notificationOpenedClass;
-
-        PackageManager packageManager = context.getPackageManager();
-        Intent intent = new Intent(context, NotificationOpenedReceiver.class);
-        intent.setPackage(context.getPackageName());
-        if (packageManager.queryBroadcastReceivers(intent, 0).size() > 0) {
-            isBroadcast = true;
-            notificationOpenedClass = NotificationOpenedReceiver.class;
-        } else {
-            notificationOpenedClass = NotificationOpenedActivity.class;
-        }
-
-        Intent targetIntent = new Intent(context, notificationOpenedClass);
-        if (!isBroadcast) {
-            targetIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        }
+        Intent targetIntent = this.getTargetIntent(context);
 
         targetIntent.putExtra("notification", notificationStr);
         targetIntent.putExtra("subscription", subscriptionStr);
 
-        int requestCode = (int) System.currentTimeMillis();
-
-        PendingIntent contentIntent;
-        if (isBroadcast) {
-            contentIntent = PendingIntent.getBroadcast(context, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        } else {
-            contentIntent = PendingIntent.getActivity(context, requestCode, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        }
-
-        return contentIntent;
+        return PendingIntent.getActivity(context, this.generateRequestCode(), targetIntent, this.getPendingIntentFlags());
     }
 
-    private void setBasicNotificationData(Context context, Notification notification, RemoteViews contentView) {
+    private void setBasicNotificationData(Notification notification, RemoteViews contentView) {
         if (notification != null && contentView != null) {
             contentView.setTextViewText(R.id.notification_title, notification.getTitle());
             contentView.setTextViewText(R.id.notification_text, notification.getText());
@@ -498,27 +448,6 @@ public class NotificationService {
         if (url == null) return null;
 
         return url.substring(url.lastIndexOf('/') + 1);
-    }
-
-    private static Bitmap resizeImageForDevice(Context context, Bitmap sourceBitmap) {
-        Bitmap resizedBitmap = null;
-
-        if (sourceBitmap != null) {
-            if (sourceBitmap.getWidth() > sourceBitmap.getHeight()) {
-                DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-
-                int newWidth = displayMetrics.widthPixels;
-                int newHeight = newWidth / 2;
-
-                resizedBitmap = scaleBitmapAndKeepRation(sourceBitmap, newWidth, newHeight);
-            }
-        }
-
-        if (resizedBitmap == null) {
-            resizedBitmap = sourceBitmap;
-        }
-
-        return resizedBitmap;
     }
 
     private static Bitmap scaleBitmapAndKeepRation(Bitmap targetBmp, int reqWidthInPixels, int reqHeightInPixels) {
@@ -540,8 +469,6 @@ public class NotificationService {
 
                             DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
                             int ivWidth = displayMetrics.widthPixels;
-                            int currentBitmapWidth = bitmap.getWidth();
-                            int currentBitmapHeight = bitmap.getHeight();
 
                             bitmap = scaleBitmapAndKeepRation(bitmap, ivWidth, 90);
 
@@ -557,13 +484,13 @@ public class NotificationService {
                             }
                         }
                     } catch (IOException e) {
-                        Log.e("CleverPush", e.getMessage());
+                        Log.e(LOG_TAG, e.getMessage());
                     } finally {
                         if (fileOutputStream != null) {
                             try {
                                 fileOutputStream.close();
                             } catch (IOException e) {
-                                Log.e("CleverPush", e.getMessage());
+                                Log.e(LOG_TAG, e.getMessage());
                             }
                         }
                     }
@@ -583,15 +510,15 @@ public class NotificationService {
                 bitmap = BitmapFactory.decodeStream(inputStream);
                 inputStream.close();
             } catch (FileNotFoundException e) {
-                Log.e("CleverPush", e.getMessage());
+                Log.e(LOG_TAG, e.getMessage());
             } catch (IOException e) {
-                Log.e("CleverPush", e.getMessage());
+                Log.e(LOG_TAG, e.getMessage());
             } finally {
                 if (inputStream != null) {
                     try {
                         inputStream.close();
                     } catch (IOException e) {
-                        Log.e("CleverPush", e.getMessage());
+                        Log.e(LOG_TAG, e.getMessage());
                     }
                 }
             }

@@ -1,5 +1,7 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -53,7 +55,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 
 					CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, null);
 				} catch (JSONException e) {
-					Log.e("CleverPush", "Error generating geo-fence json", e);
+					Log.e(LOG_TAG, "Error generating geo-fence json", e);
 				}
 			}
 		}

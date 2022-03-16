@@ -1,5 +1,7 @@
 package com.cleverpush.manager;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -23,7 +25,7 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
             if (registrationId == null) {
                 adm.startRegister();
             } else {
-                Log.d("CleverPush", "ADM Already registered with ID:" + registrationId);
+                Log.d(LOG_TAG, "ADM Already registered with ID:" + registrationId);
                 this.syncSubscription(registrationId, subscribedListener);
             }
         }).start();

@@ -1,8 +1,8 @@
 package com.cleverpush;
 
 public class CustomAttribute {
-    private String id;
-    private String name;
+    private final String id;
+    private final String name;
 
     public CustomAttribute(String id, String name) {
         this.id = id;

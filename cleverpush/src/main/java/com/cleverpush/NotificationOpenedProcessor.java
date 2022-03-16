@@ -1,7 +1,10 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -35,10 +38,15 @@ public class NotificationOpenedProcessor {
         cleverPush.fireNotificationOpenedListener(result);
 
         // open launcher activity
-        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-        if (launchIntent != null) {
-            launchIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT/* | Intent.FLAG_ACTIVITY_NEW_TASK*/);
-            context.startActivity(launchIntent);
+        boolean shouldStartActivity = cleverPush.notificationOpenShouldStartActivity();
+        Log.d(LOG_TAG, "NotificationOpenedProcessor shouldStartActivity: " + shouldStartActivity);
+
+        if (shouldStartActivity) {
+            Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+            if (launchIntent != null) {
+                launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                context.startActivity(launchIntent);
+            }
         }
 
 		BadgeHelper.update(context, cleverPush.getIncrementBadge());

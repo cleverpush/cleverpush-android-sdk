@@ -1,5 +1,7 @@
 package com.cleverpush.banner;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -41,11 +43,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class AppBannerModule {
-    @FunctionalInterface
-    private interface OnBannerLoaded {
-        void notify(List<Banner> banners);
-    }
-
     private static final String TAG = "CleverPush/AppBanner";
     private static final String APP_BANNER_SHARED_PREFS = "com.cleverpush.appbanner";
     private static final String SHOWN_APP_BANNER_PREF = "shownAppBanners";
@@ -54,7 +51,7 @@ public class AppBannerModule {
     private static AppBannerModule instance;
 
     private String channel;
-    private boolean showDrafts;
+    private final boolean showDrafts;
     private long lastSessionTimestamp;
     private int sessions;
     private boolean loading = false;
@@ -62,7 +59,7 @@ public class AppBannerModule {
     private Collection<AppBannerPopup> pendingBanners = new ArrayList<>();
     private Collection<Banner> banners = null;
     private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
-    private Map<String, String> events = new HashMap<>();
+    private final Map<String, String> events = new HashMap<>();
 
     private final HandlerThread handlerThread = new HandlerThread("AppBannerModule");
     private final Handler handler;
@@ -176,7 +173,7 @@ public class AppBannerModule {
             jsonBody.put("channelId", channel);
             jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
-            Log.e("CleverPush", ex.getMessage(), ex);
+            Log.e(LOG_TAG, ex.getMessage(), ex);
         }
 
         CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody, new SendBannerEventResponseHandler().getResponseHandler());
@@ -448,13 +445,13 @@ public class AppBannerModule {
 
             if (banner.getStartAt().before(now)) {
                 if (banner.getDelaySeconds() > 0) {
-                    getHandler().postDelayed(() -> showBanner(bannerPopup), 1000 * banner.getDelaySeconds());
+                    getHandler().postDelayed(() -> showBanner(bannerPopup), 1000L * banner.getDelaySeconds());
                 } else {
                     getHandler().post(() -> showBanner(bannerPopup));
                 }
             } else {
                 long delay = banner.getStartAt().getTime() - now.getTime();
-                getHandler().postDelayed(() -> showBanner(bannerPopup), delay + (1000 * banner.getDelaySeconds()));
+                getHandler().postDelayed(() -> showBanner(bannerPopup), delay + (1000L * banner.getDelaySeconds()));
             }
         }
     }

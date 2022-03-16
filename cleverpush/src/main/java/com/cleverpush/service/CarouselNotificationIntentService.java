@@ -1,5 +1,7 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
@@ -27,7 +29,7 @@ public class CarouselNotificationIntentService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         String action = intent.getAction();
 
-        Log.i("CleverPush", "CarouselNotificationIntentService: onHandleIntent: " + action);
+        Log.i(LOG_TAG, "CarouselNotificationIntentService: onHandleIntent: " + action);
 
         if (action == null) return;
 

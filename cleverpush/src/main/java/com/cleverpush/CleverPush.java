@@ -1,5 +1,7 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
@@ -107,7 +109,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.20.2";
+    public static final String SDK_VERSION = "1.21.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -390,7 +392,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         }
 
         if (this.channelId != null) {
-            Log.d("CleverPush", "Initializing with Channel ID: " + this.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
+            Log.d(LOG_TAG, "Initializing with Channel ID: " + this.channelId + " (SDK " + CleverPush.SDK_VERSION + ")");
 
             String storedChannelId = getChannelId(getContext());
             String storedSubscriptionId = getSubscriptionId(getContext());
@@ -401,7 +403,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 try {
                     this.clearSubscriptionData();
                 } catch (Throwable t) {
-                    Log.e("CleverPush", "Error", t);
+                    Log.e(LOG_TAG, "Error", t);
                 }
             }
             addOrUpdateChannelId(getContext(), this.channelId);
@@ -409,7 +411,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             // get channel config
             getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId);
         } else {
-            Log.d("CleverPush", "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: " + getContext().getPackageName());
+            Log.d(LOG_TAG, "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: " + getContext().getPackageName());
             // get channel config
             getChannelConfigFromBundleId("/channel-config?bundleId=" + getContext().getPackageName() + "&platformName=Android", autoRegister);
         }
@@ -514,14 +516,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             boolean newSubscription = subscriptionId == null;
             this.subscribe(newSubscription);
         } else if (subscriptionId != null && !this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
-            Log.d("CleverPush", "notification authorization revoked, unsubscribing");
+            Log.d(LOG_TAG, "notification authorization revoked, unsubscribing");
             this.unsubscribe();
         } else {
             if (subscriptionId != null) {
                 Date nextSyncDate = new Date(getNextSync(sharedPreferences) * MILLISECONDS_PER_SECOND);
                 SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_ISO, Locale.getDefault());
                 String formattedDate = dateFormat.format(nextSyncDate);
-                Log.d("CleverPush", "Subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
+                Log.d(LOG_TAG, "Subscribed with ID (next sync at " + formattedDate + "): " + subscriptionId);
 
                 this.getSubscriptionManager().checkChangedPushToken(channelConfig);
             }
@@ -611,7 +613,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         }
                     }
                 } catch (Exception ex) {
-                    Log.d("CleverPush", ex.getMessage());
+                    Log.d(LOG_TAG, ex.getMessage());
                 }
             }
         });
@@ -654,7 +656,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private void savePreferencesMap(String mapKey, Map<String, Integer> inputMap) {
-        Log.d("CleverPush", "savePreferencesMap: " + mapKey + " - " + inputMap.toString());
+        Log.d(LOG_TAG, "savePreferencesMap: " + mapKey + " - " + inputMap.toString());
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         JSONObject jsonObject = new JSONObject(inputMap);
         String jsonString = jsonObject.toString();
@@ -678,7 +680,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Log.d("CleverPush", "loadPreferencesMap: " + mapKey + " - " + outputMap.toString());
+        Log.d(LOG_TAG, "loadPreferencesMap: " + mapKey + " - " + outputMap.toString());
         return outputMap;
     }
 
@@ -688,7 +690,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         try {
             URL url = new URL(urlStr);
             String pathname = url.getPath();
-            Log.d("CleverPush", "checkTags: " + pathname);
+            Log.d(LOG_TAG, "checkTags: " + pathname);
 
             this.getAvailableTags(tags -> {
                 if (tags != null) {
@@ -696,7 +698,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     for (ChannelTag tag : tags) {
                         TagsMatcher.autoAssignTagMatches(tag, pathname, params, matches -> {
                             if (matches) {
-                                Log.d("CleverPush", "checkTag: matches: YES - " + tag.getName());
+                                Log.d(LOG_TAG, "checkTag: matches: YES - " + tag.getName());
 
                                 String visitsStorageKey = "cleverpush-tag-autoAssignVisits-" + tag.getId();
                                 String sessionsStorageKey = "cleverpush-tag-autoAssignSessions-" + tag.getId();
@@ -832,7 +834,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                     }
                                 }
                             } else {
-                                Log.d("CleverPush", "checkTag: matches: NO - " + tag.getName());
+                                Log.d(LOG_TAG, "checkTag: matches: NO - " + tag.getName());
                             }
                         });
                     }
@@ -873,7 +875,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                             }
                         }
                     } catch (Exception ex) {
-                        Log.d("CleverPush", ex.getMessage());
+                        Log.d(LOG_TAG, ex.getMessage());
                     }
                 }
             });
@@ -893,7 +895,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private GoogleApiClient.OnConnectionFailedListener getOnConnectionFailedListener() {
-        return connectionResult -> Log.d("CleverPush", "GoogleApiClient onConnectionFailed");
+        return connectionResult -> Log.d(LOG_TAG, "GoogleApiClient onConnectionFailed");
     }
 
     private GoogleApiClient.ConnectionCallbacks getConnectionCallbacks() {
@@ -901,10 +903,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             @Override
             @SuppressWarnings({"MissingPermission"})
             public void onConnected(@Nullable Bundle bundle) {
-                Log.d("CleverPush", "GoogleApiClient onConnected");
+                Log.d(LOG_TAG, "GoogleApiClient onConnected");
 
                 if (geofenceList.size() > 0) {
-                    Log.d("CleverPush", "initing geofences " + geofenceList.toString());
+                    Log.d(LOG_TAG, "initing geofences " + geofenceList.toString());
 
                     GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
                     builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
@@ -913,7 +915,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                     Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
                     // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addGeofences()
-                    PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                    int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        flags |= PendingIntent.FLAG_IMMUTABLE;
+                    }
+                    PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, flags);
 
                     try {
                         LocationServices.GeofencingApi.addGeofences(
@@ -929,7 +935,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
             @Override
             public void onConnectionSuspended(int i) {
-                Log.d("CleverPush", "GoogleApiClient onConnectionSuspended");
+                Log.d(LOG_TAG, "GoogleApiClient onConnectionSuspended");
             }
         };
     }
@@ -980,7 +986,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             jsonBody.put("fcmToken", fcmToken);
             jsonBody.put("lastNotificationId", lastNotificationId);
         } catch (JSONException ex) {
-            Log.e("CleverPush", ex.getMessage(), ex);
+            Log.e(LOG_TAG, ex.getMessage(), ex);
         }
 
         CleverPushHttpClient.post("/subscription/session/start", jsonBody, new TrackSessionStartResponseHandler().getResponseHandler());
@@ -992,7 +998,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     void trackSessionEnd() {
         if (getSessionStartedTimestamp() == 0) {
-            Log.e("CleverPush", "Error tracking session end - session started timestamp is 0");
+            Log.e(LOG_TAG, "Error tracking session end - session started timestamp is 0");
             return;
         }
 
@@ -1020,18 +1026,18 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             jsonBody.put("visits", getSessionVisits());
             jsonBody.put("duration", sessionDuration);
         } catch (JSONException ex) {
-            Log.e("CleverPush", ex.getMessage(), ex);
+            Log.e(LOG_TAG, ex.getMessage(), ex);
         }
 
         CleverPushHttpClient.post("/subscription/session/end", jsonBody, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-                Log.d("CleverPush", "Session ended");
+                Log.d(LOG_TAG, "Session ended");
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
+                Log.e(LOG_TAG, "Error setting topics - HTTP " + statusCode + ": " + response);
             }
         });
     }
@@ -1057,7 +1063,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             SubscriptionManager subscriptionManager = this.getSubscriptionManager();
             subscriptionManager.subscribe(config, newSubscriptionId -> {
                 this.subscriptionInProgress = false;
-                Log.d("CleverPush", "subscribed with ID: " + newSubscriptionId);
+                Log.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
                 this.fireSubscribedListener(newSubscriptionId);
                 this.setSubscriptionId(newSubscriptionId);
 
@@ -1116,7 +1122,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 jsonBody.put("channelId", getChannelId(getContext()));
                 jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException e) {
-                Log.e("CleverPush", "Error", e);
+                Log.e(LOG_TAG, "Error", e);
             }
 
             CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody, new UnSubscribeResponseHandler(this).getResponseHandler());
@@ -1445,7 +1451,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
             }
         } catch (Exception ex) {
-            Log.e("CleverPush", ex.getMessage(), ex);
+            Log.e(LOG_TAG, ex.getMessage(), ex);
         }
         return outputMap;
     }
@@ -1474,7 +1480,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     }
                 }
             } catch (JSONException ex) {
-                Log.d("CleverPush", ex.getMessage(), ex);
+                Log.d(LOG_TAG, ex.getMessage(), ex);
             }
         }
         return tags;
@@ -1507,7 +1513,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     }
                 }
             } catch (JSONException ex) {
-                Log.d("CleverPush", ex.getMessage(), ex);
+                Log.d(LOG_TAG, ex.getMessage(), ex);
             }
         }
         return attributes;
@@ -1566,7 +1572,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     }
                 }
             } catch (JSONException ex) {
-                Log.d("CleverPush", ex.getMessage(), ex);
+                Log.d(LOG_TAG, ex.getMessage(), ex);
             }
         }
         return topics;
@@ -1653,10 +1659,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         jsonBody.put("topicsVersion", topicsVersion);
                         jsonBody.put("subscriptionId", subscriptionId);
                     } catch (JSONException ex) {
-                        Log.e("CleverPush", ex.getMessage(), ex);
+                        Log.e(LOG_TAG, ex.getMessage(), ex);
                     }
 
-                    Log.d("CleverPush", "setSubscriptionTopics: " + Arrays.toString(topicIds));
+                    Log.d(LOG_TAG, "setSubscriptionTopics: " + Arrays.toString(topicIds));
 
                     CleverPushHttpClient.post("/subscription/sync/" + getChannelId(getContext()), jsonBody, new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicIds, completionListener));
                 }
@@ -1674,7 +1680,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     jsonBody.put("value", value);
                     jsonBody.put("subscriptionId", subscriptionId);
                 } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
 
                 Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
@@ -1695,7 +1701,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     jsonBody.put("value", value);
                     jsonBody.put("subscriptionId", subscriptionId);
                 } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
 
                 Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
@@ -1706,7 +1712,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
                     arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
                 } catch (Exception ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
 
                 arrayList.add(value);
@@ -1736,13 +1742,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         editor.commit();
                     }
                 } catch (Exception ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error pushing attribute value - HTTP " + statusCode);
+                Log.e(LOG_TAG, "Error pushing attribute value - HTTP " + statusCode);
             }
         };
     }
@@ -1757,7 +1763,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     jsonBody.put("value", value);
                     jsonBody.put("subscriptionId", subscriptionId);
                 } catch (JSONException ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
 
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
@@ -1770,7 +1776,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
                     arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
                 } catch (Exception ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
 
                 String[] arrayString = arrayList.toArray(new String[0]);
@@ -1799,13 +1805,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         editor.commit();
                     }
                 } catch (Exception ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error pulling attribute value - HTTP " + statusCode);
+                Log.e(LOG_TAG, "Error pulling attribute value - HTTP " + statusCode);
             }
         };
     }
@@ -1819,7 +1825,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
             arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
         } catch (Exception ex) {
-            Log.e("CleverPush", ex.getMessage(), ex);
+            Log.e(LOG_TAG, ex.getMessage(), ex);
         }
 
         return arrayList.contains(value);
@@ -1911,7 +1917,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 }
 
                 if (event == null) {
-                    Log.e("CleverPush", "Event not found");
+                    Log.e(LOG_TAG, "Event not found");
                     return;
                 }
 
@@ -1924,7 +1930,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                             jsonBody.put("amount", amount);
                             jsonBody.put("subscriptionId", subscriptionId);
                         } catch (JSONException ex) {
-                            Log.e("CleverPush", ex.getMessage(), ex);
+                            Log.e(LOG_TAG, ex.getMessage(), ex);
                         }
 
                         CleverPushHttpClient.post("/subscription/conversion", jsonBody, new TrackEventResponseHandler().getResponseHandler(eventName));
@@ -1932,7 +1938,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 });
 
             } catch (Exception ex) {
-                Log.e("CleverPush", ex.getMessage());
+                Log.e(LOG_TAG, ex.getMessage());
             }
         });
     }
@@ -1947,7 +1953,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             jsonBody.put("notificationId", notificationId);
             jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException e) {
-            Log.e("CleverPush", "Error generating delivered json", e);
+            Log.e(LOG_TAG, "Error generating delivered json", e);
         }
 
         CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
@@ -1963,7 +1969,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             jsonBody.put("notificationId", notificationId);
             jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException e) {
-            Log.e("CleverPush", "Error generating clicked json", e);
+            Log.e(LOG_TAG, "Error generating clicked json", e);
         }
 
         CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
@@ -2002,7 +2008,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             jsonBody.put("platformName", "Android");
             jsonBody.put("browserType", "SDK");
         } catch (JSONException e) {
-            Log.e("CleverPush", "Error setting confirm alert shown", e);
+            Log.e(LOG_TAG, "Error setting confirm alert shown", e);
         }
 
         CleverPushHttpClient.post("/channel/confirm-alert", jsonBody, null);
@@ -2036,7 +2042,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     }
                 }
             } catch (Exception ex) {
-                Log.d("CleverPush", ex.getMessage());
+                Log.d(LOG_TAG, ex.getMessage());
             }
         });
     }
@@ -2079,7 +2085,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             topicsDialogShowWhenNewAdded = channelConfig.optBoolean("topicsDialogShowWhenNewAdded");
 
             if (channelTopics == null || channelTopics.length() == 0) {
-                Log.w("CleverPush", "CleverPush: showTopicsDialog: No topics found. Create some first in the CleverPush channel settings.");
+                Log.w(LOG_TAG, "CleverPush: showTopicsDialog: No topics found. Create some first in the CleverPush channel settings.");
                 return;
             }
 
@@ -2103,7 +2109,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 AlertDialog.Builder alertBuilder = getTopicAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics, hasDeSelectAllInitial, checkboxLayout, unsubscribeCheckbox, selectedTopics);
                 AlertDialog alert = alertBuilder.create();
                 alert.setOnShowListener(dialog -> {
-                    Log.d("CleverPush", "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
+                    Log.d(LOG_TAG, "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
                     showingTopicsDialog = true;
                 });
                 alert.show();
@@ -2155,7 +2161,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                         JSONObject channelTopic = (JSONObject) channelTopics.get(j);
                         channelTopic.put("defaultUnchecked", true);
                     } catch (JSONException e) {
-                        Log.e("CleverPush", e.getLocalizedMessage());
+                        Log.e(LOG_TAG, e.getLocalizedMessage());
                     }
                 }
             } else {
@@ -2265,11 +2271,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     parentLayout.addView(checkbox);
                     setupTopicChildCheckboxes(parentLayout, unsubscribeCheckbox, channelTopics, deselectAll, nightModeFlags, selectedTopics, id, checkbox);
                 } else {
-                    Log.e("CleverPush", "topic is null");
+                    Log.e(LOG_TAG, "topic is null");
                 }
             }
         } catch (JSONException e) {
-            Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
+            Log.e(LOG_TAG, "Error getting channel topics " + e.getMessage());
         }
     }
 
@@ -2334,7 +2340,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 parentLayout.addView(childLayout);
             }
         } catch (JSONException e) {
-            Log.e("CleverPush", "Error getting channel topics " + e.getMessage());
+            Log.e(LOG_TAG, "Error getting channel topics " + e.getMessage());
         }
     }
 
@@ -2411,7 +2417,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     }
                 }
             } else {
-                Log.e("CleverPush", "topic is null");
+                Log.e(LOG_TAG, "topic is null");
             }
         }
         return false;
@@ -2519,7 +2525,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void enableDevelopmentMode() {
-        Log.w("CleverPush", "CleverPush SDK is running in development mode. Only use this for testing!");
+        Log.w(LOG_TAG, "CleverPush SDK is running in development mode. Only use this for testing!");
         this.developmentMode = true;
     }
 
@@ -2592,7 +2598,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         try {
             return getSharedPreferences(context).getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         } catch (Exception e) {
-            Log.e("CleverPush", e.getLocalizedMessage());
+            Log.e(LOG_TAG, e.getLocalizedMessage());
             return null;
         }
     }

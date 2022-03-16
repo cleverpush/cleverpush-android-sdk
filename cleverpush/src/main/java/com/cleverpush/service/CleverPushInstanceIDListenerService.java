@@ -1,5 +1,7 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.util.Log;
 
 // FirebaseInstanceIdService was removed in firebase-messaging:18.0.0
@@ -7,6 +9,6 @@ import android.util.Log;
 public class CleverPushInstanceIDListenerService {
 
     public void CleverPushInstanceIDListenerService() {
-        Log.w("CleverPush", "CleverPushInstanceIDListenerService is deprecated. Please remove it from your AndroidManifest.xml");
+        Log.w(LOG_TAG, "CleverPushInstanceIDListenerService is deprecated. Please remove it from your AndroidManifest.xml");
     }
 }

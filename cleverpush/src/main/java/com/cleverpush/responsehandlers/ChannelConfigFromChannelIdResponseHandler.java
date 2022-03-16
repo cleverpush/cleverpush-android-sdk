@@ -1,5 +1,7 @@
 package com.cleverpush.responsehandlers;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -35,7 +37,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
                     cleverPush.initFeatures();
 
                 } catch (Throwable ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
             }
 

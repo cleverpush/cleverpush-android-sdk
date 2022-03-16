@@ -1,5 +1,7 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -67,7 +69,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
                 if (addTagCompletedListener != null) {
                     addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);
                 }
-                Log.d("CleverPush", "Subscription already has tag - skipping API call " + tagIds[currentPositionOfTagToAdd]);
+                Log.d(LOG_TAG, "Subscription already has tag - skipping API call " + tagIds[currentPositionOfTagToAdd]);
                 return;
             }
 
@@ -77,7 +79,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
                 jsonBody.put("tagId", tagIds[currentPositionOfTagToAdd]);
                 jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException ex) {
-                Log.e("CleverPush", ex.getMessage(), ex);
+                Log.e(LOG_TAG, ex.getMessage(), ex);
             }
 
             tags.add(tagIds[currentPositionOfTagToAdd]);

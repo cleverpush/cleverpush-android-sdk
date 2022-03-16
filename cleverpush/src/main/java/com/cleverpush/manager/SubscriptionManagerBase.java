@@ -1,5 +1,7 @@
 package com.cleverpush.manager;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -41,7 +43,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
     }
 
     void syncSubscription(String token, SubscribedListener subscribedListener, String senderId, boolean isRetry) {
-        Log.d("CleverPush", "syncSubscription");
+        Log.d(LOG_TAG, "syncSubscription");
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
 
@@ -56,7 +58,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         if (channelId == null) {
-            Log.d("CleverPush", "channelId in preferences not found");
+            Log.d(LOG_TAG, "channelId in preferences not found");
             return;
         }
 
@@ -114,14 +116,14 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                 jsonBody.put("topicsVersion", topicsVersion);
             }
         } catch (JSONException e) {
-            Log.e("CleverPush", "Error", e);
+            Log.e(LOG_TAG, "Error", e);
         }
 
         CleverPushHttpClient.post("/subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 try {
-                    Log.d("CleverPush", "sync response: " + response);
+                    Log.d(LOG_TAG, "sync response: " + response);
 
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.has("id")) {
@@ -157,7 +159,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                         }
                     }
                 } catch (Throwable t) {
-                    Log.e("CleverPush", "Error", t);
+                    Log.e(LOG_TAG, "Error", t);
                 }
             }
 
@@ -168,7 +170,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                     syncSubscription(token, subscribedListener, senderId, true);
                     return;
                 }
-                Log.e("CleverPush", "Failed while sync subscription request - " + statusCode + " - " + response, t);
+                Log.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, t);
             }
         });
     }

@@ -9,7 +9,10 @@
         <activity
             android:name="com.cleverpush.NotificationOpenedActivity"
             android:exported="true"
-            android:noHistory="true" />
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity
             android:name=".stories.StoryDetailActivity"

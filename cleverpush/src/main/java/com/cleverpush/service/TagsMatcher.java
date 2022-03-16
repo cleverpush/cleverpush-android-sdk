@@ -1,5 +1,7 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.util.Log;
 import android.webkit.WebView;
 
@@ -32,29 +34,25 @@ public class TagsMatcher {
 
         if (tag.getAutoAssignFunction() != null && params != null) {
             try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                    (ActivityLifecycleListener.currentActivity).runOnUiThread(() -> {
-                        WebView webview = new WebView(CleverPush.context);
-                        webview.getSettings().setJavaScriptEnabled(true);
-                        Gson gson = new Gson();
-                        Type gsonType = new TypeToken<Map<String, ?>>(){}.getType();
-                        String paramsString = gson.toJson(params, gsonType);
-                        String function = "(function(params) { return (" + tag.getAutoAssignFunction() + ") ? 'true' : 'false'; })(" + paramsString + ");";
-                        Log.d("CleverPush", "autoAssignTag function: " + function);
-                        webview.evaluateJavascript(function, result -> {
-                            Log.d("CleverPush", "autoAssignTag function result: " + result);
-                            if (result.equals("true") || result.equals("\"true\"")) {
-                                callback.tagMatches(true);
-                            } else {
-                                callback.tagMatches(false);
-                            }
-                        });
+                (ActivityLifecycleListener.currentActivity).runOnUiThread(() -> {
+                    WebView webview = new WebView(CleverPush.context);
+                    webview.getSettings().setJavaScriptEnabled(true);
+                    Gson gson = new Gson();
+                    Type gsonType = new TypeToken<Map<String, ?>>(){}.getType();
+                    String paramsString = gson.toJson(params, gsonType);
+                    String function = "(function(params) { return (" + tag.getAutoAssignFunction() + ") ? 'true' : 'false'; })(" + paramsString + ");";
+                    Log.d(LOG_TAG, "autoAssignTag function: " + function);
+                    webview.evaluateJavascript(function, result -> {
+                        Log.d(LOG_TAG, "autoAssignTag function result: " + result);
+                        if (result.equals("true") || result.equals("\"true\"")) {
+                            callback.tagMatches(true);
+                        } else {
+                            callback.tagMatches(false);
+                        }
                     });
-                } else {
-                    callback.tagMatches(false);
-                }
+                });
             } catch (Exception ex) {
-                Log.d("CleverPush", "Exception", ex);
+                Log.d(LOG_TAG, "Exception", ex);
                 callback.tagMatches(false);
             }
             return;
@@ -67,6 +65,5 @@ public class TagsMatcher {
         }
 
         callback.tagMatches(false);
-        return;
     }
 }

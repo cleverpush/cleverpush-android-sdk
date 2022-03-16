@@ -1,5 +1,7 @@
 package com.cleverpush.responsehandlers;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.util.Log;
 
 import com.cleverpush.CleverPushHttpClient;
@@ -10,12 +12,12 @@ public class TrackSessionStartResponseHandler {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-                Log.d("CleverPush", "Session started");
+                Log.d(LOG_TAG, "Session started");
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
+                Log.e(LOG_TAG, "Error setting topics - HTTP " + statusCode + ": " + response);
             }
         };
     }

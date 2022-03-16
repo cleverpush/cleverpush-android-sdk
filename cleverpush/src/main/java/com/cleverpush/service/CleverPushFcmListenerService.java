@@ -1,6 +1,10 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.cleverpush.Notification;
 import com.cleverpush.Subscription;
@@ -12,13 +16,13 @@ import java.util.Map;
 
 public class CleverPushFcmListenerService extends FirebaseMessagingService {
     @Override
-    public void onMessageReceived(RemoteMessage message) {
-        Log.d("CleverPush", "onMessageReceived");
+    public void onMessageReceived(@NonNull RemoteMessage message) {
+        Log.d(LOG_TAG, "onMessageReceived");
 
         try {
 			Map<String, String> data = message.getData();
 			if (data.size() > 0) {
-				Log.d("CleverPush", "Notification data: " + data.toString());
+				Log.d(LOG_TAG, "Notification data: " + data.toString());
 
 				String notificationStr = (String) data.get("notification");
 				String subscriptionStr = (String) data.get("subscription");
@@ -33,10 +37,15 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
 				}
 
 			} else {
-				Log.e("CleverPush", "Notification data is empty");
+				Log.e(LOG_TAG, "Notification data is empty");
 			}
 		} catch (Exception exception) {
-			Log.e("CleverPush", "Error in FCM onMessageReceived handler", exception);
+			Log.e(LOG_TAG, "Error in FCM onMessageReceived handler", exception);
 		}
     }
+
+    @Override
+	public void onNewToken(@NonNull String token) {
+
+	}
 }

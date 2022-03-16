@@ -1,5 +1,7 @@
 package com.cleverpush.util;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -13,7 +15,7 @@ public class MetaDataUtils {
             ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             return ai.metaData;
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e("CleverPush", "Manifest application info not found", e);
+            Log.e(LOG_TAG, "Manifest application info not found", e);
         }
         return null;
     }

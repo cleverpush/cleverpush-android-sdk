@@ -1,5 +1,7 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -43,7 +45,7 @@ public class StoredNotificationsService {
                 List<Notification> notifications = gson.fromJson(notificationsJson, NotificationList.class);
                 return new HashSet<>(notifications);
             } catch (Exception ex) {
-                Log.e("CleverPush", "error while getting stored notifications", ex);
+                Log.e(LOG_TAG, "error while getting stored notifications", ex);
             }
         }
 
@@ -64,7 +66,7 @@ public class StoredNotificationsService {
         StringBuilder url = new StringBuilder("/channel/" + channelId + "/received-notifications?limit=" + limit + "&skip=" + skip);
         ArrayList<String> subscriptionTopics = new ArrayList<String>(StoredNotificationsService.getSubscriptionTopics(sharedPreferences));
 
-        Log.d("CleverPush", "getReceivedNotificationsFromApi: " + url);
+        Log.d(LOG_TAG, "getReceivedNotificationsFromApi: " + url);
 
         for (int i = 0; i < subscriptionTopics.size(); i++) {
             url.append("&topics[]=").append(subscriptionTopics.get(i));
@@ -83,14 +85,14 @@ public class StoredNotificationsService {
                         );
                         notificationFromApiCallbackListener.ready(notifications);
                     } catch (Exception ex) {
-                        Log.e("CleverPush", "error while getting stored notifications", ex);
+                        Log.e(LOG_TAG, "error while getting stored notifications", ex);
                     }
                 }
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e("CleverPush", "Error got Response - HTTP " + statusCode);
+                Log.e(LOG_TAG, "Error got Response - HTTP " + statusCode);
             }
         });
     }

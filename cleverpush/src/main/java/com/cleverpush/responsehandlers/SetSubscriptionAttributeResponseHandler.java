@@ -1,5 +1,7 @@
 package com.cleverpush.responsehandlers;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -32,7 +34,7 @@ public class SetSubscriptionAttributeResponseHandler {
                         editor.commit();
                     }
                 } catch (Exception ex) {
-                    Log.e("CleverPush", ex.getMessage(), ex);
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
             }
 

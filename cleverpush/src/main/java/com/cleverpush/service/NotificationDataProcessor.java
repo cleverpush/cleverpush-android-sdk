@@ -12,6 +12,7 @@ import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.Subscription;
+import com.cleverpush.util.LifecycleUtils;
 import com.cleverpush.util.LimitedSizeQueue;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -22,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static com.cleverpush.Constants.LOG_TAG;
 import static com.cleverpush.service.NotificationExtenderService.EXTENDER_SERVICE_JOB_ID;
 
 public class NotificationDataProcessor {
@@ -57,7 +59,7 @@ public class NotificationDataProcessor {
             if (callbackReceivedListener) {
                 dontShowNotification = !cleverPush.fireNotificationReceivedCallbackListener(result);
             } else {
-                if (NotificationService.getInstance().applicationInForeground(context)) {
+                if (LifecycleUtils.applicationInForeground(context)) {
                     dontShowNotification = cleverPush.fireNotificationReceivedListener(result);
                 } else {
                     cleverPush.fireNotificationReceivedListener(result);
@@ -65,7 +67,7 @@ public class NotificationDataProcessor {
             }
 
         } catch (Exception e) {
-            Log.e("CleverPush", "Error checking if application is in foreground", e);
+            Log.e(LOG_TAG, "Error checking if application is in foreground", e);
         }
 
         // do not show silent notifications
@@ -119,7 +121,7 @@ public class NotificationDataProcessor {
             editor.putString(CleverPushPreferences.LAST_NOTIFICATION_ID, notificationId);
             editor.commit();
         } catch (Exception e) {
-            Log.e("CleverPush", "Error saving notification to shared preferences", e);
+            Log.e(LOG_TAG, "Error saving notification to shared preferences", e);
         }
     }
 

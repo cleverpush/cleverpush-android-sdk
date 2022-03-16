@@ -1,11 +1,14 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.util.Log;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -19,7 +22,7 @@ public class CleverPushHttpClient {
     }
 
     public static String BASE_URL = "https://api.cleverpush.com";
-    private static final int TIMEOUT = 120000;
+    private static final int TIMEOUT = 120_000;
 
     public static void post(final String url, final JSONObject jsonBody, final ResponseHandler responseHandler) {
         try {
@@ -38,7 +41,7 @@ public class CleverPushHttpClient {
         int httpResponse = -1;
         String json = null;
 
-        Log.d("CleverPush", "[HTTP] " + (method == null ? "GET" : method) + ": " + url + (jsonBody != null ? (" " + jsonBody.toString()) : ""));
+        Log.d(LOG_TAG, "[HTTP] " + (method == null ? "GET" : method) + ": " + url + (jsonBody != null ? (" " + jsonBody.toString()) : ""));
 
         try {
             con = (HttpURLConnection) new URL(BASE_URL + url).openConnection();
@@ -73,7 +76,7 @@ public class CleverPushHttpClient {
             if (jsonBody != null) {
                 String strJsonBody = jsonBody.toString();
 
-                byte[] sendBytes = strJsonBody.getBytes("UTF-8");
+                byte[] sendBytes = strJsonBody.getBytes(StandardCharsets.UTF_8);
                 con.setFixedLengthStreamingMode(sendBytes.length);
 
                 OutputStream outputStream = con.getOutputStream();

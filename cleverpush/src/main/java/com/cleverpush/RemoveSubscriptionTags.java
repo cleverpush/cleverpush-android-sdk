@@ -1,5 +1,7 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -68,7 +70,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
                 jsonBody.put("tagId", tagIds[currentPositionOfTagToRemove]);
                 jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException ex) {
-                Log.e("CleverPush", ex.getMessage(), ex);
+                Log.e(LOG_TAG, ex.getMessage(), ex);
             }
 
             tags = this.getSubscriptionTags();

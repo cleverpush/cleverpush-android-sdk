@@ -1,5 +1,7 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.util.Log;
 
 import com.cleverpush.CleverPush;
@@ -15,7 +17,7 @@ import com.huawei.hms.push.RemoteMessage;
 public class CleverPushHmsListenerService extends HmsMessageService {
     @Override
     public void onNewToken(String token) {
-        Log.d("CleverPush", "CleverPushHmsListenerService onNewToken: " + token);
+        Log.d(LOG_TAG, "CleverPushHmsListenerService onNewToken: " + token);
         SubscriptionManager manager = CleverPush.getInstance(this).getSubscriptionManager();
         if (manager.getType() == SubscriptionManager.SubscriptionManagerType.HMS) {
             ((SubscriptionManagerHMS) manager).tokenCallback(token);
