@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.21.1
+* Fixed topics dialog scrolling
+
 ## 1.21.0
 * Optimized Activity resume behaviour when notifications are opened
 * Implemented meta data entry for disabling default activity launching: `<meta-data android:name="com.cleverpush.notification_open_activity_disabled" android:value="false" />`

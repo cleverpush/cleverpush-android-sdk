@@ -23,6 +23,7 @@ import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -109,7 +110,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.21.0";
+    public static final String SDK_VERSION = "1.21.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -2097,6 +2098,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 LinearLayout checkboxLayout = getTopicCheckboxLayout();
                 LinearLayout parentLayout = getTopicParentLayout();
 
+                ScrollView scrollView = new ScrollView(context);
+                LinearLayout.LayoutParams scrollViewLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                scrollViewLayoutParams.setMargins(45, 45, 45, 45);
+                scrollView.setLayoutParams(scrollViewLayoutParams);
+                scrollView.addView(parentLayout);
+
                 CheckBox unsubscribeCheckbox = null;
                 if (showUnsubscribeCheckbox) {
                     unsubscribeCheckbox = getTopicCheckbox(getNightModeFlags(), context.getText(R.string.deselect_all));
@@ -2104,7 +2111,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                 setTopicCheckboxList(parentLayout, channelTopics, unsubscribeCheckbox, hasDeSelectAll(), getNightModeFlags(), selectedTopics);
 
-                checkboxLayout.addView(parentLayout);
+                checkboxLayout.addView(scrollView);
 
                 AlertDialog.Builder alertBuilder = getTopicAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics, hasDeSelectAllInitial, checkboxLayout, unsubscribeCheckbox, selectedTopics);
                 AlertDialog alert = alertBuilder.create();
@@ -2203,7 +2210,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private LinearLayout getTopicParentLayout() {
         LinearLayout parentLayout = new LinearLayout(context);
         LinearLayout.LayoutParams parentLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        parentLayoutParams.setMargins(45, 45, 45, 45);
         parentLayout.setLayoutParams(parentLayoutParams);
         parentLayout.setOrientation(LinearLayout.VERTICAL);
         return parentLayout;
