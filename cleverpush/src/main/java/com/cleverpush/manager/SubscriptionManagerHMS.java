@@ -67,7 +67,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
     }
 
     @Override
-    public void checkChangedPushToken(JSONObject channelConfig) {
+    public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
         String existingToken = sharedPreferences.getString(CleverPushPreferences.HMS_TOKEN, null);
 
@@ -82,7 +82,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
             }
 
             try {
-                String newToken = getToken();
+                String newToken = changedToken != null ? changedToken : getToken();
                 if (newToken != null && !newToken.equals(existingToken)) {
                     this.syncSubscription(newToken, subscriptionId -> Log.i(LOG_TAG, "Synchronized new HMS token: " + newToken));
                 } else {

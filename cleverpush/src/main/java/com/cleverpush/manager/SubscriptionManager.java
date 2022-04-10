@@ -16,5 +16,7 @@ public interface SubscriptionManager {
 
     void checkChangedPushToken(JSONObject channelConfig);
 
+    void checkChangedPushToken(JSONObject channelConfig, String changedToken);
+
     SubscriptionManagerType getType();
 }

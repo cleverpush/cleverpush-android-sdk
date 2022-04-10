@@ -37,7 +37,6 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         super(context, SubscriptionManagerType.FCM);
     }
 
-
     private String getToken(String senderId) throws Throwable {
         initFirebaseApp(senderId);
 
@@ -143,7 +142,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     }
 
     @Override
-    public void checkChangedPushToken(JSONObject channelConfig) {
+    public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
         String existingToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
 
@@ -159,7 +158,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
             }
 
             try {
-                String newToken = getTokenAttempt(senderId);
+                String newToken = changedToken != null ? changedToken : getTokenAttempt(senderId);
                 if (newToken != null && !newToken.equals(existingToken)) {
                     this.syncSubscription(newToken, subscriptionId -> Log.i(LOG_TAG, "Synchronized new FCM token: " + newToken));
                 } else {

@@ -178,4 +178,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
     public SubscriptionManagerType getType() {
         return this.type;
     }
+
+    @Override
+    public void checkChangedPushToken(JSONObject channelConfig) {
+        this.checkChangedPushToken(channelConfig, null);
+    }
 }

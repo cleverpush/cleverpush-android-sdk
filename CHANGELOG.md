@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.21.2
+* Implemented FCM `onNewToken` listener
+
 ## 1.21.1
 * Fixed topics dialog scrolling
 

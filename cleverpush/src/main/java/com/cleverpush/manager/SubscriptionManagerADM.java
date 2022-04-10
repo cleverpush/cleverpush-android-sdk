@@ -32,7 +32,7 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
     }
 
     @Override
-    public void checkChangedPushToken(JSONObject channelConfig) {
+    public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
 
     }
 }
