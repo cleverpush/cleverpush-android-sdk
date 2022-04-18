@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.22.0
+* Implemented `triggerFollowUpEvent` method
+
 ## 1.21.2
 * Implemented FCM `onNewToken` listener
 

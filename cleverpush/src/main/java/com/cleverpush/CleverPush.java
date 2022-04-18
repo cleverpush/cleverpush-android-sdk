@@ -67,6 +67,7 @@ import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
 import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
+import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
 import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.StoredNotificationsCursor;
@@ -110,7 +111,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.21.2";
+    public static final String SDK_VERSION = "1.22.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -1938,6 +1939,45 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     }
                 });
 
+            } catch (Exception ex) {
+                Log.e(LOG_TAG, ex.getMessage());
+            }
+        });
+    }
+
+    public void triggerFollowUpEvent(String eventName) {
+        this.triggerFollowUpEvent(eventName, null);
+    }
+
+    public void triggerFollowUpEvent(String eventName, Map<String, String> parameters) {
+        this.waitForTrackingConsent(() -> {
+            try {
+                this.getSubscriptionId(subscriptionId -> {
+                    if (subscriptionId != null) {
+                        JSONObject jsonParameters = new JSONObject();
+                        if (parameters != null) {
+                            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+                                try {
+                                    jsonParameters.put(entry.getKey(), entry.getValue());
+                                } catch (JSONException ex) {
+                                    Log.e(LOG_TAG, ex.getMessage(), ex);
+                                }
+                            }
+                        }
+
+                        JSONObject jsonBody = new JSONObject();
+                        try {
+                            jsonBody.put("channelId", this.channelId);
+                            jsonBody.put("name", eventName);
+                            jsonBody.put("parameters", jsonParameters);
+                            jsonBody.put("subscriptionId", subscriptionId);
+                        } catch (JSONException ex) {
+                            Log.e(LOG_TAG, ex.getMessage(), ex);
+                        }
+
+                        CleverPushHttpClient.post("/subscription/event", jsonBody, new TriggerFollowUpEventResponseHandler().getResponseHandler(eventName));
+                    }
+                });
             } catch (Exception ex) {
                 Log.e(LOG_TAG, ex.getMessage());
             }
