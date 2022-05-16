@@ -8,26 +8,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BannerAction {
-	private String type;
-	private String name;
+    private String type;
+    private String name;
     private String url;
     private String urlType;
     private boolean dismiss;
-	private boolean openInWebView;
+    private boolean openInWebView;
     private List<String> tags;
     private List<String> topics;
     private String attributeId;
     private String attributeValue;
+    private String screen;
 
     private BannerAction() {}
 
-	public String getType() { return type; }
+    public String getType() { return type; }
+    public String getScreen() { return screen; }
 
     public String getName() { return name; }
 
-	public String getUrl() { return url; }
+    public String getUrl() { return url; }
 
-	public String getUrlType() { return urlType; }
+    public String getUrlType() { return urlType; }
 
     public boolean getDismiss() { return dismiss; }
 
@@ -50,6 +52,7 @@ public class BannerAction {
             banner.url = json.optString("url");
             banner.urlType = json.optString("urlType");
             banner.dismiss = json.optBoolean("dismiss");
+            banner.screen = json.optString("screen");
 
             if (json.has("openInWebview")) {
                 banner.openInWebView = json.optBoolean("openInWebview");
