@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.22.1
+* Implemented `isAppOpen` method used by Cordova SDK
+
 ## 1.22.0
 * Implemented `triggerFollowUpEvent` method
 
