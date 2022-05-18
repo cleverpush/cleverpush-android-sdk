@@ -1,5 +1,7 @@
 package com.cleverpush.banner.models;
 
+import android.util.Log;
+
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.banner.models.blocks.BannerBlock;
 
@@ -52,6 +54,9 @@ public class Banner {
     private List<HashMap<String, String>> attributes;
     private boolean marginEnabled;
     private boolean closeButtonEnabled;
+    private BannerAppVersionFilterRelation bannerAppVersionFilterRelation;
+    private String appVersionFilterValue;
+    private boolean enableMultipleScreens;
 
     private Banner() {
     }
@@ -102,6 +107,10 @@ public class Banner {
 
     public BannerDismissType getDismissType() {
         return dismissType;
+    }
+
+    public BannerAppVersionFilterRelation getBannerAppVersionFilterRelation() {
+        return bannerAppVersionFilterRelation;
     }
 
     public int getDismissTimeout() {
@@ -168,6 +177,18 @@ public class Banner {
         return positionType;
     }
 
+    public String getAppVersionFilterValue() {
+        return appVersionFilterValue;
+    }
+
+    public boolean getEnableMultipleScreens() {
+        return enableMultipleScreens;
+    }
+
+    public void setAppVersionFilterValue(String appVersionFilterValue) {
+        this.appVersionFilterValue = appVersionFilterValue;
+    }
+
     public void setPositionType(String positionType) {
         this.positionType = positionType;
     }
@@ -200,6 +221,7 @@ public class Banner {
         return attributes;
     }
 
+
     public boolean isMarginEnabled() {
         return marginEnabled;
     }
@@ -223,7 +245,9 @@ public class Banner {
         banner.screens = new LinkedList<>();
         banner.content = json.optString("content");
         banner.contentType = json.optString("contentType");
-        banner.carouselEnabled = json.optBoolean("carouselEnabled");
+
+
+        Log.e("Tag 2",""+json);
 
         JSONArray blockArray = json.getJSONArray("blocks");
         for (int i = 0; i < blockArray.length(); ++i) {
@@ -240,13 +264,17 @@ public class Banner {
         banner.background = BannerBackground.create(json.optJSONObject("background"));
 
         try {
-            SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            SimpleDateFormat format = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            }
             banner.startAt = format.parse(json.optString("startAt"));
         } catch (ParseException e) {
             banner.startAt = new Date();
         }
 
         banner.dismissType = BannerDismissType.fromString(json.optString("dismissType"));
+        banner.bannerAppVersionFilterRelation = BannerAppVersionFilterRelation.fromString(json.optString("appVersionFilterRelation"));
         banner.dismissTimeout = json.getInt("dismissTimeout");
         banner.stopAtType = BannerStopAtType.fromString(json.optString("stopAtType"));
 
@@ -261,14 +289,20 @@ public class Banner {
         }
 
         try {
-            SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            SimpleDateFormat format = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            }
             banner.stopAt = json.isNull("stopAt") ? null : format.parse(json.optString("stopAt"));
         } catch (ParseException e) {
             banner.stopAt = null;
         }
 
         try {
-            SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            SimpleDateFormat format = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            }
             banner.createdAt = json.isNull("createdAt") ? null : format.parse(json.optString("createdAt"));
         } catch (ParseException e) {
             banner.createdAt = null;
@@ -276,6 +310,7 @@ public class Banner {
 
         banner.frequency = BannerFrequency.fromString(json.optString("frequency"));
         banner.positionType = json.optString("type");
+        banner.appVersionFilterValue = json.optString("appVersionFilterValue");
 
         banner.subscribedType = BannerSubscribedType.fromString(json.optString("subscribedType"));
 
@@ -341,6 +376,7 @@ public class Banner {
             }
         }
 
+
         if (json.has("marginEnabled")) {
             banner.marginEnabled = json.optBoolean("marginEnabled");
         }
@@ -348,6 +384,15 @@ public class Banner {
         if (json.has("closeButtonEnabled")) {
             banner.closeButtonEnabled = json.optBoolean("closeButtonEnabled");
         }
+
+        if (json.has("enableMultipleScreens")){
+            banner.enableMultipleScreens = json.optBoolean("enableMultipleScreens");
+        }
+
+        if (json.has("carouselEnabled")){
+            banner.carouselEnabled = json.optBoolean("carouselEnabled");
+        }
+
 
         return banner;
     }
