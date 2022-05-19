@@ -28,5 +28,4 @@ public class BannerBlockScreen {
         return bannerBlockScreen;
     }
 
-
 }

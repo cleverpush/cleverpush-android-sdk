@@ -41,9 +41,7 @@ public final class BannerTextBlock extends BannerBlock {
     public List<BannerBlockScreen> getBlocks() {
         return blockScreens;
     }
-
-
-
+    
     public static BannerTextBlock createTextBlock(JSONObject json) throws JSONException {
         BannerTextBlock textBlock = new BannerTextBlock();
 

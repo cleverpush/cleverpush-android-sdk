@@ -168,12 +168,8 @@ public class AppBannerPopup {
 
     }
 
-    public void moveToNextScreen(int i) {
-        viewPager2.setCurrentItem(i, true); //getItem(-1) for previous
-    }
-
-    private int getItem(int i) {
-        return viewPager2.getCurrentItem() + i;
+    public void moveToNextScreen(int screenPosition) {
+        viewPager2.setCurrentItem(screenPosition, true);
     }
 
     public AppBannerOpenedListener getOpenedListener() {
@@ -350,7 +346,6 @@ public class AppBannerPopup {
         if (data.isCloseButtonEnabled()) {
             buttonClose.setVisibility(View.VISIBLE);
             buttonClose.setOnClickListener(view -> dismiss());
-            Log.e(TAG, "CloseIcon: " + data.isCloseButtonEnabled());
         }
 
         if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {

@@ -172,11 +172,9 @@ public class Banner {
         return positionType;
     }
 
-
     public boolean getEnableMultipleScreens() {
         return enableMultipleScreens;
     }
-
 
     public void setPositionType(String positionType) {
         this.positionType = positionType;

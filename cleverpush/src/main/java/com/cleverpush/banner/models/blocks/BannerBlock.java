@@ -20,7 +20,6 @@ public class BannerBlock {
 
     public static BannerBlock create(JSONObject json) throws JSONException, IllegalArgumentException {
         BannerBlockType blockType = BannerBlockType.fromString(json.getString("type"));
-        Log.e("Tag 1",""+json);
         switch (blockType) {
             case Text:
                 return BannerTextBlock.createTextBlock(json);
