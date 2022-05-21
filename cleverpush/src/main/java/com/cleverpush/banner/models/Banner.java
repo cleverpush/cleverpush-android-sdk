@@ -1,5 +1,7 @@
 package com.cleverpush.banner.models;
 
+import android.util.Log;
+
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.banner.models.blocks.BannerBlock;
 
@@ -52,6 +54,7 @@ public class Banner {
     private List<HashMap<String, String>> attributes;
     private boolean marginEnabled;
     private boolean closeButtonEnabled;
+    private boolean enableMultipleScreens;
 
     private Banner() {
     }
@@ -103,6 +106,7 @@ public class Banner {
     public BannerDismissType getDismissType() {
         return dismissType;
     }
+
 
     public int getDismissTimeout() {
         return dismissTimeout;
@@ -168,6 +172,10 @@ public class Banner {
         return positionType;
     }
 
+    public boolean getEnableMultipleScreens() {
+        return enableMultipleScreens;
+    }
+
     public void setPositionType(String positionType) {
         this.positionType = positionType;
     }
@@ -200,6 +208,7 @@ public class Banner {
         return attributes;
     }
 
+
     public boolean isMarginEnabled() {
         return marginEnabled;
     }
@@ -223,7 +232,9 @@ public class Banner {
         banner.screens = new LinkedList<>();
         banner.content = json.optString("content");
         banner.contentType = json.optString("contentType");
-        banner.carouselEnabled = json.optBoolean("carouselEnabled");
+
+
+        Log.e("Tag 2",""+json);
 
         JSONArray blockArray = json.getJSONArray("blocks");
         for (int i = 0; i < blockArray.length(); ++i) {
@@ -240,7 +251,10 @@ public class Banner {
         banner.background = BannerBackground.create(json.optJSONObject("background"));
 
         try {
-            SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            SimpleDateFormat format = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            }
             banner.startAt = format.parse(json.optString("startAt"));
         } catch (ParseException e) {
             banner.startAt = new Date();
@@ -261,14 +275,20 @@ public class Banner {
         }
 
         try {
-            SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            SimpleDateFormat format = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            }
             banner.stopAt = json.isNull("stopAt") ? null : format.parse(json.optString("stopAt"));
         } catch (ParseException e) {
             banner.stopAt = null;
         }
 
         try {
-            SimpleDateFormat format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            SimpleDateFormat format = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+            }
             banner.createdAt = json.isNull("createdAt") ? null : format.parse(json.optString("createdAt"));
         } catch (ParseException e) {
             banner.createdAt = null;
@@ -341,6 +361,7 @@ public class Banner {
             }
         }
 
+
         if (json.has("marginEnabled")) {
             banner.marginEnabled = json.optBoolean("marginEnabled");
         }
@@ -348,6 +369,15 @@ public class Banner {
         if (json.has("closeButtonEnabled")) {
             banner.closeButtonEnabled = json.optBoolean("closeButtonEnabled");
         }
+
+        if (json.has("enableMultipleScreens")){
+            banner.enableMultipleScreens = json.optBoolean("enableMultipleScreens");
+        }
+
+        if (json.has("carouselEnabled")){
+            banner.carouselEnabled = json.optBoolean("carouselEnabled");
+        }
+
 
         return banner;
     }

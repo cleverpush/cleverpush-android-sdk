@@ -74,10 +74,8 @@ public class AppBannerPopup {
     }
 
     private final Handler mainHandler;
-
     private final Activity activity;
     private final Banner data;
-
     private PopupWindow popup;
     private View popupRoot;
     private ViewPager2 viewPager2;
@@ -137,12 +135,7 @@ public class AppBannerPopup {
         composeBackground(bannerBackGroundImage, body);
         popup.setAnimationStyle(R.style.banner_animation);
 
-        popup.setOnDismissListener(new PopupWindow.OnDismissListener() {
-            @Override
-            public void onDismiss() {
-                toggleShowing(false);
-            }
-        });
+        popup.setOnDismissListener(() -> toggleShowing(false));
 
         isInitialized = true;
     }
@@ -175,11 +168,8 @@ public class AppBannerPopup {
 
     }
 
-    public void moveToNextScreen() {
-        int currentPosition = viewPager2.getCurrentItem();
-        if (currentPosition < data.getScreens().size() - 1) {
-            viewPager2.setCurrentItem(currentPosition + 1);
-        }
+    public void moveToNextScreen(int screenPosition) {
+        viewPager2.setCurrentItem(screenPosition, true);
     }
 
     public AppBannerOpenedListener getOpenedListener() {
@@ -189,7 +179,6 @@ public class AppBannerPopup {
     private View createLayout(int layoutId) {
         View layout = activity.getLayoutInflater().inflate(layoutId, null);
         layout.setOnClickListener(view -> dismiss());
-
         return layout;
     }
 
@@ -206,6 +195,7 @@ public class AppBannerPopup {
                 }
             }
         });
+
         if (bg.getImageUrl() == null || bg.getImageUrl().equalsIgnoreCase("null") || bg.getImageUrl().equalsIgnoreCase("")) {
             GradientDrawable drawableBG = new GradientDrawable();
             drawableBG.setShape(GradientDrawable.RECTANGLE);
@@ -289,7 +279,7 @@ public class AppBannerPopup {
     }
 
     private void displayBanner(LinearLayout body) {
-        if (!data.isCarouselEnabled()) {
+        if (!data.isCarouselEnabled() && !data.getEnableMultipleScreens()) {
             data.getScreens().clear();
             BannerScreens bannerScreens = new BannerScreens();
             bannerScreens.setBlocks(data.getBlocks());
@@ -347,6 +337,7 @@ public class AppBannerPopup {
         }
     }
 
+
     private void setUpBannerBlocks() {
         viewPager2 = popupRoot.findViewById(R.id.carousel_pager);
         TabLayout tabLayout = popupRoot.findViewById(R.id.carousel_pager_tab_layout);
@@ -354,12 +345,7 @@ public class AppBannerPopup {
 
         if (data.isCloseButtonEnabled()) {
             buttonClose.setVisibility(View.VISIBLE);
-            buttonClose.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    dismiss();
-                }
-            });
+            buttonClose.setOnClickListener(view -> dismiss());
         }
 
         if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
@@ -370,11 +356,17 @@ public class AppBannerPopup {
         AppBannerCarouselAdapter appBannerCarouselAdapter = new AppBannerCarouselAdapter(activity, data, this, openedListener);
         viewPager2.setAdapter(appBannerCarouselAdapter);
         if (data.getScreens().size() > 1) {
-            tabLayout.setVisibility(View.VISIBLE);
+            if (!data.getEnableMultipleScreens() || !data.isCarouselEnabled()) {
+                viewPager2.setUserInputEnabled(false);
+                tabLayout.setVisibility(View.GONE);
+            } else {
+                tabLayout.setVisibility(View.VISIBLE);
+                viewPager2.setUserInputEnabled(true);
+            }
             new TabLayoutMediator(tabLayout, viewPager2, (tab, position) -> {
-
             }).attach();
         }
+
         viewPager2.setPageTransformer((page, position) -> {
             if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
                 updatePagerHeightForChild(page, viewPager2);
