@@ -54,6 +54,8 @@ public class Banner {
     private List<HashMap<String, String>> attributes;
     private boolean marginEnabled;
     private boolean closeButtonEnabled;
+    private BannerAppVersionFilterRelation bannerAppVersionFilterRelation;
+    private String appVersionFilterValue;
     private boolean enableMultipleScreens;
 
     private Banner() {
@@ -107,6 +109,9 @@ public class Banner {
         return dismissType;
     }
 
+    public BannerAppVersionFilterRelation getBannerAppVersionFilterRelation() {
+        return bannerAppVersionFilterRelation;
+    }
 
     public int getDismissTimeout() {
         return dismissTimeout;
@@ -172,8 +177,16 @@ public class Banner {
         return positionType;
     }
 
+    public String getAppVersionFilterValue() {
+        return appVersionFilterValue;
+    }
+
     public boolean getEnableMultipleScreens() {
         return enableMultipleScreens;
+    }
+
+    public void setAppVersionFilterValue(String appVersionFilterValue) {
+        this.appVersionFilterValue = appVersionFilterValue;
     }
 
     public void setPositionType(String positionType) {
@@ -261,6 +274,7 @@ public class Banner {
         }
 
         banner.dismissType = BannerDismissType.fromString(json.optString("dismissType"));
+        banner.bannerAppVersionFilterRelation = BannerAppVersionFilterRelation.fromString(json.optString("appVersionFilterRelation"));
         banner.dismissTimeout = json.getInt("dismissTimeout");
         banner.stopAtType = BannerStopAtType.fromString(json.optString("stopAtType"));
 
@@ -296,6 +310,7 @@ public class Banner {
 
         banner.frequency = BannerFrequency.fromString(json.optString("frequency"));
         banner.positionType = json.optString("type");
+        banner.appVersionFilterValue = json.optString("appVersionFilterValue");
 
         banner.subscribedType = BannerSubscribedType.fromString(json.optString("subscribedType"));
 
