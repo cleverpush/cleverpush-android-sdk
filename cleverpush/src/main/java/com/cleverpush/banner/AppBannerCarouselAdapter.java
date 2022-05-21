@@ -2,12 +2,14 @@ package com.cleverpush.banner;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
@@ -29,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
+import com.cleverpush.banner.models.BannerAction;
 import com.cleverpush.banner.models.BannerScreens;
 import com.cleverpush.banner.models.blocks.Alignment;
 import com.cleverpush.banner.models.blocks.BannerBlock;
@@ -116,8 +119,34 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
     }
 
+    private void onClickListener(BannerAction action) {
+        if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
+            WebViewActivity.launch(activity, action.getUrl());
+        } else if (action.getScreen() != null && !action.getScreen().isEmpty()) {
+            for (int i = 0; i < screens.size(); i++) {
+                if (screens.get(i).getId() != null && screens.get(i).getId().equals(action.getScreen())) {
+                    appBannerPopup.moveToNextScreen(i);
+                    break;
+                }
+            }
+        } else if (action.getDismiss()) {
+            appBannerPopup.dismiss();
+        } else {
+            appBannerPopup.moveToNextScreen();
+        }
+
+        if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
+            activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(action.getUrl())));
+        }
+
+        if (appBannerPopup.getOpenedListener() != null) {
+            appBannerPopup.getOpenedListener().opened(action);
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
     private void composeButtonBlock(LinearLayout body, BannerButtonBlock block, int position) {
-        Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
+        @SuppressLint("InflateParams") Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
         button.setText(block.getText());
         button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
         button.setTextColor(ColorUtils.parseColor(block.getColor()));
@@ -131,24 +160,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         button.setBackground(bg);
 
         if (block.getAction() != null) {
-            button.setOnClickListener(view -> {
-                if (block.getAction().isOpenInWebView()) {
-                    WebViewActivity.launch(activity, block.getAction().getUrl());
-                } else if (block.getAction().getScreen() != null) {
-                    for (int i = 0; i < screens.size(); i++) {
-                        if (screens.get(i).getId() != null) {
-                            if (screens.get(i).getId().equals(block.getAction().getScreen())) {
-                                appBannerPopup.moveToNextScreen(i);
-                            }
-                        }
-                    }
-                } else if (block.getAction().getDismiss()) {
-                    appBannerPopup.dismiss();
-                }
-                if (appBannerPopup.getOpenedListener() != null) {
-                    appBannerPopup.getOpenedListener().opened((block.getAction()));
-                }
-            });
+            button.setOnClickListener(view -> this.onClickListener(block.getAction()));
         }
 
         button.setOnTouchListener((view, motionEvent) -> {
@@ -172,7 +184,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     }
 
     private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
-        TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
+        @SuppressLint("InflateParams") TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
         textView.setText(block.getText());
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
         textView.setTextColor(ColorUtils.parseColor(block.getColor()));
@@ -194,7 +206,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     }
 
     private void composeImageBlock(LinearLayout body, BannerImageBlock block, int position) {
-        ConstraintLayout imageLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
+        @SuppressLint("InflateParams") ConstraintLayout imageLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
         ImageView img = imageLayout.findViewById(R.id.imageView);
 
         ConstraintSet imgConstraints = new ConstraintSet();
@@ -211,18 +223,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                 Bitmap bitmap = BitmapFactory.decodeStream(in);
                 if (bitmap != null) {
                     img.setImageBitmap(bitmap);
-                } else if (block.getAction().getScreen() != null) {
-                    for (int i = 0; i < screens.size(); i++) {
-                        if (screens.get(i).getId() != null) {
-                            if (screens.get(i).getId().equals(block.getAction().getScreen())) {
-                                appBannerPopup.moveToNextScreen(i);
-                            } else if (block.getAction().getDismiss()) {
-                                appBannerPopup.dismiss();
-                            }
-
-                        }
-
-                    }
                 }
             } catch (Exception ignored) {
 
@@ -230,17 +230,13 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }).start();
 
         if (block.getAction() != null) {
-            img.setOnClickListener(view -> {
-                if (block.getAction().isOpenInWebView()) {
-                    WebViewActivity.launch(activity, block.getAction().getUrl());
-                }
-            });
+            img.setOnClickListener(view -> this.onClickListener(block.getAction()));
         }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
-        LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
+        @SuppressLint("InflateParams") LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
         WebView webView = webLayout.findViewById(R.id.webView);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setVerticalScrollBarEnabled(false);

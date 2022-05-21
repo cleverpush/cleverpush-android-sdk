@@ -6,8 +6,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -18,6 +16,7 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.banner.models.Banner;
+import com.cleverpush.banner.models.BannerAppVersionFilterRelation;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
@@ -27,7 +26,6 @@ import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
-import com.cleverpush.banner.models.BannerAppVersionFilterRelation;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
@@ -53,12 +51,10 @@ public class AppBannerModule {
     private static final long MIN_SESSION_LENGTH = 30 * 60 * 1000L;
     private static AppBannerModule instance;
     private String channel;
-    String appVersion = "";
     private final boolean showDrafts;
     private long lastSessionTimestamp;
     private int sessions;
     private boolean loading = false;
-    boolean allowed = true;
     private Collection<AppBannerPopup> popups = new ArrayList<>();
     private Collection<AppBannerPopup> pendingBanners = new ArrayList<>();
     private Collection<Banner> banners = null;
@@ -279,20 +275,18 @@ public class AppBannerModule {
             return false;
         }
 
+        boolean allowed = true;
 
         if (banner.getSubscribedType() == BannerSubscribedType.Subscribed && !getCleverPushInstance().isSubscribed()) {
             allowed = false;
-            Log.e("allowed 1", allowed + "");
         }
 
         if (banner.getSubscribedType() == BannerSubscribedType.Unsubscribed && getCleverPushInstance().isSubscribed()) {
             allowed = false;
-            Log.e("allowed 2", allowed + "");
         }
 
         if (banner.getTags() != null && banner.getTags().size() > 0) {
             allowed = false;
-            Log.e("allowed 3", allowed + "");
 
             for (String tag : banner.getTags()) {
                 if (getCleverPushInstance().hasSubscriptionTag(tag)) {
@@ -306,8 +300,6 @@ public class AppBannerModule {
             for (String tag : banner.getExcludeTags()) {
                 if (getCleverPushInstance().hasSubscriptionTag(tag)) {
                     allowed = false;
-                    Log.e("allowed 4", allowed + "");
-
                     break;
                 }
             }
@@ -315,7 +307,6 @@ public class AppBannerModule {
 
         if (allowed && banner.getTopics() != null && banner.getTopics().size() > 0) {
             allowed = false;
-            Log.e("allowed 5", allowed + "");
 
             for (String topic : banner.getTopics()) {
                 if (getCleverPushInstance().hasSubscriptionTopic(topic)) {
@@ -329,8 +320,6 @@ public class AppBannerModule {
             for (String topic : banner.getExcludeTopics()) {
                 if (getCleverPushInstance().hasSubscriptionTopic(topic)) {
                     allowed = false;
-                    Log.e("allowed 6", allowed + "");
-
                     break;
                 }
             }
@@ -338,8 +327,6 @@ public class AppBannerModule {
 
         if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
             allowed = false;
-            Log.e("allowed 7", allowed + "");
-
             for (HashMap<String, String> attribute : banner.getAttributes()) {
                 if (getCleverPushInstance().hasSubscriptionAttributeValue(attribute.get("id"), attribute.get("value"))) {
                     allowed = true;
@@ -348,7 +335,7 @@ public class AppBannerModule {
             }
         }
 
-        appVersionFilter(banner);
+        allowed = appVersionFilter(allowed, banner);
 
         return allowed;
     }
@@ -356,107 +343,62 @@ public class AppBannerModule {
     /**
      * App Banner Version Filter
      */
-    private void appVersionFilter(Banner banner) {
-        if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Equals)) {
-            try {
-                PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-                appVersion = pInfo.versionName;
-                if (banner.getAppVersionFilterValue().equals(appVersion)) {
-                    allowed = false;
-                    Log.e("allowed 8", allowed + "");
-
-                }
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
+    private boolean appVersionFilter(boolean allowed, Banner banner) {
+        if (banner.getBannerAppVersionFilterRelation() == null) {
+            return allowed;
         }
-        if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.NotEqual)) {
-            try {
-                PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-                appVersion = pInfo.versionName;
+
+        try {
+            PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
+            String appVersion = pInfo.versionName;
+
+            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Equals)) {
                 if (!banner.getAppVersionFilterValue().equals(appVersion)) {
                     allowed = false;
-                    Log.e("allowed 9", allowed + "");
+                }
+            }
 
-                }
-                Log.e(TAG, "AppVersion:" + appVersion);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-        if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Between)) {
-            try {
-                PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-                appVersion = pInfo.versionName;
-                if (Double.parseDouble(banner.getAppVersionFilterValue()) >= Double.parseDouble(appVersion) && Double.parseDouble(banner.getAppVersionFilterValue()) <= Double.parseDouble(appVersion)) {
+            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.NotEqual)) {
+                if (banner.getAppVersionFilterValue().equals(appVersion)) {
                     allowed = false;
-                    Log.e("allowed 10", allowed + "");
                 }
-                Log.e(TAG, "AppVersion:" + appVersion);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
             }
-        }
-        if (banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.GreaterThan)) {
-            try {
-                PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-                appVersion = pInfo.versionName;
-                if (Double.parseDouble(banner.getAppVersionFilterValue()) > (Double.parseDouble(appVersion))) {
-                    allowed = false;
-                    Log.e("allowed 11", allowed + "");
 
+            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Between)) {
+                if (Double.parseDouble(banner.getAppVersionFilterValue()) <= Double.parseDouble(appVersion) || Double.parseDouble(banner.getAppVersionFilterValue()) >= Double.parseDouble(appVersion)) {
+                    allowed = false;
                 }
-                Log.e(TAG, "AppVersion:" + appVersion);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
             }
-        }
-        if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.LessThan)) {
-            try {
-                PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-                appVersion = pInfo.versionName;
+
+            if (banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.GreaterThan)) {
                 if (Double.parseDouble(banner.getAppVersionFilterValue()) < (Double.parseDouble(appVersion))) {
                     allowed = false;
-                    Log.e("allowed 12", allowed + "");
-
                 }
-                Log.e(TAG, "AppVersion:" + appVersion);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
             }
-        }
-        if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Contains)) {
-            try {
-                PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-                appVersion = pInfo.versionName;
-                if (banner.getAppVersionFilterValue().contains(appVersion)) {
+
+            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.LessThan)) {
+                if (Double.parseDouble(banner.getAppVersionFilterValue()) > (Double.parseDouble(appVersion))) {
                     allowed = false;
-                    Log.e("allowed 13", allowed + "");
-
                 }
-                Log.e(TAG, "AppVersion:" + appVersion);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
             }
-        }
-        if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.NotContains)) {
-            try {
-                PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-                appVersion = pInfo.versionName;
+
+            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Contains)) {
                 if (!banner.getAppVersionFilterValue().contains(appVersion)) {
                     allowed = false;
-                    Log.e("allowed 14", allowed + "");
-
                 }
-                Log.e(TAG, "AppVersion:" + appVersion);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
             }
+
+            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.NotContains)) {
+                if (banner.getAppVersionFilterValue().contains(appVersion)) {
+                    allowed = false;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "Error checking app version filter", e);
         }
 
-        Log.e(TAG, "AppVersionBa:" + banner.getBannerAppVersionFilterRelation());
-        Log.e(TAG, "AppVersionFF:" + banner.getAppVersionFilterValue());
-
+        return allowed;
     }
 
     private void createBanners(Collection<Banner> banners) {
@@ -478,13 +420,7 @@ public class AppBannerModule {
             }
 
             if (!isBannerTargetingAllowed(banner)) {
-
                 Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting");
-                continue;
-            }
-
-            if (!allowed) {
-                Log.d(TAG, "allowed Banner " + allowed + " because: Targeting");
                 continue;
             }
 
@@ -570,9 +506,7 @@ public class AppBannerModule {
                 if (banner.getDelaySeconds() > 0) {
                     getHandler().postDelayed(() -> showBanner(bannerPopup), 1000L * banner.getDelaySeconds());
                 } else {
-                    if (!allowed){
-                        getHandler().post(() -> showBanner(bannerPopup));
-                    }
+                    getHandler().post(() -> showBanner(bannerPopup));
                 }
             } else {
                 long delay = banner.getStartAt().getTime() - now.getTime();
@@ -599,11 +533,8 @@ public class AppBannerModule {
                                 pendingBanners.add(popup);
                                 break;
                             }
-                            Log.e("allowed new", allowed+ "");
-                            if (!allowed){
-                                getHandler().post(() -> showBanner(popup));
-                                break;
-                            }
+                            getHandler().post(() -> showBanner(popup));
+                            break;
                         }
                     }
                 }, notificationId);

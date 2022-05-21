@@ -1,6 +1,5 @@
 package com.cleverpush.banner.models;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +12,7 @@ public enum BannerAppVersionFilterRelation {
     Contains,
     NotContains;
 
-    private static Map<String, BannerAppVersionFilterRelation> appVersionFilter = new HashMap<>();
+    private static final Map<String, BannerAppVersionFilterRelation> appVersionFilter = new HashMap<>();
 
     static {
         appVersionFilter.put("greaterThan", BannerAppVersionFilterRelation.GreaterThan);
@@ -28,9 +27,8 @@ public enum BannerAppVersionFilterRelation {
     public static BannerAppVersionFilterRelation fromString(String raw) {
         if (appVersionFilter.containsKey(raw)) {
             return appVersionFilter.get(raw);
-        } else {
-            throw new IllegalArgumentException("Unknown banner app version: " + raw);
         }
+        return null;
     }
 
 }

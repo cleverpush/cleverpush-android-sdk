@@ -111,7 +111,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.22.1";
+    public static final String SDK_VERSION = "1.23.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -1058,6 +1058,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         if (isSubscriptionInProgress()) {
             return;
         }
+
+        if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
+            Log.d(LOG_TAG, "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.");
+            return;
+        }
+
         this.subscriptionInProgress = true;
 
         SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();

@@ -13,7 +13,8 @@ public class BannerAction {
     private String url;
     private String urlType;
     private boolean dismiss;
-    private boolean openInWebView;
+	private boolean openInWebView;
+	private boolean openBySystem;
     private List<String> tags;
     private List<String> topics;
     private String attributeId;
@@ -23,6 +24,7 @@ public class BannerAction {
     private BannerAction() {}
 
     public String getType() { return type; }
+
     public String getScreen() { return screen; }
 
     public String getName() { return name; }
@@ -34,6 +36,8 @@ public class BannerAction {
     public boolean getDismiss() { return dismiss; }
 
     public boolean isOpenInWebView() { return openInWebView; }
+
+    public boolean isOpenBySystem() { return openBySystem; }
 
     public List<String> getTags() { return tags; }
 
@@ -56,6 +60,10 @@ public class BannerAction {
 
             if (json.has("openInWebview")) {
                 banner.openInWebView = json.optBoolean("openInWebview");
+            }
+
+            if (json.has("openBySystem")) {
+                banner.openBySystem = json.optBoolean("openBySystem");
             }
 
             JSONArray topicsArray = json.optJSONArray("topics");

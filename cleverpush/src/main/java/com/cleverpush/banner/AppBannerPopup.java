@@ -168,6 +168,13 @@ public class AppBannerPopup {
 
     }
 
+    public void moveToNextScreen() {
+        int currentPosition = viewPager2.getCurrentItem();
+        if (currentPosition < data.getScreens().size() - 1) {
+            viewPager2.setCurrentItem(currentPosition + 1);
+        }
+    }
+
     public void moveToNextScreen(int screenPosition) {
         viewPager2.setCurrentItem(screenPosition, true);
     }

@@ -1,7 +1,5 @@
 package com.cleverpush.banner.models;
 
-import android.util.Log;
-
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.banner.models.blocks.BannerBlock;
 
@@ -11,7 +9,6 @@ import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -245,9 +242,6 @@ public class Banner {
         banner.screens = new LinkedList<>();
         banner.content = json.optString("content");
         banner.contentType = json.optString("contentType");
-
-
-        Log.e("Tag 2",""+json);
 
         JSONArray blockArray = json.getJSONArray("blocks");
         for (int i = 0; i < blockArray.length(); ++i) {

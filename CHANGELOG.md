@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.23.0
+* Disable `subscribe` calls when notification permission has been disabled.
+* Added version filters for app banners
+* Added multiple screen support for app banners without carousel
+
 ## 1.22.1
 * Implemented `isAppOpen` method used by Cordova SDK
 

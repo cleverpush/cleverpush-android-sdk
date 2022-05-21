@@ -7,7 +7,8 @@ public enum BannerStatus {
     Published,
     Draft;
 
-    private static Map<String, BannerStatus> mapStatus = new HashMap<>();
+    private static final Map<String, BannerStatus> mapStatus = new HashMap<>();
+
     static {
         mapStatus.put("published", BannerStatus.Published);
         mapStatus.put("draft", BannerStatus.Draft);
