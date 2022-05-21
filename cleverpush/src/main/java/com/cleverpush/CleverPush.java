@@ -111,7 +111,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.22.0";
+    public static final String SDK_VERSION = "1.22.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -139,6 +139,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private String currentPageUrl;
     private AppBannerModule appBannerModule;
     private boolean appBannersDisabled = false;
+    private boolean isAppOpen = false;
 
     private String channelId;
     private String subscriptionId = null;
@@ -426,6 +427,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public SessionListener initSessionListener() {
         return open -> {
+            this.isAppOpen = open;
             if (open) {
                 this.trackSessionStart();
 
@@ -2820,5 +2822,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public void getAppBanners(AppBannersListener listener, String channelId) {
         appBannerModule.getBannerList(listener, channelId);
+    }
+
+    public boolean isAppOpen() {
+        return this.isAppOpen;
     }
 }
