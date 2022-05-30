@@ -11,6 +11,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
@@ -25,7 +26,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
     private static final String THREAD_NAME = "HMS_GET_TOKEN";
     private final String appId;
     private static boolean callbackSuccessful;
-    private SubscribedListener subscribedListener;
+    private SubscribedCallbackListener subscribedListener;
 
     public SubscriptionManagerHMS(Context context) {
         super(context, SubscriptionManagerType.HMS);
@@ -34,7 +35,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
     }
 
     @Override
-    public void subscribe(JSONObject channelConfig, SubscribedListener subscribedListener) {
+    public void subscribe(JSONObject channelConfig, SubscribedCallbackListener subscribedListener) {
         this.subscribedListener = subscribedListener;
 
         new Thread(() -> {
@@ -51,7 +52,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
         this.tokenCallback(token, this.subscribedListener);
     }
 
-    private void tokenCallback(String token, SubscribedListener subscribedListener) {
+    private void tokenCallback(String token, SubscribedCallbackListener subscribedListener) {
         if (subscribedListener == null) {
             return;
         }
@@ -59,7 +60,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
         callbackSuccessful = true;
 
         if (token == null) {
-            subscribedListener.subscribed(null);
+            subscribedListener.onFailure(null);
             return;
         }
 
@@ -84,7 +85,17 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
             try {
                 String newToken = changedToken != null ? changedToken : getToken();
                 if (newToken != null && !newToken.equals(existingToken)) {
-                    this.syncSubscription(newToken, subscriptionId -> Log.i(LOG_TAG, "Synchronized new HMS token: " + newToken));
+                    this.syncSubscription(newToken, new SubscribedCallbackListener() {
+                        @Override
+                        public void onSuccess(String subscriptionId) {
+                            Log.i(LOG_TAG, "Synchronized new HMS token: " + newToken);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable exception) {
+
+                        }
+                    });
                 } else {
                     Log.d(LOG_TAG, "HMS token has not changed: " + newToken);
                 }
@@ -99,7 +110,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
         return hmsInstanceId.getToken(appId, HmsMessaging.DEFAULT_TOKEN_SCOPE);
     }
 
-    private synchronized void getHMSTokenTask(@NonNull Context context, SubscribedListener subscribedListener) throws ApiException {
+    private synchronized void getHMSTokenTask(@NonNull Context context, SubscribedCallbackListener subscribedListener) throws ApiException {
         Log.d(LOG_TAG, "Registering device with HMS App ID: " + appId);
         String pushToken = getToken();
 
@@ -112,7 +123,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
         }
     }
 
-    private void waitForOnNewPushTokenEvent(SubscribedListener subscribedListener) {
+    private void waitForOnNewPushTokenEvent(SubscribedCallbackListener subscribedListener) {
         try {
             Thread.sleep(TOKEN_TIMEOUT_MS);
         } catch (InterruptedException e) {

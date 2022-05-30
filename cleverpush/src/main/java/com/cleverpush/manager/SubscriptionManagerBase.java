@@ -13,6 +13,7 @@ import android.util.Log;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.listener.SubscribedListener;
 
 import org.json.JSONArray;
@@ -34,19 +35,17 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         this.type = type;
     }
 
-    void syncSubscription(String token, SubscribedListener subscribedListener) {
+    void syncSubscription(String token, SubscribedCallbackListener subscribedListener) {
         syncSubscription(token, subscribedListener, null);
     }
 
-    void syncSubscription(String token, SubscribedListener subscribedListener, String senderId) {
+    void syncSubscription(String token, SubscribedCallbackListener subscribedListener, String senderId) {
         syncSubscription(token, subscribedListener, senderId, false);
     }
 
-    void syncSubscription(String token, SubscribedListener subscribedListener, String senderId, boolean isRetry) {
+    void syncSubscription(String token, SubscribedCallbackListener subscribedListener, String senderId, boolean isRetry) {
         Log.d(LOG_TAG, "syncSubscription");
-
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
-
         if (this.type == SubscriptionManagerType.ADM) {
             sharedPreferences.edit().putString(CleverPushPreferences.ADM_TOKEN, token).apply();
         } else if (this.type == SubscriptionManagerType.HMS) {
@@ -124,15 +123,12 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             public void onSuccess(String response) {
                 try {
                     Log.d(LOG_TAG, "sync response: " + response);
-
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.has("id")) {
                         String newSubscriptionId = responseJson.getString("id");
-
                         sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, newSubscriptionId).apply();
                         sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L)).apply();
-
-                        subscribedListener.subscribed(newSubscriptionId);
+                        subscribedListener.onSuccess(newSubscriptionId);
                     }
                     if (responseJson.has("topics")) {
                         JSONArray topicsArray = responseJson.getJSONArray("topics");
@@ -170,6 +166,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                     syncSubscription(token, subscribedListener, senderId, true);
                     return;
                 }
+                subscribedListener.onFailure(t);
                 Log.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, t);
             }
         });
@@ -183,4 +180,5 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
     public void checkChangedPushToken(JSONObject channelConfig) {
         this.checkChangedPushToken(channelConfig, null);
     }
+
 }
