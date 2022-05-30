@@ -1059,6 +1059,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         subscribe(newSubscription, null);
     }
 
+    public void subscribe(SubscribedCallbackListener subscribedCallbackListener) {
+        subscribe(false, subscribedCallbackListener);
+    }
+
     private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener) {
         if (isSubscriptionInProgress()) {
             if (subscribedCallbackListener != null) {
