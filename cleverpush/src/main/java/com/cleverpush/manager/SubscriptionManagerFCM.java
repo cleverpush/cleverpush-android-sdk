@@ -10,7 +10,7 @@ import android.util.Log;
 import androidx.annotation.WorkerThread;
 
 import com.cleverpush.CleverPushPreferences;
-import com.cleverpush.listener.SubscribedListener;
+import com.cleverpush.listener.SubscribedCallbackListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
@@ -123,11 +123,11 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     }
 
     @Override
-    public void subscribe(JSONObject channelConfig, SubscribedListener subscribedListener) {
+    public void subscribe(JSONObject channelConfig, SubscribedCallbackListener subscribedListener) {
         String senderId = this.getSenderIdFromConfig(channelConfig);
         if (senderId == null) {
             Log.e(LOG_TAG, "SubscriptionManager: Getting FCM Sender ID failed");
-            subscribedListener.subscribed(null);
+            subscribedListener.onFailure(new Exception("SubscriptionManager: Getting FCM Sender ID failed"));
             return;
         }
 
@@ -156,11 +156,20 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
                 Log.e(LOG_TAG, "SubscriptionManager: Getting FCM Sender ID failed");
                 return;
             }
-
             try {
                 String newToken = changedToken != null ? changedToken : getTokenAttempt(senderId);
                 if (newToken != null && !newToken.equals(existingToken)) {
-                    this.syncSubscription(newToken, subscriptionId -> Log.i(LOG_TAG, "Synchronized new FCM token: " + newToken));
+                    this.syncSubscription(newToken, new SubscribedCallbackListener() {
+                        @Override
+                        public void onSuccess(String subscriptionId) {
+                            Log.i(LOG_TAG, "Synchronized new FCM token: " + newToken);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable exception) {
+
+                        }
+                    });
                 } else {
                     Log.d(LOG_TAG, "FCM token has not changed: " + newToken);
                 }
@@ -170,7 +179,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         }, THREAD_NAME).start();
     }
 
-    private synchronized void subscribeInBackground(final String senderId, SubscribedListener subscribedListener) {
+    private synchronized void subscribeInBackground(final String senderId, SubscribedCallbackListener subscribedListener) {
         if (registerThread != null && registerThread.isAlive()) {
             return;
         }
@@ -199,6 +208,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
                 }
             } catch (Throwable throwable) {
                 Log.e(LOG_TAG, "Unknown error getting FCM Token", throwable);
+                subscribedListener.onFailure(throwable);
             }
         }, THREAD_NAME);
         registerThread.start();
@@ -227,7 +237,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         try {
             Float.parseFloat(senderId);
             return true;
-        } catch (Throwable t) {
+        } catch (Throwable throwable) {
             Log.e(LOG_TAG, "Missing FCM Sender ID");
             return false;
         }

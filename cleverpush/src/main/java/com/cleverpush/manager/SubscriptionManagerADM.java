@@ -6,7 +6,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.amazon.device.messaging.ADM;
-import com.cleverpush.listener.SubscribedListener;
+import com.cleverpush.listener.SubscribedCallbackListener;
 
 import org.json.JSONObject;
 
@@ -17,7 +17,7 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
     }
 
     @Override
-    public void subscribe(JSONObject channelConfig, final SubscribedListener subscribedListener) {
+    public void subscribe(JSONObject channelConfig, final SubscribedCallbackListener subscribedListener) {
         Context context = this.context;
         new Thread(() -> {
             final ADM adm = new ADM(context);

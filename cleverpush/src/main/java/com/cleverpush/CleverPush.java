@@ -50,6 +50,7 @@ import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
 import com.cleverpush.listener.NotificationsCallbackListener;
 import com.cleverpush.listener.SessionListener;
+import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.listener.TopicsDialogListener;
@@ -111,7 +112,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.23.0";
+    public static final String SDK_VERSION = "1.23.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -1054,48 +1055,81 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         subscribe(false);
     }
 
-    public void subscribe(boolean newSubscription) {
+    private void subscribe(boolean newSubscription) {
+        subscribe(newSubscription, null);
+    }
+
+    public void subscribe(SubscribedCallbackListener subscribedCallbackListener) {
+        subscribe(false, subscribedCallbackListener);
+    }
+
+    private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener) {
         if (isSubscriptionInProgress()) {
+            if (subscribedCallbackListener != null) {
+                subscribedCallbackListener.onFailure(new Exception("Subscription is already in progress"));
+            }
             return;
         }
 
         if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
-            Log.d(LOG_TAG, "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.");
+            String error = "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
+            Log.d(LOG_TAG, error);
+
+            if (subscribedCallbackListener != null) {
+                subscribedCallbackListener.onFailure(new Exception(error));
+            }
             return;
         }
 
         this.subscriptionInProgress = true;
-
         SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
         editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
 
         this.getChannelConfig(config -> {
             SubscriptionManager subscriptionManager = this.getSubscriptionManager();
-            subscriptionManager.subscribe(config, newSubscriptionId -> {
-                this.subscriptionInProgress = false;
-                Log.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
-                this.fireSubscribedListener(newSubscriptionId);
-                this.setSubscriptionId(newSubscriptionId);
+            CleverPush self = this;
+            subscriptionManager.subscribe(config, new SubscribedCallbackListener() {
+                @Override
+                public void onSuccess(String newSubscriptionId) {
+                    self.subscriptionInProgress = false;
+                    Log.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
 
-                if (!isSubscribeForTopicsDialog) {
-                    if (newSubscriptionId != null && newSubscription) {
-                        if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
-                            JSONArray channelTopics = config.optJSONArray("channelTopics");
-                            if (channelTopics != null && channelTopics.length() > 0) {
-                                Set<String> topics = this.getSubscriptionTopics();
-                                if (topics == null || topics.size() == 0) {
-                                    this.setSubscriptionTopics(setUpSelectedTopicIds(channelTopics).toArray(new String[0]));
+                    self.fireSubscribedListener(newSubscriptionId);
+                    self.setSubscriptionId(newSubscriptionId);
+
+                    if (subscribedCallbackListener != null) {
+                        subscribedCallbackListener.onSuccess(newSubscriptionId);
+                    }
+
+                    if (!isSubscribeForTopicsDialog) {
+                        if (newSubscriptionId != null && newSubscription) {
+                            if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
+                                JSONArray channelTopics = config.optJSONArray("channelTopics");
+                                if (channelTopics != null && channelTopics.length() > 0) {
+                                    Set<String> topics = self.getSubscriptionTopics();
+                                    if (topics == null || topics.size() == 0) {
+                                        self.setSubscriptionTopics(setUpSelectedTopicIds(channelTopics).toArray(new String[0]));
+                                    }
+                                    updatePendingTopicsDialog(true);
                                 }
-                                updatePendingTopicsDialog(true);
+                            }
+
+                            if (!isConfirmAlertShown()) {
+                                // If the confirm alert has not been tracked by the customer already,
+                                // we will track it here retroperspectively to ensure opt-in rate statistics
+                                // are correct
+                                self.setConfirmAlertShown();
                             }
                         }
+                    }
+                }
 
-                        if (!isConfirmAlertShown()) {
-                            // If the confirm alert has not been tracked by the customer already,
-                            // we will track it here retroperspectively to ensure opt-in rate statistics
-                            // are correct
-                            this.setConfirmAlertShown();
-                        }
+                @Override
+                public void onFailure(Throwable exception) {
+                    self.subscriptionInProgress = false;
+
+                    if (subscribedCallbackListener != null) {
+                        subscribedCallbackListener.onFailure(exception);
                     }
                 }
             });
@@ -2273,11 +2307,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     /**
      * Will create list of checkbox for the topics.
      *
-     * @param parentLayout        parent layout to add checkboxes
-     * @param channelTopics       topics from the channel
-     * @param deselectAll         is deselectall checkbox is checked or not
-     * @param nightModeFlags      flag if there is night mode
-     * @param selectedTopics      selectedTopics
+     * @param parentLayout   parent layout to add checkboxes
+     * @param channelTopics  topics from the channel
+     * @param deselectAll    is deselectall checkbox is checked or not
+     * @param nightModeFlags flag if there is night mode
+     * @param selectedTopics selectedTopics
      */
     void setTopicCheckboxList(LinearLayout parentLayout, JSONArray channelTopics, CheckBox unsubscribeCheckbox, boolean deselectAll, int nightModeFlags, Set<String> selectedTopics) {
         parentLayout.removeAllViews();
@@ -2495,7 +2529,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean areNotificationsEnabled() {
         try {
             return NotificationManagerCompat.from(CleverPush.context).areNotificationsEnabled();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return true;
     }
 

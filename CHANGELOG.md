@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.23.1
+* Implemented `SubscribeCallbackListener` which can be passed as an argument to the `subscribe` method
+
 ## 1.23.0
 * Disable `subscribe` calls when notification permission has been disabled.
 * Added version filters for app banners

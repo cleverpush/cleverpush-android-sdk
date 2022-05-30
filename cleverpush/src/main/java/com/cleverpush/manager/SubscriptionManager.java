@@ -1,6 +1,6 @@
 package com.cleverpush.manager;
 
-import com.cleverpush.listener.SubscribedListener;
+import com.cleverpush.listener.SubscribedCallbackListener;
 
 import org.json.JSONObject;
 
@@ -12,7 +12,7 @@ public interface SubscriptionManager {
         ADM,
     };
 
-    void subscribe(JSONObject channelConfig, SubscribedListener callback);
+    void subscribe(JSONObject channelConfig, SubscribedCallbackListener callback);
 
     void checkChangedPushToken(JSONObject channelConfig);
 
