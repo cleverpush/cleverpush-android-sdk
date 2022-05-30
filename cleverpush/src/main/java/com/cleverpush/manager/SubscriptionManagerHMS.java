@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
-import com.cleverpush.listener.SubscribedListener;
 import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.common.ApiException;
@@ -60,7 +59,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
         callbackSuccessful = true;
 
         if (token == null) {
-            subscribedListener.onFailure(null);
+            subscribedListener.onFailure(new Exception("Getting HMS token failed"));
             return;
         }
 

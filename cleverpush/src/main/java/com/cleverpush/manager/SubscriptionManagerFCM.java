@@ -11,7 +11,6 @@ import androidx.annotation.WorkerThread;
 
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
-import com.cleverpush.listener.SubscribedListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
@@ -209,6 +208,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
                 }
             } catch (Throwable throwable) {
                 Log.e(LOG_TAG, "Unknown error getting FCM Token", throwable);
+                subscribedListener.onFailure(throwable);
             }
         }, THREAD_NAME);
         registerThread.start();
@@ -237,7 +237,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         try {
             Float.parseFloat(senderId);
             return true;
-        } catch (Throwable t) {
+        } catch (Throwable throwable) {
             Log.e(LOG_TAG, "Missing FCM Sender ID");
             return false;
         }

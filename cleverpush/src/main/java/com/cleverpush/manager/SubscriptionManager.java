@@ -1,7 +1,6 @@
 package com.cleverpush.manager;
 
 import com.cleverpush.listener.SubscribedCallbackListener;
-import com.cleverpush.listener.SubscribedListener;
 
 import org.json.JSONObject;
 

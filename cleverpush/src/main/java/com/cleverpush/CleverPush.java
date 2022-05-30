@@ -112,7 +112,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.23.0";
+    public static final String SDK_VERSION = "1.23.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -1061,6 +1061,19 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener) {
         if (isSubscriptionInProgress()) {
+            if (subscribedCallbackListener != null) {
+                subscribedCallbackListener.onFailure(new Exception("Subscription is already in progress"));
+            }
+            return;
+        }
+
+        if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
+            String error = "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
+            Log.d(LOG_TAG, error);
+
+            if (subscribedCallbackListener != null) {
+                subscribedCallbackListener.onFailure(new Exception(error));
+            }
             return;
         }
 
@@ -1076,11 +1089,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 public void onSuccess(String newSubscriptionId) {
                     self.subscriptionInProgress = false;
                     Log.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
+
                     self.fireSubscribedListener(newSubscriptionId);
                     self.setSubscriptionId(newSubscriptionId);
+
                     if (subscribedCallbackListener != null) {
                         subscribedCallbackListener.onSuccess(newSubscriptionId);
                     }
+
                     if (!isSubscribeForTopicsDialog) {
                         if (newSubscriptionId != null && newSubscription) {
                             if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
@@ -1095,7 +1111,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                             }
 
                             if (!isConfirmAlertShown()) {
-
                                 // If the confirm alert has not been tracked by the customer already,
                                 // we will track it here retroperspectively to ensure opt-in rate statistics
                                 // are correct
@@ -1107,12 +1122,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
                 @Override
                 public void onFailure(Throwable exception) {
+                    self.subscriptionInProgress = false;
+
                     if (subscribedCallbackListener != null) {
                         subscribedCallbackListener.onFailure(exception);
                     }
-
                 }
-
             });
         });
     }

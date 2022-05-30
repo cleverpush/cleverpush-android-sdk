@@ -7,7 +7,6 @@ import android.util.Log;
 
 import com.amazon.device.messaging.ADM;
 import com.cleverpush.listener.SubscribedCallbackListener;
-import com.cleverpush.listener.SubscribedListener;
 
 import org.json.JSONObject;
 

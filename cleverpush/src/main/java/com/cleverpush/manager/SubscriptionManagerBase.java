@@ -14,7 +14,6 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
-import com.cleverpush.listener.SubscribedListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -160,14 +159,14 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             }
 
             @Override
-            public void onFailure(int statusCode, String response, Throwable t) {
+            public void onFailure(int statusCode, String response, Throwable throwable) {
                 if ((statusCode == 404 || statusCode == 410) && !isRetry) {
                     sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
                     syncSubscription(token, subscribedListener, senderId, true);
                     return;
                 }
-                subscribedListener.onFailure(t);
-                Log.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, t);
+                subscribedListener.onFailure(throwable);
+                Log.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, throwable);
             }
         });
     }
