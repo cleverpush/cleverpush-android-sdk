@@ -1,12 +1,12 @@
 buildscript {
     ext {
         buildVersions = [
-                compileSdkVersion: 28,
+                compileSdkVersion: 33,
         ]
         androidGradlePluginVersion = '3.6.2'
         googleServicesGradlePluginVersion = '4.3.3'
         huaweiAgconnectVersion = '1.2.1.301'
-        huaweiHmsPushVersion = '4.0.3.301'
+        huaweiHmsPushVersion = '6.3.0.304'
         kotlinVersion = '1.4.32'
     }
 
@@ -14,7 +14,9 @@ buildscript {
         maven { url 'https://maven.google.com' }
         jcenter()
         google()
-        maven { url 'http://developer.huawei.com/repo/' }
+        mavenCentral()
+        maven { url 'https://developer.huawei.com/repo/' }
+        maven { url "https://jitpack.io" }
     }
 
     dependencies {
