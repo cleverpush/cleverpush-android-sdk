@@ -501,6 +501,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         CleverPushHttpClient.get(url, new ChannelConfigFromBundleIdResponseHandler(instance, initializeListener).getResponseHandler(autoRegister));
     }
 
+    @RequiresApi(api = 33)
     public void incrementAppOpens() {
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -521,6 +522,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      *
      * @param autoRegister boolean for auto register
      */
+    @RequiresApi(api = 33)
     public void subscribeOrSync(boolean autoRegister) {
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, getChannelId(getContext())).apply();
@@ -560,9 +562,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         } else {
             return false;
         }
-//        int nextSync = getNextSync(sharedPreferences);
-//        boolean isUnsubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
-//        return !isUnsubscribed && subscriptionId == null && autoRegister || isSyncTimePassed(nextSync, subscriptionId);
     }
 
     private boolean isSyncTimePassed(int nextSync, String subscriptionId) {
@@ -699,7 +698,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     public boolean hasLocationPermission() {
         return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
-
 
     private void savePreferencesMap(String mapKey, Map<String, Integer> inputMap) {
         Log.d(LOG_TAG, "savePreferencesMap: " + mapKey + " - " + inputMap.toString());
@@ -1104,9 +1102,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     @RequiresApi(api = 33)
     public void subscribe(SubscribedCallbackListener subscribedCallbackListener) {
-        if (hasNotificationPermission()) {
-            subscribe(false, subscribedCallbackListener);
-        }
+        subscribe(false, subscribedCallbackListener);
     }
 
     @RequiresApi(api = 33)
@@ -2784,6 +2780,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return instance;
     }
 
+    @RequiresApi(api = 33)
     public static CleverPush getInstance(Context context, boolean isNullAllowed) {
         if (!isNullAllowed) {
             if (context == null) {

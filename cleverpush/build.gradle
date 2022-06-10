@@ -10,7 +10,6 @@ ext {
 
 android {
     compileSdkVersion rootProject.buildVersions.compileSdkVersion
-    compileSdkPreview "Tiramisu"
     defaultConfig {
         minSdkVersion buildVersions.minSdkVersion
         consumerProguardFiles 'consumer-proguard-rules.pro'
