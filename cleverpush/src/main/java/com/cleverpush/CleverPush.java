@@ -27,7 +27,12 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StyleRes;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.ActivityInitializedListener;
@@ -72,6 +77,14 @@ import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -169,11 +182,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private final int SYNC_SUBSCRIPTION_INTERVAL = 3 * 60 * 60 * 24;
     private final long SECONDS_PER_DAY = 60 * 60 * 24;
     private final long MILLISECONDS_PER_SECOND = 1000;
-
     private final int pushNotificationPermissionRequestCode = 102;
     private boolean pendingRequestPushNotificationPermissionCall = false;
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
 
+    @RequiresApi(api = 33)
     public CleverPush(@NonNull Context context) {
         if (context == null) {
             return;
@@ -418,6 +431,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         setUpNotificationCategoryGroups();
     }
 
+    @RequiresApi(api = 33)
     public SessionListener initSessionListener() {
         return open -> {
             this.isAppOpen = open;
@@ -539,9 +553,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private boolean shouldAutoSubscribe(SharedPreferences sharedPreferences, boolean autoRegister, String subscriptionId) {
-        int nextSync = getNextSync(sharedPreferences);
-        boolean isUnsubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
-        return !isUnsubscribed && subscriptionId == null && autoRegister || isSyncTimePassed(nextSync, subscriptionId);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && this.hasNotificationPermission()) {
+            return true;
+        } else if (this.areNotificationsEnabled()) {
+            return true;
+        } else {
+            return false;
+        }
+//        int nextSync = getNextSync(sharedPreferences);
+//        boolean isUnsubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
+//        return !isUnsubscribed && subscriptionId == null && autoRegister || isSyncTimePassed(nextSync, subscriptionId);
     }
 
     private boolean isSyncTimePassed(int nextSync, String subscriptionId) {
@@ -652,11 +673,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     /**
      * request for push notification
      */
-    public void requestPushNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (this.hasNotificationPermission()) {
-                return;
-            }
+    @RequiresApi(api = 33)
+    private void requestPushNotificationPermission() {
+        if (this.hasNotificationPermission()) {
+            return;
         }
         if (getCurrentActivity() == null) {
             this.pendingRequestPushNotificationPermissionCall = true;
@@ -667,17 +687,17 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     /**
-     * to check if app has location permission
-     */
-    public boolean hasLocationPermission() {
-        return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    /**
      * to check if app has notification permission
      */
     public boolean hasNotificationPermission() {
         return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * to check if app has location permission
+     */
+    public boolean hasLocationPermission() {
+        return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
 
@@ -1072,20 +1092,24 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return getSharedPreferences(getContext()).contains(CleverPushPreferences.SUBSCRIPTION_ID);
     }
 
+    @RequiresApi(api = 33)
     public void subscribe() {
         subscribe(false);
     }
 
+    @RequiresApi(api = 33)
     private void subscribe(boolean newSubscription) {
         subscribe(newSubscription, null);
     }
 
+    @RequiresApi(api = 33)
     public void subscribe(SubscribedCallbackListener subscribedCallbackListener) {
         if (hasNotificationPermission()) {
             subscribe(false, subscribedCallbackListener);
         }
     }
 
+    @RequiresApi(api = 33)
     private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener) {
         if (isSubscriptionInProgress()) {
             if (subscribedCallbackListener != null) {
@@ -1094,7 +1118,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !this.hasNotificationPermission()) {
             pendingSubscribeCallbackListener = subscribedCallbackListener;
             requestPushNotificationPermission();
             return;
@@ -1904,6 +1928,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return arrayList.contains(value);
     }
 
+    @RequiresApi(api = 33)
     public void trySubscriptionSync() {
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         int currentTime = (int) (System.currentTimeMillis() / MILLISECONDS_PER_SECOND);
@@ -1915,6 +1940,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         }
     }
 
+    @RequiresApi(api = 33)
     public void setSubscriptionLanguage(String language) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         String currentLanguage = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
@@ -2163,21 +2189,24 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         getActivityLifecycleListener().setActivityInitializedListener(() -> showTopicsDialog(ActivityLifecycleListener.currentActivity));
     }
 
+    @RequiresApi(api = 33)
     public void showTopicsDialog(Activity dialogActivity) {
         showTopicsDialog(dialogActivity, null);
     }
 
+    @RequiresApi(api = 33)
     public void showTopicsDialog(Activity dialogActivity, TopicsDialogListener topicsDialogListener) {
         try {
             if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
-                showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
+                showTopicsDialog(dialogActivity, topicsDialogListener, R.style.alertDialogTheme);
             else
                 showTopicsDialog(dialogActivity, topicsDialogListener, R.style.alertDialogTheme);
         } catch (IllegalStateException ex) {
-            showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
+            showTopicsDialog(dialogActivity, topicsDialogListener, R.style.alertDialogTheme);
         }
     }
 
+    @RequiresApi(api = 33)
     public void showTopicsDialog(Activity dialogActivity, TopicsDialogListener topicsDialogListener, @StyleRes int themeResId) {
         // Ensure it will only be shown once at a time
         if (isShowingTopicsDialog()) {
@@ -2240,6 +2269,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return getContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
     }
 
+    @RequiresApi(api = 33)
     private AlertDialog.Builder getTopicAlertBuilder(Context dialogActivity, TopicsDialogListener topicsDialogListener, int themeResId, JSONObject channelConfig, JSONArray channelTopics, boolean hasDeSelectAllInitial, LinearLayout checkboxLayout, CheckBox unsubscribeCheckbox, Set<String> selectedTopics) {
         AlertDialog.Builder alertBuilder = new AlertDialog.Builder(dialogActivity, themeResId);
 
@@ -2611,13 +2641,20 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return topicsChangedListener;
     }
 
+    @RequiresApi(api = 33)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case (pushNotificationPermissionRequestCode):
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if ((grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) || this.ignoreDisabledNotificationPermission) {
                     this.subscribe(true, pendingSubscribeCallbackListener);
                 }
+                break;
+            case (locationPermissionRequestCode):
+                if (geofenceList == null || geofenceList.size() == 0) {
+                    this.initGeoFences();
+                }
+                break;
         }
     }
 
@@ -2736,6 +2773,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.initialized = initialized;
     }
 
+    @RequiresApi(api = 33)
     public static CleverPush getInstance(Context context) {
         if (context == null) {
             throw new NullPointerException();
