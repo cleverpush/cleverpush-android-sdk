@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.23.2
+* Optimized ActivityLifecycleListener behaviour
+
 ## 1.23.1
 * Implemented `SubscribeCallbackListener` which can be passed as an argument to the `subscribe` method
 
