@@ -86,7 +86,10 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
             currentActivity = null;
         }
 
-        counter--;
+        if (counter > 0) {
+            counter--;
+        }
+
         if (counter == 0 && sessionListener != null) {
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
