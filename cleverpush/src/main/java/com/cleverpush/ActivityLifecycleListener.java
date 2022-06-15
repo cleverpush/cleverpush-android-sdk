@@ -86,7 +86,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
             currentActivity = null;
         }
 
-        if(counter > 0) {
+        if (counter > 0) {
             counter--;
         }
 
