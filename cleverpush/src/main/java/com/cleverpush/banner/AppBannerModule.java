@@ -475,12 +475,7 @@ public class AppBannerModule {
             }
 
             if (!contains) {
-                getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
-                    @Override
-                    public void initialized() {
-                        popups.add(new AppBannerPopup(getCurrentActivity(), banner));
-                    }
-                });
+                getActivityLifecycleListener().setActivityInitializedListener(() -> popups.add(new AppBannerPopup(getCurrentActivity(), banner)));
             }
         }
     }
@@ -688,7 +683,7 @@ public class AppBannerModule {
     }
 
     public CleverPush getCleverPushInstance() {
-        return CleverPush.getInstance(getCurrentActivity(), true);
+        return CleverPush.getInstance(CleverPush.context, true);
     }
 
     public Collection<AppBannersListener> getBannersListeners() {
@@ -716,7 +711,7 @@ public class AppBannerModule {
     }
 
     public Activity getCurrentActivity() {
-        return ActivityLifecycleListener.currentActivity;
+        return CleverPush.getInstance(CleverPush.context).getCurrentActivity();
     }
 
     public ActivityLifecycleListener getActivityLifecycleListener() {

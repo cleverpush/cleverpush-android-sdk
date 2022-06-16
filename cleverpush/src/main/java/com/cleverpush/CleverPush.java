@@ -112,7 +112,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.23.2";
+    public static final String SDK_VERSION = "1.23.3";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -176,6 +176,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private AddSubscriptionTags addSubscriptionTagsHelper;
     private RemoveSubscriptionTags removeSubscriptionTagsHelper;
+
+    private Activity customActivity = null;
 
     private final String DATE_FORMAT_ISO = "yyyy-MM-dd HH:mm:ss z";
     private final int SYNC_SUBSCRIPTION_INTERVAL = 3 * 60 * 60 * 24;
@@ -626,7 +628,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     void showFiveStarsDialog(JSONObject config) {
         FiveStarsDialog dialog = new FiveStarsDialog(
-                ActivityLifecycleListener.currentActivity,
+                getCurrentActivity(),
                 config.optString("appReviewEmail")
         );
         dialog.setRateText(config.optString("appReviewText"))
@@ -701,7 +703,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 if (tags != null) {
                     CleverPush self = this;
                     for (ChannelTag tag : tags) {
-                        TagsMatcher.autoAssignTagMatches(tag, pathname, params, matches -> {
+                        TagsMatcher.autoAssignTagMatches(getCurrentActivity(), tag, pathname, params, matches -> {
                             if (matches) {
                                 Log.d(LOG_TAG, "checkTag: matches: YES - " + tag.getName());
 
@@ -2111,7 +2113,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     int appOpens = sharedPreferences.getInt(CleverPushPreferences.APP_OPENS, 1);
 
                     if (currentUnixTime >= allowedUnixTime && appOpens >= topicsDialogSessions) {
-                        (ActivityLifecycleListener.currentActivity).runOnUiThread(() -> {
+                        getCurrentActivity().runOnUiThread(() -> {
                             new Handler().postDelayed(() -> {
                                 if (sharedPreferences.getBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, false)) {
                                     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -2131,7 +2133,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public void showTopicsDialog() {
-        getActivityLifecycleListener().setActivityInitializedListener(() -> showTopicsDialog(ActivityLifecycleListener.currentActivity));
+        getActivityLifecycleListener().setActivityInitializedListener(() -> showTopicsDialog(getCurrentActivity()));
     }
 
     public void showTopicsDialog(Activity dialogActivity) {
@@ -2744,6 +2746,9 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     public Activity getCurrentActivity() {
+        if (this.customActivity != null) {
+            return this.customActivity;
+        }
         return ActivityLifecycleListener.currentActivity;
     }
 
@@ -2867,5 +2872,13 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public boolean isAppOpen() {
         return this.isAppOpen;
+    }
+
+    public void setCustomActivity(Activity customActivity) {
+        this.customActivity = customActivity;
+    }
+
+    public Activity getCustomActivity() {
+        return this.customActivity;
     }
 }

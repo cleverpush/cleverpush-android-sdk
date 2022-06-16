@@ -2,10 +2,10 @@ package com.cleverpush.service;
 
 import static com.cleverpush.Constants.LOG_TAG;
 
+import android.app.Activity;
 import android.util.Log;
 import android.webkit.WebView;
 
-import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.ChannelTag;
 import com.cleverpush.CleverPush;
 import com.cleverpush.listener.TagsMatcherListener;
@@ -18,7 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TagsMatcher {
-    public static void autoAssignTagMatches(ChannelTag tag, String pathname, Map<String, ?> params, TagsMatcherListener callback) {
+    public static void autoAssignTagMatches(Activity currentActivity, ChannelTag tag, String pathname, Map<String, ?> params, TagsMatcherListener callback) {
         if (tag.getAutoAssignPath() != null) {
             String path = tag.getAutoAssignPath();
             if (path.equals("[EMPTY]")) {
@@ -34,7 +34,7 @@ public class TagsMatcher {
 
         if (tag.getAutoAssignFunction() != null && params != null) {
             try {
-                (ActivityLifecycleListener.currentActivity).runOnUiThread(() -> {
+                currentActivity.runOnUiThread(() -> {
                     WebView webview = new WebView(CleverPush.context);
                     webview.getSettings().setJavaScriptEnabled(true);
                     Gson gson = new Gson();
