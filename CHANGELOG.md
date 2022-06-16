@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.23.3
+* Implemented `setCustomActivity` method
+
 ## 1.23.2
 * Optimized ActivityLifecycleListener behaviour
 
