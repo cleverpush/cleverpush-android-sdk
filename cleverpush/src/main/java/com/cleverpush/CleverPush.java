@@ -86,7 +86,6 @@ import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -187,6 +186,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private final int SYNC_SUBSCRIPTION_INTERVAL = 3 * 60 * 60 * 24;
     private final long SECONDS_PER_DAY = 60 * 60 * 24;
     private final long MILLISECONDS_PER_SECOND = 1000;
+
+    private final int pushNotificationPermissionRequestCode = 102;
+    private boolean pendingRequestPushNotificationPermissionCall = false;
+    private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -442,6 +445,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     this.requestLocationPermission();
                 }
 
+                if (pendingRequestPushNotificationPermissionCall) {
+                    this.requestPushNotificationPermission();
+                }
+
                 if (pendingInitFeaturesCall) {
                     this.initFeatures();
                 }
@@ -659,10 +666,35 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     /**
+     * request for push notification
+     */
+    public void requestPushNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Constants.ANDROID_13_VERSION) {
+            if (this.hasNotificationPermission()) {
+                Log.e("Version", String.valueOf(Build.VERSION.SDK_INT));
+                return;
+            }
+        }
+        if (getCurrentActivity() == null) {
+            this.pendingRequestPushNotificationPermissionCall = true;
+            return;
+        }
+        this.pendingRequestPushNotificationPermissionCall = false;
+        ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.POST_NOTIFICATIONS}, pushNotificationPermissionRequestCode);
+    }
+
+    /**
      * to check if app has location permission
      */
     public boolean hasLocationPermission() {
         return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * to check if app has notification permission
+     */
+    public boolean hasNotificationPermission() {
+        return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
     }
 
     private void savePreferencesMap(String mapKey, Map<String, Integer> inputMap) {
@@ -1075,6 +1107,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return;
         }
 
+        if (Build.VERSION.SDK_INT >= Constants.ANDROID_13_VERSION) {
+            pendingSubscribeCallbackListener = subscribedCallbackListener;
+            requestPushNotificationPermission();
+            return;
+        }
+
         if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
             String error = "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
             Logger.d(LOG_TAG, error);
@@ -1435,8 +1473,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private static boolean isHMSCoreInstalledAndEnabled() {
-        HuaweiApiAvailability availability = HuaweiApiAvailability.getInstance();
-        return availability.isHuaweiMobileServicesAvailable(CleverPush.context) == 0;
+//        HuaweiApiAvailability availability = HuaweiApiAvailability.getInstance();
+//        return availability.isHuaweiMobileServicesAvailable(CleverPush.context) == 0;
+
+        return false;
     }
 
     private boolean supportsADM() {
@@ -2663,8 +2703,17 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == locationPermissionRequestCode && (geofenceList == null || geofenceList.size() == 0)) {
-            this.initGeoFences();
+        switch (requestCode) {
+            case (pushNotificationPermissionRequestCode):
+                if ((grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) || this.ignoreDisabledNotificationPermission) {
+                    this.subscribe(true, pendingSubscribeCallbackListener);
+                }
+                break;
+            case (locationPermissionRequestCode):
+                if (geofenceList == null || geofenceList.size() == 0) {
+                    this.initGeoFences();
+                }
+                break;
         }
     }
 

@@ -1,6 +1,4 @@
 apply plugin: 'com.android.library'
-apply from: 'maven-push.gradle'
-apply plugin: 'jacoco-android'
 
 ext {
     buildVersions = [
@@ -9,8 +7,8 @@ ext {
 }
 
 android {
-    compileSdkVersion rootProject.buildVersions.compileSdkVersion
-
+    compileSdkVersion 33
+    compileSdkPreview "Tiramisu"
     defaultConfig {
         minSdkVersion buildVersions.minSdkVersion
         consumerProguardFiles 'consumer-proguard-rules.pro'
@@ -69,6 +67,7 @@ android {
 dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.2'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    implementation 'com.google.android.gms:play-services-instantapps:18.0.1'
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 
     // Androidx
