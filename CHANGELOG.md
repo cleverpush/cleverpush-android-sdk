@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.23.4
+* Optimized layout for app banners with multiple buttons
+
 ## 1.23.3
 * Implemented `setCustomActivity` method
 
