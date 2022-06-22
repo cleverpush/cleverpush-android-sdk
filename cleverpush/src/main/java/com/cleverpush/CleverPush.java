@@ -112,7 +112,7 @@ import java.util.TimerTask;
 
 public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SDK_VERSION = "1.23.4";
+    public static final String SDK_VERSION = "1.23.5";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -164,6 +164,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private boolean incrementBadge = false;
     private boolean autoClearBadge = false;
     private boolean ignoreDisabledNotificationPermission = false;
+    private boolean keepTargetingDataOnUnsubscribe = false;
 
     private boolean developmentMode = false;
 
@@ -2632,6 +2633,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         return this.disableNightModeAdaption;
     }
 
+    public void setKeepTargetingDataOnUnsubscribe(boolean keepData) {
+        this.keepTargetingDataOnUnsubscribe = keepData;
+    }
+
     public void clearSubscriptionData() {
         subscriptionId = null;
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
@@ -2639,10 +2644,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
         editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
         editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
-        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
-        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
-        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
-        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+        if (!this.keepTargetingDataOnUnsubscribe) {
+            editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
+            editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
+            editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
+            editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+        }
         editor.commit();
     }
 

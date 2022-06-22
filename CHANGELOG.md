@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.23.5
+* Implemented `setKeepTargetingDataOnUnsubscribe` method
+
 ## 1.23.4
 * Optimized layout for app banners with multiple buttons
 
