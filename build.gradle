@@ -2,6 +2,7 @@ buildscript {
     ext {
         buildVersions = [
                 compileSdkVersion: 33,
+                compileSdkPreview: 'Tiramisu',
         ]
         androidGradlePluginVersion = '3.6.2'
         googleServicesGradlePluginVersion = '4.3.3'
@@ -16,7 +17,7 @@ buildscript {
         google()
         mavenCentral()
         maven { url 'https://developer.huawei.com/repo/' }
-        maven { url "https://jitpack.io" }
+        maven { url 'https://jitpack.io' }
     }
 
     dependencies {
