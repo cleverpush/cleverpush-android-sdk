@@ -4,7 +4,7 @@ buildscript {
                 compileSdkVersion: 33,
                 compileSdkPreview: 'Tiramisu',
         ]
-        androidGradlePluginVersion = '3.6.2'
+        androidGradlePluginVersion = '7.0.4'
         googleServicesGradlePluginVersion = '4.3.3'
         huaweiAgconnectVersion = '1.2.1.301'
         huaweiHmsPushVersion = '6.3.0.304'
@@ -21,10 +21,11 @@ buildscript {
     }
 
     dependencies {
-        classpath "com.android.tools.build:gradle:7.0.4"
-        classpath "com.google.gms:google-services:4.3.1"
-        classpath "com.github.dcendents:android-maven-gradle-plugin:1.4.1"
+        classpath "com.android.tools.build:gradle:$androidGradlePluginVersion"
+        classpath "com.google.gms:google-services:$googleServicesGradlePluginVersion"
         classpath "com.huawei.agconnect:agcp:$huaweiAgconnectVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.4'
     }
 
     ext {
