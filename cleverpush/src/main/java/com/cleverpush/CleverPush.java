@@ -1473,10 +1473,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     }
 
     private static boolean isHMSCoreInstalledAndEnabled() {
-//        HuaweiApiAvailability availability = HuaweiApiAvailability.getInstance();
-//        return availability.isHuaweiMobileServicesAvailable(CleverPush.context) == 0;
-
-        return false;
+        HuaweiApiAvailability availability = HuaweiApiAvailability.getInstance();
+        return availability.isHuaweiMobileServicesAvailable(CleverPush.context) == 0;
     }
 
     private boolean supportsADM() {
