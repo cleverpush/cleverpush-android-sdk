@@ -428,30 +428,52 @@ public class AppBannerModule {
                 boolean triggers = false;
                 for (BannerTrigger trigger : banner.getTriggers()) {
                     boolean triggerTrue = false;
+                    boolean durationTrue = false;
+                    boolean sessionTrue = false;
+                    boolean eventTrue = false;
+                    boolean is_session_count = false;
+                    boolean is_event_count = false;
+                    int sec = 0;
                     for (BannerTriggerCondition condition : trigger.getConditions()) {
-                        boolean conditionTrue = false;
                         if (condition.getType() != null) {
                             if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
-                                banner.setDelaySeconds(condition.getSeconds());
-                                conditionTrue = true;
+                                durationTrue = true;
+                                sec = condition.getSeconds();
                             }
                             if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
+                                sessionTrue = true;
                                 if (condition.getRelation().equals("lt")) {
-                                    conditionTrue = sessions < condition.getSessions();
+                                    is_session_count = sessions < condition.getSessions();
                                 } else {
-                                    conditionTrue = sessions > condition.getSessions();
+                                    is_session_count = sessions > condition.getSessions();
                                 }
                             }
                             if (condition.getType().equals(BannerTriggerConditionType.Event)) {
+                                eventTrue = true;
                                 String event = events.get(condition.getKey());
-                                conditionTrue = event != null && event.equals(condition.getValue());
+                                is_event_count = event != null && event.equals(condition.getValue());
                             }
                         }
+                    }
 
-                        if (conditionTrue) {
-                            triggerTrue = true;
-                            break;
-                        }
+                    if ((durationTrue && sessionTrue && eventTrue) && is_session_count && is_event_count) {
+                        banner.setDelaySeconds(sec);
+                        triggerTrue = true;
+                    } else if ((durationTrue && sessionTrue && !eventTrue) && is_session_count) {
+                        banner.setDelaySeconds(sec);
+                        triggerTrue = true;
+                    } else if ((eventTrue && sessionTrue && !durationTrue) && is_session_count && is_event_count) {
+                        triggerTrue = true;
+                    } else if ((durationTrue && eventTrue && !sessionTrue) && is_event_count) {
+                        banner.setDelaySeconds(sec);
+                        triggerTrue = true;
+                    } else if ((sessionTrue && !durationTrue && !eventTrue) && is_session_count) {
+                        triggerTrue = true;
+                    } else if (durationTrue && !sessionTrue && !eventTrue) {
+                        banner.setDelaySeconds(sec);
+                        triggerTrue = true;
+                    } else if ((eventTrue && !sessionTrue && !durationTrue) && is_event_count) {
+                        triggerTrue = true;
                     }
 
                     if (triggerTrue) {
