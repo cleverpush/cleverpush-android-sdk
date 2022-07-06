@@ -431,48 +431,48 @@ public class AppBannerModule {
                     boolean durationTrue = false;
                     boolean sessionTrue = false;
                     boolean eventTrue = false;
-                    boolean is_session_count = false;
-                    boolean is_event_count = false;
-                    int sec = 0;
+                    boolean sessionCount = false;
+                    boolean eventCount = false;
+                    int seconds = 0;
                     for (BannerTriggerCondition condition : trigger.getConditions()) {
                         if (condition.getType() != null) {
                             if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
                                 durationTrue = true;
-                                sec = condition.getSeconds();
+                                seconds = condition.getSeconds();
                             }
                             if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
                                 sessionTrue = true;
                                 if (condition.getRelation().equals("lt")) {
-                                    is_session_count = sessions < condition.getSessions();
+                                    sessionCount = sessions < condition.getSessions();
                                 } else {
-                                    is_session_count = sessions > condition.getSessions();
+                                    sessionCount = sessions > condition.getSessions();
                                 }
                             }
                             if (condition.getType().equals(BannerTriggerConditionType.Event)) {
                                 eventTrue = true;
                                 String event = events.get(condition.getKey());
-                                is_event_count = event != null && event.equals(condition.getValue());
+                                eventCount = event != null && event.equals(condition.getValue());
                             }
                         }
                     }
 
-                    if ((durationTrue && sessionTrue && eventTrue) && is_session_count && is_event_count) {
-                        banner.setDelaySeconds(sec);
+                    if ((durationTrue && sessionTrue && eventTrue) && sessionCount && eventCount) {
+                        banner.setDelaySeconds(seconds);
                         triggerTrue = true;
-                    } else if ((durationTrue && sessionTrue && !eventTrue) && is_session_count) {
-                        banner.setDelaySeconds(sec);
+                    } else if ((durationTrue && sessionTrue && !eventTrue) && sessionCount) {
+                        banner.setDelaySeconds(seconds);
                         triggerTrue = true;
-                    } else if ((eventTrue && sessionTrue && !durationTrue) && is_session_count && is_event_count) {
+                    } else if ((eventTrue && sessionTrue && !durationTrue) && sessionCount && eventCount) {
                         triggerTrue = true;
-                    } else if ((durationTrue && eventTrue && !sessionTrue) && is_event_count) {
-                        banner.setDelaySeconds(sec);
+                    } else if ((durationTrue && eventTrue && !sessionTrue) && eventCount) {
+                        banner.setDelaySeconds(seconds);
                         triggerTrue = true;
-                    } else if ((sessionTrue && !durationTrue && !eventTrue) && is_session_count) {
+                    } else if ((sessionTrue && !durationTrue && !eventTrue) && sessionCount) {
                         triggerTrue = true;
                     } else if (durationTrue && !sessionTrue && !eventTrue) {
-                        banner.setDelaySeconds(sec);
+                        banner.setDelaySeconds(seconds);
                         triggerTrue = true;
-                    } else if ((eventTrue && !sessionTrue && !durationTrue) && is_event_count) {
+                    } else if ((eventTrue && !sessionTrue && !durationTrue) && eventCount) {
                         triggerTrue = true;
                     }
 
