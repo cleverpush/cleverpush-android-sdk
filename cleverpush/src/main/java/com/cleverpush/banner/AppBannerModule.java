@@ -427,61 +427,36 @@ public class AppBannerModule {
             if (banner.getTriggerType() == BannerTriggerType.Conditions) {
                 boolean triggers = false;
                 for (BannerTrigger trigger : banner.getTriggers()) {
-                    boolean triggerTrue = false;
-                    boolean durationTrue = false;
-                    boolean sessionTrue = false;
-                    boolean eventTrue = false;
-                    boolean sessionCount = false;
-                    boolean eventCount = false;
-                    int seconds = 0;
+                    boolean triggerTrue = true;
                     for (BannerTriggerCondition condition : trigger.getConditions()) {
+                        boolean conditionTrue = false;
                         if (condition.getType() != null) {
                             if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
-                                durationTrue = true;
-                                seconds = condition.getSeconds();
+                                banner.setDelaySeconds(condition.getSeconds());
+                                conditionTrue = true;
                             }
                             if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
-                                sessionTrue = true;
                                 if (condition.getRelation().equals("lt")) {
-                                    sessionCount = sessions < condition.getSessions();
+                                    conditionTrue = sessions < condition.getSessions();
                                 } else {
-                                    sessionCount = sessions > condition.getSessions();
+                                    conditionTrue = sessions > condition.getSessions();
                                 }
                             }
                             if (condition.getType().equals(BannerTriggerConditionType.Event)) {
-                                eventTrue = true;
                                 String event = events.get(condition.getKey());
-                                eventCount = event != null && event.equals(condition.getValue());
+                                conditionTrue = event != null && event.equals(condition.getValue());
                             }
                         }
+                        if (conditionTrue) {
+                            triggerTrue = true;
+                            break;
+                        }
                     }
-
-                    if ((durationTrue && sessionTrue && eventTrue) && sessionCount && eventCount) {
-                        banner.setDelaySeconds(seconds);
-                        triggerTrue = true;
-                    } else if ((durationTrue && sessionTrue && !eventTrue) && sessionCount) {
-                        banner.setDelaySeconds(seconds);
-                        triggerTrue = true;
-                    } else if ((eventTrue && sessionTrue && !durationTrue) && sessionCount && eventCount) {
-                        triggerTrue = true;
-                    } else if ((durationTrue && eventTrue && !sessionTrue) && eventCount) {
-                        banner.setDelaySeconds(seconds);
-                        triggerTrue = true;
-                    } else if ((sessionTrue && !durationTrue && !eventTrue) && sessionCount) {
-                        triggerTrue = true;
-                    } else if (durationTrue && !sessionTrue && !eventTrue) {
-                        banner.setDelaySeconds(seconds);
-                        triggerTrue = true;
-                    } else if ((eventTrue && !sessionTrue && !durationTrue) && eventCount) {
-                        triggerTrue = true;
-                    }
-
                     if (triggerTrue) {
                         triggers = true;
                         break;
                     }
                 }
-
                 if (!triggers) {
                     Log.d(TAG, "Skipping Banner because: Trigger not satisfied " + sessions);
                     continue;
