@@ -429,26 +429,26 @@ public class AppBannerModule {
                 for (BannerTrigger trigger : banner.getTriggers()) {
                     boolean triggerTrue = true;
                     for (BannerTriggerCondition condition : trigger.getConditions()) {
-                        boolean conditionTrue = false;
+                        // true by default to make the AND check work
+                        boolean conditionTrue = true;
                         if (condition.getType() != null) {
                             if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
                                 banner.setDelaySeconds(condition.getSeconds());
-                                conditionTrue = true;
-                            }
-                            if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
+                            } else if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
                                 if (condition.getRelation().equals("lt")) {
                                     conditionTrue = sessions < condition.getSessions();
                                 } else {
                                     conditionTrue = sessions > condition.getSessions();
                                 }
-                            }
-                            if (condition.getType().equals(BannerTriggerConditionType.Event)) {
+                            } else if (condition.getType().equals(BannerTriggerConditionType.Event)) {
                                 String event = events.get(condition.getKey());
                                 conditionTrue = event != null && event.equals(condition.getValue());
+                            } else {
+                                conditionTrue = false;
                             }
                         }
-                        if (conditionTrue) {
-                            triggerTrue = true;
+                        if (!conditionTrue) {
+                            triggerTrue = false;
                             break;
                         }
                     }
@@ -457,6 +457,7 @@ public class AppBannerModule {
                         break;
                     }
                 }
+
                 if (!triggers) {
                     Log.d(TAG, "Skipping Banner because: Trigger not satisfied " + sessions);
                     continue;

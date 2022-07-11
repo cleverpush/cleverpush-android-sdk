@@ -33,7 +33,7 @@ public class BannerTriggerCondition {
 			banner.value = json.optString("value");
 			banner.sessions = json.optInt("sessions");
 			banner.seconds = json.optInt("seconds");
-			banner.relation = json.optString("relation");
+			banner.relation = json.optString("operator");
 		}
 
         return banner;
