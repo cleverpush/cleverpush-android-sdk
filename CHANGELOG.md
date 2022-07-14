@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.23.6
+* Optimized app banner trigger conditions
+
 ## 1.23.5
 * Implemented `setKeepTargetingDataOnUnsubscribe` method
 
