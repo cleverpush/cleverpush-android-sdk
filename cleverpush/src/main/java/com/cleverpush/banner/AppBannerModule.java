@@ -427,33 +427,31 @@ public class AppBannerModule {
             if (banner.getTriggerType() == BannerTriggerType.Conditions) {
                 boolean triggers = false;
                 for (BannerTrigger trigger : banner.getTriggers()) {
-                    boolean triggerTrue = false;
+                    boolean triggerTrue = true;
                     for (BannerTriggerCondition condition : trigger.getConditions()) {
-                        boolean conditionTrue = false;
+                        // true by default to make the AND check work
+                        boolean conditionTrue = true;
                         if (condition.getType() != null) {
                             if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
                                 banner.setDelaySeconds(condition.getSeconds());
-                                conditionTrue = true;
-                            }
-                            if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
+                            } else if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
                                 if (condition.getRelation().equals("lt")) {
                                     conditionTrue = sessions < condition.getSessions();
                                 } else {
                                     conditionTrue = sessions > condition.getSessions();
                                 }
-                            }
-                            if (condition.getType().equals(BannerTriggerConditionType.Event)) {
+                            } else if (condition.getType().equals(BannerTriggerConditionType.Event)) {
                                 String event = events.get(condition.getKey());
                                 conditionTrue = event != null && event.equals(condition.getValue());
+                            } else {
+                                conditionTrue = false;
                             }
                         }
-
-                        if (conditionTrue) {
-                            triggerTrue = true;
+                        if (!conditionTrue) {
+                            triggerTrue = false;
                             break;
                         }
                     }
-
                     if (triggerTrue) {
                         triggers = true;
                         break;
