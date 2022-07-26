@@ -40,7 +40,6 @@ import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
 import com.cleverpush.listener.ChannelTagsListener;
-import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
@@ -178,6 +177,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private AddSubscriptionTags addSubscriptionTagsHelper;
     private RemoveSubscriptionTags removeSubscriptionTagsHelper;
 
+    private AddSubscriptionTopic addSubscriptionTopicsHelper;
+    private RemoveSubscriptionTopics removeSubscriptionTopicsHelper;
     private Activity customActivity = null;
 
     private final String DATE_FORMAT_ISO = "yyyy-MM-dd HH:mm:ss z";
@@ -488,7 +489,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         CleverPushHttpClient.get(configPath, new ChannelConfigFromChannelIdResponseHandler(instance).getResponseHandler(autoRegister, storedChannelId, storedSubscriptionId));
     }
 
-
     public void getChannelConfigFromBundleId(String url, boolean autoRegister) {
         CleverPush instance = this;
         CleverPushHttpClient.get(url, new ChannelConfigFromBundleIdResponseHandler(instance, initializeListener).getResponseHandler(autoRegister));
@@ -745,9 +745,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                                 }
 
                                 int sessionsNeeded = Math.max(tag.getAutoAssignSessions(), 0);
-
-
                                 int sessions = 0;
+
                                 Map<String, Integer> dailySessions = new HashMap<>();
                                 if (tag.getAutoAssignDays() > 0 && dateAfter != null) {
                                     try {
@@ -1581,12 +1580,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
     }
 
-    public void getAvailableTopics(ChannelTopicsListener listener) {
-        this.getChannelConfig(channelConfig -> {
-            listener.ready(this.getAvailableTopicsFromConfig(channelConfig));
-        });
-    }
-
     private Set<ChannelTopic> getAvailableTopicsFromConfig(JSONObject channelConfig) {
         Set<ChannelTopic> topics = new LinkedHashSet<>();
         if (channelConfig != null && channelConfig.has("channelTopics")) {
@@ -1628,6 +1621,103 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     public void addSubscriptionTags(String[] tagIds) {
         addSubscriptionTagTrackingConsent(tagIds);
     }
+
+/*
+    public void addSubscriptionTopic(String topicId, CompletionListener completionListener) {
+        this.getSubscriptionId(subscriptionId -> {
+            Set<String> topics = this.getSubscriptionTopics();
+            if (topics.contains(topicId)) {
+                completionListener.onComplete();
+                return;
+            }
+            topics.add(topicId);
+            List<String> list = new ArrayList<>(topics);
+            String[] topicsArray = (String[]) list.toArray();
+            this.setSubscriptionTopics(topicsArray, null);
+            if (subscriptionId != null) {
+                JSONObject jsonBody = new JSONObject();
+                try {
+                    jsonBody.put("channelId", getChannelId(getContext()));
+                    jsonBody.put("topicId", topicId);
+                    jsonBody.put("subscriptionId", subscriptionId);
+                } catch (JSONException ex) {
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
+                }
+                CleverPushHttpClient.ResponseHandler responseHandler = new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
+
+                CleverPushHttpClient.post(
+                        "/subscription/topic/add" + getChannelId(getContext()),
+                        jsonBody,
+                        responseHandler);
+            }
+        });
+    }
+*/
+
+    public void addSubscriptionTopic(String[] topicId) {
+        addSubscriptionTopicTrackingConsent(topicId);
+    }
+
+    private void addSubscriptionTopicTrackingConsent(String... topicIds) {
+        startTrackingConsent(getAddSubscriptionTopicsSubscribedListener(topicIds));
+    }
+
+    private SubscribedListener getAddSubscriptionTopicsSubscribedListener(String... topicIds) {
+        return subscriptionId -> {
+            if (addSubscriptionTopicsHelper != null && !addSubscriptionTopicsHelper.isFinished()) {
+                addSubscriptionTopicsHelper.addTopicIds(topicIds);
+                return;
+            }
+            addSubscriptionTopicsHelper = new AddSubscriptionTopic(subscriptionId, this.channelId, getSharedPreferences(getContext()), topicIds);
+            addSubscriptionTopicsHelper.addSubscriptionTopic();
+        };
+    }
+
+    public void removeSubscriptionTopics(String[] topicIds) {
+        removeSubscriptionTopicTrackingConsent(topicIds);
+    }
+
+    private void removeSubscriptionTopicTrackingConsent(String... topicIds) {
+        startTrackingConsent(getRemoveSubscriptionTopicSubscribedListener(topicIds));
+    }
+
+    private SubscribedListener getRemoveSubscriptionTopicSubscribedListener(String... topicIds) {
+        return subscriptionId -> {
+            if (removeSubscriptionTopicsHelper != null && !removeSubscriptionTopicsHelper.isFinished()) {
+                removeSubscriptionTopicsHelper.removeTopicIds(topicIds);
+                return;
+            }
+            removeSubscriptionTopicsHelper = new RemoveSubscriptionTopics(subscriptionId, this.channelId, getSharedPreferences(getContext()), topicIds);
+            removeSubscriptionTopicsHelper.removeSubscriptionTopics();
+        };
+    }
+
+/*
+    public void removeSubscriptionTopic(String topicIds, CompletionListener completionListener) {
+        this.getSubscriptionId(subscriptionId -> {
+            Set<String> topics = this.getSubscriptionTopics();
+            if (!topics.contains(topicIds)) {
+                completionListener.onComplete();
+                return;
+            }
+            topics.add(topicIds);
+            List<String> list = new ArrayList<>(topics);
+            String[] topicsArray = (String[]) list.toArray();
+            this.setSubscriptionTopics(topicsArray, null);
+            if (subscriptionId != null) {
+                JSONObject jsonBody = new JSONObject();
+                try {
+                    jsonBody.put("channelId", getChannelId(getContext()));
+                    jsonBody.put("topicId", topicIds);
+                    jsonBody.put("subscriptionId", subscriptionId);
+                } catch (JSONException ex) {
+                    Log.e(LOG_TAG, ex.getMessage(), ex);
+                }
+                CleverPushHttpClient.post("/subscription/topic/remove" + getChannelId(getContext()), jsonBody, new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener));
+            }
+        });
+    }
+*/
 
     public void addSubscriptionTag(String tagId) {
         addSubscriptionTagTrackingConsent(tagId);
@@ -1682,9 +1772,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     public void setSubscriptionTopics(String[] topicIds, CompletionListener completionListener) {
         new Thread(() -> {
             SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-
             final int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
-
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
             editor.apply();
