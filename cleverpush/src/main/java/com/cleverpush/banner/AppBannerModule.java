@@ -590,14 +590,12 @@ public class AppBannerModule {
                 Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
                 topics.addAll(action.getTopics());
                 getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-                getCleverPushInstance().addSubscriptionTopic(topics.toArray(new String[0]));
             }
 
             if (action.getType().equals("removeTopics")) {
                 Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
                 topics.removeAll(action.getTopics());
                 getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-                getCleverPushInstance().removeSubscriptionTopics(topics.toArray(new String[0]));
             }
 
             if (action.getType().equals("setAttribute")) {

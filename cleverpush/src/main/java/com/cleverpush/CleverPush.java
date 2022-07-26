@@ -177,10 +177,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private AddSubscriptionTags addSubscriptionTagsHelper;
     private RemoveSubscriptionTags removeSubscriptionTagsHelper;
 
-    private AddSubscriptionTopic addSubscriptionTopicsHelper;
-    private RemoveSubscriptionTopics removeSubscriptionTopicsHelper;
     private Activity customActivity = null;
-
     private final String DATE_FORMAT_ISO = "yyyy-MM-dd HH:mm:ss z";
     private final int SYNC_SUBSCRIPTION_INTERVAL = 3 * 60 * 60 * 24;
     private final long SECONDS_PER_DAY = 60 * 60 * 24;
@@ -1622,7 +1619,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         addSubscriptionTagTrackingConsent(tagIds);
     }
 
-/*
     public void addSubscriptionTopic(String topicId, CompletionListener completionListener) {
         this.getSubscriptionId(subscriptionId -> {
             Set<String> topics = this.getSubscriptionTopics();
@@ -1652,47 +1648,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             }
         });
     }
-*/
 
-    public void addSubscriptionTopic(String[] topicId) {
-        addSubscriptionTopicTrackingConsent(topicId);
-    }
-
-    private void addSubscriptionTopicTrackingConsent(String... topicIds) {
-        startTrackingConsent(getAddSubscriptionTopicsSubscribedListener(topicIds));
-    }
-
-    private SubscribedListener getAddSubscriptionTopicsSubscribedListener(String... topicIds) {
-        return subscriptionId -> {
-            if (addSubscriptionTopicsHelper != null && !addSubscriptionTopicsHelper.isFinished()) {
-                addSubscriptionTopicsHelper.addTopicIds(topicIds);
-                return;
-            }
-            addSubscriptionTopicsHelper = new AddSubscriptionTopic(subscriptionId, this.channelId, getSharedPreferences(getContext()), topicIds);
-            addSubscriptionTopicsHelper.addSubscriptionTopic();
-        };
-    }
-
-    public void removeSubscriptionTopics(String[] topicIds) {
-        removeSubscriptionTopicTrackingConsent(topicIds);
-    }
-
-    private void removeSubscriptionTopicTrackingConsent(String... topicIds) {
-        startTrackingConsent(getRemoveSubscriptionTopicSubscribedListener(topicIds));
-    }
-
-    private SubscribedListener getRemoveSubscriptionTopicSubscribedListener(String... topicIds) {
-        return subscriptionId -> {
-            if (removeSubscriptionTopicsHelper != null && !removeSubscriptionTopicsHelper.isFinished()) {
-                removeSubscriptionTopicsHelper.removeTopicIds(topicIds);
-                return;
-            }
-            removeSubscriptionTopicsHelper = new RemoveSubscriptionTopics(subscriptionId, this.channelId, getSharedPreferences(getContext()), topicIds);
-            removeSubscriptionTopicsHelper.removeSubscriptionTopics();
-        };
-    }
-
-/*
     public void removeSubscriptionTopic(String topicIds, CompletionListener completionListener) {
         this.getSubscriptionId(subscriptionId -> {
             Set<String> topics = this.getSubscriptionTopics();
@@ -1717,7 +1673,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             }
         });
     }
-*/
 
     public void addSubscriptionTag(String tagId) {
         addSubscriptionTagTrackingConsent(tagId);
