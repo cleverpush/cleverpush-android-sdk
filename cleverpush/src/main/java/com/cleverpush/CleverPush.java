@@ -40,6 +40,7 @@ import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
 import com.cleverpush.listener.ChannelTagsListener;
+import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
@@ -178,6 +179,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private RemoveSubscriptionTags removeSubscriptionTagsHelper;
 
     private Activity customActivity = null;
+
     private final String DATE_FORMAT_ISO = "yyyy-MM-dd HH:mm:ss z";
     private final int SYNC_SUBSCRIPTION_INTERVAL = 3 * 60 * 60 * 24;
     private final long SECONDS_PER_DAY = 60 * 60 * 24;
@@ -1577,6 +1579,12 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         });
     }
 
+    public void getAvailableTopics(ChannelTopicsListener listener) {
+        this.getChannelConfig(channelConfig -> {
+            listener.ready(this.getAvailableTopicsFromConfig(channelConfig));
+        });
+    }
+
     private Set<ChannelTopic> getAvailableTopicsFromConfig(JSONObject channelConfig) {
         Set<ChannelTopic> topics = new LinkedHashSet<>();
         if (channelConfig != null && channelConfig.has("channelTopics")) {
@@ -1621,16 +1629,19 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public void addSubscriptionTopic(String topicId, CompletionListener completionListener) {
         this.getSubscriptionId(subscriptionId -> {
-            Set<String> topics = this.getSubscriptionTopics();
-            if (topics.contains(topicId)) {
-                completionListener.onComplete();
-                return;
-            }
-            topics.add(topicId);
-            List<String> list = new ArrayList<>(topics);
-            String[] topicsArray = (String[]) list.toArray();
-            this.setSubscriptionTopics(topicsArray, null);
             if (subscriptionId != null) {
+                Set<String> topics = this.getSubscriptionTopics();
+                if (topics.contains(topicId)) {
+                    if (completionListener != null) {
+                        completionListener.onComplete();
+                    }
+                    return;
+                }
+                topics.add(topicId);
+                List<String> list = new ArrayList<>(topics);
+                String[] topicsArray = (String[]) list.toArray();
+                this.setSubscriptionTopics(topicsArray, null);
+
                 JSONObject jsonBody = new JSONObject();
                 try {
                     jsonBody.put("channelId", getChannelId(getContext()));
@@ -1640,7 +1651,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
                 CleverPushHttpClient.ResponseHandler responseHandler = new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
-
                 CleverPushHttpClient.post(
                         "/subscription/topic/add" + getChannelId(getContext()),
                         jsonBody,
@@ -1651,16 +1661,19 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public void removeSubscriptionTopic(String topicIds, CompletionListener completionListener) {
         this.getSubscriptionId(subscriptionId -> {
-            Set<String> topics = this.getSubscriptionTopics();
-            if (!topics.contains(topicIds)) {
-                completionListener.onComplete();
-                return;
-            }
-            topics.add(topicIds);
-            List<String> list = new ArrayList<>(topics);
-            String[] topicsArray = (String[]) list.toArray();
-            this.setSubscriptionTopics(topicsArray, null);
             if (subscriptionId != null) {
+                Set<String> topics = this.getSubscriptionTopics();
+                if (!topics.contains(topicIds)) {
+                    if (completionListener != null) {
+                        completionListener.onComplete();
+                    }
+                    return;
+                }
+                topics.add(topicIds);
+                List<String> list = new ArrayList<>(topics);
+                String[] topicsArray = (String[]) list.toArray();
+                this.setSubscriptionTopics(topicsArray, null);
+
                 JSONObject jsonBody = new JSONObject();
                 try {
                     jsonBody.put("channelId", getChannelId(getContext()));
@@ -1669,7 +1682,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 } catch (JSONException ex) {
                     Log.e(LOG_TAG, ex.getMessage(), ex);
                 }
-                CleverPushHttpClient.post("/subscription/topic/remove" + getChannelId(getContext()), jsonBody, new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener));
+                CleverPushHttpClient.ResponseHandler responseHandler = new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
+                CleverPushHttpClient.post("/subscription/topic/remove" + getChannelId(getContext()),
+                        jsonBody,
+                        responseHandler);
             }
         });
     }
