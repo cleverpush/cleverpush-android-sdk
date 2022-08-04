@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="alertDialogTheme" parent="Theme.AppCompat.Dialog.Alert">
+    </style>
+
+</resources>

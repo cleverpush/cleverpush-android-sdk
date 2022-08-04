@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="5"
+    tools:context=".MainActivity">
+
+    <!--text view for displaying welcome message-->
+    <TextView
+        android:id="@+id/idTVWelcome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:padding="10dp"
+        android:text="Welcome to "
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="@color/purple_500"
+        android:textSize="30sp" />
+
+    <!--text view for displaying the organization
+        name from the link which we have generated-->
+    <TextView
+        android:id="@+id/idTVMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/idTVWelcome"
+        android:text="Organization Name"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="@color/purple_500"
+        android:textSize="30sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>

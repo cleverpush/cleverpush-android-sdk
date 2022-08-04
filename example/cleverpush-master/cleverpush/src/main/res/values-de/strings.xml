@@ -1,0 +1,14 @@
+<resources>
+	<string name="large_icon">Large Icon</string>
+	<string name="small_icon">Small Icon</string>
+	<string name="carousel_prev_button">Carousel prev button</string>
+	<string name="carousel_next_button">Carousel next button</string>
+	<string name="big_picture">Big picture</string>
+	<string name="carousel_image">Carousel image</string>
+	<string name="dot">&#8226;</string>
+
+	<string name="cancel">Abbrechen</string>
+	<string name="save">Speichern</string>
+	<string name="topics_dialog_title">Abonnierte Themen</string>
+	<string name="deselect_all">Alles abwählen</string>
+</resources>
