@@ -1,8 +1,5 @@
 package com.cleverpush.service;
 
-import static com.cleverpush.Constants.LOG_TAG;
-import static com.cleverpush.service.NotificationExtenderService.EXTENDER_SERVICE_JOB_ID;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -26,9 +23,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class NotificationDataProcessor {
-    public static int maximumNotifications = 100;
+import static com.cleverpush.Constants.LOG_TAG;
+import static com.cleverpush.service.NotificationExtenderService.EXTENDER_SERVICE_JOB_ID;
 
+public class NotificationDataProcessor {
     public static void process(Context context, Notification notification, Subscription subscription) {
         if (notification == null || subscription == null) {
             return;
@@ -72,7 +70,6 @@ public class NotificationDataProcessor {
             Log.e(LOG_TAG, "Error checking if application is in foreground", e);
         }
 
-
         // do not show silent notifications
         if (notification.isSilent()) {
             dontShowNotification = true;
@@ -92,6 +89,7 @@ public class NotificationDataProcessor {
             SharedPreferences.Editor editor = sharedPreferences.edit();
 
             Gson gson = new Gson();
+            int maximumNotifications = 100;
             String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
             Type type = new TypeToken<List<Notification>>() {
             }.getType();
@@ -111,10 +109,7 @@ public class NotificationDataProcessor {
             notifications.setCapacity(maximumNotifications);
 
             if (notification.getCreatedAt() == null || notification.getCreatedAt().equalsIgnoreCase("")) {
-                String currentDate = null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).format(new Date());
-                }
+                String currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).format(new Date());
                 notification.setCreatedAt(currentDate);
             }
 

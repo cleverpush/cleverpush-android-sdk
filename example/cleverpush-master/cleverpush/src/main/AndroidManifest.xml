@@ -32,8 +32,7 @@
 
         <service
             android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService"
-            android:exported="false"
-            android:enabled="true"/>
+            android:exported="false" />
 
         <service
             android:name="com.cleverpush.service.CleverPushFcmListenerService"
