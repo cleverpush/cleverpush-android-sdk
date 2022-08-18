@@ -16,7 +16,7 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.banner.models.Banner;
-import com.cleverpush.banner.models.BannerAppVersionFilterRelation;
+import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
@@ -113,7 +113,7 @@ public class AppBannerModule {
         if (notificationId != null && !notificationId.isEmpty()) {
             bannersPath += "&notificationId=" + notificationId;
         }
-        Log.d(TAG, "Loadingbanners: " + bannersPath);
+        Log.d(TAG, "Loading banners: " + bannersPath);
         CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
@@ -126,7 +126,6 @@ public class AppBannerModule {
                     for (int i = 0; i < rawBanners.length(); ++i) {
                         JSONObject rawBanner = rawBanners.getJSONObject(i);
                         Banner banner = Banner.create(rawBanner);
-//                        Log.e(TAG, "Banner :" + rawBanner.get(banner.getId()));
                         banners.add(banner);
                     }
 
@@ -328,7 +327,14 @@ public class AppBannerModule {
         if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
             allowed = false;
             for (HashMap<String, String> attribute : banner.getAttributes()) {
-                if (getCleverPushInstance().hasSubscriptionAttributeValue(attribute.get("id"), attribute.get("value"))) {
+                String attributeId = attribute.get("id");
+                String compareAttributeValue = attribute.get("value");
+                String relationString = attribute.get("relation");
+                if (relationString == null) {
+                    relationString = "equals";
+                }
+                String attributeValue = (String) getCleverPushInstance().getSubscriptionAttribute(attributeId);
+                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(relationString), compareAttributeValue, attributeValue)) {
                     allowed = true;
                     break;
                 }
@@ -344,52 +350,62 @@ public class AppBannerModule {
      * App Banner Version Filter
      */
     private boolean appVersionFilter(boolean allowed, Banner banner) {
-        if (banner.getBannerAppVersionFilterRelation() == null) {
+        try {
+            PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
+            String appVersion = pInfo.versionName;
+            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), appVersion, banner.getAppVersionFilterValue());
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "Error checking app version filter", e);
+        }
+
+        return allowed;
+    }
+
+    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String value, String compareValue) {
+        if (relation == null) {
             return allowed;
         }
 
         try {
-            PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-            String appVersion = pInfo.versionName;
-
-            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Equals)) {
-                if (!banner.getAppVersionFilterValue().equals(appVersion)) {
+            if (allowed && relation.equals(CheckFilterRelation.Equals)) {
+                if (!compareValue.equals(value)) {
                     allowed = false;
                 }
             }
 
-            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.NotEqual)) {
-                if (banner.getAppVersionFilterValue().equals(appVersion)) {
+            if (allowed && relation.equals(CheckFilterRelation.NotEqual)) {
+                if (compareValue.equals(value)) {
                     allowed = false;
                 }
             }
 
-            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Between)) {
-                if (Double.parseDouble(banner.getAppVersionFilterValue()) <= Double.parseDouble(appVersion) || Double.parseDouble(banner.getAppVersionFilterValue()) >= Double.parseDouble(appVersion)) {
+            if (allowed && relation.equals(CheckFilterRelation.Between)) {
+                if (Double.parseDouble(compareValue) <= Double.parseDouble(value) || Double.parseDouble(compareValue) >= Double.parseDouble(value)) {
                     allowed = false;
                 }
             }
 
-            if (banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.GreaterThan)) {
-                if (Double.parseDouble(banner.getAppVersionFilterValue()) < (Double.parseDouble(appVersion))) {
+            if (allowed && relation.equals(CheckFilterRelation.GreaterThan)) {
+                if (Double.parseDouble(compareValue) <= (Double.parseDouble(value))) {
                     allowed = false;
                 }
             }
 
-            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.LessThan)) {
-                if (Double.parseDouble(banner.getAppVersionFilterValue()) > (Double.parseDouble(appVersion))) {
+            if (allowed && relation.equals(CheckFilterRelation.LessThan)) {
+                if (Double.parseDouble(compareValue) >= (Double.parseDouble(value))) {
                     allowed = false;
                 }
             }
 
-            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.Contains)) {
-                if (!banner.getAppVersionFilterValue().contains(appVersion)) {
+            if (allowed && relation.equals(CheckFilterRelation.Contains)) {
+                if (!compareValue.contains(value)) {
                     allowed = false;
                 }
             }
 
-            if (allowed && banner.getBannerAppVersionFilterRelation().equals(BannerAppVersionFilterRelation.NotContains)) {
-                if (banner.getAppVersionFilterValue().contains(appVersion)) {
+            if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
+                if (compareValue.contains(value)) {
                     allowed = false;
                 }
             }

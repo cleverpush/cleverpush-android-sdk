@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.24.0
+* Added support for attribute filter relations
+* Implemented setMaximumNotificationCount method
+* Implemented add/removeSubscriptionTopic methods
+
 ## 1.23.6
 * Optimized app banner trigger conditions
 

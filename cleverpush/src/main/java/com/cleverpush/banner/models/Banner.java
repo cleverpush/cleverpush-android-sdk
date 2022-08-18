@@ -51,7 +51,7 @@ public class Banner {
     private List<HashMap<String, String>> attributes;
     private boolean marginEnabled;
     private boolean closeButtonEnabled;
-    private BannerAppVersionFilterRelation bannerAppVersionFilterRelation;
+    private CheckFilterRelation bannerAppVersionFilterRelation;
     private String appVersionFilterValue;
     private boolean enableMultipleScreens;
 
@@ -106,7 +106,7 @@ public class Banner {
         return dismissType;
     }
 
-    public BannerAppVersionFilterRelation getBannerAppVersionFilterRelation() {
+    public CheckFilterRelation getBannerAppVersionFilterRelation() {
         return bannerAppVersionFilterRelation;
     }
 
@@ -218,7 +218,6 @@ public class Banner {
         return attributes;
     }
 
-
     public boolean isMarginEnabled() {
         return marginEnabled;
     }
@@ -268,7 +267,7 @@ public class Banner {
         }
 
         banner.dismissType = BannerDismissType.fromString(json.optString("dismissType"));
-        banner.bannerAppVersionFilterRelation = BannerAppVersionFilterRelation.fromString(json.optString("appVersionFilterRelation"));
+        banner.bannerAppVersionFilterRelation = CheckFilterRelation.fromString(json.optString("appVersionFilterRelation"));
         banner.dismissTimeout = json.getInt("dismissTimeout");
         banner.stopAtType = BannerStopAtType.fromString(json.optString("stopAtType"));
 
@@ -360,10 +359,14 @@ public class Banner {
                 if (attribute != null) {
                     String attributeId = attribute.optString("id");
                     String attributeValue = attribute.optString("value");
+                    String relation = attribute.optString("relation");
                     if (attributeId != null && attributeValue != null) {
                         HashMap<String, String> attributeMap = new HashMap<>();
                         attributeMap.put("id", attributeId);
                         attributeMap.put("value", attributeValue);
+                        if (relation != null) {
+                            attributeMap.put("relation", relation);
+                        }
                         banner.attributes.add(attributeMap);
                     }
                 }
