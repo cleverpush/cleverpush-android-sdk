@@ -71,6 +71,7 @@ import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
 import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
+import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
@@ -1921,6 +1922,10 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public void getNotifications(NotificationsCallbackListener notificationsCallbackListener) {
         StoredNotificationsService.getNotifications(getSharedPreferences(getContext()), notificationsCallbackListener);
+    }
+
+    public void setMaximumNotificationCount(int limit) {
+        NotificationDataProcessor.maximumNotifications = limit;
     }
 
     public void getNotifications(@Deprecated boolean combineWithApi, NotificationsCallbackListener notificationsCallbackListener) {

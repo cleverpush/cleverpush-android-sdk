@@ -1,5 +1,8 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.LOG_TAG;
+import static com.cleverpush.service.NotificationExtenderService.EXTENDER_SERVICE_JOB_ID;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,10 +26,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import static com.cleverpush.Constants.LOG_TAG;
-import static com.cleverpush.service.NotificationExtenderService.EXTENDER_SERVICE_JOB_ID;
-
 public class NotificationDataProcessor {
+    public static int maximumNotifications = 100;
+
     public static void process(Context context, Notification notification, Subscription subscription) {
         if (notification == null || subscription == null) {
             return;
@@ -89,7 +91,6 @@ public class NotificationDataProcessor {
             SharedPreferences.Editor editor = sharedPreferences.edit();
 
             Gson gson = new Gson();
-            int maximumNotifications = 100;
             String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
             Type type = new TypeToken<List<Notification>>() {
             }.getType();
