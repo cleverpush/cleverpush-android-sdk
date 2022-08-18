@@ -3,6 +3,9 @@
     package="com.example.cleverpush">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:name=".App"
@@ -12,7 +15,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Cleverpush">
-
         <meta-data
             android:name="com.cleverpush.notification_open_activity_disabled"
             android:value="true" />
@@ -22,7 +24,31 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- on below line we are specifying the host name and the scheme type in add your App name -->
+                <data
+                    android:host="https://cleverpush.com"
+                    android:scheme="cleverpush" />
+            </intent-filter>
+
+            <!-- below is the same filter as above just the scheme is changed to your app name -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="www.cleverpush.com"
+                    android:scheme="cleverpush" />
             </intent-filter>
         </activity>
 
