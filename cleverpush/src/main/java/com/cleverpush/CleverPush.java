@@ -86,6 +86,7 @@ import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.huawei.hms.api.HuaweiApiAvailability;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -669,9 +670,8 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
      * request for push notification
      */
     public void requestPushNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Constants.ANDROID_13_VERSION) {
+        if (Build.VERSION.SDK_INT >= Constants.ANDROID_13_VERSION && this.hasNotificationPermission()) {
             if (this.hasNotificationPermission()) {
-                Log.e("Version", String.valueOf(Build.VERSION.SDK_INT));
                 return;
             }
         }
@@ -1107,7 +1107,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= Constants.ANDROID_13_VERSION) {
+        if (!this.ignoreDisabledNotificationPermission) {
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Constants.ANDROID_13_VERSION && !this.hasNotificationPermission()) {
             pendingSubscribeCallbackListener = subscribedCallbackListener;
             requestPushNotificationPermission();
             return;
@@ -2703,8 +2707,14 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case (pushNotificationPermissionRequestCode):
-                if ((grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) || this.ignoreDisabledNotificationPermission) {
+                if (this.hasNotificationPermission() && !this.ignoreDisabledNotificationPermission) {
                     this.subscribe(true, pendingSubscribeCallbackListener);
+                } else if (!this.ignoreDisabledNotificationPermission) {
+                    String error = "Can not subscribe because the notification permission has been denied by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
+                    Log.d(LOG_TAG, error);
+                    if (pendingSubscribeCallbackListener != null) {
+                        pendingSubscribeCallbackListener.onFailure(new Exception(error));
+                    }
                 }
                 break;
             case (locationPermissionRequestCode):
