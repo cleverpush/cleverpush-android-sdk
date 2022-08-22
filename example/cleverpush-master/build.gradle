@@ -26,8 +26,6 @@ buildscript {
         classpath "com.github.dcendents:android-maven-gradle-plugin:1.4.1"
         classpath "com.huawei.agconnect:agcp:$huaweiAgconnectVersion"
         classpath 'com.dicedmelon.gradle:jacoco-android:0.1.4'
-
-
     }
     ext {
         androidXCore = "1.6.0"

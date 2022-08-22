@@ -1,15 +1,13 @@
 package com.example.cleverpush;
 
-import static com.cleverpush.CleverPushHttpClient.BASE_URL;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
-import com.cleverpush.CleverPush;
-import com.cleverpush.listener.NotificationReceivedListener;
 import com.example.cleverpush.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
@@ -19,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        CleverPush.getInstance(this).requestLocationPermission();
 
 //      String BASE_URL = "https://api-stage.cleverpush.com";
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
@@ -32,9 +31,15 @@ public class MainActivity extends AppCompatActivity {
                 result -> System.out.println("Opened CleverPush Notification: " + result.getNotification().getTitle()),
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId));
 
+        CleverPush.getInstance(this).setMaximumNotificationCount(4);
+
         binding.btnSubscribe.setOnClickListener(view -> {
             CleverPush.getInstance(MainActivity.this).subscribe();
             binding.tvStatus.setText("Subscribe");
+        });
+
+        binding.btnGetnotification.setOnClickListener(view -> {
+            Log.e("limit", "getNotifications :- " + CleverPush.getInstance(this).getNotifications().size());
         });
 
         binding.btnUnsubscribe.setOnClickListener(view -> {
@@ -45,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         binding.btnGetId.setOnClickListener(view -> {
             try {
                 CleverPush.getInstance(MainActivity.this).getSubscriptionId(this);
-                binding.tvStatus.setText(CleverPush.getInstance(MainActivity.this).getSubscriptionId(this).toString());
+                binding.tvStatus.setText(CleverPush.getInstance(MainActivity.this).getSubscriptionId(this));
             } catch (Exception e) {
                 Toast.makeText(this, "Please subscribe first", Toast.LENGTH_SHORT).show();
             }

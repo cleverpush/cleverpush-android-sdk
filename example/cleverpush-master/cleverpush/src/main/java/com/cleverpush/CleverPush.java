@@ -71,6 +71,7 @@ import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
 import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
+import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
@@ -653,7 +654,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return;
         }
         this.pendingRequestLocationPermissionCall = false;
-        ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionRequestCode);
+        ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, locationPermissionRequestCode);
     }
 
     /**
@@ -890,6 +891,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
             if (geofenceList.size() > 0) {
                 googleApiClient.connect();
+                Log.e("Connected", "" + googleApiClient.isConnected());
             }
         }
     }
@@ -914,7 +916,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 Log.d(LOG_TAG, "GoogleApiClient onConnected");
 
                 if (geofenceList.size() > 0) {
-                    Log.d(LOG_TAG, "initing geofences " + geofenceList.toString());
+                    Log.d(LOG_TAG, "initing geofences " + geofenceList);
 
                     GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
                     builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
@@ -922,22 +924,18 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                     GeofencingRequest geofenceRequest = builder.build();
 
                     Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
-                    // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addGeofences()
+                    // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addGeofence()
                     int flags = PendingIntent.FLAG_UPDATE_CURRENT;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         flags |= PendingIntent.FLAG_IMMUTABLE;
                     }
                     PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, flags);
+                    LocationServices.GeofencingApi.addGeofences(
+                            googleApiClient,
+                            geofenceRequest,
+                            geofencePendingIntent
+                    );
 
-                    try {
-                        LocationServices.GeofencingApi.addGeofences(
-                                googleApiClient,
-                                geofenceRequest,
-                                geofencePendingIntent
-                        );
-                    } catch (SecurityException securityException) {
-                        // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-                    }
                 }
             }
 
@@ -1921,6 +1919,11 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public void getNotifications(NotificationsCallbackListener notificationsCallbackListener) {
         StoredNotificationsService.getNotifications(getSharedPreferences(getContext()), notificationsCallbackListener);
+    }
+
+    public void setMaximumNotificationCount(int limit) {
+        NotificationDataProcessor.maximumNotifications = limit;
+        Log.e("limit","NotificationSetLimit:- "+limit);
     }
 
     public void getNotifications(@Deprecated boolean combineWithApi, NotificationsCallbackListener notificationsCallbackListener) {
