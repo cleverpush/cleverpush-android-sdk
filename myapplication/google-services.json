@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "112267470246",
+    "project_id": "cleverpushapp-f8e5c",
+    "storage_bucket": "cleverpushapp-f8e5c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:112267470246:android:d2831ab5aed05645bf1b67",
+        "android_client_info": {
+          "package_name": "com.example.cleverpush"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "112267470246-4rjn9na0u7aohqd3ke9i3g74e8afmef0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cleverpush",
+            "certificate_hash": "349de8ee9a131da2ea987160cf735b7a16642cd2"
+          }
+        },
+        {
+          "client_id": "112267470246-vdsk67uila4skdqerq135cgog2jc2e83.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cleverpush",
+            "certificate_hash": "099d8d42c87f567163a1c7e20c569684993d4284"
+          }
+        },
+        {
+          "client_id": "112267470246-kum0j7gmmqu0prh5u0cka6af0h1dih33.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDX00aDN-ggu5SgAeEXqTJm2kve6SICzh4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "112267470246-kum0j7gmmqu0prh5u0cka6af0h1dih33.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "112267470246-f2heufr7tbl6gk7vjpkfo6pjbd5841v9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cleverpush.countdowndemo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
