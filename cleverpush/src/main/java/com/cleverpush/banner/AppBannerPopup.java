@@ -10,7 +10,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -156,7 +156,7 @@ public class AppBannerPopup {
 
     public void dismiss() {
         if (!isInitialized) {
-            Log.e(TAG, "Must be initialized");
+            Logger.e(TAG, "Must be initialized");
             return;
         }
 
@@ -224,7 +224,7 @@ public class AppBannerPopup {
                         bannerBackground.setImageBitmap(bitmap);
                     }
                 } catch (Exception ignored) {
-                    Log.e(TAG, ignored.getLocalizedMessage());
+                    Logger.e(TAG, ignored.getLocalizedMessage());
                 }
             }).start();
         } else {
@@ -279,7 +279,7 @@ public class AppBannerPopup {
                     displayBanner(body);
                     animateBody(getRoot().getHeight(), 0f);
                 } catch (Exception e) {
-                    Log.e(TAG, e.getLocalizedMessage());
+                    Logger.e(TAG, e.getLocalizedMessage());
                 }
             }
         }

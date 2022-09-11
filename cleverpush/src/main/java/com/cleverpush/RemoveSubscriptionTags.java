@@ -3,7 +3,7 @@ package com.cleverpush;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.SharedPreferences;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import com.cleverpush.listener.RemoveTagCompletedListener;
 import com.cleverpush.responsehandlers.RemoveSubscriptionTagResponseHandler;
@@ -70,7 +70,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
                 jsonBody.put("tagId", tagIds[currentPositionOfTagToRemove]);
                 jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException ex) {
-                Log.e(LOG_TAG, ex.getMessage(), ex);
+                Logger.e(LOG_TAG, ex.getMessage(), ex);
             }
 
             tags = this.getSubscriptionTags();

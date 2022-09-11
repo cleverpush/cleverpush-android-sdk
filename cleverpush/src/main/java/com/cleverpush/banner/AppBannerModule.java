@@ -8,7 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.view.View;
 
 import com.cleverpush.ActivityLifecycleListener;
@@ -113,7 +113,7 @@ public class AppBannerModule {
         if (notificationId != null && !notificationId.isEmpty()) {
             bannersPath += "&notificationId=" + notificationId;
         }
-        Log.d(TAG, "Loading banners: " + bannersPath);
+        Logger.d(TAG, "Loading banners: " + bannersPath);
         CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
@@ -135,7 +135,7 @@ public class AppBannerModule {
 
                     bannersListeners = new ArrayList<>();
                 } catch (Exception ex) {
-                    Log.e(TAG, ex.getMessage(), ex);
+                    Logger.e(TAG, ex.getMessage(), ex);
                 }
 
             }
@@ -143,7 +143,7 @@ public class AppBannerModule {
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
                 setLoading(false);
-                Log.e(TAG, "Something went wrong when loading banners." +
+                Logger.e(TAG, "Something went wrong when loading banners." +
                         "\nStatus code: " + statusCode +
                         "\nResponse: " + response
                 );
@@ -152,7 +152,7 @@ public class AppBannerModule {
     }
 
     void sendBannerEvent(String event, Banner banner) {
-        Log.d(TAG, "sendBannerEvent: " + event);
+        Logger.d(TAG, "sendBannerEvent: " + event);
 
         String subscriptionId = null;
         if (getCleverPushInstance().isSubscribed()) {
@@ -168,7 +168,7 @@ public class AppBannerModule {
             jsonBody.put("channelId", channel);
             jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
-            Log.e(LOG_TAG, ex.getMessage(), ex);
+            Logger.e(LOG_TAG, ex.getMessage(), ex);
         }
 
         CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody, new SendBannerEventResponseHandler().getResponseHandler());
@@ -251,7 +251,7 @@ public class AppBannerModule {
     }
 
     void startup() {
-        Log.d(TAG, "startup");
+        Logger.d(TAG, "startup");
 
         this.getBanners(banners -> {
             createBanners(banners);
@@ -356,7 +356,7 @@ public class AppBannerModule {
             return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), appVersion, banner.getAppVersionFilterValue());
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, "Error checking app version filter", e);
+            Logger.e(TAG, "Error checking app version filter", e);
         }
 
         return allowed;
@@ -411,7 +411,7 @@ public class AppBannerModule {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, "Error checking app version filter", e);
+            Logger.e(TAG, "Error checking app version filter", e);
         }
 
         return allowed;
@@ -421,22 +421,22 @@ public class AppBannerModule {
 
         for (Banner banner : banners) {
             if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
-                Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Draft");
+                Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Draft");
                 continue;
             }
 
             if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
-                Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Frequency");
+                Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Frequency");
                 continue;
             }
 
             if (!isBannerTimeAllowed(banner)) {
-                Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Time");
+                Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Time");
                 continue;
             }
 
             if (!isBannerTargetingAllowed(banner)) {
-                Log.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting");
+                Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting");
                 continue;
             }
 
@@ -475,7 +475,7 @@ public class AppBannerModule {
                 }
 
                 if (!triggers) {
-                    Log.d(TAG, "Skipping Banner because: Trigger not satisfied " + sessions);
+                    Logger.d(TAG, "Skipping Banner because: Trigger not satisfied " + sessions);
                     continue;
                 }
             }
@@ -532,7 +532,7 @@ public class AppBannerModule {
         getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
             @Override
             public void initialized() {
-                Log.d(TAG, "showBannerById: " + bannerId);
+                Logger.d(TAG, "showBannerById: " + bannerId);
                 getBanners(banners -> {
                     for (Banner banner : banners) {
                         if (banner.getId().equals(bannerId)) {
@@ -557,12 +557,12 @@ public class AppBannerModule {
 
     void showBanner(AppBannerPopup bannerPopup) {
         if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
-            Log.d(TAG, "Skipping Banner because: A Banner is already on the screen");
+            Logger.d(TAG, "Skipping Banner because: A Banner is already on the screen");
             return;
         }
 
         if (!isBannerTimeAllowed(bannerPopup.getData())) {
-            Log.d(TAG, "Skipping Banner because: Stop Time");
+            Logger.d(TAG, "Skipping Banner because: Stop Time");
             return;
         }
 

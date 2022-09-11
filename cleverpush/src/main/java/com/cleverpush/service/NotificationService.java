@@ -22,7 +22,7 @@ import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -93,7 +93,7 @@ public class NotificationService {
             InputStream input = connection.getInputStream();
             return BitmapFactory.decodeStream(input);
         } catch (Exception exception) {
-            Log.d(LOG_TAG, "NotificationService: Exception while loading image", exception);
+            Logger.d(LOG_TAG, "NotificationService: Exception while loading image", exception);
             return null;
         }
     }
@@ -320,7 +320,7 @@ public class NotificationService {
     }
 
     void createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr, int targetIndex, int requestId) {
-        Log.d(LOG_TAG, "NotificationService: createAndShowCarousel");
+        Logger.d(LOG_TAG, "NotificationService: createAndShowCarousel");
         NotificationCompat.Builder builder = createBasicNotification(context, notificationStr, subscriptionStr, message, requestId);
         if (builder != null) {
             android.app.Notification notification = builder.build();
@@ -407,7 +407,7 @@ public class NotificationService {
     }
 
     private PendingIntent getNavigationPendingIntent(Context context, Notification message, String notificationStr, String subscriptionStr, int targetIndex, int requestId) {
-        Log.i(LOG_TAG, "NotificationService: getNavigationPendingIntent");
+        Logger.i(LOG_TAG, "NotificationService: getNavigationPendingIntent");
 
         Intent intent = new Intent(context, CarouselNotificationIntentService.class);
         intent.setAction(CarouselNotificationIntentService.ACTION_CAROUSEL_IMG_CHANGE);
@@ -484,13 +484,13 @@ public class NotificationService {
                             }
                         }
                     } catch (IOException e) {
-                        Log.e(LOG_TAG, e.getMessage());
+                        Logger.e(LOG_TAG, e.getMessage());
                     } finally {
                         if (fileOutputStream != null) {
                             try {
                                 fileOutputStream.close();
                             } catch (IOException e) {
-                                Log.e(LOG_TAG, e.getMessage());
+                                Logger.e(LOG_TAG, e.getMessage());
                             }
                         }
                     }
@@ -510,15 +510,15 @@ public class NotificationService {
                 bitmap = BitmapFactory.decodeStream(inputStream);
                 inputStream.close();
             } catch (FileNotFoundException e) {
-                Log.e(LOG_TAG, e.getMessage());
+                Logger.e(LOG_TAG, e.getMessage());
             } catch (IOException e) {
-                Log.e(LOG_TAG, e.getMessage());
+                Logger.e(LOG_TAG, e.getMessage());
             } finally {
                 if (inputStream != null) {
                     try {
                         inputStream.close();
                     } catch (IOException e) {
-                        Log.e(LOG_TAG, e.getMessage());
+                        Logger.e(LOG_TAG, e.getMessage());
                     }
                 }
             }

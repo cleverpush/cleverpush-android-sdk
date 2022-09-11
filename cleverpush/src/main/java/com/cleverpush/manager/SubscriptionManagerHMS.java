@@ -6,12 +6,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
+import com.cleverpush.util.Logger;
 import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.common.ApiException;
@@ -41,7 +41,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
             try {
                 getHMSTokenTask(context, subscribedListener);
             } catch (ApiException e) {
-                Log.e(LOG_TAG, "HMS ApiException getting Huawei token", e);
+                Logger.e(LOG_TAG, "HMS ApiException getting Huawei token", e);
                 this.tokenCallback(null, subscribedListener);
             }
         }, THREAD_NAME).start();
@@ -77,7 +77,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
 
         new Thread(() -> {
             if (appId == null) {
-                Log.e(LOG_TAG, "SubscriptionManager: Getting HMS App ID failed");
+                Logger.e(LOG_TAG, "SubscriptionManager: Getting HMS App ID failed");
                 return;
             }
 
@@ -87,7 +87,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
                     this.syncSubscription(newToken, new SubscribedCallbackListener() {
                         @Override
                         public void onSuccess(String subscriptionId) {
-                            Log.i(LOG_TAG, "Synchronized new HMS token: " + newToken);
+                            Logger.i(LOG_TAG, "Synchronized new HMS token: " + newToken);
                         }
 
                         @Override
@@ -96,10 +96,10 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
                         }
                     });
                 } else {
-                    Log.d(LOG_TAG, "HMS token has not changed: " + newToken);
+                    Logger.d(LOG_TAG, "HMS token has not changed: " + newToken);
                 }
             } catch (Throwable throwable) {
-                Log.e(LOG_TAG, "Unknown error getting HMS Token", throwable);
+                Logger.e(LOG_TAG, "Unknown error getting HMS Token", throwable);
             }
         }, THREAD_NAME).start();
     }
@@ -110,11 +110,11 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
     }
 
     private synchronized void getHMSTokenTask(@NonNull Context context, SubscribedCallbackListener subscribedListener) throws ApiException {
-        Log.d(LOG_TAG, "Registering device with HMS App ID: " + appId);
+        Logger.d(LOG_TAG, "Registering device with HMS App ID: " + appId);
         String pushToken = getToken();
 
         if (!TextUtils.isEmpty(pushToken)) {
-            Log.d(LOG_TAG, "Device registered (HMS), push token: " + pushToken);
+            Logger.d(LOG_TAG, "Device registered (HMS), push token: " + pushToken);
             this.tokenCallback(pushToken, subscribedListener);
         } else {
             // Token is always null on Huawei EMUI <= 9. We need to wait for the event.
@@ -126,11 +126,11 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
         try {
             Thread.sleep(TOKEN_TIMEOUT_MS);
         } catch (InterruptedException e) {
-            Log.e(LOG_TAG, "SubscriptionManagerHMS Caught InterruptedException", e);
+            Logger.e(LOG_TAG, "SubscriptionManagerHMS Caught InterruptedException", e);
         }
 
         if (!callbackSuccessful) {
-            Log.e(LOG_TAG, "SubscriptionManagerHMS onNewToken timeout");
+            Logger.e(LOG_TAG, "SubscriptionManagerHMS onNewToken timeout");
             this.tokenCallback(null, subscribedListener);
         }
     }

@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
@@ -69,7 +69,7 @@ public class NotificationDataProcessor {
             }
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Error checking if application is in foreground", e);
+            Logger.e(LOG_TAG, "Error checking if application is in foreground", e);
         }
 
         // do not show silent notifications
@@ -122,7 +122,7 @@ public class NotificationDataProcessor {
             editor.putString(CleverPushPreferences.LAST_NOTIFICATION_ID, notificationId);
             editor.commit();
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Error saving notification to shared preferences", e);
+            Logger.e(LOG_TAG, "Error saving notification to shared preferences", e);
         }
     }
 

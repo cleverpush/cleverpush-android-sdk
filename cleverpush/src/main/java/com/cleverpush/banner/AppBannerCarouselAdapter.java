@@ -11,7 +11,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.util.Base64;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -201,7 +201,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                 Typeface font = Typeface.createFromAsset(activity.getAssets(), block.getFamily() + ".ttf");
                 textView.setTypeface(font);
             } catch (Exception ex) {
-                Log.e(TAG, ex.getMessage(), ex);
+                Logger.e(TAG, ex.getMessage(), ex);
             }
 
         }

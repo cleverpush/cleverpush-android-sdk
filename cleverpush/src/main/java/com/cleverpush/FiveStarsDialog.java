@@ -9,7 +9,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Build;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RatingBar;
@@ -60,7 +60,7 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
         contentTextView.setText(textToAdd);
         ratingBar = dialogView.findViewById(R.id.ratingBar);
         ratingBar.setOnRatingBarChangeListener((ratingBar, v, b) -> {
-            Log.d(TAG, "Rating changed : " + v);
+            Logger.d(TAG, "Rating changed : " + v);
             if (isForceMode && v >= upperBound) {
                 openMarket();
                 if (reviewListener != null)

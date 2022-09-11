@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
 
 public class MetaDataUtils {
     static Bundle getManifestMetaBundle(Context context) {
@@ -15,7 +14,7 @@ public class MetaDataUtils {
             ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             return ai.metaData;
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e(LOG_TAG, "Manifest application info not found", e);
+            Logger.e(LOG_TAG, "Manifest application info not found", e);
         }
         return null;
     }

@@ -4,7 +4,7 @@ import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import com.google.gson.Gson;
 
@@ -39,7 +39,7 @@ public class NotificationOpenedProcessor {
 
         // open launcher activity
         boolean shouldStartActivity = cleverPush.notificationOpenShouldStartActivity();
-        Log.d(LOG_TAG, "NotificationOpenedProcessor shouldStartActivity: " + shouldStartActivity);
+        Logger.d(LOG_TAG, "NotificationOpenedProcessor shouldStartActivity: " + shouldStartActivity);
 
         if (shouldStartActivity) {
             Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());

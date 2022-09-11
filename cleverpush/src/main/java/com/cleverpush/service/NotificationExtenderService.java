@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import androidx.core.app.JobIntentService;
 
@@ -40,7 +40,7 @@ public abstract class NotificationExtenderService extends JobIntentService {
 			Subscription subscription = (Subscription) bundle.getSerializable("subscription");
 
 			if (notification == null || subscription == null) {
-				Log.e(LOG_TAG, "notification extra is missing in NotificationExtenderService: " + bundle);
+				Logger.e(LOG_TAG, "notification extra is missing in NotificationExtenderService: " + bundle);
 				return;
 			}
 
@@ -48,7 +48,7 @@ public abstract class NotificationExtenderService extends JobIntentService {
 			try {
 				developerProcessed = onNotificationProcessing(notification);
 			} catch (Throwable t) {
-				Log.e(LOG_TAG, "Exception in NotificationExtenderService: onNotificationProcessing", t);
+				Logger.e(LOG_TAG, "Exception in NotificationExtenderService: onNotificationProcessing", t);
 			}
 
 			if (!developerProcessed && !notification.isSilent()) {
@@ -56,7 +56,7 @@ public abstract class NotificationExtenderService extends JobIntentService {
 			}
 
 		} catch (Exception ex) {
-			Log.e(LOG_TAG, "Exception in NotificationExtenderService", ex);
+			Logger.e(LOG_TAG, "Exception in NotificationExtenderService", ex);
 		}
 	}
 

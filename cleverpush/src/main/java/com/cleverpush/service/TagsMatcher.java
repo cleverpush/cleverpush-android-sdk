@@ -3,7 +3,7 @@ package com.cleverpush.service;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.app.Activity;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.webkit.WebView;
 
 import com.cleverpush.ChannelTag;
@@ -41,9 +41,9 @@ public class TagsMatcher {
                     Type gsonType = new TypeToken<Map<String, ?>>(){}.getType();
                     String paramsString = gson.toJson(params, gsonType);
                     String function = "(function(params) { return (" + tag.getAutoAssignFunction() + ") ? 'true' : 'false'; })(" + paramsString + ");";
-                    Log.d(LOG_TAG, "autoAssignTag function: " + function);
+                    Logger.d(LOG_TAG, "autoAssignTag function: " + function);
                     webview.evaluateJavascript(function, result -> {
-                        Log.d(LOG_TAG, "autoAssignTag function result: " + result);
+                        Logger.d(LOG_TAG, "autoAssignTag function result: " + result);
                         if (result.equals("true") || result.equals("\"true\"")) {
                             callback.tagMatches(true);
                         } else {
@@ -52,7 +52,7 @@ public class TagsMatcher {
                     });
                 });
             } catch (Exception ex) {
-                Log.d(LOG_TAG, "Exception", ex);
+                Logger.d(LOG_TAG, "Exception", ex);
                 callback.tagMatches(false);
             }
             return;

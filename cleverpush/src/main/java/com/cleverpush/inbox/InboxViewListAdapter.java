@@ -8,7 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.TextUtils;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,7 +36,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-
 
 public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> {
 
@@ -165,7 +164,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
         try {
             date = sdf.parse(dateToFormat);
         } catch (ParseException e) {
-            Log.e(TAG, e.getLocalizedMessage());
+            Logger.e(TAG, e.getLocalizedMessage());
         }
         java.text.DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
         return dateFormat.format(date);
@@ -177,10 +176,10 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
                 final InputStream[] inputStream = {null};
                 if (notificationArrayList.get(position).getMediaUrl() != null) {
                     inputStream[0] = new URL(notificationArrayList.get(position).getMediaUrl()).openStream();
-                    Log.e("image", notificationArrayList.get(position).getMediaUrl());
+                    Logger.e("image", notificationArrayList.get(position).getMediaUrl());
                 } else if (notificationArrayList.get(position).getIconUrl() != null) {
                     inputStream[0] = new URL(notificationArrayList.get(position).getIconUrl()).openStream();
-                    Log.e("image", notificationArrayList.get(position).getIconUrl());
+                    Logger.e("image", notificationArrayList.get(position).getIconUrl());
                 } else {
                     CleverPush.getInstance(context).getChannelConfig(new ChannelConfigListener() {
                         @Override
@@ -201,7 +200,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
                     image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 50, 50, false));
                 }
             } catch (Exception exception) {
-                Log.e(TAG, exception.getLocalizedMessage());
+                Logger.e(TAG, exception.getLocalizedMessage());
             }
         }).start();
     }

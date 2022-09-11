@@ -7,7 +7,7 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,7 +55,7 @@ public class StoryView extends LinearLayout {
 
         String storyPath = "/story-widget/"+attrArray.getString(R.styleable.StoryView_widget_id)+"/config";
 
-        Log.d(TAG, "Loading stories: " + storyPath);
+        Logger.d(TAG, "Loading stories: " + storyPath);
 
         CleverPushHttpClient.get(storyPath, getResponseHandler());
     }
@@ -89,7 +89,7 @@ public class StoryView extends LinearLayout {
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
                 loading = false;
-                Log.e(TAG, "Something went wrong when loading stories." +
+                Logger.e(TAG, "Something went wrong when loading stories." +
                         "\nStatus code: " + statusCode +
                         "\nResponse: " + response
                 );

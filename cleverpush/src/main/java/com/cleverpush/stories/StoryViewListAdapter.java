@@ -15,7 +15,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +31,6 @@ import com.cleverpush.stories.models.Story;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-
 
 public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> {
 
@@ -108,7 +107,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
                     image.setImageBitmap(getRoundedCroppedBitmap(bitmap, bitmap.getWidth()));
                 }
             } catch (Exception exception) {
-                Log.e("CleverPush/StoryView", exception.getLocalizedMessage());
+                Logger.e("CleverPush/StoryView", exception.getLocalizedMessage());
             }
         }).start();
     }

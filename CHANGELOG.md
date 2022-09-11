@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.24.1
+* Added ability to set own log listener via `setLogListener`
+
 ## 1.24.0
 * Added support for attribute filter relations
 * Implemented setMaximumNotificationCount method

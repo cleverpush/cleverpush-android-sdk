@@ -8,12 +8,12 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,7 +43,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
     }
 
     void syncSubscription(String token, SubscribedCallbackListener subscribedListener, String senderId, boolean isRetry) {
-        Log.d(LOG_TAG, "syncSubscription");
+        Logger.d(LOG_TAG, "syncSubscription");
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
         if (this.type == SubscriptionManagerType.ADM) {
             sharedPreferences.edit().putString(CleverPushPreferences.ADM_TOKEN, token).apply();
@@ -56,7 +56,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         if (channelId == null) {
-            Log.d(LOG_TAG, "channelId in preferences not found");
+            Logger.d(LOG_TAG, "channelId in preferences not found");
             return;
         }
 
@@ -114,14 +114,14 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                 jsonBody.put("topicsVersion", topicsVersion);
             }
         } catch (JSONException e) {
-            Log.e(LOG_TAG, "Error", e);
+            Logger.e(LOG_TAG, "Error", e);
         }
 
         CleverPushHttpClient.post("/subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
                 try {
-                    Log.d(LOG_TAG, "sync response: " + response);
+                    Logger.d(LOG_TAG, "sync response: " + response);
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.has("id")) {
                         String newSubscriptionId = responseJson.getString("id");
@@ -154,7 +154,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                         }
                     }
                 } catch (Throwable t) {
-                    Log.e(LOG_TAG, "Error", t);
+                    Logger.e(LOG_TAG, "Error", t);
                 }
             }
 
@@ -166,7 +166,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                     return;
                 }
                 subscribedListener.onFailure(throwable);
-                Log.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, throwable);
+                Logger.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, throwable);
             }
         });
     }

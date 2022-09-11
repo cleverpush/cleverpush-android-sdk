@@ -5,7 +5,6 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
@@ -37,7 +36,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
                     cleverPush.initFeatures();
 
                 } catch (Throwable ex) {
-                    Log.e(LOG_TAG, ex.getMessage(), ex);
+                    Logger.e(LOG_TAG, ex.getMessage(), ex);
                 }
             }
 
@@ -45,7 +44,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
             public void onFailure(int statusCode, String response, Throwable throwable) {
                 cleverPush.setInitialized(true);
 
-                getLogger().e("CleverPush", "Failed to fetch Channel Config", throwable);
+                Logger.e("CleverPush", "Failed to fetch Channel Config", throwable);
 
                 // trigger listeners
                 if (cleverPush.getChannelConfig() == null) {
@@ -65,9 +64,5 @@ public class ChannelConfigFromChannelIdResponseHandler {
 
     public Context getContext() {
         return CleverPush.context;
-    }
-
-    public Logger getLogger() {
-        return new Logger();
     }
 }

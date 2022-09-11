@@ -2,7 +2,7 @@ package com.cleverpush;
 
 import static com.cleverpush.Constants.LOG_TAG;
 
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,7 +28,7 @@ public class CleverPushHttpClient {
         try {
             new Thread(() -> makeRequest(url, "POST", jsonBody, responseHandler)).start();
         } catch (Exception e) {
-            Log.e("CleverPushHttpClient", e.getLocalizedMessage());
+            Logger.e("CleverPushHttpClient", e.getLocalizedMessage());
         }
     }
 
@@ -41,7 +41,7 @@ public class CleverPushHttpClient {
         int httpResponse = -1;
         String json = null;
 
-        Log.d(LOG_TAG, "[HTTP] " + (method == null ? "GET" : method) + ": " + url + (jsonBody != null ? (" " + jsonBody.toString()) : ""));
+        Logger.d(LOG_TAG, "[HTTP] " + (method == null ? "GET" : method) + ": " + url + (jsonBody != null ? (" " + jsonBody.toString()) : ""));
 
         try {
             con = (HttpURLConnection) new URL(BASE_URL + url).openConnection();

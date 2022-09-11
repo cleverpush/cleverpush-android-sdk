@@ -3,7 +3,7 @@ package com.cleverpush;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Message;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
@@ -116,7 +116,7 @@ public class CleverPushWebViewClient extends WebViewClient {
 
     @Override
     public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
-        Log.e("MainActivity", url);
+        Logger.e("MainActivity", url);
         webViewClientListener.doUpdateVisitedHistory(view, url, isReload);
         if (params == null) {
             cleverPush.trackPageView(url);

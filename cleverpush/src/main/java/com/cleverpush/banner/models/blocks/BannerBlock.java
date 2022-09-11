@@ -1,7 +1,7 @@
 package com.cleverpush.banner.models.blocks;
 
 import android.nfc.Tag;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;

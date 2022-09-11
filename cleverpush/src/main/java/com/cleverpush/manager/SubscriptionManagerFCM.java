@@ -5,12 +5,12 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import androidx.annotation.WorkerThread;
 
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
+import com.cleverpush.util.Logger;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
@@ -43,7 +43,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         try {
             return getTokenWithClassFirebaseMessaging();
         } catch (Exception e) {
-            Log.d(LOG_TAG, "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken");
+            Logger.d(LOG_TAG, "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken");
         }
         return getTokenWithClassFirebaseInstanceId(senderId);
     }
@@ -126,7 +126,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     public void subscribe(JSONObject channelConfig, SubscribedCallbackListener subscribedListener) {
         String senderId = this.getSenderIdFromConfig(channelConfig);
         if (senderId == null) {
-            Log.e(LOG_TAG, "SubscriptionManager: Getting FCM Sender ID failed");
+            Logger.e(LOG_TAG, "SubscriptionManager: Getting FCM Sender ID failed");
             subscribedListener.onFailure(new Exception("SubscriptionManager: Getting FCM Sender ID failed"));
             return;
         }
@@ -134,7 +134,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         try {
             subscribeInBackground(senderId, subscribedListener);
         } catch (Throwable t) {
-            Log.e(LOG_TAG,
+            Logger.e(LOG_TAG,
                     "Could not register with FCM due to an issue with your AndroidManifest.xml or with FCM.",
                     t
             );
@@ -153,7 +153,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         new Thread(() -> {
             String senderId = this.getSenderIdFromConfig(channelConfig);
             if (senderId == null) {
-                Log.e(LOG_TAG, "SubscriptionManager: Getting FCM Sender ID failed");
+                Logger.e(LOG_TAG, "SubscriptionManager: Getting FCM Sender ID failed");
                 return;
             }
             try {
@@ -162,7 +162,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
                     this.syncSubscription(newToken, new SubscribedCallbackListener() {
                         @Override
                         public void onSuccess(String subscriptionId) {
-                            Log.i(LOG_TAG, "Synchronized new FCM token: " + newToken);
+                            Logger.i(LOG_TAG, "Synchronized new FCM token: " + newToken);
                         }
 
                         @Override
@@ -171,10 +171,10 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
                         }
                     });
                 } else {
-                    Log.d(LOG_TAG, "FCM token has not changed: " + newToken);
+                    Logger.d(LOG_TAG, "FCM token has not changed: " + newToken);
                 }
             } catch (Throwable throwable) {
-                Log.e(LOG_TAG, "Unknown error getting FCM Token", throwable);
+                Logger.e(LOG_TAG, "Unknown error getting FCM Token", throwable);
             }
         }, THREAD_NAME).start();
     }
@@ -189,25 +189,25 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
                 for (int currentRetry = 0; currentRetry < REGISTRATION_RETRY_COUNT; currentRetry++) {
                     String token = getTokenAttempt(senderId);
                     if (token != null) {
-                        Log.i(LOG_TAG, "Device registered (FCM), push token: " + token);
+                        Logger.i(LOG_TAG, "Device registered (FCM), push token: " + token);
                         this.syncSubscription(token, subscribedListener, senderId);
                         return;
                     }
 
                     if (currentRetry >= (REGISTRATION_RETRY_COUNT - 1)) {
-                        Log.e(LOG_TAG, "Retry count of " + REGISTRATION_RETRY_COUNT + " exceed! Could not get a FCM Token.");
+                        Logger.e(LOG_TAG, "Retry count of " + REGISTRATION_RETRY_COUNT + " exceed! Could not get a FCM Token.");
                     } else {
-                        Log.i(LOG_TAG, "FCM returned SERVICE_NOT_AVAILABLE error. Current retry count: " + currentRetry);
+                        Logger.i(LOG_TAG, "FCM returned SERVICE_NOT_AVAILABLE error. Current retry count: " + currentRetry);
                     }
 
                     try {
                         Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
                     } catch (InterruptedException e) {
-                        Log.e(LOG_TAG, "Caught InterruptedException", e);
+                        Logger.e(LOG_TAG, "Caught InterruptedException", e);
                     }
                 }
             } catch (Throwable throwable) {
-                Log.e(LOG_TAG, "Unknown error getting FCM Token", throwable);
+                Logger.e(LOG_TAG, "Unknown error getting FCM Token", throwable);
                 subscribedListener.onFailure(throwable);
             }
         }, THREAD_NAME);
@@ -225,7 +225,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
             return token;
         } catch (IOException exception) {
             if (!ERROR_SERVICE_NOT_AVAILABLE.equals(exception.getMessage())) {
-                Log.e(LOG_TAG, "Error Getting FCM Token ", exception);
+                Logger.e(LOG_TAG, "Error Getting FCM Token ", exception);
                 throw exception;
             }
 
@@ -238,7 +238,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
             Float.parseFloat(senderId);
             return true;
         } catch (Throwable throwable) {
-            Log.e(LOG_TAG, "Missing FCM Sender ID");
+            Logger.e(LOG_TAG, "Missing FCM Sender ID");
             return false;
         }
     }

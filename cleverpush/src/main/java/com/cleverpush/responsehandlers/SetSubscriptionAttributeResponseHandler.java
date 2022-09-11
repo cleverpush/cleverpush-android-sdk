@@ -5,7 +5,6 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
@@ -34,13 +33,13 @@ public class SetSubscriptionAttributeResponseHandler {
                         editor.commit();
                     }
                 } catch (Exception ex) {
-                    Log.e(LOG_TAG, ex.getMessage(), ex);
+                    Logger.e(LOG_TAG, ex.getMessage(), ex);
                 }
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                getLogger().e("CleverPush", "Error setting attribute - HTTP " + statusCode);
+                Logger.e("CleverPush", "Error setting attribute - HTTP " + statusCode);
             }
         };
     }
@@ -51,9 +50,5 @@ public class SetSubscriptionAttributeResponseHandler {
 
     public Context getContext() {
         return CleverPush.context;
-    }
-
-    public Logger getLogger() {
-        return new Logger();
     }
 }

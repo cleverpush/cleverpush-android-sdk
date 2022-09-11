@@ -3,7 +3,7 @@ package com.cleverpush.manager;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.Context;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import com.amazon.device.messaging.ADM;
 import com.cleverpush.listener.SubscribedCallbackListener;
@@ -25,7 +25,7 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
             if (registrationId == null) {
                 adm.startRegister();
             } else {
-                Log.d(LOG_TAG, "ADM Already registered with ID:" + registrationId);
+                Logger.d(LOG_TAG, "ADM Already registered with ID:" + registrationId);
                 this.syncSubscription(registrationId, subscribedListener);
             }
         }).start();

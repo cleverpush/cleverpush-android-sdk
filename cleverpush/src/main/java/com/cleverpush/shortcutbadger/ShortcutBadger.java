@@ -1,4 +1,3 @@
-// version 1.1.16 code base
 package com.cleverpush.shortcutbadger;
 
 import android.app.Notification;
@@ -9,6 +8,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.util.Log;
+
+import com.cleverpush.util.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -28,7 +29,6 @@ import com.cleverpush.shortcutbadger.impl.SamsungHomeBadger;
 import com.cleverpush.shortcutbadger.impl.SonyHomeBadger;
 import com.cleverpush.shortcutbadger.impl.VivoHomeBadger;
 import com.cleverpush.shortcutbadger.impl.ZukHomeBadger;
-
 
 /**
  * @author Leo Lin
@@ -74,7 +74,7 @@ public final class ShortcutBadger {
             return true;
         } catch (ShortcutBadgeException e) {
             if (Log.isLoggable(LOG_TAG, Log.DEBUG)) {
-                Log.d(LOG_TAG, "Unable to execute badge", e);
+                Logger.d(LOG_TAG, "Unable to execute badge", e);
             }
             return false;
         }
@@ -135,12 +135,12 @@ public final class ShortcutBadger {
                     String lastErrorMessage = null;
                     for (int i = 0; i < SUPPORTED_CHECK_ATTEMPTS; i++) {
                         try {
-                            Log.i(LOG_TAG, "Checking if platform supports badge counters, attempt "
+                            Logger.i(LOG_TAG, "Checking if platform supports badge counters, attempt "
                                     + String.format("%d/%d.", i + 1, SUPPORTED_CHECK_ATTEMPTS));
                             if (initBadger(context)) {
                                 sShortcutBadger.executeBadge(context, sComponentName, 0);
                                 sIsBadgeCounterSupported = true;
-                                Log.i(LOG_TAG, "Badge counter is supported in this platform.");
+                                Logger.i(LOG_TAG, "Badge counter is supported in this platform.");
                                 break;
                             } else {
                                 lastErrorMessage = "Failed to initialize the badge counter.";
@@ -154,7 +154,7 @@ public final class ShortcutBadger {
                     }
 
                     if (sIsBadgeCounterSupported == null) {
-                        Log.w(LOG_TAG, "Badge counter seems not supported for this platform: "
+                        Logger.w(LOG_TAG, "Badge counter seems not supported for this platform: "
                                 + lastErrorMessage);
                         sIsBadgeCounterSupported = false;
                     }
@@ -178,7 +178,7 @@ public final class ShortcutBadger {
                 method.invoke(extraNotification, badgeCount);
             } catch (Exception e) {
                 if (Log.isLoggable(LOG_TAG, Log.DEBUG)) {
-                    Log.d(LOG_TAG, "Unable to execute badge", e);
+                    Logger.d(LOG_TAG, "Unable to execute badge", e);
                 }
             }
         }
@@ -189,7 +189,7 @@ public final class ShortcutBadger {
     private static boolean initBadger(Context context) {
         Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         if (launchIntent == null) {
-            Log.e(LOG_TAG, "Unable to find launch intent for package " + context.getPackageName());
+            Logger.e(LOG_TAG, "Unable to find launch intent for package " + context.getPackageName());
             return false;
         }
 

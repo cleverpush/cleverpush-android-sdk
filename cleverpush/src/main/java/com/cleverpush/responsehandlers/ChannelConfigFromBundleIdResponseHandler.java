@@ -5,7 +5,6 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
@@ -36,9 +35,9 @@ public class ChannelConfigFromBundleIdResponseHandler {
                     cleverPush.setChannelId(responseJson.getString("channelId"));
                     cleverPush.subscribeOrSync(autoRegister);
                     cleverPush.initFeatures();
-                    Log.d(LOG_TAG, "Got Channel ID via Package Name: " + cleverPush.getChannelId(cleverPush.getContext()) + " (SDK " + CleverPush.SDK_VERSION + ")");
+                    Logger.d(LOG_TAG, "Got Channel ID via Package Name: " + cleverPush.getChannelId(cleverPush.getContext()) + " (SDK " + CleverPush.SDK_VERSION + ")");
                 } catch (Throwable ex) {
-                    Log.e(LOG_TAG, ex.getMessage(), ex);
+                    Logger.e(LOG_TAG, ex.getMessage(), ex);
                 }
             }
 

@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
@@ -32,7 +32,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		GeofencingEvent event = GeofencingEvent.fromIntent(intent);
 		if (event.hasError()) {
-			Log.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
+			Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
 			return;
 		}
 
@@ -42,7 +42,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 		String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
 		String transitionState = event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? "enter": "exit";
 
-		Log.d(TAG, "Geofence Transition Details: " + getGeofenceTransitionDetails(event) + " " + transitionState + " subscription: " + subscriptionId + " channel " + channelId);
+		Logger.d(TAG, "Geofence Transition Details: " + getGeofenceTransitionDetails(event) + " " + transitionState + " subscription: " + subscriptionId + " channel " + channelId);
 
 		if (channelId != null && subscriptionId != null) {
 			for (Geofence geofence : event.getTriggeringGeofences()) {
@@ -55,7 +55,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 
 					CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, null);
 				} catch (JSONException e) {
-					Log.e(LOG_TAG, "Error generating geo-fence json", e);
+					Logger.e(LOG_TAG, "Error generating geo-fence json", e);
 				}
 			}
 		}

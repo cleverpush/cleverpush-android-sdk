@@ -1,6 +1,6 @@
 package com.cleverpush.responsehandlers;
 
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import com.cleverpush.CleverPushHttpClient;
 
@@ -12,12 +12,12 @@ public class SendBannerEventResponseHandler {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-                Log.d(TAG, "App Banner Event success.");
+                Logger.d(TAG, "App Banner Event success.");
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                Log.e(TAG, "App Banner Event failed." +
+                Logger.e(TAG, "App Banner Event failed." +
                         "\nStatus code: " + statusCode +
                         "\nResponse: " + response
                 );

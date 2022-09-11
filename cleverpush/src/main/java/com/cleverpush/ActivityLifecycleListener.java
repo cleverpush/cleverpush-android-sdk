@@ -10,7 +10,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.os.Handler;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -62,7 +62,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
             try {
                 CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
             } catch (IllegalStateException illegalStateException) {
-                Log.e(LOG_TAG, illegalStateException.getMessage());
+                Logger.e(LOG_TAG, illegalStateException.getMessage());
             }
         }
 

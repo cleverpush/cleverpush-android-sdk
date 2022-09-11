@@ -1,7 +1,7 @@
 package com.cleverpush.service;
 
 import android.content.SharedPreferences;
-import android.util.Log;
+import com.cleverpush.util.Logger;
 
 import com.cleverpush.Notification;
 import com.cleverpush.listener.NotificationsPageCallbackListener;
