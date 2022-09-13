@@ -6,12 +6,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application>
+
         <activity
             android:name="com.cleverpush.NotificationOpenedActivity"
+            android:excludeFromRecents="true"
             android:exported="true"
             android:noHistory="true"
-            android:excludeFromRecents="true"
-            android:taskAffinity=""
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity android:name="com.cleverpush.PermissionActivity"
@@ -26,6 +26,15 @@
             android:name=".banner.WebViewActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <receiver
+            android:name=".service.GeofenceBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
         <service
             android:name="com.cleverpush.service.CarouselNotificationIntentService"
             android:exported="false" />
@@ -34,9 +43,11 @@
             android:name="com.cleverpush.service.NotificationDismissIntentService"
             android:exported="false" />
 
-        <service
-            android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService"
-            android:exported="false" />
+                <service
+                    android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService"
+                    android:exported="true" />
+
+        <receiver android:name=".GeofenceBroadcastReceiver" />
 
         <service
             android:name="com.cleverpush.service.CleverPushFcmListenerService"

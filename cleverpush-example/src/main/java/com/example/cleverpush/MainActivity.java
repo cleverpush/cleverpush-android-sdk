@@ -20,7 +20,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        CleverPush.getInstance(this).requestLocationPermission();
 
 //      String BASE_URL = "https://api-stage.cleverpush.com";
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
@@ -34,7 +33,10 @@ public class MainActivity extends AppCompatActivity {
                 result -> System.out.println("Opened CleverPush Notification: " + result.getNotification().getTitle()),
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId));
 
-        CleverPush.getInstance(this).setMaximumNotificationCount(4);
+
+        CleverPush.getInstance(this).requestLocationPermission();
+        CleverPush.getInstance(this).initGeoFences();
+        CleverPush.getInstance(this).setMaximumNotificationCount(2);
 
         binding.btnSubscribe.setOnClickListener(view -> {
             CleverPush.getInstance(MainActivity.this).subscribe();
@@ -59,5 +61,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        CleverPush.getInstance(this).hasLocationPermission();
+        CleverPush.getInstance(this).initGeoFences();
     }
 }

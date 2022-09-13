@@ -1,7 +1,6 @@
 package com.cleverpush;
 
 public class CleverPushPreferences {
-
     public static final String FCM_TOKEN = "fcmToken";
     public static final String HMS_TOKEN = "hmsToken";
     public static final String ADM_TOKEN = "admToken";
@@ -30,5 +29,4 @@ public class CleverPushPreferences {
     public static final String TOPIC_LAST_CHECKED = "topicLastChecked";
     public static final String LAST_TIME_AUTO_SHOWED = "lastTimeAutoShowed";
     public static final String NOTIFICATION_STYLE = "notificationStyle";
-
 }

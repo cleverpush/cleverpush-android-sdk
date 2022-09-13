@@ -5,6 +5,7 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import com.cleverpush.util.Logger;
@@ -12,36 +13,32 @@ import com.cleverpush.util.Logger;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.google.android.gms.location.Geofence;
-import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class CleverPushGeofenceTransitionsIntentService extends IntentService {
-	protected static final String TAG = "CPGeofenceTransitionsIS";
+    protected static final String TAG = "CPGeofenceTransitionsIS";
 
-	public CleverPushGeofenceTransitionsIntentService() {
-		super(TAG);  // use TAG to name the IntentService worker thread
-	}
+    public CleverPushGeofenceTransitionsIntentService() {
+        super(TAG);
+    }
 
-	@Override
-	protected void onHandleIntent(Intent intent) {
-		GeofencingEvent event = GeofencingEvent.fromIntent(intent);
-		if (event.hasError()) {
-			Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
-			return;
-		}
-
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-		String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
-		String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-		String transitionState = event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? "enter": "exit";
-
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        GeofencingEvent event = GeofencingEvent.fromIntent(intent);
+//        Geofence geofence = event.getTriggeringGeofences().get(0);
+        Log.e("geofence", "GeofencingEvent : " + event.getTriggeringGeofences());
+        if (event.hasError()) {
+            Log.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
+            return;
+        }
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
+        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        String transitionState = event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? "enter" : "exit";
 		Logger.d(TAG, "Geofence Transition Details: " + getGeofenceTransitionDetails(event) + " " + transitionState + " subscription: " + subscriptionId + " channel " + channelId);
 
 		if (channelId != null && subscriptionId != null) {

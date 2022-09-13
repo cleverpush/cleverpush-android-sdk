@@ -3,7 +3,7 @@ apply from: 'maven-push.gradle'
 apply plugin: 'com.hiya.jacoco-android'
 ext {
     buildVersions = [
-            minSdkVersion: 19
+            minSdkVersion: 21
     ]
 }
 

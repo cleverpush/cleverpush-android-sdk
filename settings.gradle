@@ -1,2 +1,2 @@
 include ':cleverpush'
-include ':myapplication'
+include ':cleverpush-example'

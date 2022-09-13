@@ -2,8 +2,10 @@
     package="com.cleverpush">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application>
         <activity
@@ -29,6 +31,8 @@
         <service
             android:name="com.cleverpush.service.NotificationDismissIntentService"
             android:exported="false" />
+
+        <receiver android:name=".GeofenceBroadcastReceiver"/>
 
         <service
             android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService"

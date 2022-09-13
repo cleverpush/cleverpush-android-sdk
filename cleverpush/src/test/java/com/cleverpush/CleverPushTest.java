@@ -1,6 +1,5 @@
 package com.cleverpush;
 
-
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -9,10 +8,8 @@ import android.content.res.Resources;
 import android.os.Handler;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
-
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
