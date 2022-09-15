@@ -11,6 +11,7 @@ import androidx.databinding.DataBindingUtil;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.listener.NotificationReceivedListener;
+import com.cleverpush.util.Logger;
 import com.example.cleverpush.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,10 +35,12 @@ public class MainActivity extends AppCompatActivity {
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId));
 
 
-        CleverPush.getInstance(this).requestLocationPermission();
-        CleverPush.getInstance(this).initGeoFences();
+//        CleverPush.getInstance(this).requestLocationPermission();
+//        CleverPush.getInstance(this).initGeoFences();
         CleverPush.getInstance(this).setMaximumNotificationCount(2);
-
+        int versionCode = BuildConfig.VERSION_CODE;
+        String versionName = BuildConfig.VERSION_NAME;
+        Logger.d("Version", "" + versionCode + " - " + versionName);
         binding.btnSubscribe.setOnClickListener(view -> {
             CleverPush.getInstance(MainActivity.this).subscribe();
             binding.tvStatus.setText("Subscribe");
@@ -66,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        CleverPush.getInstance(this).hasLocationPermission();
-        CleverPush.getInstance(this).initGeoFences();
+//        CleverPush.getInstance(this).hasLocationPermission();
+//        CleverPush.getInstance(this).initGeoFences();
     }
 }

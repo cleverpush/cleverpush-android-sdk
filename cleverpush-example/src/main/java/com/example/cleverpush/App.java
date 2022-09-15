@@ -9,7 +9,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         FirebaseApp.initializeApp(this);
-        CleverPush.getInstance(this).setIgnoreDisabledNotificationPermission(true);
+//        CleverPush.getInstance(this).setIgnoreDisabledNotificationPermission(true);
         CleverPush.getInstance(this).init(getString(R.string.channel_id));
         CleverPush.getInstance(this).subscribe();
     }

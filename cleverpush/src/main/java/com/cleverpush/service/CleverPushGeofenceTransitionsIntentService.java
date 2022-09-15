@@ -12,6 +12,7 @@ import com.cleverpush.util.Logger;
 
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.util.Logger;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
 import com.google.android.gms.location.LocationServices;
