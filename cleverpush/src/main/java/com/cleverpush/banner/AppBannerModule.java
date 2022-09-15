@@ -16,7 +16,6 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.banner.models.Banner;
-import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
@@ -26,9 +25,11 @@ import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
+import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -342,7 +343,6 @@ public class AppBannerModule {
         }
 
         allowed = appVersionFilter(allowed, banner);
-
         return allowed;
     }
 
@@ -354,6 +354,7 @@ public class AppBannerModule {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
             String appVersion = pInfo.versionName;
             return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), appVersion, banner.getAppVersionFilterValue());
+
         } catch (Exception e) {
             e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
@@ -363,13 +364,14 @@ public class AppBannerModule {
     }
 
     private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String value, String compareValue) {
+        Logger.d("CheckFilterRelation :- ", "" + allowed + " - " + "Relation:- " + relation + "Value:- " + value + " CompareValue:- " + compareValue);
         if (relation == null) {
             return allowed;
         }
 
         try {
             if (allowed && relation.equals(CheckFilterRelation.Equals)) {
-                if (!compareValue.equals(value)) {
+                if (compareValue.equals(value)) {
                     allowed = false;
                 }
             }
@@ -387,13 +389,13 @@ public class AppBannerModule {
             }
 
             if (allowed && relation.equals(CheckFilterRelation.GreaterThan)) {
-                if (Double.parseDouble(compareValue) <= (Double.parseDouble(value))) {
+                if (Double.parseDouble(value) <= (Double.parseDouble(compareValue))) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.LessThan)) {
-                if (Double.parseDouble(compareValue) >= (Double.parseDouble(value))) {
+                if (Double.parseDouble(value) >= (Double.parseDouble(compareValue))) {
                     allowed = false;
                 }
             }
@@ -418,7 +420,6 @@ public class AppBannerModule {
     }
 
     private void createBanners(Collection<Banner> banners) {
-
         for (Banner banner : banners) {
             if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
                 Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Draft");
