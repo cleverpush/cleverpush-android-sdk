@@ -383,7 +383,7 @@ public class AppBannerModule {
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Between)) {
-                if (Double.parseDouble(compareValue) <= Double.parseDouble(value) || Double.parseDouble(compareValue) >= Double.parseDouble(value)) {
+                if (Double.parseDouble(value) <= Double.parseDouble(compareValue) || Double.parseDouble(value) >= Double.parseDouble(compareValue)) {
                     allowed = false;
                 }
             }
