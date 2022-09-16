@@ -275,9 +275,8 @@ public class AppBannerModule {
         if (banner == null) {
             return false;
         }
-
+        
         boolean allowed = true;
-
         if (banner.getSubscribedType() == BannerSubscribedType.Subscribed && !getCleverPushInstance().isSubscribed()) {
             allowed = false;
         }
@@ -329,20 +328,19 @@ public class AppBannerModule {
         if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
             allowed = false;
             for (HashMap<String, String> attribute : banner.getAttributes()) {
-                String attributeId = attribute.get("id");
-                String compareAttributeValue = attribute.get("value");
-                String relationString = attribute.get("relation");
+                Double attributeId = Double.valueOf(attribute.get("id"));
+                Double compareAttributeValue = Double.valueOf(attribute.get("value"));
+                Double relationString = Double.valueOf(attribute.get("relation"));
                 if (relationString == null) {
-                    relationString = "equals";
+                    relationString = Double.valueOf("equals");
                 }
-                String attributeValue = (String) getCleverPushInstance().getSubscriptionAttribute(attributeId);
-                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(relationString), compareAttributeValue, attributeValue)) {
+                Double attributeValue = Double.valueOf((String) getCleverPushInstance().getSubscriptionAttribute(String.valueOf(attributeId)));
+                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(String.valueOf(relationString)), Double.valueOf(String.valueOf(compareAttributeValue)), attributeValue)) {
                     allowed = true;
                     break;
                 }
             }
         }
-
         allowed = appVersionFilter(allowed, banner);
         return allowed;
     }
