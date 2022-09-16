@@ -200,8 +200,7 @@ public class CleverPush {
             CleverPush.context = context.getApplicationContext();
         }
 
-        sessionListener = initSessionListener();
-        if (googleApiClient == null) {
+        sessionListener = initSessionListener();        if (googleApiClient == null) {
             googleApiClient = getGoogleApiClient();
         }
 
@@ -210,6 +209,10 @@ public class CleverPush {
         }
 
         geofencingClient = LocationServices.getGeofencingClient(context);
+        if (googleApiClient == null) {
+            googleApiClient = getGoogleApiClient();
+        }
+
 
         if (googleApiClient == null) {
             googleApiClient = getGoogleApiClient();
@@ -218,7 +221,6 @@ public class CleverPush {
         if (!googleApiClient.isConnected()) {
             googleApiClient.connect();
         }
-
 
         if ((Application) getContext() != null) {
             ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) getContext(), sessionListener);
@@ -991,13 +993,10 @@ public class CleverPush {
                                             )
                                             .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
                                             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                                            .build());
-                                    //Retrieve the values
+                                            .build());                                    //Retrieve the values
                                     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
                                     sharedPreferences.edit().putString(CleverPushPreferences.GEOFENCES, String.valueOf(geofenceList)).apply();
-
                                 }
-
                             }
                         }
                     } catch (Exception ex) {
@@ -1048,7 +1047,6 @@ public class CleverPush {
                         flags |= PendingIntent.FLAG_IMMUTABLE;
                     }
                     PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, flags);
-
                     geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, flags);
                     geofencingClient.addGeofences(geofenceRequest, geofencePendingIntent);
                     context.startService(geofenceIntent);
@@ -1063,13 +1061,11 @@ public class CleverPush {
 //                    Logger.d(LOG_TAG, "geofenceIntent" + geofenceList);
                     PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
                     context.startService(geofenceIntent);
-
                     try {
                         LocationServices.GeofencingApi.addGeofences(
                                 googleApiClient,
                                 geofenceRequest,
                                 geofencePendingIntent
-                        );
                         ).setResultCallback(status -> Logger.d(LOG_TAG, "GoogleApiClient status" + status));
 
                     } catch (SecurityException securityException) {
@@ -3123,7 +3119,6 @@ public class CleverPush {
         Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show();
     }
 
-
 /*
     @SuppressLint("MissingPermission")
     @Override
@@ -3144,8 +3139,7 @@ public class CleverPush {
                 }
             });
         }
-    }
-*/
+    }*/
 
 /*
     private PendingIntent getGeofencePendingIntent() {

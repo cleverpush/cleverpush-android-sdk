@@ -22,10 +22,16 @@ import org.json.JSONObject;
 
 public class CleverPushGeofenceTransitionsIntentService extends IntentService {
     protected static final String TAG = "CPGeofenceTransitionsIS";
-
     public CleverPushGeofenceTransitionsIntentService() {
         super(TAG);
     }
+	@Override
+	protected void onHandleIntent(Intent intent) {
+		GeofencingEvent event = GeofencingEvent.fromIntent(intent);
+		if (event.hasError()) {
+			Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
+			return;
+		}
 
     @Override
     protected void onHandleIntent(Intent intent) {
