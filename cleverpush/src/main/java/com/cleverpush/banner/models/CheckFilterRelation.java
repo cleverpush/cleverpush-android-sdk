@@ -30,5 +30,4 @@ public enum CheckFilterRelation {
         }
         return null;
     }
-
 }

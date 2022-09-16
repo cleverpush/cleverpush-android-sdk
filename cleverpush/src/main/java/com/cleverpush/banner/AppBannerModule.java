@@ -274,9 +274,8 @@ public class AppBannerModule {
         if (banner == null) {
             return false;
         }
-
+        
         boolean allowed = true;
-
         if (banner.getSubscribedType() == BannerSubscribedType.Subscribed && !getCleverPushInstance().isSubscribed()) {
             allowed = false;
         }
@@ -328,20 +327,19 @@ public class AppBannerModule {
         if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
             allowed = false;
             for (HashMap<String, String> attribute : banner.getAttributes()) {
-                String attributeId = attribute.get("id");
-                String compareAttributeValue = attribute.get("value");
-                String relationString = attribute.get("relation");
+                Double attributeId = Double.valueOf(attribute.get("id"));
+                Double compareAttributeValue = Double.valueOf(attribute.get("value"));
+                Double relationString = Double.valueOf(attribute.get("relation"));
                 if (relationString == null) {
-                    relationString = "equals";
+                    relationString = Double.valueOf("equals");
                 }
-                String attributeValue = (String) getCleverPushInstance().getSubscriptionAttribute(attributeId);
-                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(relationString), compareAttributeValue, attributeValue)) {
+                Double attributeValue = Double.valueOf((String) getCleverPushInstance().getSubscriptionAttribute(String.valueOf(attributeId)));
+                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(String.valueOf(relationString)), Double.valueOf(String.valueOf(compareAttributeValue)), attributeValue)) {
                     allowed = true;
                     break;
                 }
             }
         }
-
         allowed = appVersionFilter(allowed, banner);
         return allowed;
     }
@@ -352,19 +350,19 @@ public class AppBannerModule {
     private boolean appVersionFilter(boolean allowed, Banner banner) {
         try {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-            String appVersion = pInfo.versionName;
-            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), appVersion, banner.getAppVersionFilterValue());
-
+            Double appVersion = Double.valueOf(pInfo.versionCode);
+            String compareValue = banner.getAppVersionFilterValue();
+            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), appVersion, Double.valueOf(compareValue));
         } catch (Exception e) {
             e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
         }
-
         return allowed;
     }
 
-    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String value, String compareValue) {
-        Logger.d("CheckFilterRelation :- ", "" + allowed + " - " + "Relation:- " + relation + "Value:- " + value + " CompareValue:- " + compareValue);
+
+    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, Double value, Double compareValue) {
+
         if (relation == null) {
             return allowed;
         }
@@ -377,37 +375,37 @@ public class AppBannerModule {
             }
 
             if (allowed && relation.equals(CheckFilterRelation.NotEqual)) {
-                if (compareValue.equals(value)) {
+                if (value.equals(compareValue)) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Between)) {
-                if (Double.parseDouble(value) <= Double.parseDouble(compareValue) || Double.parseDouble(value) >= Double.parseDouble(compareValue)) {
+                if (Double.parseDouble(String.valueOf(compareValue)) <= Double.parseDouble(String.valueOf(value)) || Double.parseDouble(String.valueOf(compareValue)) >= Double.parseDouble(String.valueOf(value))) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.GreaterThan)) {
-                if (Double.parseDouble(value) <= (Double.parseDouble(compareValue))) {
+                if (Double.parseDouble(String.valueOf(compareValue)) <= (Double.parseDouble(String.valueOf(value)))) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.LessThan)) {
-                if (Double.parseDouble(value) >= (Double.parseDouble(compareValue))) {
+                if (Double.parseDouble(String.valueOf(compareValue)) >= (Double.parseDouble(String.valueOf(value)))) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Contains)) {
-                if (!compareValue.contains(value)) {
+                if (!compareValue.equals(value)) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
-                if (compareValue.contains(value)) {
+                if (compareValue.equals(value)) {
                     allowed = false;
                 }
             }
@@ -415,7 +413,6 @@ public class AppBannerModule {
             e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
         }
-
         return allowed;
     }
 
