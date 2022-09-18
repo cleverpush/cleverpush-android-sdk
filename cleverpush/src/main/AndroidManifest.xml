@@ -47,16 +47,9 @@
             android:name="com.cleverpush.service.NotificationDismissIntentService"
             android:exported="false" />
 
-                <service
-                    android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService"
-                    android:exported="true" />
-
-        <receiver android:name=".GeofenceBroadcastReceiver" />
-
         <service
             android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService"
-            android:exported="false" />
-        
+            android:exported="true" />
 
         <receiver android:name=".GeofenceBroadcastReceiver" />
 

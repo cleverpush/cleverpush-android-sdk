@@ -1,4 +1,4 @@
- qpackage com.cleverpush;
+package com.cleverpush;
 
 public class CleverPushPreferences {
     public static final String FCM_TOKEN = "fcmToken";

@@ -5,7 +5,6 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import com.cleverpush.util.Logger;
@@ -15,23 +14,16 @@ import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.util.Logger;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
-import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class CleverPushGeofenceTransitionsIntentService extends IntentService {
     protected static final String TAG = "CPGeofenceTransitionsIS";
+
     public CleverPushGeofenceTransitionsIntentService() {
         super(TAG);
     }
-	@Override
-	protected void onHandleIntent(Intent intent) {
-		GeofencingEvent event = GeofencingEvent.fromIntent(intent);
-		if (event.hasError()) {
-			Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
-			return;
-		}
 
     @Override
     protected void onHandleIntent(Intent intent) {

@@ -200,19 +200,7 @@ public class CleverPush {
             CleverPush.context = context.getApplicationContext();
         }
 
-        sessionListener = initSessionListener();        if (googleApiClient == null) {
-            googleApiClient = getGoogleApiClient();
-        }
-
-        if (!googleApiClient.isConnected()) {
-            googleApiClient.connect();
-        }
-
-        geofencingClient = LocationServices.getGeofencingClient(context);
-        if (googleApiClient == null) {
-            googleApiClient = getGoogleApiClient();
-        }
-
+        sessionListener = initSessionListener();
 
         if (googleApiClient == null) {
             googleApiClient = getGoogleApiClient();
@@ -953,9 +941,6 @@ public class CleverPush {
      */
     @SuppressWarnings("deprecation")
     public void initGeoFences() {
-        if (this.hasLocationPermission()) {
-    void initGeoFences() {
-    public void initGeoFences() {
 
         if (hasLocationPermission()) {
             googleApiClient = getGoogleApiClient();
@@ -965,21 +950,6 @@ public class CleverPush {
                 if (config != null) {
                     try {
                         JSONArray geoFenceArray = config.getJSONArray("geoFences");
-                        for (int i = 0; i < geoFenceArray.length(); i++) {
-                            JSONObject geoFence = geoFenceArray.getJSONObject(i);
-                            if (geoFence != null) {
-                                geofenceList.add(new Geofence.Builder()
-                                        .setRequestId(geoFence.getString("_id"))
-                                        .setCircularRegion(
-                                                geoFence.getDouble("latitude"),
-                                                geoFence.getDouble("longitude"),
-                                                geoFence.getLong("radius")
-                                        )
-                                        // Future: use "endsAt" instead
-                                        .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                                        .build());
-
                         if (geoFenceArray != null) {
                             for (int i = 0; i < geoFenceArray.length(); i++) {
                                 JSONObject geoFence = geoFenceArray.getJSONObject(i);
@@ -993,7 +963,8 @@ public class CleverPush {
                                             )
                                             .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
                                             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                                            .build());                                    //Retrieve the values
+                                            .build());
+                                    //Retrieve the values
                                     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
                                     sharedPreferences.edit().putString(CleverPushPreferences.GEOFENCES, String.valueOf(geofenceList)).apply();
                                 }
@@ -1039,25 +1010,6 @@ public class CleverPush {
                     GeofencingRequest geofenceRequest = builder.build();
 
                     Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
-
-                    // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addGeofences()
-
-                    int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        flags |= PendingIntent.FLAG_IMMUTABLE;
-                    }
-                    PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, flags);
-                    geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, flags);
-                    geofencingClient.addGeofences(geofenceRequest, geofencePendingIntent);
-                    context.startService(geofenceIntent);
-
-
-                    LocationServices.GeofencingApi.addGeofences(
-                            googleApiClient,
-                            geofenceRequest,
-                            geofencePendingIntent
-                    );
-
 //                    Logger.d(LOG_TAG, "geofenceIntent" + geofenceList);
                     PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
                     context.startService(geofenceIntent);
