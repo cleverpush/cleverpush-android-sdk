@@ -29,7 +29,7 @@ import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
-import com.cleverpush.util.Logger;
+import com.cleverpush.util.VersionComparatorNew;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -65,6 +65,7 @@ public class AppBannerModule {
     private final Handler handler;
     private final SharedPreferences sharedPreferences;
     private final SharedPreferences.Editor editor;
+
 
     private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
         this.channel = channel;
@@ -344,15 +345,15 @@ public class AppBannerModule {
         return allowed;
     }
 
+
     /**
      * App Banner Version Filter
      */
     private boolean appVersionFilter(boolean allowed, Banner banner) {
         try {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-            Double appVersion = Double.valueOf(pInfo.versionCode);
-            String compareValue = banner.getAppVersionFilterValue();
-            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), appVersion, Double.valueOf(compareValue));
+            String versionName = pInfo.versionName;
+            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName, banner.getAppVersionFilterValue());
         } catch (Exception e) {
             e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
@@ -360,8 +361,9 @@ public class AppBannerModule {
         return allowed;
     }
 
-
-    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, Double value, Double compareValue) {
+    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String versionName, String compareValue) {
+        VersionComparatorNew vc = new VersionComparatorNew();
+        int mainValue = vc.compare(versionName, compareValue);
 
         if (relation == null) {
             return allowed;
@@ -369,43 +371,43 @@ public class AppBannerModule {
 
         try {
             if (allowed && relation.equals(CheckFilterRelation.Equals)) {
-                if (compareValue.equals(value)) {
+                if (mainValue != 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.NotEqual)) {
-                if (value.equals(compareValue)) {
+                if (mainValue == 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Between)) {
-                if (Double.parseDouble(String.valueOf(compareValue)) <= Double.parseDouble(String.valueOf(value)) || Double.parseDouble(String.valueOf(compareValue)) >= Double.parseDouble(String.valueOf(value))) {
+                if (mainValue != 1 || mainValue != 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.GreaterThan)) {
-                if (Double.parseDouble(String.valueOf(compareValue)) <= (Double.parseDouble(String.valueOf(value)))) {
+                if (mainValue <= 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.LessThan)) {
-                if (Double.parseDouble(String.valueOf(compareValue)) >= (Double.parseDouble(String.valueOf(value)))) {
+                if (mainValue >= 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Contains)) {
-                if (!compareValue.equals(value)) {
+                if (!compareValue.contains(versionName)) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
-                if (compareValue.equals(value)) {
+                if (compareValue.contains(versionName)) {
                     allowed = false;
                 }
             }
@@ -413,6 +415,9 @@ public class AppBannerModule {
             e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
         }
+
+        Log.e("checkRelationFilter", "" + versionName + " " + compareValue + " " + relation + " " + allowed);
+
         return allowed;
     }
 
