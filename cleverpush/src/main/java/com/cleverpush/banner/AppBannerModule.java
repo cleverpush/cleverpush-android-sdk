@@ -67,6 +67,7 @@ public class AppBannerModule {
     private final SharedPreferences sharedPreferences;
     private final SharedPreferences.Editor editor;
 
+
     private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
         this.channel = channel;
         this.showDrafts = showDrafts;
@@ -344,6 +345,7 @@ public class AppBannerModule {
         allowed = appVersionFilter(allowed, banner);
         return allowed;
     }
+
 
     /**
      * App Banner Version Filter
