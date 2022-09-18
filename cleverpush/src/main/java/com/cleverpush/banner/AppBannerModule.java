@@ -67,7 +67,6 @@ public class AppBannerModule {
     private final SharedPreferences sharedPreferences;
     private final SharedPreferences.Editor editor;
 
-
     private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
         this.channel = channel;
         this.showDrafts = showDrafts;
@@ -276,8 +275,9 @@ public class AppBannerModule {
         if (banner == null) {
             return false;
         }
-        
+
         boolean allowed = true;
+
         if (banner.getSubscribedType() == BannerSubscribedType.Subscribed && !getCleverPushInstance().isSubscribed()) {
             allowed = false;
         }
@@ -329,23 +329,24 @@ public class AppBannerModule {
         if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
             allowed = false;
             for (HashMap<String, String> attribute : banner.getAttributes()) {
-                Double attributeId = Double.valueOf(attribute.get("id"));
-                Double compareAttributeValue = Double.valueOf(attribute.get("value"));
-                Double relationString = Double.valueOf(attribute.get("relation"));
+                String attributeId = attribute.get("id");
+                String compareAttributeValue = attribute.get("value");
+                String relationString = attribute.get("relation");
                 if (relationString == null) {
-                    relationString = Double.valueOf("equals");
+                    relationString = "equals";
                 }
-                Double attributeValue = Double.valueOf((String) getCleverPushInstance().getSubscriptionAttribute(String.valueOf(attributeId)));
-                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(String.valueOf(relationString)), Double.valueOf(String.valueOf(compareAttributeValue)), attributeValue)) {
+                String attributeValue = (String) getCleverPushInstance().getSubscriptionAttribute(attributeId);
+                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(relationString), compareAttributeValue, attributeValue)) {
                     allowed = true;
                     break;
                 }
             }
         }
+
         allowed = appVersionFilter(allowed, banner);
+
         return allowed;
     }
-
 
     /**
      * App Banner Version Filter
