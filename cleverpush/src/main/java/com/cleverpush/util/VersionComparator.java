@@ -2,7 +2,7 @@ package com.cleverpush.util;
 
 import java.util.Comparator;
 
-public class VersionComparatorNew implements Comparator {
+public class VersionComparator implements Comparator {
 
     public boolean equals(Object o1, Object o2) {
         return compare(o1, o2) == 0;
@@ -51,13 +51,23 @@ public class VersionComparatorNew implements Comparator {
             boolean empty1 = suffix1.length() == 0;
             boolean empty2 = suffix2.length() == 0;
 
-            if (empty1 && empty2) continue; // No suffixes
-            if (empty1) return 1; // First suffix is empty (1.2 > 1.2b)
-            if (empty2) return -1; // Second suffix is empty (1.2a < 1.2)
+            if (empty1 && empty2) {
+                continue; // No suffixes
+            }
+
+            if (empty1) {
+                return 1; // First suffix is empty (1.2 > 1.2b)
+            }
+
+            if (empty2) {
+                return -1; // Second suffix is empty (1.2a < 1.2)
+            }
 
             // Lexical comparison of suffixes
             int result = suffix1.compareTo(suffix2);
-            if (result != 0) return result;
+            if (result != 0) {
+                return result;
+            }
 
         }
         if (tokenizer2.MoveNext()) {
@@ -88,9 +98,9 @@ public class VersionComparatorNew implements Comparator {
         private boolean _hasValue;
 
         VersionTokenizer(String versionString) {
-            if (versionString == null)
+            if (versionString == null) {
                 throw new IllegalArgumentException("versionString is null");
-
+            }
             _versionString = versionString;
             _length = versionString.length();
         }
@@ -113,14 +123,17 @@ public class VersionComparatorNew implements Comparator {
             _hasValue = false;
 
             // No more characters
-            if (_position >= _length)
+            if (_position >= _length) {
                 return false;
+            }
 
             _hasValue = true;
 
             while (_position < _length) {
                 char c = _versionString.charAt(_position);
-                if (c < '0' || c > '9') break;
+                if (c < '0' || c > '9') {
+                    break;
+                }
                 _number = _number * 10 + (c - '0');
                 _position++;
             }
@@ -129,13 +142,17 @@ public class VersionComparatorNew implements Comparator {
 
             while (_position < _length) {
                 char c = _versionString.charAt(_position);
-                if (c == '.') break;
+                if (c == '.') {
+                    break;
+                }
                 _position++;
             }
 
             _suffix = _versionString.substring(suffixStart, _position);
 
-            if (_position < _length) _position++;
+            if (_position < _length){
+                _position++;
+            }
 
             return true;
         }
