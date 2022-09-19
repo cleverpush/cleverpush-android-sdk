@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
-//apply from: 'maven-push.gradle'
-//apply plugin: 'jacoco-android'
+apply from: 'maven-push.gradle'
+apply plugin: 'jacoco-android'
 
 ext {
     buildVersions = [
