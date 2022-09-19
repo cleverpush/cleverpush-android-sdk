@@ -8,7 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
-import com.cleverpush.util.Logger;
+import android.util.Log;
 import android.view.View;
 
 import com.cleverpush.ActivityLifecycleListener;
@@ -16,7 +16,6 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.banner.models.Banner;
-import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
@@ -26,9 +25,12 @@ import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
+import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
+import com.cleverpush.util.Logger;
+import com.cleverpush.util.VersionComparator;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -352,60 +354,62 @@ public class AppBannerModule {
     private boolean appVersionFilter(boolean allowed, Banner banner) {
         try {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
-            String appVersion = pInfo.versionName;
-            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), appVersion, banner.getAppVersionFilterValue());
+            String versionName = pInfo.versionName;
+            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName, banner.getAppVersionFilterValue());
         } catch (Exception e) {
             e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
         }
-
         return allowed;
     }
 
-    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String value, String compareValue) {
+    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String versionName, String compareValue) {
+        VersionComparator vc = new VersionComparator();
+        int mainValue = vc.compare(versionName, compareValue);
+
         if (relation == null) {
             return allowed;
         }
 
         try {
             if (allowed && relation.equals(CheckFilterRelation.Equals)) {
-                if (!compareValue.equals(value)) {
+                if (mainValue != 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.NotEqual)) {
-                if (compareValue.equals(value)) {
+                if (mainValue == 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Between)) {
-                if (Double.parseDouble(compareValue) <= Double.parseDouble(value) || Double.parseDouble(compareValue) >= Double.parseDouble(value)) {
+                if (mainValue != 1 || mainValue != 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.GreaterThan)) {
-                if (Double.parseDouble(compareValue) <= (Double.parseDouble(value))) {
+                if (mainValue <= 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.LessThan)) {
-                if (Double.parseDouble(compareValue) >= (Double.parseDouble(value))) {
+                if (mainValue >= 0) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Contains)) {
-                if (!compareValue.contains(value)) {
+                if (!compareValue.contains(versionName)) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
-                if (compareValue.contains(value)) {
+                if (compareValue.contains(versionName)) {
                     allowed = false;
                 }
             }
@@ -414,11 +418,12 @@ public class AppBannerModule {
             Logger.e(TAG, "Error checking app version filter", e);
         }
 
+        Log.e("checkRelationFilter", "" + versionName + " " + compareValue + " " + relation + " " + allowed);
+
         return allowed;
     }
 
     private void createBanners(Collection<Banner> banners) {
-
         for (Banner banner : banners) {
             if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
                 Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Draft");

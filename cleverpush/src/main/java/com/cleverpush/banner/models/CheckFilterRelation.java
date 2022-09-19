@@ -19,7 +19,7 @@ public enum CheckFilterRelation {
         relations.put("equals", CheckFilterRelation.Equals);
         relations.put("lessThan", CheckFilterRelation.LessThan);
         relations.put("between", CheckFilterRelation.Between);
-        relations.put("notEqual", CheckFilterRelation.NotEqual);
+        relations.put("notEquals", CheckFilterRelation.NotEqual);
         relations.put("contains", CheckFilterRelation.Contains);
         relations.put("notContains", CheckFilterRelation.NotContains);
     }
@@ -30,5 +30,4 @@ public enum CheckFilterRelation {
         }
         return null;
     }
-
 }
