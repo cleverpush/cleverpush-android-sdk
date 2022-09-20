@@ -23,6 +23,7 @@ import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -3059,6 +3060,7 @@ public class CleverPush {
     public void setLogListener(LogListener logListener) {
         Logger.setLogListener(logListener);
     }
+/*
     @Override
     public void onResult(@NonNull Status status) {
         String toastMessage;
@@ -3070,6 +3072,7 @@ public class CleverPush {
         }
         Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show();
     }
+*/
 
 /*
     @SuppressLint("MissingPermission")
@@ -3123,6 +3126,4 @@ public class CleverPush {
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.e("connectionResult", "connectionResult" + connectionResult.getErrorMessage());
     }*/
-}
-
 }

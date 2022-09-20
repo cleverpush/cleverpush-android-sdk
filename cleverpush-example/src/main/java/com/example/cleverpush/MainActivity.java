@@ -22,9 +22,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-//      String BASE_URL = "https://api-stage.cleverpush.com";
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
-//      CleverPush.getInstance(this).enableDevelopmentMode();
         CleverPush.getInstance(this).subscribe();
         CleverPush.getInstance(this).init(getString(R.string.channel_id),
                 (NotificationReceivedListener)
@@ -34,20 +32,9 @@ public class MainActivity extends AppCompatActivity {
                 result -> System.out.println("Opened CleverPush Notification: " + result.getNotification().getTitle()),
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId));
 
-
-//        CleverPush.getInstance(this).requestLocationPermission();
-//        CleverPush.getInstance(this).initGeoFences();
-        CleverPush.getInstance(this).setMaximumNotificationCount(2);
-        int versionCode = BuildConfig.VERSION_CODE;
-        String versionName = BuildConfig.VERSION_NAME;
-        Logger.d("Version", "" + versionCode + " - " + versionName);
         binding.btnSubscribe.setOnClickListener(view -> {
             CleverPush.getInstance(MainActivity.this).subscribe();
             binding.tvStatus.setText("Subscribe");
-        });
-
-        binding.btnGetnotification.setOnClickListener(view -> {
-            Log.e("limit", "getNotifications :- " + CleverPush.getInstance(this).getNotifications().size());
         });
 
         binding.btnUnsubscribe.setOnClickListener(view -> {
@@ -64,12 +51,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-//        CleverPush.getInstance(this).hasLocationPermission();
-//        CleverPush.getInstance(this).initGeoFences();
     }
 }
