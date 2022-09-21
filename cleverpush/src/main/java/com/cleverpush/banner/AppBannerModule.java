@@ -14,7 +14,6 @@ import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
-import com.cleverpush.Constants;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
