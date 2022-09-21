@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 import android.view.View;
 
 import com.cleverpush.ActivityLifecycleListener;
@@ -26,6 +25,7 @@ import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.banner.models.CheckFilterRelation;
+import com.cleverpush.banner.models.VersionComparison;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
@@ -331,12 +331,14 @@ public class AppBannerModule {
             for (HashMap<String, String> attribute : banner.getAttributes()) {
                 String attributeId = attribute.get("id");
                 String compareAttributeValue = attribute.get("value");
+                String fromVersion = attribute.get("fromVersion");
+                String toVersion = attribute.get("toVersion");
                 String relationString = attribute.get("relation");
                 if (relationString == null) {
                     relationString = "equals";
                 }
                 String attributeValue = (String) getCleverPushInstance().getSubscriptionAttribute(attributeId);
-                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(relationString), compareAttributeValue, attributeValue)) {
+                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(relationString), compareAttributeValue, attributeValue, fromVersion, toVersion)) {
                     allowed = true;
                     break;
                 }
@@ -355,17 +357,21 @@ public class AppBannerModule {
         try {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
             String versionName = pInfo.versionName;
-            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName, banner.getAppVersionFilterValue());
+            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName, banner.getAppVersionFilterValue(), banner.getFromVersion(), banner.getToVersion());
         } catch (Exception e) {
             e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
         }
+
         return allowed;
     }
 
-    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String versionName, String compareValue) {
+    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String appVersion, String compareValue, String fromVersion, String toVersion) {
         VersionComparator vc = new VersionComparator();
-        int mainValue = vc.compare(versionName, compareValue);
+
+        VersionComparison result = vc.compare(appVersion, compareValue);
+        VersionComparison resultFrom = vc.compare(appVersion, fromVersion);
+        VersionComparison resultTo = vc.compare(appVersion, toVersion);
 
         if (relation == null) {
             return allowed;
@@ -373,43 +379,46 @@ public class AppBannerModule {
 
         try {
             if (allowed && relation.equals(CheckFilterRelation.Equals)) {
-                if (mainValue != 0) {
-                    allowed = false;
-                }
-            }
-
-            if (allowed && relation.equals(CheckFilterRelation.NotEqual)) {
-                if (mainValue == 0) {
+                if (result != VersionComparison.EQUALS) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Between)) {
-                if (mainValue != 1 || mainValue != 0) {
+                if (resultFrom != VersionComparison.EQUALS
+                        && resultFrom != VersionComparison.GREATER_THAN
+                        && resultTo != VersionComparison.EQUALS
+                        && resultTo != VersionComparison.GREATER_THAN) {
+                    allowed = false;
+                }
+            }
+
+            if (allowed && relation.equals(CheckFilterRelation.NotEqual)) {
+                if (result == VersionComparison.EQUALS) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.GreaterThan)) {
-                if (mainValue <= 0) {
+                if (result != VersionComparison.GREATER_THAN) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.LessThan)) {
-                if (mainValue >= 0) {
+                if (result != VersionComparison.LESS_THAN) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Contains)) {
-                if (!compareValue.contains(versionName)) {
+                if (!compareValue.contains(appVersion)) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
-                if (compareValue.contains(versionName)) {
+                if (compareValue.contains(appVersion)) {
                     allowed = false;
                 }
             }
@@ -417,8 +426,6 @@ public class AppBannerModule {
             e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
         }
-
-        Log.e("checkRelationFilter", "" + versionName + " " + compareValue + " " + relation + " " + allowed);
 
         return allowed;
     }

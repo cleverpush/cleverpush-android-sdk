@@ -53,6 +53,8 @@ public class Banner {
     private boolean closeButtonEnabled;
     private CheckFilterRelation bannerAppVersionFilterRelation;
     private String appVersionFilterValue;
+    private String fromVersion;
+    private String toVersion;
     private boolean enableMultipleScreens;
 
     private Banner() {
@@ -176,6 +178,14 @@ public class Banner {
 
     public String getAppVersionFilterValue() {
         return appVersionFilterValue;
+    }
+
+    public String getFromVersion() {
+        return fromVersion;
+    }
+
+    public String getToVersion() {
+        return toVersion;
     }
 
     public boolean getEnableMultipleScreens() {
@@ -304,6 +314,8 @@ public class Banner {
         banner.frequency = BannerFrequency.fromString(json.optString("frequency"));
         banner.positionType = json.optString("type");
         banner.appVersionFilterValue = json.optString("appVersionFilterValue");
+        banner.fromVersion = json.optString("fromVersion");
+        banner.toVersion = json.optString("toVersion");
 
         banner.subscribedType = BannerSubscribedType.fromString(json.optString("subscribedType"));
 
@@ -382,11 +394,11 @@ public class Banner {
             banner.closeButtonEnabled = json.optBoolean("closeButtonEnabled");
         }
 
-        if (json.has("enableMultipleScreens")){
+        if (json.has("enableMultipleScreens")) {
             banner.enableMultipleScreens = json.optBoolean("enableMultipleScreens");
         }
 
-        if (json.has("carouselEnabled")){
+        if (json.has("carouselEnabled")) {
             banner.carouselEnabled = json.optBoolean("carouselEnabled");
         }
 

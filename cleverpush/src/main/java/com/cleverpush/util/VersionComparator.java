@@ -1,14 +1,14 @@
 package com.cleverpush.util;
 
-import java.util.Comparator;
+import com.cleverpush.banner.models.VersionComparison;
 
-public class VersionComparator implements Comparator {
+public class VersionComparator {
 
     public boolean equals(Object o1, Object o2) {
-        return compare(o1, o2) == 0;
+        return compare(o1, o2) == VersionComparison.EQUALS;
     }
 
-    public int compare(Object o1, Object o2) {
+    public VersionComparison compare(Object o1, Object o2) {
         String version1 = (String) o1;
         String version2 = (String) o2;
 
@@ -25,13 +25,13 @@ public class VersionComparator implements Comparator {
                     suffix1 = tokenizer1.getSuffix();
                     if (number1 != 0 || suffix1.length() != 0) {
                         // Version one is longer than number two, and non-zero
-                        return 1;
+                        return VersionComparison.GREATER_THAN;
                     }
                 }
                 while (tokenizer1.MoveNext());
 
                 // Version one is longer than version two, but zero
-                return 0;
+                return VersionComparison.EQUALS;
             }
 
             number1 = tokenizer1.getNumber();
@@ -41,11 +41,11 @@ public class VersionComparator implements Comparator {
 
             if (number1 < number2) {
                 // Number one is less than number two
-                return -1;
+                return VersionComparison.LESS_THAN;
             }
             if (number1 > number2) {
                 // Number one is greater than number two
-                return 1;
+                return VersionComparison.GREATER_THAN;
             }
 
             boolean empty1 = suffix1.length() == 0;
@@ -56,17 +56,17 @@ public class VersionComparator implements Comparator {
             }
 
             if (empty1) {
-                return 1; // First suffix is empty (1.2 > 1.2b)
+                return VersionComparison.GREATER_THAN; // First suffix is empty (1.2 > 1.2b)
             }
 
             if (empty2) {
-                return -1; // Second suffix is empty (1.2a < 1.2)
+                return VersionComparison.LESS_THAN; // Second suffix is empty (1.2a < 1.2)
             }
 
             // Lexical comparison of suffixes
             int result = suffix1.compareTo(suffix2);
             if (result != 0) {
-                return result;
+                return VersionComparison.valueOf(String.valueOf(result));
             }
 
         }
@@ -76,15 +76,15 @@ public class VersionComparator implements Comparator {
                 suffix2 = tokenizer2.getSuffix();
                 if (number2 != 0 || suffix2.length() != 0) {
                     // Version one is longer than version two, and non-zero
-                    return -1;
+                    return VersionComparison.LESS_THAN;
                 }
             }
             while (tokenizer2.MoveNext());
 
             // Version two is longer than version one, but zero
-            return 0;
+            return VersionComparison.EQUALS;
         }
-        return 0;
+        return VersionComparison.EQUALS;
     }
 
     // VersionTokenizer.java
@@ -150,7 +150,7 @@ public class VersionComparator implements Comparator {
 
             _suffix = _versionString.substring(suffixStart, _position);
 
-            if (_position < _length){
+            if (_position < _length) {
                 _position++;
             }
 
