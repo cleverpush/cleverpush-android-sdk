@@ -26,6 +26,7 @@ import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.banner.models.CheckFilterRelation;
+import com.cleverpush.banner.models.VersionComparison;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
@@ -366,9 +367,10 @@ public class AppBannerModule {
 
     private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String appVersion, String compareValue, String fromVersion, String toVersion) {
         VersionComparator vc = new VersionComparator();
-        int result = vc.compare(appVersion, compareValue);
-        int resultFrom = vc.compare(appVersion, fromVersion);
-        int resultTo = vc.compare(appVersion, toVersion);
+
+        VersionComparison result = vc.compare(appVersion, compareValue);
+        VersionComparison resultFrom = vc.compare(appVersion, fromVersion);
+        VersionComparison resultTo = vc.compare(appVersion, toVersion);
 
         if (relation == null) {
             return allowed;
@@ -376,32 +378,31 @@ public class AppBannerModule {
 
         try {
             if (allowed && relation.equals(CheckFilterRelation.Equals)) {
-                if (result != Constants.EQUALS) {
+                if (result != VersionComparison.EQUALS) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Between)) {
-                if (resultFrom != Constants.EQUALS && resultFrom != Constants.GREATER_THAN && resultTo != Constants.EQUALS && resultTo != Constants.GREATER_THAN) {
+                if (resultFrom != VersionComparison.EQUALS && resultFrom != VersionComparison.GREATER_THAN && resultTo != VersionComparison.EQUALS && resultTo != VersionComparison.GREATER_THAN) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.NotEqual)) {
-                if (result == Constants.EQUALS) {
+                if (result == VersionComparison.EQUALS) {
                     allowed = false;
                 }
             }
 
-
             if (allowed && relation.equals(CheckFilterRelation.GreaterThan)) {
-                if (result <= Constants.EQUALS) {
+                if (result != VersionComparison.GREATER_THAN) {
                     allowed = false;
                 }
             }
 
             if (allowed && relation.equals(CheckFilterRelation.LessThan)) {
-                if (result >= Constants.EQUALS) {
+                if (result != VersionComparison.LESS_THAN) {
                     allowed = false;
                 }
             }
