@@ -31,9 +31,11 @@ import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.VersionComparator;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -383,7 +385,10 @@ public class AppBannerModule {
             }
 
             if (allowed && relation.equals(CheckFilterRelation.Between)) {
-                if (resultFrom != VersionComparison.EQUALS && resultFrom != VersionComparison.GREATER_THAN && resultTo != VersionComparison.EQUALS && resultTo != VersionComparison.GREATER_THAN) {
+                if (resultFrom != VersionComparison.EQUALS
+                        && resultFrom != VersionComparison.GREATER_THAN
+                        && resultTo != VersionComparison.EQUALS
+                        && resultTo != VersionComparison.GREATER_THAN) {
                     allowed = false;
                 }
             }
