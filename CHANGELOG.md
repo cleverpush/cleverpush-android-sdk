@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.24.2
+* Improved app banner version filter conditions
+
 ## 1.24.1
 * Added ability to set own log listener via `setLogListener`
 
