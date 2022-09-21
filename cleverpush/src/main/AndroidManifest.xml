@@ -6,12 +6,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application>
-
         <activity
             android:name="com.cleverpush.NotificationOpenedActivity"
-            android:excludeFromRecents="true"
             android:exported="true"
             android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity android:name="com.cleverpush.PermissionActivity"
@@ -26,19 +26,6 @@
             android:name=".banner.WebViewActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBU2zVDNqvN6KgOc9OoCsy8J1TTOzuFb7g" />
-
-        <receiver
-            android:name=".service.GeofenceBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true" />
-
         <service
             android:name="com.cleverpush.service.CarouselNotificationIntentService"
             android:exported="false" />
@@ -49,9 +36,7 @@
 
         <service
             android:name="com.cleverpush.service.CleverPushGeofenceTransitionsIntentService"
-            android:exported="true" />
-
-        <receiver android:name=".GeofenceBroadcastReceiver" />
+            android:exported="false" />
 
         <service
             android:name="com.cleverpush.service.CleverPushFcmListenerService"
@@ -74,7 +59,6 @@
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false" />
-
     </application>
 
     <!-- START: ShortcutBadger -->

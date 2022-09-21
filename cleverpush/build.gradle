@@ -1,9 +1,10 @@
 apply plugin: 'com.android.library'
 apply from: 'maven-push.gradle'
 apply plugin: 'com.hiya.jacoco-android'
+
 ext {
     buildVersions = [
-            minSdkVersion: 21
+            minSdkVersion: 19
     ]
 }
 
@@ -13,7 +14,6 @@ android {
     defaultConfig {
         minSdkVersion buildVersions.minSdkVersion
         consumerProguardFiles 'consumer-proguard-rules.pro'
-        multiDexEnabled true
     }
 
     buildTypes {
@@ -74,7 +74,7 @@ dependencies {
 
     // Androidx
     api 'androidx.core:core:1.6.0'
-    api 'androidx.annotation:annotation:1.4.0'
+    api 'androidx.annotation:annotation:1.3.0'
     api "androidx.dynamicanimation:dynamicanimation:1.0.0"
 
     // Gson

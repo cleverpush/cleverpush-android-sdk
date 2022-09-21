@@ -15,7 +15,6 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.banner.models.Banner;
-import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
@@ -116,7 +115,7 @@ public class AppBannerModule {
         if (notificationId != null && !notificationId.isEmpty()) {
             bannersPath += "&notificationId=" + notificationId;
         }
-        Log.d(TAG, "Loading banners: " + bannersPath);
+        Logger.d(TAG, "Loading banners: " + bannersPath);
         CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
