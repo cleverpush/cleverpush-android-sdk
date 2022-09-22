@@ -10,7 +10,7 @@ steps:
       - name: dockersock
         path: /var/run/docker.sock
     commands:
-      - ./gradlew publish --warning-mode all --rerun-tasks
+      - ./gradlew publish --warning-mode all --stacktrace
     when:
       event: [ tag ]
     environment:
@@ -20,8 +20,6 @@ steps:
         from_secret: MAVEN_CENTRAL_PASSWORD
       ORG_GRADLE_PROJECT_signingInMemoryKey:
         from_secret: SIGNING_KEY
-      SONATYPE_AUTOMATIC_RELEASE: true
-      SONATYPE_HOST: DEFAULT
 
   - name: unitTest
     image: alvrme/alpine-android:android-33
