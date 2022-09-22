@@ -18,9 +18,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-
-import com.cleverpush.listener.LogListener;
-import com.cleverpush.util.Logger;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
@@ -29,9 +26,9 @@ import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
@@ -47,6 +44,7 @@ import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.InitializeListener;
+import com.cleverpush.listener.LogListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
@@ -77,6 +75,7 @@ import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
+import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -113,9 +112,9 @@ import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCallback {
+public class CleverPush {
 
-    public static final String SDK_VERSION = "1.24.2";
+    public static final String SDK_VERSION = "1.25.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -157,7 +156,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     private int sessionVisits = 0;
     private long sessionStartedTimestamp = 0;
-    private final int locationPermissionRequestCode = 101;
 
     private boolean trackingConsentRequired = false;
     private boolean hasTrackingConsent = false;
@@ -188,8 +186,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     private final long SECONDS_PER_DAY = 60 * 60 * 24;
     private final long MILLISECONDS_PER_SECOND = 1000;
 
-    private final int pushNotificationPermissionRequestCode = 102;
-    private boolean pendingRequestPushNotificationPermissionCall = false;
+    private boolean pendingRequestNotificationPermissionCall = false;
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
 
     public CleverPush(@NonNull Context context) {
@@ -442,27 +439,27 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             if (open) {
                 this.trackSessionStart();
 
-                if (pendingRequestLocationPermissionCall) {
+                if (this.pendingRequestLocationPermissionCall) {
                     this.requestLocationPermission();
                 }
 
-                if (pendingRequestPushNotificationPermissionCall) {
-                    this.requestPushNotificationPermission();
+                if (this.pendingRequestNotificationPermissionCall && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    this.requestNotificationPermission();
                 }
 
-                if (pendingInitFeaturesCall) {
+                if (this.pendingInitFeaturesCall) {
                     this.initFeatures();
                 }
 
-                if (appBannerModule != null) {
-                    appBannerModule.initSession(channelId);
+                if (this.appBannerModule != null) {
+                    this.appBannerModule.initSession(channelId);
                 }
 
-                if (pendingPageViews.size() > 0) {
-                    for (PageView pageView : pendingPageViews) {
+                if (this.pendingPageViews.size() > 0) {
+                    for (PageView pageView : this.pendingPageViews) {
                         this.trackPageView(pageView.getUrl(), pageView.getParams());
                     }
-                    pendingPageViews = new ArrayList<>();
+                    this.pendingPageViews = new ArrayList<>();
                 }
             } else {
                 this.trackSessionEnd();
@@ -651,6 +648,21 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
                 .show();
     }
 
+    private void requestPermission(String permissionType, PermissionActivity.PermissionCallback callback) {
+        if (this.getCurrentActivity() == null || this.getCurrentActivity().getClass().equals(PermissionActivity.class)) {
+            return;
+        }
+
+        Logger.d(LOG_TAG, "Requesting permission: " + permissionType);
+
+        PermissionActivity.registerAsCallback(permissionType, callback);
+
+        Intent intent = new Intent(this.getCurrentActivity(), PermissionActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.putExtra(PermissionActivity.INTENT_EXTRA_PERMISSION_TYPE, permissionType);
+        this.getCurrentActivity().startActivity(intent);
+    }
+
     /**
      * request for location permission
      */
@@ -663,24 +675,53 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return;
         }
         this.pendingRequestLocationPermissionCall = false;
-        ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionRequestCode);
-    }
+        this.requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, new PermissionActivity.PermissionCallback() {
+            @Override
+            public void onGrant() {
+                if (geofenceList == null || geofenceList.size() == 0) {
+                    initGeoFences();
+                }
+            }
+
+            @Override
+            public void onDeny() {
+
+            }
+        });
+     }
 
     /**
      * request for push notification
      */
-    public void requestPushNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Constants.ANDROID_13_VERSION && this.hasNotificationPermission()) {
-            if (this.hasNotificationPermission()) {
-                return;
-            }
-        }
-        if (getCurrentActivity() == null) {
-            this.pendingRequestPushNotificationPermissionCall = true;
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    public void requestNotificationPermission() {
+        if (this.hasNotificationPermission()) {
             return;
         }
-        this.pendingRequestPushNotificationPermissionCall = false;
-        ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.POST_NOTIFICATIONS}, pushNotificationPermissionRequestCode);
+        if (getCurrentActivity() == null) {
+            this.pendingRequestNotificationPermissionCall = true;
+            return;
+        }
+        this.pendingRequestNotificationPermissionCall = false;
+        this.requestPermission(Manifest.permission.POST_NOTIFICATIONS, new PermissionActivity.PermissionCallback() {
+            @Override
+            public void onGrant() {
+                if (!ignoreDisabledNotificationPermission) {
+                    subscribe(true, pendingSubscribeCallbackListener);
+                }
+            }
+
+            @Override
+            public void onDeny() {
+                if (!ignoreDisabledNotificationPermission) {
+                    String error = "Can not subscribe because the notification permission has been denied by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
+                    Logger.d(LOG_TAG, error);
+                    if (pendingSubscribeCallbackListener != null) {
+                        pendingSubscribeCallbackListener.onFailure(new Exception(error));
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -693,6 +734,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
     /**
      * to check if app has notification permission
      */
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     public boolean hasNotificationPermission() {
         return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
     }
@@ -1107,14 +1149,16 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
             return;
         }
 
-        if (!this.ignoreDisabledNotificationPermission) {
-            return;
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission()) {
+            if (!this.ignoreDisabledNotificationPermission) {
+                this.pendingSubscribeCallbackListener = subscribedCallbackListener;
+            }
 
-        if (Build.VERSION.SDK_INT >= Constants.ANDROID_13_VERSION && !this.hasNotificationPermission()) {
-            pendingSubscribeCallbackListener = subscribedCallbackListener;
-            requestPushNotificationPermission();
-            return;
+            this.requestNotificationPermission();
+
+            if (!this.ignoreDisabledNotificationPermission) {
+                return;
+            }
         }
 
         if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
@@ -1130,6 +1174,7 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
         this.subscriptionInProgress = true;
         SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
         editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
+        editor.commit();
 
         this.getChannelConfig(config -> {
             SubscriptionManager subscriptionManager = this.getSubscriptionManager();
@@ -2701,28 +2746,6 @@ public class CleverPush implements ActivityCompat.OnRequestPermissionsResultCall
 
     public TopicsChangedListener getTopicsChangedListener() {
         return topicsChangedListener;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case (pushNotificationPermissionRequestCode):
-                if (this.hasNotificationPermission() && !this.ignoreDisabledNotificationPermission) {
-                    this.subscribe(true, pendingSubscribeCallbackListener);
-                } else if (!this.ignoreDisabledNotificationPermission) {
-                    String error = "Can not subscribe because the notification permission has been denied by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
-                    Log.d(LOG_TAG, error);
-                    if (pendingSubscribeCallbackListener != null) {
-                        pendingSubscribeCallbackListener.onFailure(new Exception(error));
-                    }
-                }
-                break;
-            case (locationPermissionRequestCode):
-                if (geofenceList == null || geofenceList.size() == 0) {
-                    this.initGeoFences();
-                }
-                break;
-        }
     }
 
     public void setAutoClearBadge(boolean autoClearBadge) {

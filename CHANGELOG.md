@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.25.0
+* Android 13 support
+
 ## 1.24.2
 * Improved app banner version filter conditions
 
