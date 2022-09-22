@@ -354,12 +354,14 @@ public class AppBannerModule {
      * App Banner Version Filter
      */
     private boolean appVersionFilter(boolean allowed, Banner banner) {
+        if (this.getCurrentActivity() == null) {
+            return allowed;
+        }
         try {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
             String versionName = pInfo.versionName;
             return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName, banner.getAppVersionFilterValue(), banner.getFromVersion(), banner.getToVersion());
         } catch (Exception e) {
-            e.printStackTrace();
             Logger.e(TAG, "Error checking app version filter", e);
         }
 
