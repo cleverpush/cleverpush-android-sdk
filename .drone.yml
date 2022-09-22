@@ -10,8 +10,8 @@ steps:
       - name: dockersock
         path: /var/run/docker.sock
     commands:
-      - ./gradlew publish --no-daemon --no-parallel
-      - ./gradlew closeAndReleaseRepository
+      - ./gradlew publish --no-daemon --no-parallel --warning-mode all
+      - ./gradlew closeAndReleaseRepository --warning-mode all
     when:
       branch: [ master ]
       event: [ push ]
@@ -24,11 +24,10 @@ steps:
         from_secret: SIGNING_KEY
 
   - name: unitTest
-    image: androidsdk/android-33
+    image: alvrme/alpine-android:android-33
     pull: if-not-exists
     commands:
-      - bash ./gradlew test --stacktrace --warning-mode=all
+      - ./gradlew test --stacktrace --warning-mode=all
     when:
       event:
         - push
-
