@@ -3,15 +3,6 @@ type: docker
 name: default
 
 steps:
-  - name: unitTest
-    image: androidsdk/android-33
-    pull: if-not-exists
-    commands:
-      - bash ./gradlew test --stacktrace --warning-mode=all
-    when:
-      event:
-        - push
-
   - name: publish-snapshot
     image: alvrme/alpine-android:android-33
     pull: if-not-exists
@@ -31,4 +22,13 @@ steps:
         from_secret: MAVEN_CENTRAL_PASSWORD
       ORG_GRADLE_PROJECT_signingInMemoryKey:
         from_secret: SIGNING_KEY
+
+  - name: unitTest
+    image: androidsdk/android-33
+    pull: if-not-exists
+    commands:
+      - bash ./gradlew test --stacktrace --warning-mode=all
+    when:
+      event:
+        - push
 
