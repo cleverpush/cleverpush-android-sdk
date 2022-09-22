@@ -31,3 +31,4 @@ steps:
         from_secret: MAVEN_CENTRAL_PASSWORD
       ORG_GRADLE_PROJECT_signingInMemoryKey:
         from_secret: SIGNING_KEY
+
