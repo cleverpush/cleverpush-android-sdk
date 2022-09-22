@@ -10,7 +10,7 @@ steps:
       - name: dockersock
         path: /var/run/docker.sock
     commands:
-      - ./gradlew publish --warning-mode all
+      - ./gradlew publish --warning-mode all --rerun-tasks
     when:
       event: [ tag ]
     environment:
