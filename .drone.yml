@@ -20,6 +20,10 @@ steps:
         from_secret: MAVEN_CENTRAL_PASSWORD
       ORG_GRADLE_PROJECT_signingInMemoryKey:
         from_secret: SIGNING_KEY
+      ORG_GRADLE_PROJECT_signingInMemoryKeyId:
+        from_secret: SIGNING_KEY_ID
+      ORG_GRADLE_PROJECT_signingInMemoryKeyPassword:
+        from_secret: SIGNING_KEY_PASSWORD
 
   - name: unitTest
     image: alvrme/alpine-android:android-33
