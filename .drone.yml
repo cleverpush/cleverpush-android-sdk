@@ -3,7 +3,7 @@ type: docker
 name: default
 
 steps:
-  - name: publish-snapshot
+  - name: publish
     image: alvrme/alpine-android:android-33
     pull: if-not-exists
     volumes:
@@ -12,8 +12,7 @@ steps:
     commands:
       - ./gradlew publish --warning-mode all
     when:
-      branch: [ master ]
-      event: [ push ]
+      event: [ tag ]
     environment:
       ORG_GRADLE_PROJECT_mavenCentralUsername:
         from_secret: MAVEN_CENTRAL_USERNAME
@@ -30,5 +29,4 @@ steps:
     commands:
       - ./gradlew test --stacktrace --warning-mode=all
     when:
-      event:
-        - push
+      event: [ push ]
