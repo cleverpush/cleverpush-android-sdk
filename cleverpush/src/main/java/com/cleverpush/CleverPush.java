@@ -6,8 +6,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -111,6 +113,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 public class CleverPush {
 
@@ -188,6 +191,7 @@ public class CleverPush {
 
     private boolean pendingRequestNotificationPermissionCall = false;
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
+    BroadcastReceiver myBroadcastReceiver = new DeviceIdBroadcastReceiver();
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -571,6 +575,27 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
+        DeviceIdBroadcastReceiver myReceiver = new DeviceIdBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter("com.cleverpush");
+        if (intentFilter != null) {
+            context.registerReceiver(myReceiver, intentFilter);
+        }
+
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+        if (sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null) == null) {
+            sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, UUID.randomUUID().toString()).apply();
+        }
+
+        this.getChannelConfig(channelConfig1 -> {
+            if (channelConfig.optString("preventDuplicatePushesEnabled") != null && channelConfig.optBoolean("preventDuplicatePushesEnabled") == true) {
+                String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
+                final Intent i = new Intent();
+                i.putExtra("deviceId", deviceId);
+                i.setAction("com.cleverpush");
+                i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                context.sendBroadcast(i);
+            }
+        });
         this.pendingInitFeaturesCall = false;
 
         this.showTopicDialogOnNewAdded();
@@ -688,7 +713,7 @@ public class CleverPush {
 
             }
         });
-     }
+    }
 
     /**
      * request for push notification
