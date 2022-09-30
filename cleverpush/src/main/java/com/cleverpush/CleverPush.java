@@ -191,7 +191,7 @@ public class CleverPush {
 
     private boolean pendingRequestNotificationPermissionCall = false;
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
-    BroadcastReceiver myBroadcastReceiver = new DeviceIdBroadcastReceiver();
+    BroadcastReceiver deviceIdBroadcastReceiver = new DeviceIdBroadcastReceiver();
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -575,10 +575,9 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
-        DeviceIdBroadcastReceiver myReceiver = new DeviceIdBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter("com.cleverpush");
+        IntentFilter intentFilter = new IntentFilter(Constants.SDK_PKG);
         if (intentFilter != null) {
-            context.registerReceiver(myReceiver, intentFilter);
+            context.registerReceiver(deviceIdBroadcastReceiver, intentFilter);
         }
 
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
@@ -587,11 +586,11 @@ public class CleverPush {
         }
 
         this.getChannelConfig(channelConfig1 -> {
-            if (channelConfig.optString("preventDuplicatePushesEnabled") != null && channelConfig.optBoolean("preventDuplicatePushesEnabled") == true) {
+            if (channelConfig.optString(Constants.DEVICE_ID_FLAG) != null && channelConfig.optBoolean(Constants.DEVICE_ID_FLAG) == true) {
                 String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
                 final Intent i = new Intent();
                 i.putExtra("deviceId", deviceId);
-                i.setAction("com.cleverpush");
+                i.setAction(Constants.SDK_PKG);
                 i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
                 context.sendBroadcast(i);
             }
