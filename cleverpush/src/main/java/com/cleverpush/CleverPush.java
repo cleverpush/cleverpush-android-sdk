@@ -587,12 +587,7 @@ public class CleverPush {
 
         this.getChannelConfig(channelConfig1 -> {
             if (channelConfig.optString(Constants.DEVICE_ID_FLAG) != null && channelConfig.optBoolean(Constants.DEVICE_ID_FLAG) == true) {
-                String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
-                final Intent i = new Intent();
-                i.putExtra("deviceId", deviceId);
-                i.setAction(Constants.SDK_PKG);
-                i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-                context.sendBroadcast(i);
+                sendBrodcastReceiver();
             }
         });
         this.pendingInitFeaturesCall = false;
@@ -617,6 +612,16 @@ public class CleverPush {
         }
 
         appBannerModule.initSession(channelId);
+    }
+
+    private void sendBrodcastReceiver() {
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+        String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
+        final Intent i = new Intent();
+        i.putExtra(Constants.DEVICE_ID, deviceId);
+        i.setAction(Constants.SDK_PKG);
+        i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        context.sendBroadcast(i);
     }
 
     /**
