@@ -412,8 +412,11 @@ public class CleverPush {
             // Maybe the user switched from Dev to Live environment.
             if (isChannelIdChanged(storedChannelId, storedSubscriptionId)) {
                 try {
-                    this.unsubscribe();
-                    this.clearSubscriptionData();
+                    if (subscriptionId != null) {
+                        this.unsubscribe();
+                    } else {
+                        this.clearSubscriptionData();
+                    }
                 } catch (Throwable t) {
                     Logger.e(LOG_TAG, "Error", t);
                 }
@@ -689,7 +692,7 @@ public class CleverPush {
 
             }
         });
-     }
+    }
 
     /**
      * request for push notification
