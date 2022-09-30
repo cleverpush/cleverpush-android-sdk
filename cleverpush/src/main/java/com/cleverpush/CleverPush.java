@@ -412,6 +412,7 @@ public class CleverPush {
             // Maybe the user switched from Dev to Live environment.
             if (isChannelIdChanged(storedChannelId, storedSubscriptionId)) {
                 try {
+                    this.unsubscribe();
                     this.clearSubscriptionData();
                 } catch (Throwable t) {
                     Logger.e(LOG_TAG, "Error", t);

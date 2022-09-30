@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import com.cleverpush.util.Logger;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
@@ -17,6 +16,7 @@ import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.Subscription;
 import com.cleverpush.util.LifecycleUtils;
 import com.cleverpush.util.LimitedSizeQueue;
+import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -107,7 +107,10 @@ public class NotificationDataProcessor {
             if (notifications == null) {
                 notifications = new LimitedSizeQueue<>();
             }
-            notifications.setCapacity(maximumNotifications);
+
+            if (notifications.size() > 0){
+                notifications.setCapacity(maximumNotifications);
+            }
 
             if (notification.getCreatedAt() == null || notification.getCreatedAt().equalsIgnoreCase("")) {
                 String currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).format(new Date());
