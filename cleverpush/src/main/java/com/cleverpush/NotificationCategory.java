@@ -29,8 +29,8 @@ public class NotificationCategory implements Serializable {
     String lockScreen;
     @SerializedName("importance")
     String importance;
-    @SerializedName("badgesEnabled")
-    Boolean badgesEnabled;
+    @SerializedName("badgeDisabled")
+    Boolean badgeDisabled;
     @SerializedName("backgroundColor")
     String backgroundColor;
     @SerializedName("foregroundColor")
@@ -93,11 +93,11 @@ public class NotificationCategory implements Serializable {
         return importance;
     }
 
-    public Boolean getBadgesEnabled() {
-        if (badgesEnabled == null) {
+    public Boolean getBadgeDisabled() {
+        if (badgeDisabled == null) {
             return false;
         }
-        return badgesEnabled;
+        return badgeDisabled;
     }
 
     public String getBackgroundColor() {
@@ -156,8 +156,8 @@ public class NotificationCategory implements Serializable {
         this.importance = importance;
     }
 
-    public void setBadgesEnabled(Boolean badgesEnabled) {
-        this.badgesEnabled = badgesEnabled;
+    public void setBadgeDisabled(Boolean badgeDisabled) {
+        this.badgeDisabled = badgeDisabled;
     }
 
     public void setBackgroundColor(String backgroundColor) {

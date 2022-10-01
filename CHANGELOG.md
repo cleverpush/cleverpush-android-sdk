@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.25.1
+* Support disabling of badge counts via Notification Categories
+
 ## 1.25.0
 * Android 13 support
 

@@ -31,11 +31,13 @@ public class CarouselNotificationIntentService extends IntentService {
 
         Logger.i(LOG_TAG, "CarouselNotificationIntentService: onHandleIntent: " + action);
 
-        if (action == null) return;
+        if (action == null) {
+            return;
+        }
 
-        Notification message = null;
+        Notification notification = null;
         try {
-            message = (Notification) intent.getSerializableExtra("notification");
+            notification = (Notification) intent.getSerializableExtra("notification");
         } catch (Exception ignore) {
         }
 
@@ -45,7 +47,7 @@ public class CarouselNotificationIntentService extends IntentService {
         } catch (Exception ignore) {
         }
 
-        if (message == null || data == null) {
+        if (notification == null || data == null) {
             return;
         }
 
@@ -54,12 +56,12 @@ public class CarouselNotificationIntentService extends IntentService {
                 int targetIndex = intent.getIntExtra("carouselIndex", 0);
                 int notificationId = intent.getIntExtra("notificationId", 0);
 
-                updateCarouselNotification(this, message, (String) data.get("notification"), (String) data.get("subscription"), targetIndex, notificationId);
+                updateCarouselNotification(this, notification, (String) data.get("notification"), (String) data.get("subscription"), targetIndex, notificationId);
 
                 break;
 
             case ACTION_NOTIFICATION_DELETE:
-                NotificationCarouselItem[] carouselElements = message.getCarouselItems();
+                NotificationCarouselItem[] carouselElements = notification.getCarouselItems();
                 if (carouselElements != null && carouselElements.length > 0) {
                     for (NotificationCarouselItem  element : carouselElements) {
                         String url = element.getMediaUrl();
@@ -74,8 +76,8 @@ public class CarouselNotificationIntentService extends IntentService {
         }
     }
 
-    private void updateCarouselNotification(Context context, Notification message, String notificationStr, String subscriptionStr, int newIndex, int notificationId) {
+    private void updateCarouselNotification(Context context, Notification notification, String notificationStr, String subscriptionStr, int newIndex, int notificationId) {
         NotificationService.getInstance()
-                .createAndShowCarousel(context, message, notificationStr, subscriptionStr, newIndex, notificationId);
+                .createAndShowCarousel(context, notification, notificationStr, subscriptionStr, newIndex, notificationId);
     }
 }

@@ -188,7 +188,7 @@ public class NotificationService {
 
         notificationBuilder = notificationBuilder
                 .setContentIntent(contentIntent)
-                .setDeleteIntent(this.getNotificationDeleteIntent(context))
+                .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
                 .setContentTitle(title)
                 .setContentText(text)
                 .setSmallIcon(getSmallIcon(context))
@@ -299,7 +299,10 @@ public class NotificationService {
             requestId = NotificationService.getInstance().sendNotification(context, notification, notificationStr, subscriptionStr);
         }
 
-        BadgeHelper.update(context, CleverPush.getInstance(context).getIncrementBadge());
+        boolean badgeEnabled = notification.getCategory() == null || !notification.getCategory().getBadgeDisabled();
+        if (badgeEnabled) {
+            BadgeHelper.update(context, CleverPush.getInstance(context).getIncrementBadge());
+        }
 
         return requestId;
     }
@@ -336,8 +339,11 @@ public class NotificationService {
         }
     }
 
-    private PendingIntent getNotificationDeleteIntent(Context context) {
+    private PendingIntent getNotificationDeleteIntent(Context context, Notification notification) {
         Intent delIntent = new Intent(context, NotificationDismissIntentService.class);
+
+        delIntent.putExtra("notification", notification);
+
         return PendingIntent.getService(context, this.generateRequestCode(), delIntent, this.getDeleteIntentFlags());
     }
 

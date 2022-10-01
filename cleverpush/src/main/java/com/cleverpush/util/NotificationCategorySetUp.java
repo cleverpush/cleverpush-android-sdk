@@ -21,64 +21,68 @@ import java.util.regex.Pattern;
 public class NotificationCategorySetUp {
 
     public static void setNotificationCategory(Context context, ArrayList<NotificationCategory> notificationCategories) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return;
+        }
+
         for (int i = 0; i < notificationCategories.size(); i++) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationCategory category = notificationCategories.get(i);
+            NotificationCategory category = notificationCategories.get(i);
 
-                if (category.getId() == null || category.getId().isEmpty() || category.getName() == null || category.getName().isEmpty()) {
-                    continue;
-                }
-
-                NotificationChannel channel = new NotificationChannel(category.getId(), category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
-
-                String description = category.getDescription();
-                if (description != null) {
-                    channel.setDescription(description);
-                }
-
-                String importance = category.getImportance();
-                if (importance != null) {
-                    if (importance.equalsIgnoreCase("URGENT")) {
-                        channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
-                    } else if (importance.equalsIgnoreCase("HIGH")) {
-                        channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
-                    } else if (importance.equalsIgnoreCase("MEDIUM")) {
-                        channel.setImportance(NotificationManager.IMPORTANCE_DEFAULT);
-                    } else if (importance.equalsIgnoreCase("LOW")) {
-                        channel.setImportance(NotificationManager.IMPORTANCE_LOW);
-                    }
-                }
-
-                String lockScreen = category.getLockScreen();
-                if (lockScreen != null) {
-                    if (lockScreen.equalsIgnoreCase("PUBLIC")) {
-                        channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
-                    } else if (lockScreen.equalsIgnoreCase("PRIVATE")) {
-                        channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
-                    } else if (lockScreen.equalsIgnoreCase("SECRET")) {
-                        channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_SECRET);
-                    }
-                }
-
-                String ledColor = category.getLedColor();
-                if (category.getLedColorEnabled() && ledColor != null && !ledColor.equalsIgnoreCase("")) {
-                    int parsedLedColor = parseColor(ledColor);
-                    if (parsedLedColor > 0) {
-                        channel.setLightColor(parsedLedColor);
-                    }
-                }
-
-                NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-
-                NotificationCategoryGroup categoryGroup = category.getGroup();
-                if (categoryGroup != null) {
-                    NotificationChannelGroup group = new NotificationChannelGroup(categoryGroup.getId(), categoryGroup.getName());
-                    notificationManager.createNotificationChannelGroup(group);
-                    channel.setGroup(group.getId());
-                }
-
-                notificationManager.createNotificationChannel(channel);
+            if (category.getId() == null || category.getId().isEmpty() || category.getName() == null || category.getName().isEmpty()) {
+                continue;
             }
+
+            NotificationChannel channel = new NotificationChannel(category.getId(), category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
+
+            String description = category.getDescription();
+            if (description != null) {
+                channel.setDescription(description);
+            }
+
+            String importance = category.getImportance();
+            if (importance != null) {
+                if (importance.equalsIgnoreCase("URGENT")) {
+                    channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
+                } else if (importance.equalsIgnoreCase("HIGH")) {
+                    channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
+                } else if (importance.equalsIgnoreCase("MEDIUM")) {
+                    channel.setImportance(NotificationManager.IMPORTANCE_DEFAULT);
+                } else if (importance.equalsIgnoreCase("LOW")) {
+                    channel.setImportance(NotificationManager.IMPORTANCE_LOW);
+                }
+            }
+
+            String lockScreen = category.getLockScreen();
+            if (lockScreen != null) {
+                if (lockScreen.equalsIgnoreCase("PUBLIC")) {
+                    channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+                } else if (lockScreen.equalsIgnoreCase("PRIVATE")) {
+                    channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
+                } else if (lockScreen.equalsIgnoreCase("SECRET")) {
+                    channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_SECRET);
+                }
+            }
+
+            String ledColor = category.getLedColor();
+            if (category.getLedColorEnabled() && ledColor != null && !ledColor.equalsIgnoreCase("")) {
+                int parsedLedColor = parseColor(ledColor);
+                if (parsedLedColor > 0) {
+                    channel.setLightColor(parsedLedColor);
+                }
+            }
+
+            channel.setShowBadge(!category.getBadgeDisabled());
+
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+
+            NotificationCategoryGroup categoryGroup = category.getGroup();
+            if (categoryGroup != null) {
+                NotificationChannelGroup group = new NotificationChannelGroup(categoryGroup.getId(), categoryGroup.getName());
+                notificationManager.createNotificationChannelGroup(group);
+                channel.setGroup(group.getId());
+            }
+
+            notificationManager.createNotificationChannel(channel);
         }
     }
 
@@ -109,7 +113,7 @@ public class NotificationCategorySetUp {
                     notificationCategory.setLedColor(notificationCategoryJSONObject.optString("ledColor"));
                     notificationCategory.setLockScreen(notificationCategoryJSONObject.optString("lockScreen"));
                     notificationCategory.setImportance(notificationCategoryJSONObject.optString("importance"));
-                    notificationCategory.setBadgesEnabled(notificationCategoryJSONObject.optBoolean("badgesEnabled"));
+                    notificationCategory.setBadgeDisabled(notificationCategoryJSONObject.optBoolean("badgeDisabled"));
                     notificationCategory.setBackgroundColor(notificationCategoryJSONObject.optString("backgroundColor"));
                     notificationCategory.setForegroundColor(notificationCategoryJSONObject.optString("foregroundColor"));
 

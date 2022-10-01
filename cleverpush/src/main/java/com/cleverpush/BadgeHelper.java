@@ -4,9 +4,9 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.service.notification.StatusBarNotification;
-import androidx.core.app.NotificationCompat;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
 
 import com.cleverpush.shortcutbadger.ShortcutBadgeException;
 import com.cleverpush.shortcutbadger.ShortcutBadger;
@@ -45,11 +45,11 @@ public class BadgeHelper {
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private static void updateBadge(Context context, boolean incrementBadge, int additionalCount) {
-        StatusBarNotification[] activeNotifs = getActiveNotifications(context);
+        StatusBarNotification[] activeNotifications = getActiveNotifications(context);
 
         int runningCount = additionalCount;
-        for (StatusBarNotification activeNotif : activeNotifs) {
-            if (isGroupSummary(activeNotif)) {
+        for (StatusBarNotification activeNotification : activeNotifications) {
+            if (isGroupSummary(activeNotification)) {
                 continue;
             }
             runningCount++;

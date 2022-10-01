@@ -49,6 +49,9 @@ public class NotificationOpenedProcessor {
             }
         }
 
-		BadgeHelper.update(context, cleverPush.getIncrementBadge());
+        boolean badgeEnabled = notification.getCategory() == null || !notification.getCategory().getBadgeDisabled();
+        if (badgeEnabled) {
+            BadgeHelper.update(context, cleverPush.getIncrementBadge());
+        }
     }
 }
