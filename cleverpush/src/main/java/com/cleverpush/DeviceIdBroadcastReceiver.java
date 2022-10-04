@@ -14,9 +14,9 @@ public class DeviceIdBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
-        if (intent.getAction().equals(Constants.SDK_PKG)) {
-            if (intent.hasExtra(Constants.DEVICE_ID_INTENT)) {
-                sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, intent.getStringExtra(Constants.DEVICE_ID_INTENT)).apply();
+        if (intent.getAction().equals(Constants.DEVICE_ID_INTENT)) {
+            if (intent.hasExtra(Constants.DEVICE_ID)) {
+                sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, intent.getStringExtra(Constants.DEVICE_ID)).apply();
             }
             deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
         } else {

@@ -575,7 +575,7 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
-        IntentFilter intentFilter = new IntentFilter(Constants.SDK_PKG);
+        IntentFilter intentFilter = new IntentFilter(Constants.DEVICE_ID_INTENT);
         if (intentFilter != null) {
             context.registerReceiver(deviceIdBroadcastReceiver, intentFilter);
         }
@@ -618,8 +618,8 @@ public class CleverPush {
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
         final Intent i = new Intent();
-        i.putExtra(Constants.DEVICE_ID_INTENT, deviceId);
-        i.setAction(Constants.SDK_PKG);
+        i.putExtra(Constants.DEVICE_ID, deviceId);
+        i.setAction(Constants.DEVICE_ID_INTENT);
         i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         context.sendBroadcast(i);
     }
