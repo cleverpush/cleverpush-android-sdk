@@ -586,7 +586,7 @@ public class CleverPush {
         }
 
         this.getChannelConfig(channelConfig1 -> {
-            if (channelConfig.optString(Constants.DEVICE_ID_FLAG) != null && channelConfig.optBoolean(Constants.DEVICE_ID_FLAG) == true) {
+            if (channelConfig.optString(Constants.DEVICE_ID_CONFIG_FIELD) != null && channelConfig.optBoolean(Constants.DEVICE_ID_CONFIG_FIELD) == true) {
                 sendBrodcastReceiver();
             }
         });
@@ -618,7 +618,7 @@ public class CleverPush {
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
         final Intent i = new Intent();
-        i.putExtra(Constants.DEVICE_ID, deviceId);
+        i.putExtra(Constants.DEVICE_ID_INTENT, deviceId);
         i.setAction(Constants.SDK_PKG);
         i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         context.sendBroadcast(i);
