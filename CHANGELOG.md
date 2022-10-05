@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.25.2
+* Fixed potential crashes in AppBanners
+
 ## 1.25.1
 * Support disabling of badge counts via Notification Categories
 
