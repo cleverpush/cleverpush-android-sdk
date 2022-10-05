@@ -153,14 +153,7 @@ public class AppBannerModule {
         });
     }
 
-    void sendBannerEvent(String event, Banner banner) {
-        Logger.d(TAG, "sendBannerEvent: " + event);
-
-        String subscriptionId = null;
-        if (getCleverPushInstance().isSubscribed()) {
-            subscriptionId = getCleverPushInstance().getSubscriptionId();
-        }
-
+    void sendBannerEventWithSubscriptionId(String event, Banner banner, String subscriptionId) {
         JSONObject jsonBody = getJsonObject();
         try {
             jsonBody.put("bannerId", banner.getId());
@@ -174,6 +167,18 @@ public class AppBannerModule {
         }
 
         CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody, new SendBannerEventResponseHandler().getResponseHandler());
+    }
+
+    void sendBannerEvent(String event, Banner banner) {
+        Logger.d(TAG, "sendBannerEvent: " + event);
+
+        if (getCleverPushInstance().isSubscribed()) {
+            getCleverPushInstance().getSubscriptionId(subscriptionId -> {
+                this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId);
+            });
+        } else {
+            this.sendBannerEventWithSubscriptionId(event, banner, null);
+        }
     }
 
     public void initSession(String channel) {
