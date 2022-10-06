@@ -122,10 +122,6 @@ public class AppBannerPopup {
         int layoutId = R.layout.app_banner;
 
         popupRoot = createLayout(layoutId);
-        if (popupRoot == null) {
-            return;
-        }
-
         body = popupRoot.findViewById(R.id.bannerBody);
         ImageView bannerBackGroundImage = popupRoot.findViewById(R.id.bannerBackgroundImage);
 
@@ -188,14 +184,9 @@ public class AppBannerPopup {
     }
 
     private View createLayout(int layoutId) {
-        try {
-          View layout = activity.getLayoutInflater().inflate(layoutId, null);
-          layout.setOnClickListener(view -> dismiss());
-          return layout;
-        } catch (Exception exception) {
-          Logger.e(TAG, exception.getLocalizedMessage());
-        }
-        return null;
+        View layout = activity.getLayoutInflater().inflate(layoutId, null);
+        layout.setOnClickListener(view -> dismiss());
+        return layout;
     }
 
     private void composeBackground(ImageView bannerBackground, LinearLayout body) {

@@ -153,7 +153,14 @@ public class AppBannerModule {
         });
     }
 
-    void sendBannerEventWithSubscriptionId(String event, Banner banner, String subscriptionId) {
+    void sendBannerEvent(String event, Banner banner) {
+        Logger.d(TAG, "sendBannerEvent: " + event);
+
+        String subscriptionId = null;
+        if (getCleverPushInstance().isSubscribed()) {
+            subscriptionId = getCleverPushInstance().getSubscriptionId();
+        }
+
         JSONObject jsonBody = getJsonObject();
         try {
             jsonBody.put("bannerId", banner.getId());
@@ -167,18 +174,6 @@ public class AppBannerModule {
         }
 
         CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody, new SendBannerEventResponseHandler().getResponseHandler());
-    }
-
-    void sendBannerEvent(String event, Banner banner) {
-        Logger.d(TAG, "sendBannerEvent: " + event);
-
-        if (getCleverPushInstance().isSubscribed()) {
-            getCleverPushInstance().getSubscriptionId(subscriptionId -> {
-                this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId);
-            });
-        } else {
-            this.sendBannerEventWithSubscriptionId(event, banner, null);
-        }
     }
 
     public void initSession(String channel) {
@@ -575,77 +570,73 @@ public class AppBannerModule {
     }
 
     void showBanner(AppBannerPopup bannerPopup) {
-        try {
-            if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
-                Logger.d(TAG, "Skipping Banner because: A Banner is already on the screen");
-                return;
-            }
+        if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
+            Logger.d(TAG, "Skipping Banner because: A Banner is already on the screen");
+            return;
+        }
 
-            if (!isBannerTimeAllowed(bannerPopup.getData())) {
-                Logger.d(TAG, "Skipping Banner because: Stop Time");
-                return;
-            }
+        if (!isBannerTimeAllowed(bannerPopup.getData())) {
+            Logger.d(TAG, "Skipping Banner because: Stop Time");
+            return;
+        }
 
-            bannerPopup.init();
-            bannerPopup.show();
+        bannerPopup.init();
+        bannerPopup.show();
 
-            if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
-                getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
-                    @Override
-                    public void initialized() {
-                        bannerIsShown(bannerPopup.getData().getId());
-                    }
-                });
-            }
-
-            if (bannerPopup.getData().getDismissType() == BannerDismissType.Timeout) {
-                long timeout = Math.max(0, bannerPopup.getData().getDismissTimeout());
-                getHandler().postDelayed(bannerPopup::dismiss, timeout * 1000);
-            }
-
-            bannerPopup.setOpenedListener(action -> {
-                sendBannerEvent("clicked", bannerPopup.getData());
-
-                if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
-                    getCleverPushInstance().getAppBannerOpenedListener().opened(action);
-                }
-
-                if (action.getType().equals("subscribe")) {
-                    getCleverPushInstance().subscribe();
-                }
-
-                if (action.getType().equals("addTags")) {
-                    getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
-                }
-
-                if (action.getType().equals("removeTags")) {
-                    getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
-                }
-
-                if (action.getType().equals("addTopics")) {
-                    Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-                    topics.addAll(action.getTopics());
-                    getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-                }
-
-                if (action.getType().equals("removeTopics")) {
-                    Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-                    topics.removeAll(action.getTopics());
-                    getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-                }
-
-                if (action.getType().equals("setAttribute")) {
-                    getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
-                }
-
-                if (action.getType().equals("switchScreen")) {
+        if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
+            getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
+                @Override
+                public void initialized() {
+                    bannerIsShown(bannerPopup.getData().getId());
                 }
             });
-
-            this.sendBannerEvent("delivered", bannerPopup.getData());
-        } catch (Exception ex) {
-            Logger.e(TAG, ex.getMessage(), ex);
         }
+
+        if (bannerPopup.getData().getDismissType() == BannerDismissType.Timeout) {
+            long timeout = Math.max(0, bannerPopup.getData().getDismissTimeout());
+            getHandler().postDelayed(bannerPopup::dismiss, timeout * 1000);
+        }
+
+        bannerPopup.setOpenedListener(action -> {
+            sendBannerEvent("clicked", bannerPopup.getData());
+
+            if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
+                getCleverPushInstance().getAppBannerOpenedListener().opened(action);
+            }
+
+            if (action.getType().equals("subscribe")) {
+                getCleverPushInstance().subscribe();
+            }
+
+            if (action.getType().equals("addTags")) {
+                getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
+            }
+
+            if (action.getType().equals("removeTags")) {
+                getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
+            }
+
+            if (action.getType().equals("addTopics")) {
+                Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+                topics.addAll(action.getTopics());
+                getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+            }
+
+            if (action.getType().equals("removeTopics")) {
+                Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+                topics.removeAll(action.getTopics());
+                getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+            }
+
+            if (action.getType().equals("setAttribute")) {
+                getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
+            }
+
+            if (action.getType().equals("switchScreen")) {
+            }
+        });
+
+        this.sendBannerEvent("delivered", bannerPopup.getData());
     }
 
     private boolean isBannerShown(String id) {

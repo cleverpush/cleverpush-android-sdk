@@ -44,6 +44,7 @@ import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.InitializeListener;
+import com.cleverpush.listener.LogListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
@@ -74,6 +75,7 @@ import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
+import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -112,7 +114,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "1.25.2";
+    public static final String SDK_VERSION = "1.25.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
