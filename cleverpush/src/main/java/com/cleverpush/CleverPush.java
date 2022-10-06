@@ -575,7 +575,8 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
-        IntentFilter intentFilter = new IntentFilter(Constants.DEVICE_ID_INTENT);
+        getActionName(Constants.APPLICATION_GROUP_NAME);
+        IntentFilter intentFilter = new IntentFilter(getActionName(Constants.APPLICATION_GROUP_NAME));
         if (intentFilter != null) {
             context.registerReceiver(deviceIdBroadcastReceiver, intentFilter);
         }
@@ -614,12 +615,18 @@ public class CleverPush {
         appBannerModule.initSession(channelId);
     }
 
+    private String getActionName(String applicationGroupName) {
+        String[] parts = applicationGroupName.split("\\.");
+        String splitedString = parts[0].concat(".").concat(parts[1]).concat(".").concat(Constants.DEVICE_ID_INTENT);
+        return splitedString;
+    }
+
     private void sendBrodcastReceiver() {
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
         final Intent i = new Intent();
         i.putExtra(Constants.DEVICE_ID, deviceId);
-        i.setAction(Constants.DEVICE_ID_INTENT);
+        i.setAction(getActionName(Constants.APPLICATION_GROUP_NAME));
         i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         context.sendBroadcast(i);
     }
