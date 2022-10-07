@@ -575,21 +575,8 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
-        IntentFilter intentFilter = new IntentFilter(Constants.DEVICE_ID_ACTION_KEY);
-        if (intentFilter != null) {
-            context.registerReceiver(deviceIdBroadcastReceiver, intentFilter);
-        }
+        registerReceiver();
 
-        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-        if (sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null) == null) {
-            sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, UUID.randomUUID().toString()).apply();
-        }
-
-        this.getChannelConfig(channelConfig1 -> {
-            if (channelConfig.optString(Constants.DEVICE_ID_CONFIG_FIELD) != null && channelConfig.optBoolean(Constants.DEVICE_ID_CONFIG_FIELD) == true) {
-                sendBrodcastReceiver();
-            }
-        });
         this.pendingInitFeaturesCall = false;
 
         this.showTopicDialogOnNewAdded();
@@ -614,14 +601,32 @@ public class CleverPush {
         appBannerModule.initSession(channelId);
     }
 
+    private void registerReceiver() {
+        IntentFilter intentFilter = new IntentFilter(Constants.DEVICE_ID_ACTION_KEY);
+        if (intentFilter != null) {
+            context.registerReceiver(deviceIdBroadcastReceiver, intentFilter);
+        }
+
+        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+        if (sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null) == null) {
+            sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, UUID.randomUUID().toString()).apply();
+        }
+
+        this.getChannelConfig(channelConfig -> {
+            if (channelConfig.optString(Constants.DEVICE_ID_CONFIG_FIELD) != null && channelConfig.optBoolean(Constants.DEVICE_ID_CONFIG_FIELD) == true) {
+                sendBrodcastReceiver();
+            }
+        });
+    }
+
     private void sendBrodcastReceiver() {
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
-        final Intent i = new Intent();
-        i.putExtra(Constants.DEVICE_ID, deviceId);
-        i.setAction(Constants.DEVICE_ID_ACTION_KEY);
-        i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-        context.sendBroadcast(i);
+        final Intent intent = new Intent();
+        intent.putExtra(Constants.DEVICE_ID, deviceId);
+        intent.setAction(Constants.DEVICE_ID_ACTION_KEY);
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        context.sendBroadcast(intent);
     }
 
     /**
