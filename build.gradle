@@ -3,7 +3,7 @@ buildscript {
         buildVersions = [
                 compileSdkVersion: 33,
         ]
-        androidGradlePluginVersion = '7.3.0'
+        androidGradlePluginVersion = '4.0.0'
         googleServicesGradlePluginVersion = '4.3.3'
         huaweiAgconnectVersion = '1.2.1.301'
         huaweiHmsPushVersion = '4.0.3.301'
@@ -13,9 +13,8 @@ buildscript {
     repositories {
         maven { url 'https://maven.google.com' }
         google()
-        mavenCentral()
-        maven { url 'https://developer.huawei.com/repo/' }
-        maven { url 'https://plugins.gradle.org/m2/' }
+        maven {url "https://plugins.gradle.org/m2/"}
+        maven { url 'http://developer.huawei.com/repo/' }
     }
 
     dependencies {
@@ -23,12 +22,7 @@ buildscript {
         classpath "com.google.gms:google-services:$googleServicesGradlePluginVersion"
         classpath "com.huawei.agconnect:agcp:$huaweiAgconnectVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.5'
-        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.22.0'
-    }
-
-    ext {
-        androidXCore = "1.6.0"
+        classpath "com.hiya:jacoco-android:0.2"
     }
 }
 
@@ -37,7 +31,8 @@ allprojects {
         maven { url 'https://maven.google.com' }
         mavenCentral()
         google()
-        maven { url 'https://developer.huawei.com/repo/' }
+        maven {url "https://plugins.gradle.org/m2/"}
+        maven { url 'http://developer.huawei.com/repo/' }
     }
 }
 

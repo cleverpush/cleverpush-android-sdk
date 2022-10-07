@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "184904602200",
+    "project_id": "cleverpush-app-ex",
+    "storage_bucket": "cleverpush-app-ex.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:184904602200:android:91714e07ec8b4fdca7702d",
+        "android_client_info": {
+          "package_name": "com.example.cleverpush"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "184904602200-00c9pi17kisp1n1126epm3o3iheiraue.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfbS_Ttk7gmDxzFmnGQb8IuxO3mdD2PlY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "184904602200-00c9pi17kisp1n1126epm3o3iheiraue.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
