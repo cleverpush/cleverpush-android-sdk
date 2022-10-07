@@ -90,6 +90,7 @@ public class NotificationDataProcessor {
             if (maximumNotifications <= 0) {
                 return;
             }
+
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
             SharedPreferences.Editor editor = sharedPreferences.edit();
 
@@ -112,10 +113,7 @@ public class NotificationDataProcessor {
             }
             notifications.setCapacity(maximumNotifications);
             if (notification.getCreatedAt() == null || notification.getCreatedAt().equalsIgnoreCase("")) {
-                String currentDate = null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).format(new Date());
-                }
+                String currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).format(new Date());
                 notification.setCreatedAt(currentDate);
             }
 
