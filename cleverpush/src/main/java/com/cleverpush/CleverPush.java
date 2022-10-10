@@ -177,6 +177,7 @@ public class CleverPush {
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
     private boolean topicsDialogShowWhenNewAdded = false;
+    private boolean registeredDeviceBroadcastReceiver = false;
     private InitializeListener initializeListener;
 
     private AddSubscriptionTags addSubscriptionTagsHelper;
@@ -602,31 +603,35 @@ public class CleverPush {
     }
 
     private void registerReceiver() {
-        IntentFilter intentFilter = new IntentFilter(Constants.DEVICE_ID_ACTION_KEY);
-        if (intentFilter != null) {
-            context.registerReceiver(deviceIdBroadcastReceiver, intentFilter);
+        if (registeredDeviceBroadcastReceiver) {
+            return;
         }
+
+        registeredDeviceBroadcastReceiver = true;
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Constants.DEVICE_ID_ACTION_KEY);
+        intentFilter.addAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
+        context.registerReceiver(deviceIdBroadcastReceiver, intentFilter);
 
         SharedPreferences sharedPreferences = getSharedPreferences(getContext());
         if (sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null) == null) {
-            sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, UUID.randomUUID().toString()).apply();
+            String uid = UUID.randomUUID().toString();
+            sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, uid).apply();
         }
 
         this.getChannelConfig(channelConfig -> {
             if (channelConfig.optString(Constants.DEVICE_ID_CONFIG_FIELD) != null && channelConfig.optBoolean(Constants.DEVICE_ID_CONFIG_FIELD) == true) {
-                sendBrodcastReceiver();
+                getDeviceIDFromOtherInstalledApps();
             }
         });
     }
 
-    private void sendBrodcastReceiver() {
-        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-        String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
-        final Intent intent = new Intent();
-        intent.putExtra(Constants.DEVICE_ID, deviceId);
-        intent.setAction(Constants.DEVICE_ID_ACTION_KEY);
-        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-        context.sendBroadcast(intent);
+    private void getDeviceIDFromOtherInstalledApps() {
+        final Intent i = new Intent();
+        i.setAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
+        i.putExtra(Constants.GET_FULL_PACKAGE_NAME_KEY, Constants.APPLICATION_PACKAGE_NAME);
+        i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        context.sendBroadcast(i);
     }
 
     /**
