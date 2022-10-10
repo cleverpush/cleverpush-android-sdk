@@ -627,11 +627,11 @@ public class CleverPush {
     }
 
     private void getDeviceIDFromOtherInstalledApps() {
-        final Intent i = new Intent();
-        i.setAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
-        i.putExtra(Constants.GET_FULL_PACKAGE_NAME_KEY, Constants.APPLICATION_PACKAGE_NAME);
-        i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-        context.sendBroadcast(i);
+        final Intent intent = new Intent();
+        intent.setAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
+        intent.putExtra(Constants.GET_FULL_PACKAGE_NAME_KEY, Constants.APPLICATION_PACKAGE_NAME);
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        context.sendBroadcast(intent);
     }
 
     /**
