@@ -1,6 +1,7 @@
 package com.cleverpush;
 
 import static com.cleverpush.Constants.LOG_TAG;
+import static com.cleverpush.util.BroadcastReceiverUtils.registerReceiver;
 
 import android.Manifest;
 import android.app.Activity;
@@ -9,7 +10,6 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -113,7 +113,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 
 public class CleverPush {
 
@@ -177,7 +176,6 @@ public class CleverPush {
     private boolean showingTopicsDialog = false;
     private boolean confirmAlertShown = false;
     private boolean topicsDialogShowWhenNewAdded = false;
-    private boolean registeredDeviceBroadcastReceiver = false;
     private InitializeListener initializeListener;
 
     private AddSubscriptionTags addSubscriptionTagsHelper;
@@ -192,7 +190,9 @@ public class CleverPush {
 
     private boolean pendingRequestNotificationPermissionCall = false;
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
-    BroadcastReceiver deviceIdBroadcastReceiver = new DeviceIdBroadcastReceiver();
+
+    public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
+    public boolean registeredDeviceBroadcastReceiver = false;
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -576,7 +576,7 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
-        registerReceiver();
+        registerReceiver(this);
 
         this.pendingInitFeaturesCall = false;
 
@@ -600,38 +600,6 @@ public class CleverPush {
         }
 
         appBannerModule.initSession(channelId);
-    }
-
-    private void registerReceiver() {
-        if (registeredDeviceBroadcastReceiver) {
-            return;
-        }
-
-        registeredDeviceBroadcastReceiver = true;
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Constants.DEVICE_ID_ACTION_KEY);
-        intentFilter.addAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
-        context.registerReceiver(deviceIdBroadcastReceiver, intentFilter);
-
-        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-        if (sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null) == null) {
-            String uid = UUID.randomUUID().toString();
-            sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, uid).apply();
-        }
-
-        this.getChannelConfig(channelConfig -> {
-            if (channelConfig.optString(Constants.DEVICE_ID_CONFIG_FIELD) != null && channelConfig.optBoolean(Constants.DEVICE_ID_CONFIG_FIELD) == true) {
-                getDeviceIDFromOtherInstalledApps();
-            }
-        });
-    }
-
-    private void getDeviceIDFromOtherInstalledApps() {
-        final Intent intent = new Intent();
-        intent.setAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
-        intent.putExtra(Constants.GET_FULL_PACKAGE_NAME_KEY, Constants.APPLICATION_PACKAGE_NAME);
-        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-        context.sendBroadcast(intent);
     }
 
     /**
