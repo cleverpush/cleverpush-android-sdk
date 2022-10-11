@@ -37,12 +37,10 @@ public final class BroadcastReceiverUtils {
             intentFilter.addAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
             CleverPush.context.registerReceiver(broadcastReceiverHandler, intentFilter);
 
-            SharedPreferences sharedPreferences = cleverPushInstance.getSharedPreferences(CleverPush.context);
-            if (sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null) == null) {
+            if (PreferenceManagerUtils.getSharedPreferenceByKey(context, CleverPushPreferences.DEVICE_ID) == null) {
                 String uid = UUID.randomUUID().toString();
-                sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, uid).apply();
+                PreferenceManagerUtils.updateSharedPreferenceByKey(context, CleverPushPreferences.DEVICE_ID, uid);
             }
-
             getDeviceIdFromOtherApps();
         });
     }
@@ -67,8 +65,7 @@ public final class BroadcastReceiverUtils {
      * @param broadcastReceiverHandler
      */
     public static void sendBroadcastMessage(BroadcastReceiverHandler broadcastReceiverHandler) {
-        SharedPreferences sharedPreferences = broadcastReceiverHandler.getSharedPreferences(context);
-        String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
+        String deviceId = PreferenceManagerUtils.getSharedPreferenceByKey(context, CleverPushPreferences.DEVICE_ID);
 
         final Intent intent = new Intent();
         intent.setAction(Constants.DEVICE_ID_ACTION_KEY);
@@ -77,5 +74,5 @@ public final class BroadcastReceiverUtils {
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         context.sendBroadcast(intent);
     }
-    
+
 }

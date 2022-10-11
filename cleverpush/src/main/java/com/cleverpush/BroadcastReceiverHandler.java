@@ -8,12 +8,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.cleverpush.util.PreferenceManagerUtils;
+
 public class BroadcastReceiverHandler extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
 
-        if (intent.getStringExtra(Constants.GET_FULL_PACKAGE_NAME_KEY).equals(Constants.APPLICATION_PACKAGE_NAME)) {
+        if (intent.hasExtra(Constants.GET_FULL_PACKAGE_NAME_KEY) && intent.getStringExtra(Constants.GET_FULL_PACKAGE_NAME_KEY).equals(Constants.APPLICATION_PACKAGE_NAME)) {
+            return;
+        }
+
+        if (action == null) {
             return;
         }
 
@@ -22,14 +28,9 @@ public class BroadcastReceiverHandler extends BroadcastReceiver {
             return;
         }
 
-        if (action.equals(Constants.DEVICE_ID_ACTION_KEY) && intent.hasExtra(Constants.DEVICE_ID)) {
-            SharedPreferences sharedPreferences = getSharedPreferences(context);
+        if (action.equals(Constants.DEVICE_ID_ACTION_KEY) && intent.hasExtra(Constants.DEVICE_ID)) {;
             String deviceId = intent.getStringExtra(Constants.DEVICE_ID);
-            sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, deviceId).apply();
+            PreferenceManagerUtils.updateSharedPreferenceByKey(context, CleverPushPreferences.DEVICE_ID, deviceId);
         }
-    }
-
-    public SharedPreferences getSharedPreferences(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context);
     }
 }
