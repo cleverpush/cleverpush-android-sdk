@@ -17,15 +17,12 @@ public class BroadcastReceiverHandler extends BroadcastReceiver {
             return;
         }
 
-        if (action == null) {
+        if (action.equals(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE)) {
+            sendBroadcastMessage(this);
             return;
         }
 
-        if (action.equals(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE)) {
-            sendBroadcastMessage();
-        }
-
-        if (intent.getAction().equals(Constants.DEVICE_ID_ACTION_KEY) && intent.hasExtra(Constants.DEVICE_ID)) {
+        if (action.equals(Constants.DEVICE_ID_ACTION_KEY) && intent.hasExtra(Constants.DEVICE_ID)) {
             SharedPreferences sharedPreferences = getSharedPreferences(context);
             String deviceId = intent.getStringExtra(Constants.DEVICE_ID);
             sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, deviceId).apply();

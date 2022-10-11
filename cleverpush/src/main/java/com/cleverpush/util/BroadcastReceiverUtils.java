@@ -3,12 +3,11 @@ package com.cleverpush.util;
 import static com.cleverpush.CleverPush.broadcastReceiverHandler;
 import static com.cleverpush.CleverPush.context;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
+import com.cleverpush.BroadcastReceiverHandler;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Constants;
@@ -19,26 +18,26 @@ public final class BroadcastReceiverUtils {
     /**
      * This function will register broadcast receiver with intent if only channel has preventDuplicateEnabled in config or if it's not already registered
      *
-     * @param context
+     * @param cleverPushInstance
      * @function registerReceiver
      */
-    public static void registerReceiver(CleverPush context) {
-        if (context.registeredDeviceBroadcastReceiver) {
+    public static void registerReceiver(CleverPush cleverPushInstance) {
+        if (cleverPushInstance.registeredDeviceBroadcastReceiver) {
             return;
         }
 
-        context.getChannelConfig(channelConfig -> {
+        cleverPushInstance.getChannelConfig(channelConfig -> {
             if (channelConfig.optString(Constants.DEVICE_ID_CONFIG_FIELD) == null || channelConfig.optBoolean(Constants.DEVICE_ID_CONFIG_FIELD) != true) {
                 return;
             }
 
-            context.registeredDeviceBroadcastReceiver = true;
+            cleverPushInstance.registeredDeviceBroadcastReceiver = true;
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(Constants.DEVICE_ID_ACTION_KEY);
             intentFilter.addAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
             CleverPush.context.registerReceiver(broadcastReceiverHandler, intentFilter);
 
-            SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
+            SharedPreferences sharedPreferences = cleverPushInstance.getSharedPreferences(CleverPush.context);
             if (sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null) == null) {
                 String uid = UUID.randomUUID().toString();
                 sharedPreferences.edit().putString(CleverPushPreferences.DEVICE_ID, uid).apply();
@@ -65,9 +64,10 @@ public final class BroadcastReceiverUtils {
      * This function will send Device id from shared preference to all other applications
      *
      * @function sendBroadcastMessage
+     * @param broadcastReceiverHandler
      */
-    public static void sendBroadcastMessage() {
-        SharedPreferences sharedPreferences = getSharedPreferences(context);
+    public static void sendBroadcastMessage(BroadcastReceiverHandler broadcastReceiverHandler) {
+        SharedPreferences sharedPreferences = broadcastReceiverHandler.getSharedPreferences(context);
         String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
 
         final Intent intent = new Intent();
@@ -77,16 +77,5 @@ public final class BroadcastReceiverUtils {
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         context.sendBroadcast(intent);
     }
-
-    /**
-     * This function will return Shared preference from preference manager
-     *
-     * @param context
-     * @return SharedPreference
-     * @function getSharedPreferences
-     */
-    public static SharedPreferences getSharedPreferences(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context);
-    }
-
+    
 }
