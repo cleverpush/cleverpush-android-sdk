@@ -55,6 +55,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
         String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
         if (channelId == null) {
             Logger.d(LOG_TAG, "channelId in preferences not found");
             return;
@@ -108,6 +109,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             }
             if (timeZone != null && timeZone.getID() != null) {
                 jsonBody.put("timezone", timeZone.getID());
+            }
+            if (deviceId != null) {
+                jsonBody.put("deviceId", deviceId);
             }
             if (topics != null) {
                 jsonBody.put("topics", new JSONArray(topics));

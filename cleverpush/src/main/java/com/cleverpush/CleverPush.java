@@ -1,11 +1,13 @@
 package com.cleverpush;
 
 import static com.cleverpush.Constants.LOG_TAG;
+import static com.cleverpush.util.BroadcastReceiverUtils.registerReceiver;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -188,6 +190,9 @@ public class CleverPush {
 
     private boolean pendingRequestNotificationPermissionCall = false;
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
+
+    public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
+    public boolean registeredDeviceBroadcastReceiver = false;
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -571,6 +576,8 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
+        registerReceiver(this);
+
         this.pendingInitFeaturesCall = false;
 
         this.showTopicDialogOnNewAdded();
@@ -688,7 +695,7 @@ public class CleverPush {
 
             }
         });
-     }
+    }
 
     /**
      * request for push notification
