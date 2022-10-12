@@ -1,7 +1,6 @@
 package com.cleverpush;
 
 import static com.cleverpush.Constants.LOG_TAG;
-import static com.cleverpush.util.BroadcastReceiverUtils.registerReceiver;
 
 import android.Manifest;
 import android.app.Activity;
@@ -77,6 +76,7 @@ import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
+import com.cleverpush.util.BroadcastReceiverUtils;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
@@ -116,7 +116,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "1.25.2";
+    public static final String SDK_VERSION = "1.26.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -192,7 +192,6 @@ public class CleverPush {
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
 
     public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
-    public boolean registeredDeviceBroadcastReceiver = false;
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -580,7 +579,6 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
-        registerReceiver(this);
 
         this.pendingInitFeaturesCall = false;
 
@@ -604,6 +602,8 @@ public class CleverPush {
         }
 
         appBannerModule.initSession(channelId);
+
+        BroadcastReceiverUtils.registerReceiver(this);
     }
 
     /**

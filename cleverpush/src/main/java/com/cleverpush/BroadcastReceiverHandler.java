@@ -1,12 +1,10 @@
 package com.cleverpush;
 
-import static com.cleverpush.util.BroadcastReceiverUtils.sendBroadcastMessage;
+import static com.cleverpush.util.BroadcastReceiverUtils.sendDeviceId;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.util.PreferenceManagerUtils;
 
@@ -15,7 +13,7 @@ public class BroadcastReceiverHandler extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
 
-        if (intent.hasExtra(Constants.GET_FULL_PACKAGE_NAME_KEY) && intent.getStringExtra(Constants.GET_FULL_PACKAGE_NAME_KEY).equals(Constants.APPLICATION_PACKAGE_NAME)) {
+        if (intent.hasExtra(Constants.EXTRA_FULL_PACKAGE_NAME) && intent.getStringExtra(Constants.EXTRA_FULL_PACKAGE_NAME).equals(Constants.APPLICATION_PACKAGE_NAME)) {
             return;
         }
 
@@ -23,13 +21,13 @@ public class BroadcastReceiverHandler extends BroadcastReceiver {
             return;
         }
 
-        if (action.equals(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE)) {
-            sendBroadcastMessage(this);
+        if (action.equals(Constants.ACTION_REQUEST_DEVICE_ID)) {
+            sendDeviceId();
             return;
         }
 
-        if (action.equals(Constants.DEVICE_ID_ACTION_KEY) && intent.hasExtra(Constants.DEVICE_ID)) {;
-            String deviceId = intent.getStringExtra(Constants.DEVICE_ID);
+        if (action.equals(Constants.ACTION_SEND_DEVICE_ID) && intent.hasExtra(Constants.EXTRA_DEVICE_ID)) {;
+            String deviceId = intent.getStringExtra(Constants.EXTRA_DEVICE_ID);
             PreferenceManagerUtils.updateSharedPreferenceByKey(context, CleverPushPreferences.DEVICE_ID, deviceId);
         }
     }

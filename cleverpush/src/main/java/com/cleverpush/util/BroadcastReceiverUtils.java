@@ -5,9 +5,7 @@ import static com.cleverpush.CleverPush.context;
 
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 
-import com.cleverpush.BroadcastReceiverHandler;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Constants;
@@ -15,6 +13,8 @@ import com.cleverpush.Constants;
 import java.util.UUID;
 
 public final class BroadcastReceiverUtils {
+    private static boolean registeredDeviceIdBroadcastReceiver = false;
+
     /**
      * This function will register broadcast receiver with intent if only channel has preventDuplicateEnabled in config or if it's not already registered
      *
@@ -22,26 +22,26 @@ public final class BroadcastReceiverUtils {
      * @function registerReceiver
      */
     public static void registerReceiver(CleverPush cleverPushInstance) {
-        if (cleverPushInstance.registeredDeviceBroadcastReceiver) {
+        if (registeredDeviceIdBroadcastReceiver) {
             return;
         }
+        registeredDeviceIdBroadcastReceiver = true;
 
         cleverPushInstance.getChannelConfig(channelConfig -> {
-            if (channelConfig.optString(Constants.DEVICE_ID_CONFIG_FIELD) == null || channelConfig.optBoolean(Constants.DEVICE_ID_CONFIG_FIELD) != true) {
+            if (channelConfig == null || !channelConfig.optBoolean(Constants.DEVICE_ID_CONFIG_FIELD)) {
                 return;
             }
 
-            cleverPushInstance.registeredDeviceBroadcastReceiver = true;
             IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction(Constants.DEVICE_ID_ACTION_KEY);
-            intentFilter.addAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
+            intentFilter.addAction(Constants.ACTION_SEND_DEVICE_ID);
+            intentFilter.addAction(Constants.ACTION_REQUEST_DEVICE_ID);
             CleverPush.context.registerReceiver(broadcastReceiverHandler, intentFilter);
 
             if (PreferenceManagerUtils.getSharedPreferenceByKey(context, CleverPushPreferences.DEVICE_ID) == null) {
                 String uid = UUID.randomUUID().toString();
                 PreferenceManagerUtils.updateSharedPreferenceByKey(context, CleverPushPreferences.DEVICE_ID, uid);
             }
-            getDeviceIdFromOtherApps();
+            requestDeviceId();
         });
     }
 
@@ -50,10 +50,10 @@ public final class BroadcastReceiverUtils {
      *
      * @function getDeviceIdFromOtherApps
      */
-    public static void getDeviceIdFromOtherApps() {
+    public static void requestDeviceId() {
         final Intent intent = new Intent();
-        intent.setAction(Constants.GET_DEVICE_ID_FROM_ALL_DEVICE);
-        intent.putExtra(Constants.GET_FULL_PACKAGE_NAME_KEY, Constants.APPLICATION_PACKAGE_NAME);
+        intent.setAction(Constants.ACTION_REQUEST_DEVICE_ID);
+        intent.putExtra(Constants.EXTRA_FULL_PACKAGE_NAME, Constants.APPLICATION_PACKAGE_NAME);
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         context.sendBroadcast(intent);
     }
@@ -62,17 +62,15 @@ public final class BroadcastReceiverUtils {
      * This function will send Device id from shared preference to all other applications
      *
      * @function sendBroadcastMessage
-     * @param broadcastReceiverHandler
      */
-    public static void sendBroadcastMessage(BroadcastReceiverHandler broadcastReceiverHandler) {
+    public static void sendDeviceId() {
         String deviceId = PreferenceManagerUtils.getSharedPreferenceByKey(context, CleverPushPreferences.DEVICE_ID);
 
         final Intent intent = new Intent();
-        intent.setAction(Constants.DEVICE_ID_ACTION_KEY);
-        intent.putExtra(Constants.DEVICE_ID, deviceId);
-        intent.putExtra(Constants.GET_FULL_PACKAGE_NAME_KEY, Constants.APPLICATION_PACKAGE_NAME);
+        intent.setAction(Constants.ACTION_SEND_DEVICE_ID);
+        intent.putExtra(Constants.EXTRA_DEVICE_ID, deviceId);
+        intent.putExtra(Constants.EXTRA_FULL_PACKAGE_NAME, Constants.APPLICATION_PACKAGE_NAME);
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         context.sendBroadcast(intent);
     }
-
 }

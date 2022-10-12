@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.26.0
+* Implemented optional Device ID feature to prevent duplicate notifications on multiple apps of the same package name group.
+
 ## 1.25.2
 * Fixed potential crashes in AppBanners
 
