@@ -951,7 +951,7 @@ public class CleverPush {
      * initialize Geo Fences
      */
     @SuppressWarnings("deprecation")
-    void initGeoFences() {
+    public void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = getGoogleApiClient();
 
@@ -970,6 +970,7 @@ public class CleverPush {
                                                     geoFence.getDouble("longitude"),
                                                     geoFence.getLong("radius")
                                             )
+                                            .setLoiteringDelay((int) geoFence.getDouble("delay"))
                                             .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
                                             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
                                             .build());
@@ -1030,8 +1031,10 @@ public class CleverPush {
                                 geofencePendingIntent
                         );
                     } catch (SecurityException securityException) {
+                        Logger.d("ex:", securityException.getMessage());
                         // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
                     }
+                    context.startService(geofenceIntent);
                 }
             }
 

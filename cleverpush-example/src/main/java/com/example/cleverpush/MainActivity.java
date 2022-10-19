@@ -22,6 +22,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
+        CleverPush.getInstance(this).requestLocationPermission();
+        CleverPush.getInstance(this).initGeoFences();
+        CleverPush.getInstance(this).enableDevelopmentMode();
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
         CleverPush.getInstance(this).subscribe();
         CleverPush.getInstance(this).init(getString(R.string.channel_id),
