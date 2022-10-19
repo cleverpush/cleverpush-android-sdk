@@ -59,6 +59,8 @@
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false" />
+
+        <receiver android:name=".GeofenceBroadcastReceiver"/>
     </application>
 
     <!-- START: ShortcutBadger -->

@@ -84,8 +84,11 @@ import com.cleverpush.util.NotificationCategorySetUp;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.huawei.hms.api.HuaweiApiAvailability;
@@ -195,6 +198,8 @@ public class CleverPush {
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
 
     public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
+    private PendingIntent geofencePendingIntent;
+    private GeofencingClient geofencingClient;
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -212,6 +217,8 @@ public class CleverPush {
         if ((Application) getContext() != null) {
             ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) getContext(), sessionListener);
         }
+
+        geofencingClient = LocationServices.getGeofencingClient(context);
     }
 
     /**
@@ -970,7 +977,7 @@ public class CleverPush {
                                                     geoFence.getDouble("longitude"),
                                                     geoFence.getLong("radius")
                                             )
-                                            .setLoiteringDelay((int) geoFence.getDouble("delay"))
+//                                            .setLoiteringDelay((int) geoFence.getDouble("delay"))
                                             .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
                                             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
                                             .build());
@@ -1001,6 +1008,25 @@ public class CleverPush {
         return connectionResult -> Logger.d(LOG_TAG, "GoogleApiClient onConnectionFailed");
     }
 
+    private GeofencingRequest getGeofencingRequest() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        builder.addGeofences(geofenceList);
+        return builder.build();
+    }
+
+    private PendingIntent getGeofencePendingIntent() {
+        // Reuse the PendingIntent if we already have it.
+        if (geofencePendingIntent != null) {
+            return geofencePendingIntent;
+        }
+        Intent intent = new Intent(CleverPush.context, GeofenceBroadcastReceiver.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+        // calling addGeofences() and removeGeofences().
+        geofencePendingIntent = PendingIntent.getBroadcast(CleverPush.context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        return geofencePendingIntent;
+    }
+
     private GoogleApiClient.ConnectionCallbacks getConnectionCallbacks() {
         return new GoogleApiClient.ConnectionCallbacks() {
             @Override
@@ -1009,7 +1035,33 @@ public class CleverPush {
                 Logger.d(LOG_TAG, "GoogleApiClient onConnected");
 
                 if (geofenceList.size() > 0) {
+
+                    geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                            .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    try {
+                                        LocationServices.GeofencingApi.addGeofences(
+                                                googleApiClient,
+                                                getGeofencingRequest(),
+                                                getGeofencePendingIntent()
+                                        );
+                                    } catch (SecurityException securityException) {
+                                        Logger.d("ex:", securityException.getMessage());
+                                        // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
+                                    }
+                                    Logger.d("OnSuccessListener", "hjhjkh");
+                                }
+                            })
+                            .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Failed to add geofences
+                                    // ...
+                                }
+                            });
                     Logger.d(LOG_TAG, "initing geofences " + geofenceList.toString());
+/*
 
                     GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
                     builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
@@ -1035,6 +1087,7 @@ public class CleverPush {
                         // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
                     }
                     context.startService(geofenceIntent);
+*/
                 }
             }
 

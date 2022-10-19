@@ -31,7 +31,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Logger.d("onHandleIntent","onHandleIntent");
+//        Logger.d("onHandleIntent","onHandleIntent");
         GeofencingEvent event = GeofencingEvent.fromIntent(intent);
         if (event.hasError()) {
             Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
@@ -43,7 +43,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
         String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
         String transitionState = event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? "enter" : "exit";
-        Logger.d("tran", String.valueOf(event.getGeofenceTransition()));
+        Logger.d("transmission", String.valueOf(event.getGeofenceTransition()));
 
 
 //        Logger.d(TAG, "Geofence Transition Details: " + getGeofenceTransitionDetails(event) + " " + transitionState + " subscription: " + subscriptionId + " channel " + channelId);
