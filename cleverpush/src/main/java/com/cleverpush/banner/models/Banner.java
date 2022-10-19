@@ -48,6 +48,7 @@ public class Banner {
     private List<String> excludeTags;
     private List<String> topics;
     private List<String> excludeTopics;
+    private List<String> languages;
     private List<HashMap<String, String>> attributes;
     private boolean marginEnabled;
     private boolean closeButtonEnabled;
@@ -224,6 +225,10 @@ public class Banner {
         return excludeTopics;
     }
 
+    public List<String> getLanguages(){
+        return languages;
+    }
+
     public List<HashMap<String, String>> getAttributes() {
         return attributes;
     }
@@ -326,6 +331,17 @@ public class Banner {
                 String tag = tagsArray.optString(i);
                 if (tag != null) {
                     banner.tags.add(tag);
+                }
+            }
+        }
+
+        JSONArray languages = json.optJSONArray("languages");
+        if (languages != null) {
+            banner.languages = new ArrayList<>();
+            for (int i = 0; i < languages.length(); ++i) {
+                String language = languages.optString(i);
+                if (language != null) {
+                    banner.languages.add(language);
                 }
             }
         }
