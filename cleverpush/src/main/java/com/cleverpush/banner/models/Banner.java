@@ -225,7 +225,7 @@ public class Banner {
         return excludeTopics;
     }
 
-    public List<String> getLanguages(){
+    public List<String> getLanguages() {
         return languages;
     }
 
