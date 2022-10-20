@@ -1023,7 +1023,8 @@ public class CleverPush {
         Intent intent = new Intent(CleverPush.context, GeofenceBroadcastReceiver.class);
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
         // calling addGeofences() and removeGeofences().
-        geofencePendingIntent = PendingIntent.getBroadcast(CleverPush.context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        geofencePendingIntent = PendingIntent.getBroadcast(CleverPush.context, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         return geofencePendingIntent;
     }
 
