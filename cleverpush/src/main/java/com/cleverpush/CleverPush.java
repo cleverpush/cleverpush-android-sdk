@@ -135,7 +135,7 @@ public class CleverPush {
     private TopicsChangedListener topicsChangedListener;
     private AppBannerOpenedListener appBannerOpenedListener;
     private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
-    private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
+    private static Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
     private final Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
     private SessionListener sessionListener;
     private WebViewClientListener webViewClientListener;
@@ -153,9 +153,9 @@ public class CleverPush {
 
     private String channelId;
     private String subscriptionId = null;
-    private JSONObject channelConfig = null;
+    private static JSONObject channelConfig = null;
     private boolean subscriptionInProgress = false;
-    private boolean initialized = false;
+    private static boolean initialized = false;
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
     private boolean pendingInitFeaturesCall = false;
@@ -961,8 +961,7 @@ public class CleverPush {
     public void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = getGoogleApiClient();
-
-            this.getChannelConfig(config -> {
+            getChannelConfig(config -> {
                 if (config != null) {
                     try {
                         JSONArray geoFenceArray = config.getJSONArray("geoFences");
@@ -977,7 +976,6 @@ public class CleverPush {
                                                     geoFence.getDouble("longitude"),
                                                     geoFence.getLong("radius")
                                             )
-//                                            .setLoiteringDelay((int) geoFence.getDouble("delay"))
                                             .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
                                             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
                                             .build());
@@ -1021,9 +1019,6 @@ public class CleverPush {
             return geofencePendingIntent;
         }
         Intent intent = new Intent(CleverPush.context, GeofenceBroadcastReceiver.class);
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
-        // calling addGeofences() and removeGeofences().
-
         geofencePendingIntent = PendingIntent.getBroadcast(CleverPush.context, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         return geofencePendingIntent;
     }
@@ -1036,11 +1031,11 @@ public class CleverPush {
                 Logger.d(LOG_TAG, "GoogleApiClient onConnected");
 
                 if (geofenceList.size() > 0) {
-
                     geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
                             .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
+/*
                                     try {
                                         LocationServices.GeofencingApi.addGeofences(
                                                 googleApiClient,
@@ -1049,46 +1044,15 @@ public class CleverPush {
                                         );
                                     } catch (SecurityException securityException) {
                                         Logger.d("ex:", securityException.getMessage());
-                                        // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
                                     }
-                                    Logger.d("OnSuccessListener", "hjhjkh");
+*/
                                 }
                             })
                             .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
-                                    // Failed to add geofences
-                                    // ...
                                 }
                             });
-                    Logger.d(LOG_TAG, "initing geofences " + geofenceList.toString());
-/*
-
-                    GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-                    builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-                    builder.addGeofences(geofenceList);
-                    GeofencingRequest geofenceRequest = builder.build();
-
-                    Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
-                    // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addGeofences()
-                    int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        flags |= PendingIntent.FLAG_IMMUTABLE;
-                    }
-                    PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, flags);
-
-                    try {
-                        LocationServices.GeofencingApi.addGeofences(
-                                googleApiClient,
-                                geofenceRequest,
-                                geofencePendingIntent
-                        );
-                    } catch (SecurityException securityException) {
-                        Logger.d("ex:", securityException.getMessage());
-                        // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-                    }
-                    context.startService(geofenceIntent);
-*/
                 }
             }
 
@@ -1400,7 +1364,7 @@ public class CleverPush {
         return channelConfig;
     }
 
-    public void getChannelConfig(ChannelConfigListener listener) {
+    public static void getChannelConfig(ChannelConfigListener listener) {
         if (listener != null) {
             if (channelConfig == null && !initialized) {
                 getChannelConfigListeners.add(listener);
