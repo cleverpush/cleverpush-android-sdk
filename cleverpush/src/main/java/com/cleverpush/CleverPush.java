@@ -1014,7 +1014,6 @@ public class CleverPush {
     }
 
     private PendingIntent getGeofencePendingIntent() {
-        // Reuse the PendingIntent if we already have it.
         if (geofencePendingIntent != null) {
             return geofencePendingIntent;
         }
@@ -1035,17 +1034,17 @@ public class CleverPush {
                             .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
-/*
                                     try {
+/*
                                         LocationServices.GeofencingApi.addGeofences(
                                                 googleApiClient,
                                                 getGeofencingRequest(),
                                                 getGeofencePendingIntent()
                                         );
+*/
                                     } catch (SecurityException securityException) {
                                         Logger.d("ex:", securityException.getMessage());
                                     }
-*/
                                 }
                             })
                             .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {

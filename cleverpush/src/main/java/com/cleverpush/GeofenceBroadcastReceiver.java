@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Handler;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -17,19 +17,34 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GeofenceBroadcastReceiver extends BroadcastReceiver {
 
     private double delay;
-    private Handler mHandler = new Handler();
+    private ArrayList<Double> mDelayList = new ArrayList();
+    private int transition;
+    private String channelId;
+    private String subscriptionId;
+    private String transitionState;
+    int position = 0;
+    boolean mCompleted = false;
+    CountDownTimer cTimer;
+
     public void onReceive(Context context, Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
             String errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.getErrorCode());
-            Log.e("CPTAG", errorMessage);
+            Log.e("CPErrorMessage", errorMessage);
             return;
         }
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
+        subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+        transitionState = geofencingEvent.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? "enter" : "exit";
+        transition = geofencingEvent.getGeofenceTransition();
 
         CleverPush.getChannelConfig(channelConfig -> {
             if (channelConfig != null) {
@@ -40,50 +55,67 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                             JSONObject geoFence = geoFenceArray.getJSONObject(i);
                             if (geoFence != null) {
                                 delay = geoFence.getDouble("delay");
+                                mDelayList.add(delay);
                             }
                         }
                     }
                 } catch (Exception ex) {
-                    Logger.d("CPLOG_TAG", ex.getMessage());
+                    Logger.d("Exception", ex.getMessage());
                 }
             }
         });
+        countDownCalling(geofencingEvent);
+    }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
-        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        String transitionState = geofencingEvent.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? "enter" : "exit";
 
-        int transition = geofencingEvent.getGeofenceTransition();
-        if (transition == Geofence.GEOFENCE_TRANSITION_ENTER || transition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-            List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
-            if (channelId != null && subscriptionId != null) {
-                for (int i = 0; i < triggeringGeofences.size(); i++) {
-                    JSONObject jsonBody = new JSONObject();
-                    try {
-                        jsonBody.put("geoFenceId", triggeringGeofences.get(i).getRequestId());
-                        jsonBody.put("channelId", channelId);
-                        jsonBody.put("subscriptionId", subscriptionId);
-                        jsonBody.put("state", transitionState);
-
-                        CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, new CleverPushHttpClient.ResponseHandler() {
-                            @Override
-                            public void onSuccess(String response) {
-                                Logger.e("CPintentNe", "" + response);
-                            }
-
-                            @Override
-                            public void onFailure(int statusCode, String response, Throwable throwable) {
-
-                            }
-                        });
-                    } catch (JSONException e) {
-                        Logger.e("CPLOG", "Error generating geo-fence json", e);
-                    }
+    void countDownCalling(GeofencingEvent geofencingEvent) {
+        if (position != mDelayList.size()) {
+            cTimer = new CountDownTimer((long) (mDelayList.get(position) * 1000), 1000) {
+                @Override
+                public void onTick(long l) {
+                    Logger.e("CPDelay", mDelayList.get(position).intValue() + " - " + l);
                 }
-            }
-        } else {
-            Log.e("CPiTAGINVALID", "Invalid type");
+
+                @Override
+                public void onFinish() {
+                    if (transition == Geofence.GEOFENCE_TRANSITION_ENTER || transition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+                        List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
+                        if (channelId != null && subscriptionId != null) {
+                            JSONObject jsonBody = new JSONObject();
+                            try {
+                                jsonBody.put("geoFenceId", triggeringGeofences.get(position).getRequestId());
+                                jsonBody.put("channelId", channelId);
+                                jsonBody.put("subscriptionId", subscriptionId);
+                                jsonBody.put("state", transitionState);
+
+                            } catch (JSONException e) {
+                                Logger.e("CPJSONException", "Error generating geo-fence json", e);
+                            }
+                            mCompleted = true;
+                            CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+                                @Override
+                                public void onSuccess(String response) {
+                                }
+
+                                @Override
+                                public void onFailure(int statusCode, String response, Throwable throwable) {
+                                }
+                            });
+                        }
+                    } else {
+                        Log.e("CPJSONInvalid", "Invalid type");
+                    }
+
+                    if (mCompleted) {
+                        mCompleted = false;
+                        cTimer.cancel();
+                        position += 1;
+                        countDownCalling(geofencingEvent);
+                    }
+
+                }
+            }.start();
         }
     }
+
 }
