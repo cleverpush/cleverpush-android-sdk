@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.26.1
+* Added more logs and try-catch to prevent potential crash
+
 ## 1.26.0
 * Implemented optional Device ID feature to prevent duplicate notifications on multiple apps of the same package name group.
 
