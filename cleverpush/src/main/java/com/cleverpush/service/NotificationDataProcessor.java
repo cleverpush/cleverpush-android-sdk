@@ -106,6 +106,7 @@ public class NotificationDataProcessor {
                     notifications = new LimitedSizeQueue<>();
                     notifications.addAll(notificationList);
                 } catch (Exception ex) {
+                    Logger.e(LOG_TAG, "Error creating notificationList", ex);
                 }
             }
             if (notifications == null) {

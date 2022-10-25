@@ -202,6 +202,7 @@ public class NotificationService {
                     notificationBuilder = notificationBuilder.setLargeIcon(icon);
                 }
             } catch (Exception ignored) {
+                Logger.e(LOG_TAG, "Error getting icon", ignored);
             }
         }
 
@@ -218,6 +219,7 @@ public class NotificationService {
                     );
                 }
             } catch (Exception ignored) {
+                Logger.e(LOG_TAG, "Error getting media", ignored);
             }
         } else if (notificationStyle == NotificationStyle.BIG_TEXT || (
                 notificationStyle == NotificationStyle.AUTO && hasText
@@ -250,6 +252,7 @@ public class NotificationService {
                     expandedView.setImageViewBitmap(R.id.notification_image, media);
                 }
             } catch (Exception ignored) {
+                Logger.e(LOG_TAG, "Error getting media", ignored);
             }
         }
         return expandedView;
@@ -283,8 +286,9 @@ public class NotificationService {
                 return NotificationStyle.lookupByCode(notificationStyleCode);
             }
         } catch (Exception ignored) {
-
+            Logger.e(LOG_TAG, "Error getting notificationStyleCode", ignored);
         }
+
         return NotificationStyle.AUTO;
     }
 
@@ -342,7 +346,11 @@ public class NotificationService {
     private PendingIntent getNotificationDeleteIntent(Context context, Notification notification) {
         Intent delIntent = new Intent(context, NotificationDismissIntentService.class);
 
-        delIntent.putExtra("notification", notification);
+        try {
+            delIntent.putExtra("notification", notification);
+        } catch (Exception exception) {
+            Logger.e(LOG_TAG, "Error with delete intent", exception);
+        }
 
         return PendingIntent.getService(context, this.generateRequestCode(), delIntent, this.getDeleteIntentFlags());
     }
