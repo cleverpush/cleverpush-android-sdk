@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">Cleverpush Example</string>
+    <string name="app_name" translatable="false">CleverPush Example</string>
     <string name="channel_id" translatable="false">hxWyS7jPk4DrnSk5K</string>
 </resources>
