@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.26.4
+* Updated proguard to prevent gson issue
+
 ## 1.26.3
 * Implemented optional callback for `unsubscribe` method
 

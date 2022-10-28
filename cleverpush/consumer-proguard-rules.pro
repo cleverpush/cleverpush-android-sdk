@@ -18,3 +18,6 @@
 # Amazon
 -keep class com.amazon.device.messaging.ADM { *; }
 -dontwarn com.amazon.**
+
+# Gson
+-keep class com.google.gson.** { *; }
