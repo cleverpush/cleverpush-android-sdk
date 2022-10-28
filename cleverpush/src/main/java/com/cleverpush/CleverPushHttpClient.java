@@ -112,9 +112,9 @@ public class CleverPushHttpClient {
                     responseHandler.onFailure(httpResponse, json, null);
                 }
             }
-        } catch (Throwable t) {
+        } catch (Throwable throwable) {
             if (responseHandler != null) {
-                responseHandler.onFailure(httpResponse, null, t);
+                responseHandler.onFailure(httpResponse, null, throwable);
             }
         } finally {
             if (con != null) {

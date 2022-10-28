@@ -45,7 +45,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
             public void onFailure(int statusCode, String response, Throwable throwable) {
                 cleverPush.setInitialized(true);
 
-                getLogger().e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?", throwable);
+                Logger.e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?", throwable);
 
                 // trigger listeners
                 if (cleverPush.getChannelConfig() == null) {
@@ -66,9 +66,5 @@ public class ChannelConfigFromBundleIdResponseHandler {
 
     public Context getContext() {
         return CleverPush.context;
-    }
-
-    public Logger getLogger() {
-        return new Logger();
     }
 }

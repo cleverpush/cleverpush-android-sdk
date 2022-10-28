@@ -32,12 +32,8 @@ public class SetSubscriptionTopicsResponseHandler {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                getLogger().e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
+                Logger.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
             }
         };
-    }
-
-    public Logger getLogger() {
-        return new Logger();
     }
 }

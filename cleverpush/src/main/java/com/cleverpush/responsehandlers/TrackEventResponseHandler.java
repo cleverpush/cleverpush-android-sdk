@@ -9,17 +9,13 @@ public class TrackEventResponseHandler {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
-                getLogger().d("CleverPush", "Event successfully tracked: " + eventName);
+                Logger.d("CleverPush", "Event successfully tracked: " + eventName);
             }
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                getLogger().e("CleverPush", "Error tracking event - HTTP " + statusCode);
+                Logger.e("CleverPush", "Error tracking event - HTTP " + statusCode);
             }
         };
-    }
-
-    public Logger getLogger() {
-        return new Logger();
     }
 }

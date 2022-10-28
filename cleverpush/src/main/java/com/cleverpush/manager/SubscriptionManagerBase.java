@@ -157,8 +157,8 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                             }
                         }
                     }
-                } catch (Throwable t) {
-                    Logger.e(LOG_TAG, "Error", t);
+                } catch (Throwable throwable) {
+                    Logger.e(LOG_TAG, "Error", throwable);
                 }
             }
 

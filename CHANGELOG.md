@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.26.3
+* Implemented optional callback for `unsubscribe` method
+
 ## 1.26.2
 * Publish maven package with `api` scope for dependencies to potentially fix errors where proguard rules from dependencies were not included
 

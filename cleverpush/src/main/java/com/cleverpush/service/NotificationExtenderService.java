@@ -47,8 +47,8 @@ public abstract class NotificationExtenderService extends JobIntentService {
 			boolean developerProcessed = false;
 			try {
 				developerProcessed = onNotificationProcessing(notification);
-			} catch (Throwable t) {
-				Logger.e(LOG_TAG, "Exception in NotificationExtenderService: onNotificationProcessing", t);
+			} catch (Throwable throwable) {
+				Logger.e(LOG_TAG, "Exception in NotificationExtenderService: onNotificationProcessing", throwable);
 			}
 
 			if (!developerProcessed && !notification.isSilent()) {

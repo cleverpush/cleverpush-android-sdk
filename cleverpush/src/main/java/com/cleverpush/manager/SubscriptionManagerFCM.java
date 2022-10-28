@@ -133,10 +133,10 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
         try {
             subscribeInBackground(senderId, subscribedListener);
-        } catch (Throwable t) {
+        } catch (Throwable throwable) {
             Logger.e(LOG_TAG,
                     "Could not register with FCM due to an issue with your AndroidManifest.xml or with FCM.",
-                    t
+                    throwable
             );
         }
     }

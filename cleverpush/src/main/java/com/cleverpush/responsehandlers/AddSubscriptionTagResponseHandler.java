@@ -27,7 +27,7 @@ public class AddSubscriptionTagResponseHandler {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                getLogger().e("CleverPush", "Error adding tag - HTTP " + statusCode);
+                Logger.e("CleverPush", "Error adding tag - HTTP " + statusCode);
             }
         };
     }
@@ -52,9 +52,4 @@ public class AddSubscriptionTagResponseHandler {
     public Context getContext() {
         return CleverPush.context;
     }
-
-    public Logger getLogger() {
-        return new Logger();
-    }
-
 }

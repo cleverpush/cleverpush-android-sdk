@@ -56,6 +56,7 @@ import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.listener.TopicsDialogListener;
 import com.cleverpush.listener.TrackingConsentListener;
+import com.cleverpush.listener.UnsubscribedListener;
 import com.cleverpush.listener.WebViewClientListener;
 import com.cleverpush.manager.SubscriptionManager;
 import com.cleverpush.manager.SubscriptionManagerADM;
@@ -70,7 +71,7 @@ import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
 import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
-import com.cleverpush.responsehandlers.UnSubscribeResponseHandler;
+import com.cleverpush.responsehandlers.UnsubscribeResponseHandler;
 import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
@@ -421,8 +422,8 @@ public class CleverPush {
                     } else {
                         this.clearSubscriptionData();
                     }
-                } catch (Throwable t) {
-                    Logger.e(LOG_TAG, "Error", t);
+                } catch (Throwable throwable) {
+                    Logger.e(LOG_TAG, "Error", throwable);
                 }
             }
             addOrUpdateChannelId(getContext(), this.channelId);
@@ -1261,6 +1262,10 @@ public class CleverPush {
     }
 
     public void unsubscribe() {
+        this.unsubscribe(null);
+    }
+
+    public void unsubscribe(UnsubscribedListener listener) {
         String subscriptionId = getSubscriptionId(getContext());
         if (subscriptionId != null) {
             JSONObject jsonBody = getJsonObject();
@@ -1271,7 +1276,7 @@ public class CleverPush {
                 Logger.e(LOG_TAG, "Error", e);
             }
 
-            CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody, new UnSubscribeResponseHandler(this).getResponseHandler());
+            CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody, new UnsubscribeResponseHandler(this, listener).getResponseHandler());
         }
     }
 

@@ -27,7 +27,7 @@ public class RemoveSubscriptionTagResponseHandler {
 
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
-                getLogger().e("CleverPush", "Error removing tag - HTTP " + statusCode);
+                Logger.e("CleverPush", "Error removing tag - HTTP " + statusCode);
             }
         };
 
@@ -52,9 +52,5 @@ public class RemoveSubscriptionTagResponseHandler {
 
     public Context getContext() {
         return CleverPush.context;
-    }
-
-    public Logger getLogger() {
-        return new Logger();
     }
 }
