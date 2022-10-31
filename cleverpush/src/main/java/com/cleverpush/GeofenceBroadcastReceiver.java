@@ -21,14 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GeofenceBroadcastReceiver extends BroadcastReceiver {
-
     private double delay;
-    private ArrayList<Double> mDelayList = new ArrayList();
+    private final ArrayList<Double> mDelayList = new ArrayList();
     private int transition;
     private String channelId;
     private String subscriptionId;
     private String transitionState;
-    int position = 0;
+    int position;
     boolean mCompleted = false;
     CountDownTimer cTimer;
 
@@ -66,28 +65,25 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
         });
         countDownCalling(geofencingEvent);
     }
-
-
+    
     void countDownCalling(GeofencingEvent geofencingEvent) {
         if (position != mDelayList.size()) {
             cTimer = new CountDownTimer((long) (mDelayList.get(position) * 1000), 1000) {
                 @Override
                 public void onTick(long l) {
-                    Logger.e("CPDelay", mDelayList.get(position).intValue() + " - " + l);
                 }
 
                 @Override
                 public void onFinish() {
                     if (transition == Geofence.GEOFENCE_TRANSITION_ENTER || transition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-                        List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
-                        if (channelId != null && subscriptionId != null) {
+                        List<Geofence> triggeringGeofence = geofencingEvent.getTriggeringGeofences();
+                        if (channelId != null && subscriptionId != null && position < triggeringGeofence.size()) {
                             JSONObject jsonBody = new JSONObject();
                             try {
-                                jsonBody.put("geoFenceId", triggeringGeofences.get(position).getRequestId());
+                                jsonBody.put("geoFenceId", triggeringGeofence.get(position).getRequestId());
                                 jsonBody.put("channelId", channelId);
                                 jsonBody.put("subscriptionId", subscriptionId);
                                 jsonBody.put("state", transitionState);
-
                             } catch (JSONException e) {
                                 Logger.e("CPJSONException", "Error generating geo-fence json", e);
                             }
@@ -112,10 +108,8 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                         position += 1;
                         countDownCalling(geofencingEvent);
                     }
-
                 }
             }.start();
         }
     }
-
 }
