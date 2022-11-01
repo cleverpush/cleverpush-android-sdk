@@ -369,7 +369,7 @@ public class AppBannerModule {
      * App Banner Version Filter
      */
     private boolean appVersionFilter(boolean allowed, Banner banner) {
-        if (this.getCurrentActivity() == null) {
+        if (this.getCurrentActivity() != null) {
             return allowed;
         }
         try {
