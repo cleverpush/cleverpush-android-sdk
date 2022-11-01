@@ -360,7 +360,9 @@ public class AppBannerModule {
             }
         }
 
-        allowed = appVersionFilter(allowed, banner);
+        if (allowed) {
+            allowed = appVersionFilter(allowed, banner);
+        }
 
         return allowed;
     }
@@ -369,8 +371,8 @@ public class AppBannerModule {
      * App Banner Version Filter
      */
     private boolean appVersionFilter(boolean allowed, Banner banner) {
-        if (this.getCurrentActivity() != null) {
-            return allowed;
+        if (this.getCurrentActivity() == null) {
+            return !allowed;
         }
         try {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
