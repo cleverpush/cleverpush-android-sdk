@@ -284,7 +284,7 @@ public class AppBannerModule {
     }
 
     boolean isBannerTargetingAllowed(Banner banner) {
-        if (banner == null) {
+        if (banner == null || this.getCurrentActivity() == null) {
             return false;
         }
 
@@ -361,7 +361,7 @@ public class AppBannerModule {
         }
 
         if (allowed) {
-            allowed = appVersionFilter(allowed, banner);
+            allowed = appVersionFilter(true, banner);
         }
 
         return allowed;
@@ -371,9 +371,6 @@ public class AppBannerModule {
      * App Banner Version Filter
      */
     private boolean appVersionFilter(boolean allowed, Banner banner) {
-        if (this.getCurrentActivity() == null) {
-            return !allowed;
-        }
         try {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
             String versionName = pInfo.versionName;

@@ -468,7 +468,8 @@ public class CleverPush {
                     this.initFeatures();
                 }
 
-                if (this.appBannerModule != null) {
+                Logger.d("initSession", "appBannerModule" + this.getCurrentActivity());
+                if (this.appBannerModule != null && this.getCurrentActivity() != null) {
                     this.appBannerModule.initSession(channelId);
                 }
 
