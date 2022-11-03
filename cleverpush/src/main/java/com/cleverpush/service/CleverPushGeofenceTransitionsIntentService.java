@@ -1,5 +1,7 @@
 package com.cleverpush.service;
 
+import static com.cleverpush.Constants.GEOFENCE_ENTER_STATE;
+import static com.cleverpush.Constants.GEOFENCE_EXIT_STATE;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.app.IntentService;
@@ -8,10 +10,10 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
-import com.cleverpush.util.Logger;
-
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.Constants;
+import com.cleverpush.util.Logger;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
@@ -31,7 +33,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-//        Logger.d("onHandleIntent","onHandleIntent");
+
         GeofencingEvent event = GeofencingEvent.fromIntent(intent);
         if (event.hasError()) {
             Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
@@ -42,29 +44,25 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 
         String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
         String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        String transitionState = event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? "enter" : "exit";
-        Logger.d("transmission", String.valueOf(event.getGeofenceTransition()));
-
-
-//        Logger.d(TAG, "Geofence Transition Details: " + getGeofenceTransitionDetails(event) + " " + transitionState + " subscription: " + subscriptionId + " channel " + channelId);
+        String transitionState = event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? GEOFENCE_ENTER_STATE : GEOFENCE_EXIT_STATE;
 
         if (channelId != null && subscriptionId != null) {
-//			for (Geofence geofence : event.getTriggeringGeofences()) {
-            JSONObject jsonBody = new JSONObject();
-            try {
-//					jsonBody.put("geoFenceId", geofence.getRequestId());
-                jsonBody.put("geoFenceId", "geofence.getRequestId()");
-                jsonBody.put("channelId", channelId);
-                jsonBody.put("subscriptionId", subscriptionId);
-                jsonBody.put("state", transitionState);
+            for (Geofence geofence : event.getTriggeringGeofences()) {
+                JSONObject jsonBody = new JSONObject();
+                try {
+                    jsonBody.put("geoFenceId", geofence.getRequestId());
+                    jsonBody.put("geoFenceId", "geofence.getRequestId()");
+                    jsonBody.put("channelId", channelId);
+                    jsonBody.put("subscriptionId", subscriptionId);
+                    jsonBody.put("state", transitionState);
 
-                CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, null);
-            } catch (JSONException e) {
-                Logger.e(LOG_TAG, "Error generating geo-fence json", e);
+                    CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, null);
+                } catch (JSONException e) {
+                    Logger.e(LOG_TAG, "Error generating geo-fence json", e);
+                }
             }
         }
     }
-//	}
 
     private static String getGeofenceTransitionDetails(GeofencingEvent event) {
         String transitionString = GeofenceStatusCodes.getStatusCodeString(event.getGeofenceTransition());

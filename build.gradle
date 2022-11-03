@@ -3,7 +3,7 @@ buildscript {
         buildVersions = [
                 compileSdkVersion: 33,
         ]
-        androidGradlePluginVersion = '7.2.2'
+        androidGradlePluginVersion = '7.3.0'
         googleServicesGradlePluginVersion = '4.3.3'
         huaweiAgconnectVersion = '1.2.1.301'
         huaweiHmsPushVersion = '4.0.3.301'

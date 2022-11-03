@@ -72,7 +72,6 @@ import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
 import com.cleverpush.responsehandlers.UnsubscribeResponseHandler;
-import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
@@ -1034,17 +1033,6 @@ public class CleverPush {
                             .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
-                                    try {
-/*
-                                        LocationServices.GeofencingApi.addGeofences(
-                                                googleApiClient,
-                                                getGeofencingRequest(),
-                                                getGeofencePendingIntent()
-                                        );
-*/
-                                    } catch (SecurityException securityException) {
-                                        Logger.d("ex:", securityException.getMessage());
-                                    }
                                 }
                             })
                             .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
