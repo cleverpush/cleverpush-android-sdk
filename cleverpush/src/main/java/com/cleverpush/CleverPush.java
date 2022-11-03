@@ -956,7 +956,6 @@ public class CleverPush {
     /**
      * initialize Geo Fences
      */
-    @SuppressWarnings("deprecation")
     public void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = getGoogleApiClient();

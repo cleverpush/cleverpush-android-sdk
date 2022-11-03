@@ -4,6 +4,8 @@ import static com.cleverpush.Constants.COUNTDOWN_TIMER;
 import static com.cleverpush.Constants.COUNTDOWN_TIMER_INTERVAL;
 import static com.cleverpush.Constants.GEOFENCE_ENTER_STATE;
 import static com.cleverpush.Constants.GEOFENCE_EXIT_STATE;
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -65,10 +67,10 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                 }
             }
         });
-        countDownCalling(geofencingEvent);
+        geoFenceHandleTimer(geofencingEvent);
     }
 
-    void countDownCalling(GeofencingEvent geofencingEvent) {
+    void geoFenceHandleTimer(GeofencingEvent geofencingEvent) {
         if (geoFenceIndex != geoFenceDelayArray.size()) {
             countDownTimer = new CountDownTimer((long) (geoFenceDelayArray.get(geoFenceIndex) * COUNTDOWN_TIMER), COUNTDOWN_TIMER_INTERVAL) {
                 @Override
@@ -87,7 +89,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                                 jsonBody.put("subscriptionId", subscriptionId);
                                 jsonBody.put("state", transitionState);
                             } catch (JSONException e) {
-                                Logger.e("", "Error generating geo-fence json", e);
+                                Logger.e(LOG_TAG, "Error generating geo-fence json", e);
                             }
                             geoFenceTimeoutCompleted = true;
                             CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, new CleverPushHttpClient.ResponseHandler() {
@@ -110,7 +112,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                         geoFenceTimeoutCompleted = false;
                         countDownTimer.cancel();
                         geoFenceIndex += 1;
-                        countDownCalling(geofencingEvent);
+                        geoFenceHandleTimer(geofencingEvent);
                     }
                 }
             }.start();
