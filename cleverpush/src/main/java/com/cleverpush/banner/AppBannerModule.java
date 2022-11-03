@@ -42,6 +42,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -282,6 +283,10 @@ public class AppBannerModule {
         }
 
         boolean allowed = true;
+
+        if (banner.getLanguages().size() > 0 && !banner.getLanguages().contains(Locale.getDefault().getLanguage())) {
+            allowed = false;
+        }
 
         if (banner.getSubscribedType() == BannerSubscribedType.Subscribed && !getCleverPushInstance().isSubscribed()) {
             allowed = false;
