@@ -67,6 +67,7 @@ public class AppBannerModule {
     private final Handler handler;
     private final SharedPreferences sharedPreferences;
     private final SharedPreferences.Editor editor;
+    private boolean trackingEnabled = true;
 
     private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
         this.channel = channel;
@@ -172,6 +173,11 @@ public class AppBannerModule {
 
     void sendBannerEvent(String event, Banner banner) {
         Logger.d(TAG, "sendBannerEvent: " + event);
+
+        if (!this.trackingEnabled) {
+          Logger.d(TAG, "sendBannerEvent: not sending event because tracking has been disabled.");
+          return;
+        }
 
         if (getCleverPushInstance().isSubscribed()) {
             getCleverPushInstance().getSubscriptionId(subscriptionId -> {
@@ -284,7 +290,7 @@ public class AppBannerModule {
 
         boolean allowed = true;
 
-        if (banner.getLanguages().size() > 0 && !banner.getLanguages().contains(Locale.getDefault().getLanguage())) {
+        if (banner.getLanguages() != null && banner.getLanguages().size() > 0 && !banner.getLanguages().contains(Locale.getDefault().getLanguage())) {
             allowed = false;
         }
 
@@ -696,6 +702,10 @@ public class AppBannerModule {
 
     public void disableBanners() {
         pendingBanners = new ArrayList<>();
+    }
+
+    public void setTrackingEnabled(boolean trackingEnabled) {
+        this.trackingEnabled = trackingEnabled;
     }
 
     @Override

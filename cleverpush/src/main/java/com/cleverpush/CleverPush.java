@@ -146,6 +146,7 @@ public class CleverPush {
     private AppBannerModule appBannerModule;
     private boolean appBannersDisabled = false;
     private boolean isAppOpen = false;
+    private Boolean pendingAppBannerTrackingEnabled = null;
 
     private String channelId;
     private String subscriptionId = null;
@@ -588,6 +589,11 @@ public class CleverPush {
         this.initGeoFences();
 
         appBannerModule = getAppBannerModule();
+
+        if (pendingAppBannerTrackingEnabled != null) {
+            appBannerModule.setTrackingEnabled(pendingAppBannerTrackingEnabled);
+            pendingAppBannerTrackingEnabled = null;
+        }
 
         if (getPendingAppBannerEvents() != null) {
             for (Map.Entry<String, String> entry : getPendingAppBannerEvents().entrySet()) {
@@ -2854,6 +2860,14 @@ public class CleverPush {
             return;
         }
         appBannerModule.disableBanners();
+    }
+
+    public void setAppBannerTrackingEnabled(boolean trackingEnabled) {
+        if (appBannerModule == null) {
+            pendingAppBannerTrackingEnabled = trackingEnabled;
+            return;
+        }
+        appBannerModule.setTrackingEnabled(trackingEnabled);
     }
 
     public boolean isChannelIdChanged(String storedChannelId, String storedSubscriptionId) {

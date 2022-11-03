@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.26.5
+* Support app banner language filters
+* Implement methods to optionally disable app banner statistic tracking
+
 ## 1.26.4
 * Updated proguard to prevent gson issue
 
