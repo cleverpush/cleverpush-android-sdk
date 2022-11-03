@@ -12,6 +12,7 @@ import com.example.cleverpush.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
+    String url = "https://cleverpush.com/en/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
