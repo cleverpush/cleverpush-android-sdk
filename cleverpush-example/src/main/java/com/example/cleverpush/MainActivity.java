@@ -42,6 +42,11 @@ public class MainActivity extends AppCompatActivity {
             binding.tvStatus.setText("Unsubscribe");
         });
 
+        binding.btnTopicsDialog.setOnClickListener(view -> {
+            CleverPush.getInstance(MainActivity.this).showTopicsDialog();
+            binding.tvStatus.setText("ShowTopicsDialog");
+        });
+
         binding.btnGetId.setOnClickListener(view -> {
             try {
                 CleverPush.getInstance(MainActivity.this).getSubscriptionId(this);

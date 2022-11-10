@@ -117,7 +117,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "1.26.2";
+    public static final String SDK_VERSION = "1.26.6";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -2361,8 +2361,12 @@ public class CleverPush {
             }
 
             dialogActivity.runOnUiThread(() -> {
-                final boolean hasDeSelectAllInitial = this.hasDeSelectAll();
+                if (!instance.hasSubscriptionTopics()) {
+                    instance.setSubscriptionTopics(setUpSelectedTopicIds(channelTopics).toArray(new String[0]));
+                }
+
                 Set<String> selectedTopics = new HashSet<>(instance.getSubscriptionTopics());
+                final boolean hasDeSelectAllInitial = this.hasDeSelectAll();
                 boolean showUnsubscribeCheckbox = channelConfig.optBoolean("topicsDialogShowUnsubscribe", false);
 
                 LinearLayout checkboxLayout = getTopicCheckboxLayout();

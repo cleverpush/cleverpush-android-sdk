@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.26.6
+* Fixed race condition in `showTopicsDialog` method
+
 ## 1.26.5
 * Support app banner language filters
 * Implement methods to optionally disable app banner statistic tracking
