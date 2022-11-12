@@ -1,11 +1,9 @@
 package com.cleverpush;
 
-import static com.cleverpush.Constants.LOG_TAG;
-
 import android.content.Context;
 import android.content.Intent;
-import com.cleverpush.util.Logger;
 
+import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
 public class NotificationOpenedProcessor {
@@ -35,11 +33,15 @@ public class NotificationOpenedProcessor {
         CleverPush cleverPush = CleverPush.getInstance(context);
 
         cleverPush.trackNotificationClicked(notificationId, subscriptionId);
-        cleverPush.fireNotificationOpenedListener(result);
+        Logger.i("CHECKLOG", "fireNotificationOpenedListener onCreate Before");
+
+        if (cleverPush.isIsNotificationOpenedCallback()){
+            cleverPush.fireNotificationOpenedListener(result);
+        }
 
         // open launcher activity
         boolean shouldStartActivity = cleverPush.notificationOpenShouldStartActivity();
-        Logger.d(LOG_TAG, "NotificationOpenedProcessor shouldStartActivity: " + shouldStartActivity);
+        Logger.d("CHECKLOG", "NotificationOpenedProcessor shouldStartActivity: " + shouldStartActivity);
 
         if (shouldStartActivity) {
             Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());

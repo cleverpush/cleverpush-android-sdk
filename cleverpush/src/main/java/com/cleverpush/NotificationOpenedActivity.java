@@ -14,9 +14,12 @@ public class NotificationOpenedActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Logger.d(LOG_TAG, "NotificationOpenedActivity onCreate");
+        Logger.i("CHECKLOG", "NotificationOpenedActivity onCreate Before");
         processIntent(NotificationOpenedActivity.this, getIntent());
-        finish();
+        if (CleverPush.getInstance(this).isIsNotificationOpenedCallback()) {
+            Logger.i("CHECKLOG", "isIsNotificationOpenedCallback L20");
+            finish();
+        }
     }
 
     @Override
@@ -24,7 +27,8 @@ public class NotificationOpenedActivity extends Activity {
         super.onNewIntent(intent);
         Logger.d(LOG_TAG, "NotificationOpenedActivity onNewIntent");
         processIntent(NotificationOpenedActivity.this, getIntent());
-        finish();
+        if (CleverPush.getInstance(this).isIsNotificationOpenedCallback()) {
+            finish();
+        }
     }
-
 }

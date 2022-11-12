@@ -67,7 +67,6 @@ public class NotificationDataProcessor {
                     cleverPush.fireNotificationReceivedListener(result);
                 }
             }
-
         } catch (Exception e) {
             Logger.e(LOG_TAG, "Error checking if application is in foreground", e);
         }
