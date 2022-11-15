@@ -34,6 +34,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.listener.ChannelAttributesListener;
@@ -44,6 +45,7 @@ import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.DeviceTokenListener;
+import com.cleverpush.listener.FinishActivity;
 import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.listener.LogListener;
 import com.cleverpush.listener.NotificationOpenedCallbackListener;
@@ -367,7 +369,20 @@ public class CleverPush {
      *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-     * @param notificationOpenedListener   callback for the notification opened
+       @param notificationOpenedListener   callback for the notification opened
+     * @param subscribedListener           callback for subscription
+     */
+    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
+        init(channelId, notificationReceivedListener, notificationOpenedListener,null, subscribedListener, true);
+    }
+
+    /**
+     * initialize CleverPush SDK for channel with notification received, notification opened callback and subscribed callback
+     *
+     * @param channelId                    channelID of the channel
+     * @param notificationReceivedListener callback for the notification received
+     @param notificationOpenedListener   callback for the notification opened
+      * @param notificationOpenedCallbackListener   callback for the notification opened callback
      * @param subscribedListener           callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable NotificationOpenedCallbackListener notificationOpenedCallbackListener, @Nullable final SubscribedListener subscribedListener) {
@@ -417,7 +432,7 @@ public class CleverPush {
             this.setNotificationOpenedListener(notificationOpenedListener);
         }
         if (notificationOpenedCallbackListener != null) {
-            this.setNotificationOpenedCallbackListener(notificationOpenedCallbackListener);
+            this.setNotificationOpenedCallbackListener(notificationOpenedCallbackListener, new FinishActivity());
         }
         if (subscribedListener != null) {
             this.setSubscribedListener(subscribedListener);
@@ -516,12 +531,12 @@ public class CleverPush {
         }
     }
 
-    public void setNotificationOpenedCallbackListener(@Nullable final NotificationOpenedCallbackListener notificationOpenedCallbackListener) {
+    public void setNotificationOpenedCallbackListener(@Nullable final NotificationOpenedCallbackListener notificationOpenedCallbackListener, FinishActivity finishActivity) {
         this.notificationOpenedCallbackListener = notificationOpenedCallbackListener;
 
         if (notificationOpenedCallbackListener != null) {
             for (NotificationOpenedResult result : getUnprocessedOpenedNotifications()) {
-                fireNotificationOpenedListener(result);
+                fireNotificationOpenedCallbackListener(result, finishActivity);
             }
             unprocessedOpenedNotifications.clear();
         }
@@ -1440,8 +1455,8 @@ public class CleverPush {
         return notificationReceivedListener != null && notificationReceivedListener instanceof NotificationReceivedCallbackListener;
     }
 
-    public boolean isIsNotificationOpenedCallback() {
-        return notificationOpenedCallbackListener != null;
+    public boolean isNotificationOpenedCallbackListenerUsed() {
+        return notificationOpenedCallbackListener != null && notificationOpenedCallbackListener instanceof NotificationOpenedCallbackListener;
     }
 
     public boolean fireNotificationReceivedListener(final NotificationOpenedResult openedResult) {
@@ -1453,12 +1468,29 @@ public class CleverPush {
     }
 
     public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
-        Logger.i("CHECKLOG", "fireNotificationOpenedListener 1");
+        if (openedResult.getNotification().getAppBanner() != null) {
+            getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
+                @Override
+                public void initialized() {
+                    showAppBanner(openedResult.getNotification().getAppBanner(), openedResult.getNotification().getId());
+                }
+            });
+        }
 
+        if (notificationOpenedListener == null) {
+            unprocessedOpenedNotifications.add(openedResult);
+            return false;
+        }
+
+        notificationOpenedListener.notificationOpened(openedResult);
+        return true;
+    }
+
+     public boolean fireNotificationOpenedCallbackListener(final NotificationOpenedResult openedResult, FinishActivity finishActivity) {
         if (notificationOpenedCallbackListener == null) {
             return false;
         }
-        notificationOpenedCallbackListener.notificationOpenedCallback(openedResult);
+        notificationOpenedCallbackListener.notificationOpenedCallback(openedResult, finishActivity);
         return true;
     }
 
@@ -2807,7 +2839,6 @@ public class CleverPush {
     }
 
     public boolean notificationOpenShouldStartActivity() {
-        Logger.i("CHECKLOG", "notificationOpenShouldStartActivity   " + !MetaDataUtils.getManifestMetaBoolean(getContext(), "com.cleverpush.notification_open_activity_disabled"));
         return !MetaDataUtils.getManifestMetaBoolean(getContext(), "com.cleverpush.notification_open_activity_disabled");
     }
 

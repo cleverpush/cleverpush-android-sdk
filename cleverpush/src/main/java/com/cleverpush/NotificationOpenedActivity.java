@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.cleverpush.listener.FinishActivity;
 import com.cleverpush.util.Logger;
 
 public class NotificationOpenedActivity extends Activity {
@@ -14,10 +15,8 @@ public class NotificationOpenedActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Logger.i("CHECKLOG", "NotificationOpenedActivity onCreate Before");
-        processIntent(NotificationOpenedActivity.this, getIntent());
-        if (CleverPush.getInstance(this).isIsNotificationOpenedCallback()) {
-            Logger.i("CHECKLOG", "isIsNotificationOpenedCallback L20");
+        processIntent(NotificationOpenedActivity.this, getIntent(), new FinishActivity());
+        if (!CleverPush.getInstance(this).isNotificationOpenedCallbackListenerUsed()) {
             finish();
         }
     }
@@ -25,9 +24,8 @@ public class NotificationOpenedActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        Logger.d(LOG_TAG, "NotificationOpenedActivity onNewIntent");
-        processIntent(NotificationOpenedActivity.this, getIntent());
-        if (CleverPush.getInstance(this).isIsNotificationOpenedCallback()) {
+        processIntent(NotificationOpenedActivity.this, getIntent(),new FinishActivity());
+        if (!CleverPush.getInstance(this).isNotificationOpenedCallbackListenerUsed()) {
             finish();
         }
     }
