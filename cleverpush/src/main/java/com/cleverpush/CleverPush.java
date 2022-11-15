@@ -328,8 +328,8 @@ public class CleverPush {
      * @param notificationReceivedListener callback for the notification received
      * @param notificationOpenedListener   callback for the notification opened
      */
-    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final NotificationOpenedCallbackListener notificationOpenedCallbackListener) {
-        init(channelId, notificationReceivedListener, notificationOpenedListener, notificationOpenedCallbackListener, null);
+    public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener) {
+        init(channelId, notificationReceivedListener, notificationOpenedListener, null);
     }
 
     /**
@@ -369,21 +369,21 @@ public class CleverPush {
      *
      * @param channelId                    channelID of the channel
      * @param notificationReceivedListener callback for the notification received
-       @param notificationOpenedListener   callback for the notification opened
+     * @param notificationOpenedListener   callback for the notification opened
      * @param subscribedListener           callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
-        init(channelId, notificationReceivedListener, notificationOpenedListener,null, subscribedListener, true);
+        init(channelId, notificationReceivedListener, notificationOpenedListener, null, subscribedListener, true);
     }
 
     /**
      * initialize CleverPush SDK for channel with notification received, notification opened callback and subscribed callback
      *
-     * @param channelId                    channelID of the channel
-     * @param notificationReceivedListener callback for the notification received
-     @param notificationOpenedListener   callback for the notification opened
-      * @param notificationOpenedCallbackListener   callback for the notification opened callback
-     * @param subscribedListener           callback for subscription
+     * @param channelId                          channelID of the channel
+     * @param notificationReceivedListener       callback for the notification received
+     * @param notificationOpenedListener         callback for the notification opened
+     * @param notificationOpenedCallbackListener callback for the notification opened callback
+     * @param subscribedListener                 callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable NotificationOpenedCallbackListener notificationOpenedCallbackListener, @Nullable final SubscribedListener subscribedListener) {
         init(channelId, notificationReceivedListener, notificationOpenedListener, notificationOpenedCallbackListener, subscribedListener, true);
@@ -1455,7 +1455,7 @@ public class CleverPush {
         return notificationReceivedListener != null && notificationReceivedListener instanceof NotificationReceivedCallbackListener;
     }
 
-    public boolean isNotificationOpenedCallbackListenerUsed() {
+    public boolean isNotificationOpenedCallbackListener() {
         return notificationOpenedCallbackListener != null && notificationOpenedCallbackListener instanceof NotificationOpenedCallbackListener;
     }
 
@@ -1486,7 +1486,7 @@ public class CleverPush {
         return true;
     }
 
-     public boolean fireNotificationOpenedCallbackListener(final NotificationOpenedResult openedResult, FinishActivity finishActivity) {
+    public boolean fireNotificationOpenedCallbackListener(final NotificationOpenedResult openedResult, FinishActivity finishActivity) {
         if (notificationOpenedCallbackListener == null) {
             return false;
         }

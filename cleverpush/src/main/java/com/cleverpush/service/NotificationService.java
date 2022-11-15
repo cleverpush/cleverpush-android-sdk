@@ -173,6 +173,7 @@ public class NotificationService {
         } else {
             notificationBuilder = new NotificationCompat.Builder(context);
         }
+
         if (notification.getSoundFilename() != null && !notification.getSoundFilename().isEmpty()) {
             Resources resources = context.getResources();
             String packageName = context.getPackageName();

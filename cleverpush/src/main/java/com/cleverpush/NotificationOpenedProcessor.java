@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.cleverpush.listener.FinishActivity;
-import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
 public class NotificationOpenedProcessor {
@@ -35,7 +34,7 @@ public class NotificationOpenedProcessor {
 
         cleverPush.trackNotificationClicked(notificationId, subscriptionId);
 
-        if (cleverPush.isNotificationOpenedCallbackListenerUsed()) {
+        if (cleverPush.isNotificationOpenedCallbackListener()) {
             cleverPush.fireNotificationOpenedCallbackListener(result, finishActivity);
         } else {
             cleverPush.fireNotificationOpenedListener(result);
