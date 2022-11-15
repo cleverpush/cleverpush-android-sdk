@@ -17,7 +17,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        Logger.i("CHECKLOG", "MainActivity block L42");
         binding.btnUnsubscribe.setOnClickListener(view -> {
             CleverPush.getInstance(MainActivity.this).unsubscribe();
             binding.tvStatus.setText("Unsubscribe");

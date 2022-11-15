@@ -1,7 +1,5 @@
 package com.example.cleverpush;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 import com.cleverpush.Notification;
 import com.cleverpush.service.NotificationExtenderService;
 
