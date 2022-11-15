@@ -278,7 +278,7 @@ public class CleverPush {
      * @param notificationReceivedListener callback for the notification received
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener) {
-        init(channelId, notificationReceivedListener, null, null, null);
+        init(channelId, notificationReceivedListener, null, null);
     }
 
     /**
@@ -288,7 +288,7 @@ public class CleverPush {
      * @param notificationOpenedListener callback for the notification opened
      */
     public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener) {
-        init(channelId, null, notificationOpenedListener, null, null);
+        init(channelId, null, notificationOpenedListener, null);
     }
 
     /**
@@ -340,7 +340,7 @@ public class CleverPush {
      * @param subscribedListener           callback for subscription
      */
     public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
-        init(channelId, notificationReceivedListener, null, null, subscribedListener);
+        init(channelId, notificationReceivedListener, null, subscribedListener);
     }
 
     /**
@@ -350,8 +350,8 @@ public class CleverPush {
      * @param notificationOpenedListener callback for the notification opened
      * @param subscribedListener         callback for subscription
      */
-    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final NotificationOpenedCallbackListener notificationOpenedCallbackListener, @Nullable final SubscribedListener subscribedListener) {
-        init(channelId, null, notificationOpenedListener, notificationOpenedCallbackListener, subscribedListener);
+    public void init(String channelId, @Nullable final NotificationOpenedListener notificationOpenedListener, @Nullable final SubscribedListener subscribedListener) {
+        init(channelId, null, notificationOpenedListener, subscribedListener);
     }
 
     /**
