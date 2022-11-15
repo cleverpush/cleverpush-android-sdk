@@ -34,6 +34,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.listener.ChannelAttributesListener;
@@ -2838,7 +2839,6 @@ public class CleverPush {
     }
 
     public boolean notificationOpenShouldStartActivity() {
-        Logger.i("CHECKLOG", "notificationOpenShouldStartActivity   " + !MetaDataUtils.getManifestMetaBoolean(getContext(), "com.cleverpush.notification_open_activity_disabled"));
         return !MetaDataUtils.getManifestMetaBoolean(getContext(), "com.cleverpush.notification_open_activity_disabled");
     }
 
