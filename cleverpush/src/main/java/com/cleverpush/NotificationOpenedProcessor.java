@@ -34,7 +34,7 @@ public class NotificationOpenedProcessor {
 
         cleverPush.trackNotificationClicked(notificationId, subscriptionId);
 
-        if (cleverPush.isNotificationOpenedCallbackListener()) {
+        if (cleverPush.isUsingNotificationOpenedCallbackListener()) {
             cleverPush.fireNotificationOpenedCallbackListener(result, finishActivity);
         } else {
             cleverPush.fireNotificationOpenedListener(result);

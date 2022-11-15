@@ -252,16 +252,6 @@ public class CleverPush {
     }
 
     /**
-     * initialize CleverPush SDK with notification opened callback
-     *
-     * @param notificationOpenedCallbackListener callback for the notification opened
-     */
-    public void init(@Nullable final NotificationOpenedCallbackListener notificationOpenedCallbackListener) {
-        String channelId = MetaDataUtils.getChannelId(CleverPush.context);
-        init(channelId, null, null, notificationOpenedCallbackListener, null);
-    }
-
-    /**
      * initialize CleverPush SDK with subscribed callback
      *
      * @param subscribedListener callback for subscription
@@ -318,7 +308,7 @@ public class CleverPush {
      * @param subscribedListener           callback for subscription
      */
     public void init(@Nullable final NotificationReceivedListenerBase notificationReceivedListener, @Nullable final SubscribedListener subscribedListener) {
-        init(null, notificationReceivedListener, null, null, subscribedListener);
+        init(null, notificationReceivedListener, null, subscribedListener);
     }
 
     /**
@@ -1455,7 +1445,7 @@ public class CleverPush {
         return notificationReceivedListener != null && notificationReceivedListener instanceof NotificationReceivedCallbackListener;
     }
 
-    public boolean isNotificationOpenedCallbackListener() {
+    public boolean isUsingNotificationOpenedCallbackListener() {
         return notificationOpenedCallbackListener != null && notificationOpenedCallbackListener instanceof NotificationOpenedCallbackListener;
     }
 

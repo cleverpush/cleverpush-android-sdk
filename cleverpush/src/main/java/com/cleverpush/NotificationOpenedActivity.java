@@ -14,7 +14,7 @@ public class NotificationOpenedActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         processIntent(NotificationOpenedActivity.this, getIntent(), new FinishActivity());
-        if (!CleverPush.getInstance(this).isNotificationOpenedCallbackListener()) {
+        if (!CleverPush.getInstance(this).isUsingNotificationOpenedCallbackListener()) {
             finish();
         }
     }
@@ -23,7 +23,7 @@ public class NotificationOpenedActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         processIntent(NotificationOpenedActivity.this, getIntent(), new FinishActivity());
-        if (!CleverPush.getInstance(this).isNotificationOpenedCallbackListener()) {
+        if (!CleverPush.getInstance(this).isUsingNotificationOpenedCallbackListener()) {
             finish();
         }
     }
