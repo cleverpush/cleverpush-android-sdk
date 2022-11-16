@@ -3,12 +3,12 @@ package com.cleverpush;
 import android.content.Context;
 import android.content.Intent;
 
-import com.cleverpush.listener.FinishActivity;
+import com.cleverpush.listener.AppActivity;
 import com.google.gson.Gson;
 
 public class NotificationOpenedProcessor {
 
-    public static void processIntent(Context context, Intent intent, FinishActivity finishActivity) {
+    public static void processIntent(Context context, Intent intent, AppActivity finishActivity) {
         CleverPush.setAppContext(context);
 
         Gson gson = new Gson();
@@ -35,9 +35,7 @@ public class NotificationOpenedProcessor {
         cleverPush.trackNotificationClicked(notificationId, subscriptionId);
 
         if (cleverPush.isUsingNotificationOpenedCallbackListener()) {
-            cleverPush.fireNotificationOpenedCallbackListener(result, finishActivity);
-        } else {
-            cleverPush.fireNotificationOpenedListener(result);
+            cleverPush.fireNotificationOpenedListener(result, finishActivity);
         }
 
         // open launcher activity

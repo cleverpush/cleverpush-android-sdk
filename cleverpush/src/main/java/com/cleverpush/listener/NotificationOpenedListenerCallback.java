@@ -2,7 +2,6 @@ package com.cleverpush.listener;
 
 import com.cleverpush.NotificationOpenedResult;
 
-public interface NotificationOpenedListener {
+public interface NotificationOpenedListenerCallback {
     void notificationOpened(NotificationOpenedResult result, AppActivity finishActivity);
 }
-
