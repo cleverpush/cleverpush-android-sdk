@@ -116,7 +116,7 @@ public class InboxView extends LinearLayout implements OnItemClickListener {
         } else if (getCleverPushInstance().getNotificationOpenedListener() != null) {
             NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
             notificationOpenedResult.setNotification(notificationArrayList.get(position));
-            getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult,new AppActivity());
+            getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult, new AppActivity());
         }
 
         notificationArrayList.get(position).setRead(true);
