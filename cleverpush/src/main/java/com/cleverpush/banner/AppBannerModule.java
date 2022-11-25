@@ -175,8 +175,8 @@ public class AppBannerModule {
         Logger.d(TAG, "sendBannerEvent: " + event);
 
         if (!this.trackingEnabled) {
-          Logger.d(TAG, "sendBannerEvent: not sending event because tracking has been disabled.");
-          return;
+            Logger.d(TAG, "sendBannerEvent: not sending event because tracking has been disabled.");
+            return;
         }
 
         if (getCleverPushInstance().isSubscribed()) {
@@ -343,19 +343,18 @@ public class AppBannerModule {
         }
 
         if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
-            allowed = false;
             for (HashMap<String, String> attribute : banner.getAttributes()) {
                 String attributeId = attribute.get("id");
-                String compareAttributeValue = attribute.get("value");
-                String fromVersion = attribute.get("fromVersion");
-                String toVersion = attribute.get("toVersion");
+                String compareAttributeValue = attribute.get("value") != null ? attribute.get("value") : "";
+                String fromValue = attribute.get("fromValue") != null ? attribute.get("fromValue") : "";
+                String toValue = attribute.get("toValue") != null ? attribute.get("toValue") : "";
                 String relationString = attribute.get("relation");
                 if (relationString == null) {
                     relationString = "equals";
                 }
                 String attributeValue = (String) getCleverPushInstance().getSubscriptionAttribute(attributeId);
-                if (this.checkRelationFilter(true, CheckFilterRelation.fromString(relationString), compareAttributeValue, attributeValue, fromVersion, toVersion)) {
-                    allowed = true;
+                if (!this.checkRelationFilter(allowed, CheckFilterRelation.fromString(relationString), attributeValue, compareAttributeValue, fromValue, toValue)) {
+                    allowed = false;
                     break;
                 }
             }
@@ -376,7 +375,7 @@ public class AppBannerModule {
         try {
             PackageInfo pInfo = this.getCurrentActivity().getPackageManager().getPackageInfo(this.getCurrentActivity().getPackageName(), 0);
             String versionName = pInfo.versionName;
-            return this.checkRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName, banner.getAppVersionFilterValue(), banner.getFromVersion(), banner.getToVersion());
+            return this.checkAppVersionRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName, banner.getAppVersionFilterValue(), banner.getFromVersion(), banner.getToVersion());
         } catch (Exception e) {
             Logger.e(TAG, "Error checking app version filter", e);
         }
@@ -384,7 +383,54 @@ public class AppBannerModule {
         return allowed;
     }
 
-    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String appVersion, String compareValue, String fromVersion, String toVersion) {
+    private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String compareValue, String attributeValue, String fromValue, String toValue) {
+        if (relation == null) {
+            return allowed;
+        }
+        try {
+            if (allowed && relation.equals(CheckFilterRelation.Equals)) {
+                if (!compareValue.equals(attributeValue)) {
+                    allowed = false;
+                }
+            }
+
+            if (allowed && relation.equals(CheckFilterRelation.NotEqual)) {
+                if (compareValue.equals(attributeValue)) {
+                    allowed = false;
+                }
+            }
+
+            if (allowed && relation.equals(CheckFilterRelation.GreaterThan)) {
+                if (Double.parseDouble(compareValue) < (Double.parseDouble(attributeValue))) {
+                    allowed = false;
+                }
+            }
+
+            if (allowed && relation.equals(CheckFilterRelation.LessThan)) {
+                if (Double.parseDouble(compareValue) > (Double.parseDouble(attributeValue))) {
+                    allowed = false;
+                }
+            }
+
+            if (allowed && relation.equals(CheckFilterRelation.Contains)) {
+                if (!compareValue.contains(attributeValue)) {
+                    allowed = false;
+                }
+            }
+
+            if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
+                if (compareValue.contains(attributeValue)) {
+                    allowed = false;
+                }
+            }
+        } catch (Exception e) {
+            Logger.e(TAG, "Error checking app version filter", e);
+        }
+
+        return allowed;
+    }
+
+    private boolean checkAppVersionRelationFilter(boolean allowed, CheckFilterRelation relation, String appVersion, String compareValue, String fromVersion, String toVersion) {
         VersionComparator vc = new VersionComparator();
 
         VersionComparison result = vc.compare(appVersion, compareValue);

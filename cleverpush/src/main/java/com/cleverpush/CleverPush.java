@@ -168,6 +168,7 @@ public class CleverPush {
 
     private boolean incrementBadge = false;
     private boolean autoClearBadge = false;
+    public  boolean isShowDraft = false;
     private boolean ignoreDisabledNotificationPermission = false;
     private boolean keepTargetingDataOnUnsubscribe = false;
 
@@ -1913,7 +1914,6 @@ public class CleverPush {
 
                 Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
                 subscriptionAttributes.put(attributeId, value);
-
                 CleverPushHttpClient.post("/subscription/attribute", jsonBody, new SetSubscriptionAttributeResponseHandler().getResponseHandler(subscriptionAttributes));
             }
         })).start());
@@ -2778,6 +2778,10 @@ public class CleverPush {
         this.autoClearBadge = autoClearBadge;
     }
 
+    public void setAppBannerDraftsEnabled(boolean isShowDraft) {
+        this.isShowDraft = isShowDraft;
+    }
+
     public boolean getAutoClearBadge() {
         return this.autoClearBadge;
     }
@@ -2939,7 +2943,7 @@ public class CleverPush {
     }
 
     public AppBannerModule getAppBannerModule() {
-        return AppBannerModule.init(channelId, this.developmentMode, getSharedPreferences(getContext()), getSharedPreferences(getContext()).edit());
+        return AppBannerModule.init(channelId, this.isShowDraft, getSharedPreferences(getContext()), getSharedPreferences(getContext()).edit());
     }
 
     public Activity getCurrentActivity() {
