@@ -386,8 +386,6 @@ public class AppBannerModule {
         if (relation == null) {
             return allowed;
         }
-        fromValue = "1.0";
-        toValue = "1.5";
         try {
             if (allowed && relation.equals(CheckFilterRelation.Equals)) {
                 if (!compareValue.equals(attributeValue)) {
@@ -424,16 +422,6 @@ public class AppBannerModule {
                     allowed = false;
                 }
             }
-
-/*
-            if (allowed && relation.equals(CheckFilterRelation.Between)) {
-                if (Double.parseDouble(attributeValue) <= Double.parseDouble(fromValue)
-                        && Double.parseDouble(attributeValue) >= Double.parseDouble(toValue)) {
-                    allowed = false;
-                }
-            }
-*/
-
         } catch (Exception e) {
             Logger.e(TAG, "Error checking app version filter", e);
         }
