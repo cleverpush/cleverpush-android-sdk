@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.26.7
+* Fixed app banner attribute targeting
+* Added new method to support showing app banner drafts: `setAppBanerDraftsEnabled`
+
 ## 1.26.6
 * Fixed race condition in `showTopicsDialog` method
 
