@@ -175,6 +175,7 @@ public class AppBannerModule {
         Logger.d(TAG, "sendBannerEvent: " + event);
 
         if (!this.trackingEnabled) {
+            Logger.d(TAG, "sendBannerEvent: not sending event because tracking has been disabled.");
             return;
         }
 
