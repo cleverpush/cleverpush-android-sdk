@@ -11,4 +11,8 @@ public interface Constants {
     String ACTION_REQUEST_DEVICE_ID = "com.cleverpush.REQUEST_DEVICE_ID";
     String EXTRA_DEVICE_ID = "deviceId";
     String EXTRA_FULL_PACKAGE_NAME = "fullPackageName";
+    Integer COUNTDOWN_TIMER = 1000;
+    Integer COUNTDOWN_TIMER_INTERVAL = 1000;
+    String GEOFENCE_ENTER_STATE = "enter";
+    String GEOFENCE_EXIT_STATE = "exit";
 }

@@ -3,7 +3,6 @@ package com.example.cleverpush;
 import static com.cleverpush.CleverPushHttpClient.BASE_URL;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,7 +10,6 @@ import androidx.databinding.DataBindingUtil;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.listener.NotificationReceivedListener;
-import com.cleverpush.util.Logger;
 import com.example.cleverpush.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
@@ -22,6 +20,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
+        CleverPush.getInstance(this).requestLocationPermission();
+        CleverPush.getInstance(this).initGeoFences();
+
+        CleverPush.getInstance(this).enableDevelopmentMode();
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
         CleverPush.getInstance(this).subscribe();
         CleverPush.getInstance(this).init(getString(R.string.channel_id),

@@ -72,7 +72,6 @@ import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
 import com.cleverpush.responsehandlers.UnsubscribeResponseHandler;
-import com.cleverpush.service.CleverPushGeofenceTransitionsIntentService;
 import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
@@ -84,8 +83,11 @@ import com.cleverpush.util.NotificationCategorySetUp;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.huawei.hms.api.HuaweiApiAvailability;
@@ -132,7 +134,7 @@ public class CleverPush {
     private TopicsChangedListener topicsChangedListener;
     private AppBannerOpenedListener appBannerOpenedListener;
     private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
-    private Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
+    private static Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
     private final Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
     private SessionListener sessionListener;
     private WebViewClientListener webViewClientListener;
@@ -150,9 +152,9 @@ public class CleverPush {
 
     private String channelId;
     private String subscriptionId = null;
-    private JSONObject channelConfig = null;
+    private static JSONObject channelConfig = null;
     private boolean subscriptionInProgress = false;
-    private boolean initialized = false;
+    private static boolean initialized = false;
     private int brandingColor;
     private boolean pendingRequestLocationPermissionCall = false;
     private boolean pendingInitFeaturesCall = false;
@@ -195,6 +197,8 @@ public class CleverPush {
     private SubscribedCallbackListener pendingSubscribeCallbackListener = null;
 
     public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
+    private PendingIntent geofencePendingIntent;
+    private GeofencingClient geofencingClient;
 
     public CleverPush(@NonNull Context context) {
         if (context == null) {
@@ -212,6 +216,8 @@ public class CleverPush {
         if ((Application) getContext() != null) {
             ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) getContext(), sessionListener);
         }
+
+        geofencingClient = LocationServices.getGeofencingClient(context);
     }
 
     /**
@@ -950,12 +956,10 @@ public class CleverPush {
     /**
      * initialize Geo Fences
      */
-    @SuppressWarnings("deprecation")
-    void initGeoFences() {
+    public void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = getGoogleApiClient();
-
-            this.getChannelConfig(config -> {
+            getChannelConfig(config -> {
                 if (config != null) {
                     try {
                         JSONArray geoFenceArray = config.getJSONArray("geoFences");
@@ -1000,6 +1004,22 @@ public class CleverPush {
         return connectionResult -> Logger.d(LOG_TAG, "GoogleApiClient onConnectionFailed");
     }
 
+    private GeofencingRequest getGeofencingRequest() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        builder.addGeofences(geofenceList);
+        return builder.build();
+    }
+
+    private PendingIntent getGeofencePendingIntent() {
+        if (geofencePendingIntent != null) {
+            return geofencePendingIntent;
+        }
+        Intent intent = new Intent(CleverPush.context, GeofenceBroadcastReceiver.class);
+        geofencePendingIntent = PendingIntent.getBroadcast(CleverPush.context, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        return geofencePendingIntent;
+    }
+
     private GoogleApiClient.ConnectionCallbacks getConnectionCallbacks() {
         return new GoogleApiClient.ConnectionCallbacks() {
             @Override
@@ -1008,30 +1028,17 @@ public class CleverPush {
                 Logger.d(LOG_TAG, "GoogleApiClient onConnected");
 
                 if (geofenceList.size() > 0) {
-                    Logger.d(LOG_TAG, "initing geofences " + geofenceList.toString());
-
-                    GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-                    builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-                    builder.addGeofences(geofenceList);
-                    GeofencingRequest geofenceRequest = builder.build();
-
-                    Intent geofenceIntent = new Intent(CleverPush.context, CleverPushGeofenceTransitionsIntentService.class);
-                    // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling addGeofences()
-                    int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        flags |= PendingIntent.FLAG_IMMUTABLE;
-                    }
-                    PendingIntent geofencePendingIntent = PendingIntent.getService(CleverPush.context, 0, geofenceIntent, flags);
-
-                    try {
-                        LocationServices.GeofencingApi.addGeofences(
-                                googleApiClient,
-                                geofenceRequest,
-                                geofencePendingIntent
-                        );
-                    } catch (SecurityException securityException) {
-                        // Catch exception generated if the app does not use ACCESS_FINE_LOCATION permission.
-                    }
+                    geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                            .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                }
+                            })
+                            .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                }
+                            });
                 }
             }
 
@@ -1343,7 +1350,7 @@ public class CleverPush {
         return channelConfig;
     }
 
-    public void getChannelConfig(ChannelConfigListener listener) {
+    public static void getChannelConfig(ChannelConfigListener listener) {
         if (listener != null) {
             if (channelConfig == null && !initialized) {
                 getChannelConfigListeners.add(listener);
