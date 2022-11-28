@@ -12,7 +12,6 @@ import android.text.TextUtils;
 
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
-import com.cleverpush.Constants;
 import com.cleverpush.util.Logger;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
@@ -51,7 +50,6 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
                 JSONObject jsonBody = new JSONObject();
                 try {
                     jsonBody.put("geoFenceId", geofence.getRequestId());
-                    jsonBody.put("geoFenceId", "geofence.getRequestId()");
                     jsonBody.put("channelId", channelId);
                     jsonBody.put("subscriptionId", subscriptionId);
                     jsonBody.put("state", transitionState);
