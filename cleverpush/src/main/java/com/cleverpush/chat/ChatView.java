@@ -122,7 +122,7 @@ public class ChatView extends WebView {
         }).start();
     }
 
-    void init() {
+    public void init() {
         this.handler = new Handler();
         Context context = this.getContext();
 

@@ -64,7 +64,7 @@ public class InboxView extends LinearLayout implements OnItemClickListener {
         });
     }
 
-    void getNotifications(boolean combineWithApi) {
+    public void getNotifications(boolean combineWithApi) {
         getCleverPushInstance().getNotifications(combineWithApi, new NotificationsCallbackListener() {
             @Override
             public void ready(Set<Notification> notifications) {

@@ -616,7 +616,7 @@ public class CleverPush {
     /**
      * initialize the App review
      */
-    void initAppReview() {
+    public void initAppReview() {
         this.getChannelConfig(config -> {
             if (config != null && config.optBoolean("appReviewEnabled")) {
                 try {
@@ -652,7 +652,7 @@ public class CleverPush {
         });
     }
 
-    void showFiveStarsDialog(JSONObject config) {
+    public void showFiveStarsDialog(JSONObject config) {
         FiveStarsDialog dialog = new FiveStarsDialog(
                 getCurrentActivity(),
                 config.optString("appReviewEmail")
@@ -786,7 +786,7 @@ public class CleverPush {
         return outputMap;
     }
 
-    void checkTags(String urlStr, Map<String, ?> params) {
+    public void checkTags(String urlStr, Map<String, ?> params) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
 
         try {
@@ -950,7 +950,7 @@ public class CleverPush {
      * initialize Geo Fences
      */
     @SuppressWarnings("deprecation")
-    void initGeoFences() {
+    public void initGeoFences() {
         if (hasLocationPermission()) {
             googleApiClient = getGoogleApiClient();
 
@@ -987,7 +987,7 @@ public class CleverPush {
         }
     }
 
-    GoogleApiClient getGoogleApiClient() {
+    public GoogleApiClient getGoogleApiClient() {
         return new GoogleApiClient.Builder(CleverPush.context)
                 .addConnectionCallbacks(getConnectionCallbacks())
                 .addOnConnectionFailedListener(getOnConnectionFailedListener())
@@ -1065,7 +1065,7 @@ public class CleverPush {
         webView.setWebViewClient(new CleverPushWebViewClient(params, webViewClientListener, this));
     }
 
-    void trackSessionStart() {
+    public void trackSessionStart() {
         this.sessionVisits = 0;
         this.sessionStartedTimestamp = System.currentTimeMillis() / MILLISECONDS_PER_SECOND;
         this.waitForTrackingConsent(() -> this.getChannelConfig(config -> {
@@ -1097,7 +1097,7 @@ public class CleverPush {
         this.sessionVisits += 1;
     }
 
-    void trackSessionEnd() {
+    public void trackSessionEnd() {
         if (getSessionStartedTimestamp() == 0) {
             Logger.e(LOG_TAG, "Error tracking session end - session started timestamp is 0");
             return;
@@ -1151,7 +1151,7 @@ public class CleverPush {
         subscribe(false);
     }
 
-    private void subscribe(boolean newSubscription) {
+    public void subscribe(boolean newSubscription) {
         subscribe(newSubscription, null);
     }
 
@@ -1286,11 +1286,11 @@ public class CleverPush {
         }
     }
 
-    JSONObject getJsonObject() {
+    public JSONObject getJsonObject() {
         return new JSONObject();
     }
 
-    JSONObject getJsonObject(String jsonString) {
+    public JSONObject getJsonObject(String jsonString) {
         try {
             return new JSONObject(jsonString);
         } catch (JSONException exception) {
@@ -1655,7 +1655,7 @@ public class CleverPush {
         });
     }
 
-    Set<CustomAttribute> getAvailableAttributesFromConfig(JSONObject channelConfig) {
+    public Set<CustomAttribute> getAvailableAttributesFromConfig(JSONObject channelConfig) {
         Set<CustomAttribute> attributes = new HashSet<>();
         if (channelConfig != null && channelConfig.has("customAttributes")) {
             try {
@@ -2285,7 +2285,7 @@ public class CleverPush {
         CleverPushHttpClient.post("/channel/confirm-alert", jsonBody, null);
     }
 
-    void showPendingTopicsDialog() {
+    public void showPendingTopicsDialog() {
         this.getChannelConfig(config -> {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
             try {

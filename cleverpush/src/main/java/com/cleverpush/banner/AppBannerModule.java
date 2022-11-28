@@ -105,7 +105,7 @@ public class AppBannerModule {
         loadBanners(null, channel);
     }
 
-    void loadBanners(String notificationId, String channelId) {
+    public void loadBanners(String notificationId, String channelId) {
         if (isLoading()) {
             return;
         }
@@ -171,7 +171,7 @@ public class AppBannerModule {
         CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody, new SendBannerEventResponseHandler().getResponseHandler());
     }
 
-    void sendBannerEvent(String event, Banner banner) {
+    public void sendBannerEvent(String event, Banner banner) {
         Logger.d(TAG, "sendBannerEvent: " + event);
 
         if (!this.trackingEnabled) {
@@ -218,7 +218,7 @@ public class AppBannerModule {
         return sharedPreferences.getInt(CleverPushPreferences.APP_BANNER_SESSIONS, 0);
     }
 
-    void saveSessions() {
+    public void saveSessions() {
         editor.putInt(CleverPushPreferences.APP_BANNER_SESSIONS, sessions);
         editor.apply();
     }
@@ -264,7 +264,7 @@ public class AppBannerModule {
         }
     }
 
-    void startup() {
+    public void startup() {
         Logger.d(TAG, "startup");
 
         this.getBanners(banners -> {
@@ -273,7 +273,7 @@ public class AppBannerModule {
         });
     }
 
-    boolean isBannerTimeAllowed(Banner banner) {
+    public boolean isBannerTimeAllowed(Banner banner) {
         Date now = new Date();
         if (banner == null) {
             return false;
@@ -524,7 +524,7 @@ public class AppBannerModule {
         }
     }
 
-    void scheduleBanners() {
+    public void scheduleBanners() {
         if (getCleverPushInstance().isAppBannersDisabled()) {
             pendingBanners.addAll(getPopups());
             getPopups().removeAll(pendingBanners);
@@ -585,7 +585,7 @@ public class AppBannerModule {
         return new AppBannerPopup(getCurrentActivity(), banner);
     }
 
-    void showBanner(AppBannerPopup bannerPopup) {
+    public void showBanner(AppBannerPopup bannerPopup) {
         try {
             if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
                 Logger.d(TAG, "Skipping Banner because: A Banner is already on the screen");
@@ -674,7 +674,7 @@ public class AppBannerModule {
         return shownBanners.contains(id);
     }
 
-    void bannerIsShown(String id) {
+    public void bannerIsShown(String id) {
         if (getCurrentActivity() == null) {
             return;
         }
