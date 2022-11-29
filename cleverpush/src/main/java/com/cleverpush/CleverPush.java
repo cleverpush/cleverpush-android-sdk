@@ -170,7 +170,7 @@ public class CleverPush {
 
     private boolean incrementBadge = false;
     private boolean autoClearBadge = false;
-    public  boolean isShowDraft = false;
+    public boolean isShowDraft = false;
     private boolean ignoreDisabledNotificationPermission = false;
     private boolean keepTargetingDataOnUnsubscribe = false;
 
@@ -470,6 +470,8 @@ public class CleverPush {
 
                 if (this.appBannerModule != null && this.getCurrentActivity() != null) {
                     this.appBannerModule.initSession(channelId);
+                } else {
+                    Logger.e("LOG_TAG", "activity null: " + getCurrentActivity());
                 }
 
                 if (this.pendingPageViews.size() > 0) {
