@@ -470,8 +470,8 @@ public class CleverPush {
 
                 if (this.appBannerModule != null && this.getCurrentActivity() != null) {
                     this.appBannerModule.initSession(channelId);
-                } else {
-                    Logger.e("LOG_TAG", "activity null: " + getCurrentActivity());
+                } else if(this.getCurrentActivity() == null){
+                    Logger.e("LOG_TAG", "getCurrentActivity() is null");
                 }
 
                 if (this.pendingPageViews.size() > 0) {
