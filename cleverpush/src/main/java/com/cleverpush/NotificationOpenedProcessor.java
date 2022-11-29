@@ -1,14 +1,14 @@
 package com.cleverpush;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
-import com.cleverpush.listener.AppActivity;
 import com.google.gson.Gson;
 
 public class NotificationOpenedProcessor {
 
-    public static void processIntent(Context context, Intent intent, AppActivity finishActivity) {
+    public static void processIntent(Context context, Intent intent, Activity finishActivity) {
         CleverPush.setAppContext(context);
 
         Gson gson = new Gson();

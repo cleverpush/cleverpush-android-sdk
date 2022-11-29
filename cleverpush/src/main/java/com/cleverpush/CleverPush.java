@@ -35,7 +35,6 @@ import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.ActivityInitializedListener;
-import com.cleverpush.listener.AppActivity;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.listener.ChannelAttributesListener;
@@ -404,7 +403,7 @@ public class CleverPush {
             this.setNotificationReceivedListener(notificationReceivedListener);
         }
         if (notificationOpenedListener != null) {
-            this.setNotificationOpenedListener(notificationOpenedListener, new AppActivity());
+            this.setNotificationOpenedListener(notificationOpenedListener, new Activity());
         }
         if (subscribedListener != null) {
             this.setSubscribedListener(subscribedListener);
@@ -491,7 +490,7 @@ public class CleverPush {
         this.notificationReceivedListener = notificationReceivedListener;
     }
 
-    public void setNotificationOpenedListener(@Nullable final NotificationOpenedListener notificationOpenedListener, AppActivity finishActivity) {
+    public void setNotificationOpenedListener(@Nullable final NotificationOpenedListener notificationOpenedListener, Activity finishActivity) {
         this.notificationOpenedListener = notificationOpenedListener;
 
         // fire listeners for unprocessed open notifications
@@ -502,19 +501,6 @@ public class CleverPush {
             unprocessedOpenedNotifications.clear();
         }
     }
-
-/*
-    public void setNotificationOpenedCallbackListener(@Nullable final NotificationOpenedListenerCallback notificationOpenedCallbackListener, FinishActivity finishActivity) {
-        this.notificationOpenedListener = notificationOpenedListener;
-
-        if (notificationOpenedCallbackListener != null) {
-            for (NotificationOpenedResult result : getUnprocessedOpenedNotifications()) {
-                fireNotificationOpenedCallbackListener(result, finishActivity);
-            }
-            unprocessedOpenedNotifications.clear();
-        }
-    }
-*/
 
     public void setSubscribedListener(@Nullable final SubscribedListener subscribedListener) {
         this.subscribedListener = subscribedListener;
@@ -1461,7 +1447,7 @@ public class CleverPush {
         return true;
     }
 
-    public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult, AppActivity finishActivity) {
+    public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult, Activity finishActivity) {
         if (openedResult.getNotification().getAppBanner() != null) {
             getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
                 @Override
