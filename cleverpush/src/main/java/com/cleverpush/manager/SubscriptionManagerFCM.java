@@ -93,9 +93,9 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         try {
             Class<?> FirebaseInstanceIdClass = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
             Method getInstanceMethod = FirebaseInstanceIdClass.getMethod("getInstance");
-            Object instanceId = getInstanceMethod.invoke(null, null);
+            Object instanceId = getInstanceMethod.invoke(null);
             Method getTokenMethod = FirebaseInstanceIdClass.getMethod("getToken");
-            Task<String> tokenTask = (Task<String>) getTokenMethod.invoke(instanceId, null);
+            Task<String> tokenTask = (Task<String>) getTokenMethod.invoke(instanceId);
             return Tasks.await(tokenTask);
         } catch (ClassNotFoundException e) {
             exception = e;
