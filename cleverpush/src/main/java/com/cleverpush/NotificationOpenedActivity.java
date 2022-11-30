@@ -8,10 +8,20 @@ import android.os.Bundle;
 
 public class NotificationOpenedActivity extends Activity {
 
+    public static NotificationOpenedActivity notificationOpenActivity = null;
+
+    void setNotificationOpenActivity(NotificationOpenedActivity activity) {
+        if (NotificationOpenedActivity.notificationOpenActivity !=  null) {
+            return;
+        }
+        NotificationOpenedActivity.notificationOpenActivity = activity;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        processIntent(NotificationOpenedActivity.this, getIntent(), new Activity());
+        setNotificationOpenActivity(this);
+        processIntent(NotificationOpenedActivity.this, getIntent());
         if (!CleverPush.getInstance(this).isUsingNotificationOpenedCallbackListener()) {
             finish();
         }
@@ -20,7 +30,7 @@ public class NotificationOpenedActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        processIntent(NotificationOpenedActivity.this, getIntent(), new Activity());
+        processIntent(NotificationOpenedActivity.this, getIntent());
         if (!CleverPush.getInstance(this).isUsingNotificationOpenedCallbackListener()) {
             finish();
         }

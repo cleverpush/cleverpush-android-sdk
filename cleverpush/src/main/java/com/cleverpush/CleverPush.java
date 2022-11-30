@@ -496,7 +496,7 @@ public class CleverPush {
         // fire listeners for unprocessed open notifications
         if (this.notificationOpenedListener != null) {
             for (NotificationOpenedResult result : getUnprocessedOpenedNotifications()) {
-                fireNotificationOpenedListener(result, finishActivity);
+                fireNotificationOpenedListener(result);
             }
             unprocessedOpenedNotifications.clear();
         }
@@ -1447,7 +1447,7 @@ public class CleverPush {
         return true;
     }
 
-    public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult, Activity finishActivity) {
+    public boolean fireNotificationOpenedListener(final NotificationOpenedResult openedResult) {
         if (openedResult.getNotification().getAppBanner() != null) {
             getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
                 @Override
@@ -1463,7 +1463,7 @@ public class CleverPush {
             return false;
         }
 
-        notificationOpenedListener.notificationOpened(openedResult, finishActivity);
+        notificationOpenedListener.notificationOpened(openedResult, NotificationOpenedActivity.notificationOpenActivity);
         return true;
     }
 

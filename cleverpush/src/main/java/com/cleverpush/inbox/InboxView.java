@@ -1,6 +1,5 @@
 package com.cleverpush.inbox;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
@@ -16,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.Notification;
+import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.R;
 import com.cleverpush.listener.InitializeListener;
@@ -116,7 +116,7 @@ public class InboxView extends LinearLayout implements OnItemClickListener {
         } else if (getCleverPushInstance().getNotificationOpenedListener() != null) {
             NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
             notificationOpenedResult.setNotification(notificationArrayList.get(position));
-            getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult, new Activity());
+            getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult, NotificationOpenedActivity.notificationOpenActivity);
         }
 
         notificationArrayList.get(position).setRead(true);

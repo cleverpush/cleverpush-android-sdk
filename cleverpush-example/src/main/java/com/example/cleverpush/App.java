@@ -37,7 +37,7 @@ public class App extends Application {
                             startActivity(intent);
                         }
                         appActivity.finish();
-                    }, 20000);
+                    }, 15000);
                     System.out.println("Opened CleverPush Notification: " + result.getNotification().getUrl());
                 },
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId));
