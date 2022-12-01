@@ -47,9 +47,6 @@ class UnSubscribeResponseHandlerTest {
     @Mock
     SharedPreferences.Editor editor;
 
-    @Mock
-    Logger logger;
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
