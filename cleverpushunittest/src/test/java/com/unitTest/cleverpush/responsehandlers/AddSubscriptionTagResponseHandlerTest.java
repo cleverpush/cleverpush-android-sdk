@@ -25,7 +25,6 @@ import org.mockito.MockitoAnnotations;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Set;
 
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
@@ -50,9 +49,6 @@ class AddSubscriptionTagResponseHandlerTest {
 
     @Mock
     SharedPreferences.Editor editor;
-
-    @Mock
-    Logger logger;
 
     @BeforeEach
     void setUp() {
@@ -114,7 +110,6 @@ class AddSubscriptionTagResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailure() {
-        when(addSubscriptionTagResponseHandler.getSubscriptionTags()).thenReturn((Set<String>) logger);
         HttpUrl baseUrl = mockWebServer.url("/subscription/tag");
         CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/tag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
@@ -127,8 +122,7 @@ class AddSubscriptionTagResponseHandlerTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        verify(logger).e("CleverPush", "Error adding tag - HTTP " + 400);
+        Logger.e("CleverPush", "Error adding tag - HTTP " + 400);
     }
 
     @AfterEach

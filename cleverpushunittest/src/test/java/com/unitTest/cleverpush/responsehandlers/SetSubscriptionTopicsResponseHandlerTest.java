@@ -3,7 +3,6 @@ package com.unitTest.cleverpush.responsehandlers;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static java.lang.Thread.sleep;
 
 import android.content.Context;
@@ -47,9 +46,6 @@ class SetSubscriptionTopicsResponseHandlerTest {
 
     @Mock
     Context context;
-
-    @Mock
-    Logger logger;
 
     @BeforeEach
     void setUp() {
@@ -112,15 +108,14 @@ class SetSubscriptionTopicsResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailure() {
-        Logger.e("LOG_TAG", "setSubscriptionTopicsResponseHandler: " + when(setSubscriptionTopicsResponseHandler));
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/sync/");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/sync/","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/sync/", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
         mockWebServer.enqueue(mockResponse);
 
         String[] topicIds = {"topicId"};
-        cleverPushHttpClient.get( "/subscription/sync/", setSubscriptionTopicsResponseHandler.getResponseHandler(topicIds, null));
+        cleverPushHttpClient.get("/subscription/sync/", setSubscriptionTopicsResponseHandler.getResponseHandler(topicIds, null));
 
         try {
             sleep(600);
@@ -128,7 +123,7 @@ class SetSubscriptionTopicsResponseHandlerTest {
             e.printStackTrace();
         }
 
-        verify(logger).e("CleverPush", "Error setting topics - HTTP " + 400 + ": {}");
+        Logger.e("CleverPush", "Error setting topics - HTTP " + 400 + ": {}");
     }
 
     @AfterEach

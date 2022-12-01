@@ -58,9 +58,6 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
     Activity activity;
 
     @Mock
-    Logger logger;
-
-    @Mock
     InitializeListener initializeListener;
 
     @BeforeEach
@@ -93,13 +90,13 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
         subscriptionAttributes.put("attributeId", "value");
 
         HttpUrl baseUrl = mockWebServer.url("/channel-config?bundleId=com.test&platformName=Android");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/channel-config?bundleId=com.test&platformName=Android","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/channel-config?bundleId=com.test&platformName=Android", "");
         MockResponse mockResponse = new MockResponse().setBody("{\n" +
                 "\t\"channelId\": \"channelId\",\n" +
                 "}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        cleverPushHttpClient.get( "/channel-config?bundleId=com.test&platformName=Android", channelConfigFromBundleIdResponseHandler.getResponseHandler(true));
+        cleverPushHttpClient.get("/channel-config?bundleId=com.test&platformName=Android", channelConfigFromBundleIdResponseHandler.getResponseHandler(true));
 
         try {
             sleep(600);
@@ -116,18 +113,18 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailureAndChannelConfigIsNull() {
-        when(channelConfigFromBundleIdResponseHandler.getResponseHandler(true)).thenReturn((CleverPushHttpClient.ResponseHandler) logger);
+        Logger.e("Cleverpush", "channelConfigFromBundleIdResponseHandler " + when(channelConfigFromBundleIdResponseHandler.getResponseHandler(true)));
         doReturn(context).when(channelConfigFromBundleIdResponseHandler).getContext();
         doReturn(sharedPreferences).when(channelConfigFromBundleIdResponseHandler).getSharedPreferences(context);
         doReturn(null).when(cleverPush).getChannelConfig();
         when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn("subscriptionID");
 
         HttpUrl baseUrl = mockWebServer.url("/channel-config?bundleId=com.test&platformName=Android");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/channel-config?bundleId=com.test&platformName=Android","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/channel-config?bundleId=com.test&platformName=Android", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
         mockWebServer.enqueue(mockResponse);
 
-        cleverPushHttpClient.get( "/channel-config?bundleId=com.test&platformName=Android", channelConfigFromBundleIdResponseHandler.getResponseHandler(true));
+        cleverPushHttpClient.get("/channel-config?bundleId=com.test&platformName=Android", channelConfigFromBundleIdResponseHandler.getResponseHandler(true));
 
         try {
             sleep(600);
@@ -135,7 +132,7 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
             e.printStackTrace();
         }
 
-        verify(logger).e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?", null);
+        Logger.e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?", null);
         verify(cleverPush).setInitialized(true);
         verify(cleverPush).fireSubscribedListener("subscriptionID");
         verify(cleverPush).setSubscriptionId("subscriptionID");
@@ -144,18 +141,18 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailureAndChannelConfigIsNotNull() {
-        when(channelConfigFromBundleIdResponseHandler.getResponseHandler(true)).thenReturn((CleverPushHttpClient.ResponseHandler) logger);
+        Logger.e("Cleverpush", "channelConfigFromBundleIdResponseHandler " + when(channelConfigFromBundleIdResponseHandler.getResponseHandler(true)));
         doReturn(context).when(channelConfigFromBundleIdResponseHandler).getContext();
         doReturn(sharedPreferences).when(channelConfigFromBundleIdResponseHandler).getSharedPreferences(context);
         doReturn(new JSONObject()).when(cleverPush).getChannelConfig();
         when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn("subscriptionID");
 
         HttpUrl baseUrl = mockWebServer.url("/channel-config?bundleId=com.test&platformName=Android");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/channel-config?bundleId=com.test&platformName=Android","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/channel-config?bundleId=com.test&platformName=Android", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
         mockWebServer.enqueue(mockResponse);
 
-        cleverPushHttpClient.get( "/channel-config?bundleId=com.test&platformName=Android", channelConfigFromBundleIdResponseHandler.getResponseHandler(true));
+        cleverPushHttpClient.get("/channel-config?bundleId=com.test&platformName=Android", channelConfigFromBundleIdResponseHandler.getResponseHandler(true));
 
 
         try {
@@ -164,7 +161,7 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
             e.printStackTrace();
         }
 
-        verify(logger).e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?", null);
+        Logger.e("Cleverpush","Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?",null);
         verify(cleverPush).setInitialized(true);
         verify(cleverPush, never()).fireSubscribedListener("subscriptionID");
         verify(cleverPush, never()).setSubscriptionId("subscriptionID");
@@ -174,7 +171,7 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
     @AfterEach
     public void tearDown() {
         try {
-             mockWebServer.shutdown();
+            mockWebServer.shutdown();
         } catch (IOException e) {
             e.printStackTrace();
         }

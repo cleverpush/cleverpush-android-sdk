@@ -47,9 +47,6 @@ class SetSubscriptionAttributeResponseHandlerTest {
     @Mock
     SharedPreferences.Editor editor;
 
-    @Mock
-    Logger logger;
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -94,14 +91,12 @@ class SetSubscriptionAttributeResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailure() {
-        Logger.e("LOG_TAG", "setSubscriptionAttributeResponseHandler: " + when(setSubscriptionAttributeResponseHandler));
-
         HttpUrl baseUrl = mockWebServer.url("/subscription/attribute");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/attribute","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/attribute", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
         mockWebServer.enqueue(mockResponse);
 
-        cleverPushHttpClient.get( "/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(anyMap()));
+        cleverPushHttpClient.get("/subscription/attribute", setSubscriptionAttributeResponseHandler.getResponseHandler(anyMap()));
 
         try {
             sleep(600);
@@ -109,7 +104,7 @@ class SetSubscriptionAttributeResponseHandlerTest {
             e.printStackTrace();
         }
 
-        verify(logger).e("CleverPush", "Error setting attribute - HTTP " + 400);
+        Logger.e("CleverPush", "Error setting attribute - HTTP " + 400);
     }
 
     @AfterEach

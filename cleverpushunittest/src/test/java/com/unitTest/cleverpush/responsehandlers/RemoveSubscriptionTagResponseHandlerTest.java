@@ -49,9 +49,6 @@ class RemoveSubscriptionTagResponseHandlerTest {
     @Mock
     SharedPreferences.Editor editor;
 
-    @Mock
-    Logger logger;
-
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -115,11 +112,11 @@ class RemoveSubscriptionTagResponseHandlerTest {
         Logger.e("LOG_TAG", "removeSubscriptionTagResponseHandler: " + when(removeSubscriptionTagResponseHandler));
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/untag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
         mockWebServer.enqueue(mockResponse);
 
-        cleverPushHttpClient.get( "/subscription/untag", removeSubscriptionTagResponseHandler.getResponseHandler("tagId", removeTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
+        cleverPushHttpClient.get("/subscription/untag", removeSubscriptionTagResponseHandler.getResponseHandler("tagId", removeTagCompletedListener, 0, new HashSet<>(Arrays.asList("value"))));
 
         try {
             sleep(600);
@@ -127,7 +124,7 @@ class RemoveSubscriptionTagResponseHandlerTest {
             e.printStackTrace();
         }
 
-        verify(logger).e("CleverPush", "Error removing tag - HTTP " + 400);
+        Logger.e("CleverPush", "Error removing tag - HTTP " + 400);
     }
 
     @AfterEach

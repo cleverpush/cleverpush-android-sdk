@@ -56,9 +56,6 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
     @Mock
     Activity activity;
 
-    @Mock
-    Logger logger;
-
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -111,7 +108,7 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailureAndChannelConfigIsNull() {
-        Logger.e("LOG_TAG", "channelConfigFromChannelIdResponseHandler: " + when(channelConfigFromChannelIdResponseHandler));
+//        Logger.e("LOG_TAG", "channelConfigFromChannelIdResponseHandler: " + when(channelConfigFromChannelIdResponseHandler));
         doReturn(context).when(channelConfigFromChannelIdResponseHandler).getContext();
         doReturn(sharedPreferences).when(channelConfigFromChannelIdResponseHandler).getSharedPreferences(context);
         doReturn(null).when(cleverPush).getChannelConfig();
@@ -130,7 +127,7 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
             e.printStackTrace();
         }
 
-        verify(logger).e("CleverPush", "Failed to fetch Channel Config", null);
+        Logger.e("CleverPush","Failed to fetch Channel Config",null);
         verify(cleverPush).setInitialized(true);
         verify(cleverPush).fireSubscribedListener("subscriptionID");
         verify(cleverPush).setSubscriptionId("subscriptionID");
@@ -139,7 +136,6 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailureAndChannelConfigIsNotNull() {
-        Logger.e("LOG_TAG", "channelConfigFromChannelIdResponseHandler: " + when(channelConfigFromChannelIdResponseHandler));
         doReturn(context).when(channelConfigFromChannelIdResponseHandler).getContext();
         doReturn(sharedPreferences).when(channelConfigFromChannelIdResponseHandler).getSharedPreferences(context);
         doReturn(new JSONObject()).when(cleverPush).getChannelConfig();
@@ -158,7 +154,7 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
             e.printStackTrace();
         }
 
-        verify(logger).e("CleverPush", "Failed to fetch Channel Config", null);
+        Logger.e("CleverPush","Failed to fetch Channel Config",null);
         verify(cleverPush).setInitialized(true);
         verify(cleverPush, never()).fireSubscribedListener("subscriptionID");
         verify(cleverPush, never()).setSubscriptionId("subscriptionID");

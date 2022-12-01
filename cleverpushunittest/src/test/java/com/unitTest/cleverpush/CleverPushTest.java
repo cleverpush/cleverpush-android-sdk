@@ -6,7 +6,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -227,12 +226,12 @@ class CleverPushTest {
         doNothing().when(cleverPush).incrementAppOpens();
         doNothing().when(cleverPush).setUpNotificationCategoryGroups();
         when(context.getResources()).thenReturn(resources);
-//        when(notificationOpenedResult.getNotification()).thenReturn(notification);
-//        when(notification.getAppBanner()).thenReturn(null);
         Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
         unprocessedOpenedNotifications.add(notificationOpenedResult);
         doReturn(unprocessedOpenedNotifications).when(cleverPush).getUnprocessedOpenedNotifications();
         cleverPush.init(null, null, notificationOpenedListener, null, true);
+        when(notificationOpenedResult.getNotification().getAppBanner());
+        when(notificationOpenedResult.getNotification().getAppBanner()).thenReturn(notification.getChannelId());
         verify(cleverPush).fireNotificationOpenedListener(notificationOpenedResult);
     }
 
@@ -388,7 +387,7 @@ class CleverPushTest {
         doReturn(activity).when(cleverPush).getCurrentActivity();
         cleverPush.requestLocationPermission();
         assertThat(cleverPush.isPendingRequestLocationPermissionCall()).isFalse();
-        //verify(activityCompat).requestPermissions(activity,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 101);
+        verify(activity).requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 101);
     }
 
     @Test
@@ -521,15 +520,15 @@ class CleverPushTest {
         verify(cleverPush, never()).updateServerSessionStart();
     }
 
-//    @Test
-//    void tesTrackSessionEndWhenThereIsNoSessionStartTime() {
-//        when(cleverPush.getSessionStartedTimestamp()).thenReturn(0L);
-//
-//        cleverPush.trackSessionEnd();
-//
-//        verify(cleverPush).trackSessionEnd();
-//        verifyNoMoreInteractions(cleverPush);
-//    }
+    @Test
+    void tesTrackSessionEndWhenThereIsNoSessionStartTime() {
+        when(cleverPush.getSessionStartedTimestamp()).thenReturn(0L);
+
+        cleverPush.trackSessionEnd();
+
+        verify(cleverPush).trackSessionEnd();
+        verifyNoMoreInteractions(cleverPush);
+    }
 
     @Test
     void tesTrackSessionEndWhenThereIsConfigAndTrackAppStatisticsButNoSubscriptionID() {
@@ -1119,7 +1118,7 @@ class CleverPushTest {
 
 //        notifications = cleverPush.getNotifications();
 //        List<Notification> notificationList = new ArrayList<Notification>(notifications);
-
+//
 //        assertThat(notificationList.size()).isEqualTo(1);
 //        assertThat(notificationList.get(0).getChannelId()).isEqualTo("RfS4GzvnjzwXa9cqr");
     }
@@ -1166,17 +1165,18 @@ class CleverPushTest {
         verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
         verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
         verify(editor).apply();
+        verify(editor).commit();
     }
 
-//    @Test
-//    void testSubscribeWhenSubscriptionInProgress(){
-//        doReturn(true).when(cleverPush).isSubscriptionInProgress();
-//
-//        cleverPush.subscribe(false);
-//
-//        //verify(cleverPush).subscribe(false);
-//        verifyNoMoreInteractions(cleverPush);
-//    }
+    @Test
+    void testSubscribeWhenSubscriptionInProgress() {
+        doReturn(true).when(cleverPush).isSubscriptionInProgress();
+
+        cleverPush.subscribe(false);
+
+        verify(cleverPush).subscribe(false);
+        verifyNoMoreInteractions(cleverPush);
+    }
 
     @Test
     void testSubscribeWhenNewSubscriptionIdNull() {
@@ -1204,7 +1204,7 @@ class CleverPushTest {
             subscribedListener.onSuccess(null);
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(false);
@@ -1235,7 +1235,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1274,7 +1274,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1313,7 +1313,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1358,7 +1358,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1405,7 +1405,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1453,7 +1453,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1493,7 +1493,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1526,7 +1526,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1559,7 +1559,7 @@ class CleverPushTest {
             subscribedListener.onSuccess("subscriptionID");
             return null;
         }).when(subscriptionManager)
-                .subscribe(anyObject(), any(SubscribedCallbackListener.class));
+                .subscribe(any(), any(SubscribedCallbackListener.class));
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
 
         cleverPush.subscribe(true);
@@ -1646,8 +1646,8 @@ class CleverPushTest {
 
         Answer<Void> subscribedListenerAnswer = new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
-                SubscribedCallbackListener callback = (SubscribedCallbackListener) invocation.getArguments()[0];
-                callback.onSuccess("subscriptionId");
+                SubscribedListener callback = (SubscribedListener) invocation.getArguments()[0];
+                callback.subscribed("subscriptionId");
                 return null;
             }
         };
@@ -1733,8 +1733,8 @@ class CleverPushTest {
 
         Answer<Void> subscribedListenerAnswer = new Answer<Void>() {
             public Void answer(InvocationOnMock invocation) {
-                SubscribedCallbackListener callback = (SubscribedCallbackListener) invocation.getArguments()[0];
-                callback.onSuccess("subscriptionId");
+                SubscribedListener callback = (SubscribedListener) invocation.getArguments()[0];
+                callback.subscribed("subscriptionId");
                 return null;
             }
         };
@@ -1864,42 +1864,42 @@ class CleverPushTest {
         );
     }
 
-//    @Test
-//    void testShowTopicsDialogWhenThereIsNoJSONException(){
-//        final JSONObject[] responseJson = new JSONObject[1];
-//        doReturn(context).when(cleverPush).getContext();
-//        doReturn(resources).when(context).getResources();
-//
-//        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
-//            public Void answer(InvocationOnMock invocation) {
-//                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
-//                try {
-//                    JSONObject responseJson = new JSONObject("{\n" +
-//                            "\t\"confirmAlertHideChannelTopics\": false,\n" +
-//                            "\t\"channelTopics\": [\"topicId\"]\n" +
-//                            "}");
-//                    callback.ready(responseJson);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//                return null;
-//            }
-//        };
-//
-//        Answer<Void> runOnUiThreadAnswer = new Answer<Void>() {
-//            public Void answer(InvocationOnMock invocation) {
-//                Runnable callback = (Runnable) invocation.getArguments()[0];
-//                callback.run();
-//                return null;
-//            }
-//        };
-//
-//        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
-//        doAnswer(runOnUiThreadAnswer).when(activity).runOnUiThread(any(Runnable.class));
-//
-//        cleverPush.showTopicsDialog(activity, topicsDialogListener,1);
-//
-//    }
+    @Test
+    void testShowTopicsDialogWhenThereIsNoJSONException(){
+        final JSONObject[] responseJson = new JSONObject[1];
+        doReturn(context).when(cleverPush).getContext();
+        doReturn(resources).when(context).getResources();
+
+        Answer<Void> channelConfigListenerAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                ChannelConfigListener callback = (ChannelConfigListener) invocation.getArguments()[0];
+                try {
+                    JSONObject responseJson = new JSONObject("{\n" +
+                            "\t\"confirmAlertHideChannelTopics\": false,\n" +
+                            "\t\"channelTopics\": [\"topicId\"]\n" +
+                            "}");
+                    callback.ready(responseJson);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        Answer<Void> runOnUiThreadAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) {
+                Runnable callback = (Runnable) invocation.getArguments()[0];
+                callback.run();
+                return null;
+            }
+        };
+
+        doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
+        doAnswer(runOnUiThreadAnswer).when(activity).runOnUiThread(any(Runnable.class));
+
+        cleverPush.showTopicsDialog(activity, topicsDialogListener,1);
+
+    }
 
     @Test
     void testSetCheckboxListWhenThereIsNoTopicsDialogShowUnsubscribe() {

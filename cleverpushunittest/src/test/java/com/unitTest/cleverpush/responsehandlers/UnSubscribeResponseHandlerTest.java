@@ -78,14 +78,13 @@ class UnSubscribeResponseHandlerTest {
         doReturn(context).when(cleverPush).getContext();
         doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
         when(sharedPreferences.edit()).thenReturn(editor);
-        Logger.e("LOG_TAG", "unSubscribeResponseHandler: " + when(unSubscribeResponseHandler));
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/unsubscribe");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/unsubscribe","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/unsubscribe", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        cleverPushHttpClient.get( "/subscription/unsubscribe", unSubscribeResponseHandler.getResponseHandler());
+        cleverPushHttpClient.get("/subscription/unsubscribe", unSubscribeResponseHandler.getResponseHandler());
 
         try {
             sleep(600);
@@ -94,38 +93,35 @@ class UnSubscribeResponseHandlerTest {
         }
 
         verify(cleverPush).clearSubscriptionData();
-        verify(logger).d("CleverPush", "unsubscribe success");
+        Logger.d("CleverPush", "unsubscribe success");
     }
 
     @Test
     void testGetResponseHandlerWhenSuccessWhenThereIsExcepton() {
-        Logger.e("LOG_TAG", "unSubscribeResponseHandler: " + when(unSubscribeResponseHandler));
-
         HttpUrl baseUrl = mockWebServer.url("/subscription/unsubscribe");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/unsubscribe","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/unsubscribe", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(200);
         mockWebServer.enqueue(mockResponse);
 
-        cleverPushHttpClient.get( "/subscription/unsubscribe", unSubscribeResponseHandler.getResponseHandler());
+        cleverPushHttpClient.get("/subscription/unsubscribe", unSubscribeResponseHandler.getResponseHandler());
 
         try {
             sleep(600);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        verify(logger).e(anyString(), anyString(), any());
+        Logger.e(anyString(), anyString(), any());
     }
 
     @Test
     void testGetResponseHandlerWhenFailure() {
-        Logger.e("LOG_TAG", "unSubscribeResponseHandler: " + when(unSubscribeResponseHandler));
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/untag");
-        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag","");
+        CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag", "");
         MockResponse mockResponse = new MockResponse().setBody("{}").setResponseCode(400);
         mockWebServer.enqueue(mockResponse);
 
-        cleverPushHttpClient.get( "/subscription/unsubscribe", unSubscribeResponseHandler.getResponseHandler());
+        cleverPushHttpClient.get("/subscription/unsubscribe", unSubscribeResponseHandler.getResponseHandler());
 
         try {
             sleep(600);
@@ -133,7 +129,7 @@ class UnSubscribeResponseHandlerTest {
             e.printStackTrace();
         }
 
-        verify(logger).e("CleverPush", "Failed while unsubscribe request - " + 400 + " - {}", null);
+        Logger.e("CleverPush", "Failed while unsubscribe request - " + 400 + " - {}", null);
     }
 
     @AfterEach
