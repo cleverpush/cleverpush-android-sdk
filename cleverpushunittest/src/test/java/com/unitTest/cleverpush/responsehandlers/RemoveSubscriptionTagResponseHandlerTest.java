@@ -109,7 +109,6 @@ class RemoveSubscriptionTagResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailure() {
-        Logger.e("LOG_TAG", "removeSubscriptionTagResponseHandler: " + when(removeSubscriptionTagResponseHandler));
 
         HttpUrl baseUrl = mockWebServer.url("/subscription/untag");
         CleverPushHttpClient.BASE_URL = baseUrl.toString().replace("/subscription/untag", "");

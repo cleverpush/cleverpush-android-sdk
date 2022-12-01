@@ -113,7 +113,6 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailureAndChannelConfigIsNull() {
-        Logger.e("Cleverpush", "channelConfigFromBundleIdResponseHandler " + when(channelConfigFromBundleIdResponseHandler.getResponseHandler(true)));
         doReturn(context).when(channelConfigFromBundleIdResponseHandler).getContext();
         doReturn(sharedPreferences).when(channelConfigFromBundleIdResponseHandler).getSharedPreferences(context);
         doReturn(null).when(cleverPush).getChannelConfig();
@@ -141,7 +140,6 @@ class ChannelConfigFromBundleIdResponseHandlerTest {
 
     @Test
     void testGetResponseHandlerWhenFailureAndChannelConfigIsNotNull() {
-        Logger.e("Cleverpush", "channelConfigFromBundleIdResponseHandler " + when(channelConfigFromBundleIdResponseHandler.getResponseHandler(true)));
         doReturn(context).when(channelConfigFromBundleIdResponseHandler).getContext();
         doReturn(sharedPreferences).when(channelConfigFromBundleIdResponseHandler).getSharedPreferences(context);
         doReturn(new JSONObject()).when(cleverPush).getChannelConfig();

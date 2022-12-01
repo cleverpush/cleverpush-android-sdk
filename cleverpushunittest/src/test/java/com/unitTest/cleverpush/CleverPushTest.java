@@ -1896,7 +1896,7 @@ class CleverPushTest {
         doAnswer(channelConfigListenerAnswer).when(cleverPush).getChannelConfig(any(ChannelConfigListener.class));
         doAnswer(runOnUiThreadAnswer).when(activity).runOnUiThread(any(Runnable.class));
 
-//        cleverPush.showTopicsDialog(activity, topicsDialogListener,1);
+//      cleverPush.showTopicsDialog(activity, topicsDialogListener,1);
 
     }
 
@@ -1954,9 +1954,9 @@ class CleverPushTest {
 
         cleverPush.setupTopicParentCheckboxes(linearLayout, checkBox, channelTopics, true, 0, selectedTopics);
 
-//        verify(linearLayout).removeAllViews();
-//        verify(checkBox).setChecked(true);
-//        verify(linearLayout).addView(checkBox);
+//      verify(linearLayout).removeAllViews();
+//      verify(checkBox).setChecked(true);
+//      verify(linearLayout).addView(checkBox);
         cleverPush.setupTopicParentCheckboxes(linearLayout, checkBox, channelTopics, true, 0, selectedTopics);
     }
 
