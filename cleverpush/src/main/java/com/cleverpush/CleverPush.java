@@ -170,7 +170,7 @@ public class CleverPush {
 
     private boolean incrementBadge = false;
     private boolean autoClearBadge = false;
-    public boolean isShowDraft = false;
+    public  boolean isShowDraft = false;
     private boolean ignoreDisabledNotificationPermission = false;
     private boolean keepTargetingDataOnUnsubscribe = false;
 

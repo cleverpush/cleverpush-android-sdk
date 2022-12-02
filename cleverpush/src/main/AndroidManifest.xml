@@ -8,22 +8,15 @@
     <application>
         <activity
             android:name="com.cleverpush.NotificationOpenedActivity"
-            android:excludeFromRecents="true"
             android:exported="true"
             android:noHistory="true"
+            android:excludeFromRecents="true"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
-            <meta-data
-                android:name="com.cleverpush.notification_open_activity_disabled"
-                android:value="true" />
-
-        </activity>
-
-
-        <activity
-            android:name="com.cleverpush.PermissionActivity"
-            android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity android:name="com.cleverpush.PermissionActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="false" />
 
         <activity
             android:name=".stories.StoryDetailActivity"
