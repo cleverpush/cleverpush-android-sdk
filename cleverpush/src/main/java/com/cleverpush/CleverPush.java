@@ -468,8 +468,10 @@ public class CleverPush {
                     this.initFeatures();
                 }
 
-                if (this.appBannerModule != null) {
+                if (this.appBannerModule != null && this.getCurrentActivity() != null) {
                     this.appBannerModule.initSession(channelId);
+                } else if (this.getCurrentActivity() == null) {
+                    Logger.e("LOG_TAG", "getCurrentActivity() is null");
                 }
 
                 if (this.pendingPageViews.size() > 0) {
