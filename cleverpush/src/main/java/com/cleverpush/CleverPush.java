@@ -403,7 +403,7 @@ public class CleverPush {
             this.setNotificationReceivedListener(notificationReceivedListener);
         }
         if (notificationOpenedListener != null) {
-            this.setNotificationOpenedListener(notificationOpenedListener, new Activity());
+            this.setNotificationOpenedListener(notificationOpenedListener);
         }
         if (subscribedListener != null) {
             this.setSubscribedListener(subscribedListener);
@@ -490,7 +490,7 @@ public class CleverPush {
         this.notificationReceivedListener = notificationReceivedListener;
     }
 
-    public void setNotificationOpenedListener(@Nullable final NotificationOpenedListener notificationOpenedListener, Activity finishActivity) {
+    public void setNotificationOpenedListener(@Nullable final NotificationOpenedListener notificationOpenedListener) {
         this.notificationOpenedListener = notificationOpenedListener;
 
         // fire listeners for unprocessed open notifications
