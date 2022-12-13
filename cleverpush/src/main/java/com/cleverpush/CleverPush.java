@@ -119,7 +119,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "1.26.7";
+    public static final String SDK_VERSION = "1.26.8";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -461,7 +461,7 @@ public class CleverPush {
                 }
 
                 if (this.pendingRequestNotificationPermissionCall && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    this.requestNotificationPermission();
+                    this.requestNotificationPermission(this.getCurrentActivity());
                 }
 
                 if (this.pendingInitFeaturesCall) {
@@ -675,8 +675,8 @@ public class CleverPush {
                 .show();
     }
 
-    private void requestPermission(String permissionType, PermissionActivity.PermissionCallback callback) {
-        if (this.getCurrentActivity() == null || this.getCurrentActivity().getClass().equals(PermissionActivity.class)) {
+    private void requestPermission(Activity dialogActivity, String permissionType, PermissionActivity.PermissionCallback callback) {
+        if (dialogActivity == null || dialogActivity.getClass().equals(PermissionActivity.class)) {
             return;
         }
 
@@ -684,25 +684,26 @@ public class CleverPush {
 
         PermissionActivity.registerAsCallback(permissionType, callback);
 
-        Intent intent = new Intent(this.getCurrentActivity(), PermissionActivity.class);
+        Intent intent = new Intent(dialogActivity, PermissionActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         intent.putExtra(PermissionActivity.INTENT_EXTRA_PERMISSION_TYPE, permissionType);
-        this.getCurrentActivity().startActivity(intent);
+        dialogActivity.startActivity(intent);
     }
 
-    /**
-     * request for location permission
-     */
     public void requestLocationPermission() {
+      this.requestLocationPermission(getCurrentActivity());
+    }
+
+    public void requestLocationPermission(Activity dialogActivity) {
         if (this.hasLocationPermission()) {
             return;
         }
-        if (getCurrentActivity() == null) {
+        if (dialogActivity == null) {
             this.pendingRequestLocationPermissionCall = true;
             return;
         }
         this.pendingRequestLocationPermissionCall = false;
-        this.requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, new PermissionActivity.PermissionCallback() {
+        this.requestPermission(dialogActivity, Manifest.permission.ACCESS_FINE_LOCATION, new PermissionActivity.PermissionCallback() {
             @Override
             public void onGrant() {
                 if (geofenceList == null || geofenceList.size() == 0) {
@@ -721,16 +722,16 @@ public class CleverPush {
      * request for push notification
      */
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
-    public void requestNotificationPermission() {
+    public void requestNotificationPermission(Activity dialogActivity) {
         if (this.hasNotificationPermission()) {
             return;
         }
-        if (getCurrentActivity() == null) {
+        if (dialogActivity == null) {
             this.pendingRequestNotificationPermissionCall = true;
             return;
         }
         this.pendingRequestNotificationPermissionCall = false;
-        this.requestPermission(Manifest.permission.POST_NOTIFICATIONS, new PermissionActivity.PermissionCallback() {
+        this.requestPermission(dialogActivity, Manifest.permission.POST_NOTIFICATIONS, new PermissionActivity.PermissionCallback() {
             @Override
             public void onGrant() {
                 if (!ignoreDisabledNotificationPermission) {
@@ -1162,14 +1163,18 @@ public class CleverPush {
     }
 
     private void subscribe(boolean newSubscription) {
-        subscribe(newSubscription, null);
+        subscribe(newSubscription, null, getCurrentActivity());
     }
 
     public void subscribe(SubscribedCallbackListener subscribedCallbackListener) {
-        subscribe(false, subscribedCallbackListener);
+        subscribe(false, subscribedCallbackListener, getCurrentActivity());
     }
 
-    private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener) {
+    public void subscribe(SubscribedCallbackListener subscribedCallbackListener, Activity dialogActivity) {
+      subscribe(false, subscribedCallbackListener, dialogActivity);
+    }
+
+    private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener, Activity dialogActivity) {
         if (isSubscriptionInProgress()) {
             if (subscribedCallbackListener != null) {
                 subscribedCallbackListener.onFailure(new Exception("Subscription is already in progress"));
@@ -1182,7 +1187,7 @@ public class CleverPush {
                 this.pendingSubscribeCallbackListener = subscribedCallbackListener;
             }
 
-            this.requestNotificationPermission();
+            this.requestNotificationPermission(dialogActivity);
 
             if (!this.ignoreDisabledNotificationPermission) {
                 return;

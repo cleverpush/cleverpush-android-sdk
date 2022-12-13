@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.26.8
+* Added ability to specify custom `dialogActivity` in `subscribe` method
+* Improved app banner targeting behaviour
+
 ## 1.26.7
 * Fixed app banner attribute targeting
 * Added new method to support showing app banner drafts: `setAppBanerDraftsEnabled`
