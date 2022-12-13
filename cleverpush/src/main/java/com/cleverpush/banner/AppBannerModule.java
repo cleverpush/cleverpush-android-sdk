@@ -53,8 +53,13 @@ public class AppBannerModule {
     private static final String SHOWN_APP_BANNER_PREF = "shownAppBanners";
     private static final long MIN_SESSION_LENGTH = 30 * 60 * 1000L;
     private static AppBannerModule instance;
-    private String channel;
     private final boolean showDrafts;
+    private final Map<String, String> events = new HashMap<>();
+    private final HandlerThread handlerThread = new HandlerThread("AppBannerModule");
+    private final Handler handler;
+    private final SharedPreferences sharedPreferences;
+    private final SharedPreferences.Editor editor;
+    private String channel;
     private long lastSessionTimestamp;
     private int sessions;
     private boolean loading = false;
@@ -62,11 +67,6 @@ public class AppBannerModule {
     private Collection<AppBannerPopup> pendingBanners = new ArrayList<>();
     private Collection<Banner> banners = null;
     private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
-    private final Map<String, String> events = new HashMap<>();
-    private final HandlerThread handlerThread = new HandlerThread("AppBannerModule");
-    private final Handler handler;
-    private final SharedPreferences sharedPreferences;
-    private final SharedPreferences.Editor editor;
     private boolean trackingEnabled = true;
 
     private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
@@ -82,10 +82,6 @@ public class AppBannerModule {
         editor.commit();
     }
 
-    private View getRoot() {
-        return getCurrentActivity().getWindow().getDecorView().getRootView();
-    }
-
     public static AppBannerModule init(String channel, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
         return init(channel, false, sharedPreferences, editor);
     }
@@ -95,6 +91,10 @@ public class AppBannerModule {
             instance = new AppBannerModule(channel, showDrafts, sharedPreferences, editor);
         }
         return instance;
+    }
+
+    private View getRoot() {
+        return getCurrentActivity().getWindow().getDecorView().getRootView();
     }
 
     private void loadBanners(String channelId) {
@@ -109,6 +109,7 @@ public class AppBannerModule {
         if (isLoading()) {
             return;
         }
+
         setLoading(true);
         String bannersPath = "/channel/" + channelId + "/app-banners?platformName=Android";
         if (getCleverPushInstance().isDevelopmentModeEnabled()) {
@@ -343,6 +344,10 @@ public class AppBannerModule {
         }
 
         if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
+            if (!getCleverPushInstance().isSubscribed()) {
+                return false;
+            }
+
             for (HashMap<String, String> attribute : banner.getAttributes()) {
                 String attributeId = attribute.get("id");
                 String compareAttributeValue = attribute.get("value") != null ? attribute.get("value") : "";
@@ -353,6 +358,10 @@ public class AppBannerModule {
                     relationString = "equals";
                 }
                 String attributeValue = (String) getCleverPushInstance().getSubscriptionAttribute(attributeId);
+                if (attributeValue == null) {
+                    return false;
+                }
+
                 if (!this.checkRelationFilter(allowed, CheckFilterRelation.fromString(relationString), attributeValue, compareAttributeValue, fromValue, toValue)) {
                     allowed = false;
                     break;
@@ -423,7 +432,7 @@ public class AppBannerModule {
                 }
             }
         } catch (Exception e) {
-            Logger.e(TAG, "Error checking app version filter", e);
+            Logger.e(TAG, "Error checking relation filter", e);
         }
 
         return allowed;
@@ -495,23 +504,8 @@ public class AppBannerModule {
 
     private void createBanners(Collection<Banner> banners) {
         for (Banner banner : banners) {
-            if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
-                Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Draft");
-                continue;
-            }
-
             if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
                 Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Frequency");
-                continue;
-            }
-
-            if (!isBannerTimeAllowed(banner)) {
-                Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Time");
-                continue;
-            }
-
-            if (!isBannerTargetingAllowed(banner)) {
-                Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting");
                 continue;
             }
 
@@ -632,13 +626,24 @@ public class AppBannerModule {
 
     void showBanner(AppBannerPopup bannerPopup) {
         try {
+            Banner banner = bannerPopup.getData();
             if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
                 Logger.d(TAG, "Skipping Banner because: A Banner is already on the screen");
                 return;
             }
 
-            if (!isBannerTimeAllowed(bannerPopup.getData())) {
+            if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
+                Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Draft");
+                return;
+            }
+
+            if (!isBannerTimeAllowed(banner)) {
                 Logger.d(TAG, "Skipping Banner because: Stop Time");
+                return;
+            }
+
+            if (!isBannerTargetingAllowed(banner)) {
+                Logger.d(TAG, "Skipping Banner because: Targeting not allowed");
                 return;
             }
 
