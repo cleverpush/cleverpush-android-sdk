@@ -1174,6 +1174,10 @@ public class CleverPush {
       subscribe(false, subscribedCallbackListener, dialogActivity);
     }
 
+    private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener) {
+        subscribe(newSubscription, subscribedCallbackListener, getCurrentActivity());
+    }
+
     private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener, Activity dialogActivity) {
         if (isSubscriptionInProgress()) {
             if (subscribedCallbackListener != null) {
