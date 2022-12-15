@@ -686,6 +686,7 @@ public class CleverPush {
 
         Intent intent = new Intent(dialogActivity, PermissionActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         intent.putExtra(PermissionActivity.INTENT_EXTRA_PERMISSION_TYPE, permissionType);
         dialogActivity.startActivity(intent);
     }

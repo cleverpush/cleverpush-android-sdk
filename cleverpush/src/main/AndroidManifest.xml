@@ -15,7 +15,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity android:name="com.cleverpush.PermissionActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
             android:exported="false" />
 
         <activity
