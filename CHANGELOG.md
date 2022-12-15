@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.26.9
+* Improve permission activity styling
+
 ## 1.26.8
 * Added ability to specify custom `dialogActivity` in `subscribe` method
 * Improved app banner targeting behaviour
