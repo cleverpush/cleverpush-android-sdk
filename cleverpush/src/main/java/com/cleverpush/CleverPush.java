@@ -119,7 +119,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "1.26.9";
+    public static final String SDK_VERSION = "1.27.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -2737,7 +2737,7 @@ public class CleverPush {
         sharedPreferences.edit().putInt(CleverPushPreferences.LAST_TIME_AUTO_SHOWED, (int) (System.currentTimeMillis() / 1000L)).apply();
     }
 
-    private boolean areNotificationsEnabled() {
+    public boolean areNotificationsEnabled() {
         try {
             return NotificationManagerCompat.from(CleverPush.context).areNotificationsEnabled();
         } catch (Exception ignored) {

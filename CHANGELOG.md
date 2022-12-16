@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.0
+* Make `areNotificationsEnabled` method public
+
 ## 1.26.9
 * Improve permission activity styling
 
