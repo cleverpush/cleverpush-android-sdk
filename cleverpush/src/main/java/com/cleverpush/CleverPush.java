@@ -44,6 +44,7 @@ import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.listener.CompletionListener;
+import com.cleverpush.listener.DeviceTokenListener;
 import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.listener.LogListener;
 import com.cleverpush.listener.NotificationOpenedListener;
@@ -119,7 +120,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "1.27.0";
+    public static final String SDK_VERSION = "1.27.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -1406,6 +1407,14 @@ public class CleverPush {
             } else {
                 listener.subscribed(subscriptionId);
             }
+        }
+    }
+
+    public void getDeviceToken(DeviceTokenListener listener) {
+        if (listener != null) {
+            SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+            String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
+            listener.complete(fcmToken);
         }
     }
 

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.1
+* Added `getDeviceToken` method
+
 ## 1.27.0
 * Make `areNotificationsEnabled` method public
 
