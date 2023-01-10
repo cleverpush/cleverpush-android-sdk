@@ -1,5 +1,6 @@
 package com.cleverpush;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -34,7 +35,7 @@ public class NotificationOpenedProcessor {
         cleverPush.trackNotificationClicked(notificationId, subscriptionId);
 
         if (cleverPush.isUsingNotificationOpenedCallbackListener()) {
-            cleverPush.fireNotificationOpenedListener(result);
+            cleverPush.fireNotificationOpenedCallbackListener(result, (Activity) context);
         }
 
         // open launcher activity
