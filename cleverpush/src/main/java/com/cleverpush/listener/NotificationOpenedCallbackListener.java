@@ -10,9 +10,7 @@ public abstract class NotificationOpenedCallbackListener implements Notification
     }
 
     /**
-     *
      * @param result notification open result
-     * @return true if the notification should be shown
      */
-    public abstract boolean notificationOpenedCallback(NotificationOpenedResult result, Activity finishActivity);
+    public abstract void notificationOpenedCallback(NotificationOpenedResult result, Activity notificationOpenedActivity);
 }
