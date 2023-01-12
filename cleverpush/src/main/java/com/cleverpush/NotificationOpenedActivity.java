@@ -24,4 +24,10 @@ public class NotificationOpenedActivity extends Activity {
             finish();
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        CleverPush.getInstance(this).setNotificationOpenedActivityDestroyedAt(System.currentTimeMillis());
+        super.onDestroy();
+    }
 }

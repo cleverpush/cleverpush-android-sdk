@@ -29,14 +29,13 @@ public class NotificationOpenedProcessor {
         NotificationOpenedResult result = new NotificationOpenedResult();
         result.setNotification(notification);
         result.setSubscription(subscription);
+        result.setNotificationOpenedActivity((Activity) context);
 
         CleverPush cleverPush = CleverPush.getInstance(context);
 
         cleverPush.trackNotificationClicked(notificationId, subscriptionId);
 
-        if (cleverPush.isUsingNotificationOpenedCallbackListener()) {
-            cleverPush.fireNotificationOpenedCallbackListener(result, (Activity) context);
-        }
+        cleverPush.fireNotificationOpenedListener(result);
 
         // open launcher activity
         boolean shouldStartActivity = cleverPush.notificationOpenShouldStartActivity();

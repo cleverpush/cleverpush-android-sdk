@@ -151,6 +151,7 @@ public class CleverPush {
     private boolean appBannersDisabled = false;
     private boolean isAppOpen = false;
     private Boolean pendingAppBannerTrackingEnabled = null;
+    private long notificationOpenedActivityDestroyedAt = 0;
 
     private String channelId;
     private String subscriptionId = null;
@@ -494,10 +495,15 @@ public class CleverPush {
     public void setNotificationOpenedListener(@Nullable final NotificationOpenedListenerBase notificationOpenedListener) {
         this.notificationOpenedListener = notificationOpenedListener;
 
+        if (notificationOpenedListener instanceof NotificationOpenedCallbackListener && !notificationOpenShouldStartActivity()) {
+           Logger.d(LOG_TAG, "The NotificationOpenedCallbackListener is supposed to be used with the notification_open_activity_disabled meta data option, which is not being used at the moment.");
+        }
+
         // fire listeners for unprocessed open notifications
         if (this.notificationOpenedListener != null) {
             for (NotificationOpenedResult result : getUnprocessedOpenedNotifications()) {
                 fireNotificationOpenedListener(result);
+                result.setNotificationOpenedActivity(null); // Make sure we have no garbage collection problems
             }
             unprocessedOpenedNotifications.clear();
         }
@@ -1464,7 +1470,12 @@ public class CleverPush {
             return false;
         }
 
-        notificationOpenedListener.notificationOpened(openedResult);
+        if (notificationOpenedListener instanceof NotificationOpenedCallbackListener) {
+            ((NotificationOpenedCallbackListener) notificationOpenedListener).notificationOpenedCallback(openedResult, openedResult.getNotificationOpenedActivity());
+        } else {
+            notificationOpenedListener.notificationOpened(openedResult);
+        }
+
         return true;
     }
 
@@ -1473,13 +1484,6 @@ public class CleverPush {
             return false;
         }
         return ((NotificationReceivedCallbackListener) notificationReceivedListener).notificationReceivedCallback(openedResult);
-    }
-
-    public boolean fireNotificationOpenedCallbackListener(final NotificationOpenedResult openedResult, Activity activity) {
-        if (notificationOpenedListener == null || !(notificationOpenedListener instanceof NotificationOpenedCallbackListener)) {
-            return false;
-        }
-        return ((NotificationOpenedCallbackListener) notificationOpenedListener).notificationOpenedCallback(openedResult, activity);
     }
 
     public void removeNotificationReceivedListener() {
@@ -3126,5 +3130,13 @@ public class CleverPush {
 
     public void setLogListener(LogListener logListener) {
         Logger.setLogListener(logListener);
+    }
+
+    public long getNotificationOpenedActivityDestroyedAt() {
+        return notificationOpenedActivityDestroyedAt;
+    }
+
+    public void setNotificationOpenedActivityDestroyedAt(long notificationOpenedActivityDestroyedAt) {
+        this.notificationOpenedActivityDestroyedAt = notificationOpenedActivityDestroyedAt;
     }
 }
