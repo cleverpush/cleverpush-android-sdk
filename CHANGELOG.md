@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.2
+* Release new `NotificationOpenedCallbackListener` (see documentation)
+
 ## 1.27.1
 * Added `getDeviceToken` method
 

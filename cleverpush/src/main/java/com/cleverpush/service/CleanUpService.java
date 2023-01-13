@@ -31,7 +31,7 @@ public class CleanUpService extends Service {
         boolean shouldStartActivity = CleverPush.getInstance(this).notificationOpenShouldStartActivity();
         long notificationOpenedActivityWasDestroyedAt = CleverPush.getInstance(this).getNotificationOpenedActivityDestroyedAt();
         boolean notificationOpenedActivityWasDestroyedRecently = System.currentTimeMillis() - notificationOpenedActivityWasDestroyedAt < EXPECTED_NOTIFICATION_OPENED_ACTIVITY_ON_DESTROY_DELAY;
-        if(shouldStartActivity || !notificationOpenedActivityWasDestroyedRecently){
+        if (shouldStartActivity || !notificationOpenedActivityWasDestroyedRecently){
             CleverPush.removeInstance();
         }
 
