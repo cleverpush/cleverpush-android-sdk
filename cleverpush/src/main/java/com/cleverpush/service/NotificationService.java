@@ -22,7 +22,6 @@ import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import com.cleverpush.util.Logger;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -39,6 +38,7 @@ import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationStyle;
 import com.cleverpush.R;
 import com.cleverpush.Subscription;
+import com.cleverpush.util.Logger;
 import com.cleverpush.util.NotificationCategorySetUp;
 
 import java.io.File;

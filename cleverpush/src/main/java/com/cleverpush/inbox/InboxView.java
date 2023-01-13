@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.Notification;
+import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.R;
 import com.cleverpush.listener.InitializeListener;

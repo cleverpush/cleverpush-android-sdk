@@ -2,10 +2,11 @@ package com.cleverpush;
 
 import static com.cleverpush.Constants.LOG_TAG;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import com.cleverpush.util.Logger;
 
+import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
 public class NotificationOpenedProcessor {
@@ -31,10 +32,12 @@ public class NotificationOpenedProcessor {
         NotificationOpenedResult result = new NotificationOpenedResult();
         result.setNotification(notification);
         result.setSubscription(subscription);
+        result.setNotificationOpenedActivity((Activity) context);
 
         CleverPush cleverPush = CleverPush.getInstance(context);
 
         cleverPush.trackNotificationClicked(notificationId, subscriptionId);
+
         cleverPush.fireNotificationOpenedListener(result);
 
         // open launcher activity

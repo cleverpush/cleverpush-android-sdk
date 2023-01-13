@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
 import com.cleverpush.CleverPush;
+import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedListener;
 import com.example.cleverpush.databinding.ActivityMainBinding;
 
@@ -26,12 +27,12 @@ public class MainActivity extends AppCompatActivity {
         CleverPush.getInstance(this).enableDevelopmentMode();
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
         CleverPush.getInstance(this).subscribe();
-        CleverPush.getInstance(this).init(getString(R.string.channel_id),
-                (NotificationReceivedListener)
-                        result -> {
-                            System.out.println("Received CleverPush Notification: " + result.getNotification().getTitle());
-                        },
-                result -> System.out.println("Opened CleverPush Notification: " + result.getNotification().getTitle()),
+        CleverPush.getInstance(this).init(
+                getString(R.string.channel_id),
+                (NotificationReceivedListener) result -> System.out.println("Received CleverPush Notification: " + result.getNotification().getTitle()),
+                (NotificationOpenedListener) (result, appActivity) -> {
+                    System.out.println("Opened CleverPush Notification: " + result.getNotification().getUrl());
+                },
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId));
 
         binding.btnSubscribe.setOnClickListener(view -> {

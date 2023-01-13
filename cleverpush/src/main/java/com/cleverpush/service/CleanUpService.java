@@ -11,6 +11,7 @@ import com.cleverpush.CleverPush;
 
 public class CleanUpService extends Service {
 
+    private final long EXPECTED_NOTIFICATION_OPENED_ACTIVITY_ON_DESTROY_DELAY = 5000;
 
     @Nullable
     @Override
@@ -26,7 +27,14 @@ public class CleanUpService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
-        CleverPush.removeInstance();
+
+        boolean shouldStartActivity = CleverPush.getInstance(this).notificationOpenShouldStartActivity();
+        long notificationOpenedActivityWasDestroyedAt = CleverPush.getInstance(this).getNotificationOpenedActivityDestroyedAt();
+        boolean notificationOpenedActivityWasDestroyedRecently = System.currentTimeMillis() - notificationOpenedActivityWasDestroyedAt < EXPECTED_NOTIFICATION_OPENED_ACTIVITY_ON_DESTROY_DELAY;
+        if(shouldStartActivity || !notificationOpenedActivityWasDestroyedRecently){
+            CleverPush.removeInstance();
+        }
+
         ActivityLifecycleListener.clearSessionListener();
         this.stopSelf();
     }

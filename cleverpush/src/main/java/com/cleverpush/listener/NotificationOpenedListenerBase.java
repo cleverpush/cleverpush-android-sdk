@@ -4,7 +4,6 @@ import android.app.Activity;
 
 import com.cleverpush.NotificationOpenedResult;
 
-public interface NotificationOpenedListener extends NotificationOpenedListenerBase {
+public interface NotificationOpenedListenerBase {
     void notificationOpened(NotificationOpenedResult result);
 }
-
