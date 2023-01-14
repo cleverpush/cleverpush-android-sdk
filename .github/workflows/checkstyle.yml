@@ -1,5 +1,7 @@
 on: pull_request
 
+name: reviewdog
+
 jobs:
   checkstyle_job:
     runs-on: ubuntu-latest
