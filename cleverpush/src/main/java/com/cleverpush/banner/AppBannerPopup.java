@@ -10,7 +10,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import com.cleverpush.util.Logger;
+
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +28,7 @@ import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.cleverpush.util.Logger;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
@@ -37,6 +38,7 @@ import com.cleverpush.banner.models.blocks.Alignment;
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
+import com.cleverpush.util.CustomExceptionHandler;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -53,18 +55,6 @@ public class AppBannerPopup {
     private static final String POSITION_TYPE_BOTTOM = "bottom";
     private static final String POSITION_TYPE_FULL = "full";
     private static final String TAG = "CleverPush/AppBanner";
-    private final int TAB_LAYOUT_DEFAULT_HEIGHT = 48;
-    private final int MAIN_LAYOUT_PADDING = 15;
-
-    private static SpringForce getDefaultForce(float finalValue) {
-        SpringForce force = new SpringForce(finalValue);
-        force.setDampingRatio(SpringForce.DAMPING_RATIO_LOW_BOUNCY);
-        float DEFAULT_STIFFNESS_RATIO = 300f;
-        force.setStiffness(DEFAULT_STIFFNESS_RATIO);
-
-        return force;
-    }
-
     private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
 
     static {
@@ -73,6 +63,8 @@ public class AppBannerPopup {
         alignmentMap.put(Alignment.Right, View.TEXT_ALIGNMENT_TEXT_END);
     }
 
+    private final int TAB_LAYOUT_DEFAULT_HEIGHT = 48;
+    private final int MAIN_LAYOUT_PADDING = 15;
     private final Handler mainHandler;
     private final Activity activity;
     private final Banner data;
@@ -85,8 +77,20 @@ public class AppBannerPopup {
 
     private boolean isInitialized = false;
 
-    public void setOpenedListener(AppBannerOpenedListener openedListener) {
-        this.openedListener = openedListener;
+    AppBannerPopup(Activity activity, Banner data) {
+        this.activity = activity;
+        this.data = data;
+
+        mainHandler = new CustomExceptionHandler(activity.getMainLooper());
+    }
+
+    private static SpringForce getDefaultForce(float finalValue) {
+        SpringForce force = new SpringForce(finalValue);
+        force.setDampingRatio(SpringForce.DAMPING_RATIO_LOW_BOUNCY);
+        float DEFAULT_STIFFNESS_RATIO = 300f;
+        force.setStiffness(DEFAULT_STIFFNESS_RATIO);
+
+        return force;
     }
 
     private boolean isRootReady() {
@@ -105,13 +109,6 @@ public class AppBannerPopup {
 
     public Banner getData() {
         return data;
-    }
-
-    AppBannerPopup(Activity activity, Banner data) {
-        this.activity = activity;
-        this.data = data;
-
-        mainHandler = new Handler(activity.getMainLooper());
     }
 
     public void init() {
@@ -187,13 +184,17 @@ public class AppBannerPopup {
         return openedListener;
     }
 
+    public void setOpenedListener(AppBannerOpenedListener openedListener) {
+        this.openedListener = openedListener;
+    }
+
     private View createLayout(int layoutId) {
         try {
-          View layout = activity.getLayoutInflater().inflate(layoutId, null);
-          layout.setOnClickListener(view -> dismiss());
-          return layout;
+            View layout = activity.getLayoutInflater().inflate(layoutId, null);
+            layout.setOnClickListener(view -> dismiss());
+            return layout;
         } catch (Exception exception) {
-          Logger.e(TAG, exception.getLocalizedMessage());
+            Logger.e(TAG, exception.getLocalizedMessage());
         }
         return null;
     }
@@ -252,7 +253,9 @@ public class AppBannerPopup {
     }
 
     private void runInMain(Runnable runnable) {
-        mainHandler.post(runnable);
+        if (isRootReady()) {
+            mainHandler.post(runnable);
+        }
     }
 
     private void runInMain(Runnable runnable, long delay) {
@@ -260,37 +263,6 @@ public class AppBannerPopup {
             mainHandler.post(runnable);
         } else {
             mainHandler.postDelayed(runnable, delay);
-        }
-    }
-
-    public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(String... strings) {
-            if (isRootReady()) {
-                return true;
-            } else {
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        new tryShowSafe().execute();
-                    }
-                }, 100);
-
-            }
-            return false;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean isRootReady) {
-            super.onPostExecute(isRootReady);
-            if (isRootReady) {
-                try {
-                    displayBanner(body);
-                    animateBody(getRoot().getHeight(), 0f);
-                } catch (Exception e) {
-                    Logger.e(TAG, e.getLocalizedMessage());
-                }
-            }
         }
     }
 
@@ -353,7 +325,6 @@ public class AppBannerPopup {
         }
     }
 
-
     private void setUpBannerBlocks() {
         viewPager2 = popupRoot.findViewById(R.id.carousel_pager);
         TabLayout tabLayout = popupRoot.findViewById(R.id.carousel_pager_tab_layout);
@@ -407,5 +378,35 @@ public class AppBannerPopup {
             viewPager2.setLayoutParams(layoutParams);
             viewPager2.invalidate();
         });
+    }
+
+    public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            if (isRootReady()) {
+                return true;
+            } else {
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        new tryShowSafe().execute();
+                    }
+                }, 100);
+            }
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean isRootReady) {
+            super.onPostExecute(isRootReady);
+            if (isRootReady) {
+                try {
+                    displayBanner(body);
+                    animateBody(getRoot().getHeight(), 0f);
+                } catch (Exception e) {
+                    Logger.e(TAG, e.getLocalizedMessage());
+                }
+            }
+        }
     }
 }
