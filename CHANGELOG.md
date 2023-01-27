@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.3
+* Fixed crash when runnable throws an exception
+
 ## 1.27.2
 * Release new `NotificationOpenedCallbackListener` (see documentation)
 
