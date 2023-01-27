@@ -30,10 +30,11 @@ public class MainActivity extends AppCompatActivity {
         CleverPush.getInstance(this).init(
                 getString(R.string.channel_id),
                 (NotificationReceivedListener) result -> System.out.println("Received CleverPush Notification: " + result.getNotification().getTitle()),
-                (NotificationOpenedListener) (result, appActivity) -> {
+                (NotificationOpenedListener) (result) -> {
                     System.out.println("Opened CleverPush Notification: " + result.getNotification().getUrl());
                 },
-                subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId));
+                subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId)
+                );
 
         binding.btnSubscribe.setOnClickListener(view -> {
             CleverPush.getInstance(MainActivity.this).subscribe();
