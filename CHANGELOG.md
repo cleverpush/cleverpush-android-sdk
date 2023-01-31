@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.4
+* Fixed missing `fcmId` in request to CleverPush API.
+
 ## 1.27.3
 * Fixed crash when runnable throws an exception
 

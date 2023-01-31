@@ -169,7 +169,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
                         public void onFailure(Throwable exception) {
 
                         }
-                    });
+                    }, senderId);
                 } else {
                     Logger.d(LOG_TAG, "FCM token has not changed: " + newToken);
                 }
