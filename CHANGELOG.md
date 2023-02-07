@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.5
+* Added try catch for possible race condition
+
 ## 1.27.4
 * Fixed missing `fcmId` in request to CleverPush API.
 
