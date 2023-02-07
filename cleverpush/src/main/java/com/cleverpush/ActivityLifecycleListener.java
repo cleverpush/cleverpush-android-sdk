@@ -70,11 +70,15 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
             sessionListener.stateChanged(true);
         }
 
-        if (activityInitializedListeners != null && activityInitializedListeners.size() > 0) {
-            for (ActivityInitializedListener listener : activityInitializedListeners) {
-                listener.initialized();
+        try {
+            if (activityInitializedListeners != null && activityInitializedListeners.size() > 0) {
+                for (ActivityInitializedListener listener : activityInitializedListeners) {
+                    listener.initialized();
+                }
+                activityInitializedListeners.clear();
             }
-            activityInitializedListeners.clear();
+        } catch (Exception error) {
+            Logger.e(LOG_TAG, "activityInitializedListeners != null " + (activityInitializedListeners != null) + " " + error.getMessage());
         }
 
         counter++;
