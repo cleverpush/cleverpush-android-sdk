@@ -44,6 +44,11 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         }
     }
 
+    static void registerActivityLifecycleCallbacks(@NonNull final Application application, SessionListener sessionListener, Activity activity) {
+        registerActivityLifecycleCallbacks(application, sessionListener);
+        instance.currentActivity = activity;
+    }
+
     @Override
     public void onActivityCreated(Activity activity, Bundle bundle) {
 
@@ -56,6 +61,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
     @Override
     public void onActivityResumed(Activity activity) {
+        Logger.d(LOG_TAG, "onActivityResumed");
         currentActivity = activity;
 
         if (!isServiceRunning(CleanUpService.class)) {

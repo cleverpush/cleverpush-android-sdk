@@ -217,7 +217,11 @@ public class CleverPush {
         sessionListener = initSessionListener();
 
         if ((Application) getContext() != null) {
-            ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) getContext(), sessionListener);
+            if (context instanceof Activity) {
+                ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) getContext(), sessionListener, (Activity) context);
+            } else {
+                ActivityLifecycleListener.registerActivityLifecycleCallbacks((Application) getContext(), sessionListener);
+            }
         }
 
         geofencingClient = LocationServices.getGeofencingClient(context);
@@ -473,7 +477,7 @@ public class CleverPush {
                 if (this.appBannerModule != null && this.getCurrentActivity() != null) {
                     this.appBannerModule.initSession(channelId);
                 } else if (this.getCurrentActivity() == null) {
-                    Logger.e("LOG_TAG", "getCurrentActivity() is null");
+                    Logger.e(LOG_TAG, "getCurrentActivity() is null");
                 }
 
                 if (this.pendingPageViews.size() > 0) {
@@ -597,6 +601,8 @@ public class CleverPush {
             this.pendingInitFeaturesCall = true;
             return;
         }
+
+        Logger.d(LOG_TAG, "initFeatures");
 
         this.pendingInitFeaturesCall = false;
 
@@ -1084,6 +1090,7 @@ public class CleverPush {
     }
 
     void trackSessionStart() {
+        Logger.d(LOG_TAG, "trackSessionStart");
         this.sessionVisits = 0;
         this.sessionStartedTimestamp = System.currentTimeMillis() / MILLISECONDS_PER_SECOND;
         this.waitForTrackingConsent(() -> this.getChannelConfig(config -> {
@@ -1116,6 +1123,7 @@ public class CleverPush {
     }
 
     void trackSessionEnd() {
+        Logger.d(LOG_TAG, "trackSessionEnd");
         if (getSessionStartedTimestamp() == 0) {
             Logger.e(LOG_TAG, "Error tracking session end - session started timestamp is 0");
             return;
@@ -2995,6 +3003,7 @@ public class CleverPush {
         if (this.customActivity != null) {
             return this.customActivity;
         }
+
         return ActivityLifecycleListener.currentActivity;
     }
 
