@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.6
+* Fixed missing activity in case onActivityResumed is not called
+
 ## 1.27.5
 * Added try catch for possible race condition
 
