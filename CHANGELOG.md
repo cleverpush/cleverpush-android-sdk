@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.7
+* Prevent crash in `PermissionActivity` when callback is null
+
 ## 1.27.6
 * Fixed missing activity in case onActivityResumed is not called
 

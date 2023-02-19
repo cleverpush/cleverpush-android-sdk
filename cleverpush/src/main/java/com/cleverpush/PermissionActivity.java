@@ -62,7 +62,9 @@ public class PermissionActivity extends Activity implements ActivityCompat.OnReq
 
             PermissionCallback callback = callbackMap.get(permissionType);
             if (callback == null) {
-                throw new RuntimeException("Missing callback for permissionType: " + permissionType);
+                Logger.w(LOG_TAG, "onRequestPermissionsResult: Missing callback for permissionType: " + permissionType);
+                finish();
+                return;
             }
 
             if (isGranted) {
