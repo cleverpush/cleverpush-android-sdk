@@ -1,5 +1,8 @@
 package com.cleverpush.banner.models;
 
+import android.app.Activity;
+import android.content.res.Configuration;
+
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.banner.models.blocks.BannerBlock;
 
@@ -57,6 +60,8 @@ public class Banner {
     private String fromVersion;
     private String toVersion;
     private boolean enableMultipleScreens;
+    private boolean darkModeEnabled;
+    private List<String> connectedBanners;
 
     private Banner() {
     }
@@ -241,6 +246,14 @@ public class Banner {
         return closeButtonEnabled;
     }
 
+    public boolean isDarkModeEnabled() {
+        return darkModeEnabled;
+    }
+
+    public List<String> getConnectedBanners() {
+        return connectedBanners;
+    }
+
     public static Banner create(JSONObject json) throws JSONException {
         Banner banner = new Banner();
 
@@ -401,7 +414,6 @@ public class Banner {
             }
         }
 
-
         if (json.has("marginEnabled")) {
             banner.marginEnabled = json.optBoolean("marginEnabled");
         }
@@ -418,7 +430,28 @@ public class Banner {
             banner.carouselEnabled = json.optBoolean("carouselEnabled");
         }
 
+        if (json.has("darkModeEnabled")) {
+            banner.darkModeEnabled = json.optBoolean("darkModeEnabled");
+        }
+
+        if (json.optBoolean("connectedBannersEnabled")) {
+            JSONArray connectedBannersArray = json.optJSONArray("connectedBanners");
+            if (connectedBannersArray != null) {
+                banner.connectedBanners = new ArrayList<>();
+                for (int i = 0; i < connectedBannersArray.length(); ++i) {
+                    String connectedBannerId = connectedBannersArray.optString(i);
+                    if (connectedBannerId != null) {
+                        banner.connectedBanners.add(connectedBannerId);
+                    }
+                }
+            }
+        }
 
         return banner;
+    }
+
+    public boolean isDarkModeEnabled(Activity activity) {
+        int nightModeFlags = activity.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return this.darkModeEnabled && nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
     }
 }

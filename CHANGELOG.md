@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.28.0
+* Support app banner dark mode settings + connected banners (see app banner settings in CleverPush for more information)
+
 ## 1.27.7
 * Prevent crash in `PermissionActivity` when callback is null
 

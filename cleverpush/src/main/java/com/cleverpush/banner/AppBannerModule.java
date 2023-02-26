@@ -654,7 +654,7 @@ public class AppBannerModule {
                 getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
                     @Override
                     public void initialized() {
-                        bannerIsShown(bannerPopup.getData().getId());
+                        setBannerIsShown(bannerPopup.getData());
                     }
                 });
             }
@@ -724,16 +724,25 @@ public class AppBannerModule {
         return shownBanners.contains(id);
     }
 
-    void bannerIsShown(String id) {
+    void setBannerIsShown(Banner banner) {
         if (getCurrentActivity() == null) {
             return;
         }
 
         SharedPreferences sharedPreferences = getCurrentActivity().getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
-        Set<String> shownBanners = sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>());
+        Set<String> shownBanners = new HashSet<>(sharedPreferences.getStringSet(SHOWN_APP_BANNER_PREF, new HashSet<>()));
 
         assert shownBanners != null;
-        shownBanners.add(id);
+        shownBanners.add(banner.getId());
+
+        if (banner.getConnectedBanners() != null) {
+            for (String connectedBannerId : banner.getConnectedBanners()) {
+                if (shownBanners.contains(connectedBannerId)) {
+                    continue;
+                }
+                shownBanners.add(connectedBannerId);
+            }
+        }
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove(SHOWN_APP_BANNER_PREF);

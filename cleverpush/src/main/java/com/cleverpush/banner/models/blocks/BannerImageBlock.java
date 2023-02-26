@@ -11,6 +11,7 @@ import java.util.List;
 
 public class BannerImageBlock extends BannerBlock {
     private String imageUrl;
+    private String darkImageUrl;
     private int scale;
     private boolean dismiss;
     private BannerAction action;
@@ -21,6 +22,10 @@ public class BannerImageBlock extends BannerBlock {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public String getDarkImageUrl() {
+        return darkImageUrl;
     }
 
     public float getScale() {
@@ -39,7 +44,6 @@ public class BannerImageBlock extends BannerBlock {
         return blockScreens;
     }
 
-
     public static BannerImageBlock createImageBlock(JSONObject json) throws JSONException {
         BannerImageBlock imageBlock = new BannerImageBlock();
 
@@ -47,11 +51,19 @@ public class BannerImageBlock extends BannerBlock {
         if (json.getString("imageUrl") != null) {
             imageBlock.imageUrl = json.getString("imageUrl");
         }
+
+        if (json.has("darkImageUrl") && !json.optString("darkImageUrl").isEmpty()) {
+            imageBlock.darkImageUrl = json.optString("darkImageUrl");
+        }
+
         imageBlock.scale = json.getInt("scale");
+
         imageBlock.dismiss = json.getBoolean("dismiss");
+
         if (json.has("action")) {
             imageBlock.action = BannerAction.create(json.getJSONObject("action"));
         }
+
         imageBlock.blockScreens = new LinkedList<>();
         if (json.has("screens")) {
             JSONArray screens = json.getJSONArray("screens");

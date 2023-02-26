@@ -149,7 +149,15 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         @SuppressLint("InflateParams") Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
         button.setText(block.getText());
         button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
-        button.setTextColor(ColorUtils.parseColor(block.getColor()));
+
+        String textColor;
+        if (appBannerPopup.getData().isDarkModeEnabled(activity) && block.getDarkColor() != null) {
+            textColor = block.getDarkColor();
+        } else {
+            textColor = block.getColor();
+        }
+        button.setTextColor(ColorUtils.parseColor(textColor));
+
         Integer alignment = alignmentMap.get(block.getAlignment());
         button.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
 
@@ -163,7 +171,14 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.RECTANGLE);
         bg.setCornerRadius(block.getRadius() * getPXScale());
-        bg.setColor(ColorUtils.parseColor(block.getBackground()));
+
+        String backgroundColor;
+        if (appBannerPopup.getData().isDarkModeEnabled(activity) && block.getDarkBackground() != null) {
+            backgroundColor = block.getDarkBackground();
+        } else {
+            backgroundColor = block.getBackground();
+        }
+        bg.setColor(ColorUtils.parseColor(backgroundColor));
         button.setBackground(bg);
 
         if (block.getAction() != null) {
@@ -194,7 +209,14 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         @SuppressLint("InflateParams") TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
         textView.setText(block.getText());
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
-        textView.setTextColor(ColorUtils.parseColor(block.getColor()));
+
+        String textColor;
+        if (appBannerPopup.getData().isDarkModeEnabled(activity) && block.getDarkColor() != null) {
+            textColor = block.getDarkColor();
+        } else {
+            textColor = block.getColor();
+        }
+        textView.setTextColor(ColorUtils.parseColor(textColor));
 
         if (block.getFamily() != null) {
             try {
@@ -226,7 +248,14 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
         new Thread(() -> {
             try {
-                InputStream in = new URL(block.getImageUrl()).openStream();
+                String imageUrl;
+                if (appBannerPopup.getData().isDarkModeEnabled(activity) && block.getDarkImageUrl() != null) {
+                    imageUrl = block.getDarkImageUrl();
+                } else {
+                    imageUrl = block.getImageUrl();
+                }
+
+                InputStream in = new URL(imageUrl).openStream();
                 Bitmap bitmap = BitmapFactory.decodeStream(in);
                 if (bitmap != null) {
                     img.setImageBitmap(bitmap);

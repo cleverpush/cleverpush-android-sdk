@@ -5,7 +5,9 @@ import org.json.JSONObject;
 
 public class BannerBackground {
     private String imageUrl;
+    private String darkImageUrl;
     private String color;
+    private String darkColor;
     private boolean dismiss;
 
     private BannerBackground() {
@@ -19,6 +21,14 @@ public class BannerBackground {
         return color;
     }
 
+    public String getDarkImageUrl() {
+        return darkImageUrl;
+    }
+
+    public String getDarkColor() {
+        return darkColor;
+    }
+
     public boolean dismissOnClick() {
         return dismiss;
     }
@@ -29,9 +39,15 @@ public class BannerBackground {
         if (json.has("imageUrl")) {
             bg.imageUrl = json.optString("imageUrl");
         }
+        if (json.has("darkImageUrl") && !json.optString("darkImageUrl").isEmpty()) {
+            bg.darkImageUrl = json.optString("darkImageUrl");
+        }
 
         if (json.has("color")) {
             bg.color = json.optString("color");
+        }
+        if (json.has("darkColor") && !json.optString("darkColor").isEmpty()) {
+            bg.darkColor = json.optString("darkColor");
         }
 
         if (json.has("dismiss")) {

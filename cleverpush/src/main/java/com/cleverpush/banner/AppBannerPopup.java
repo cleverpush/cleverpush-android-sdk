@@ -219,7 +219,10 @@ public class AppBannerPopup {
             if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
                 drawableBG.setCornerRadius(10 * getPXScale());
             }
-            if (bg.getColor() != null) {
+
+            if (data.isDarkModeEnabled(activity) && bg.getDarkColor() != null) {
+                drawableBG.setColor(ColorUtils.parseColor(bg.getDarkColor()));
+            } else if (bg.getColor() != null) {
                 drawableBG.setColor(ColorUtils.parseColor(bg.getColor()));
             } else {
                 drawableBG.setColor(Color.WHITE);
@@ -228,7 +231,14 @@ public class AppBannerPopup {
         } else if (bg.getImageUrl() != null) {
             new Thread(() -> {
                 try {
-                    InputStream in = new URL(bg.getImageUrl()).openStream();
+                    String imageUrl;
+                    if (data.isDarkModeEnabled(activity) && bg.getDarkImageUrl() != null) {
+                        imageUrl = bg.getDarkImageUrl();
+                    } else {
+                        imageUrl = bg.getImageUrl();
+                    }
+
+                    InputStream in = new URL(imageUrl).openStream();
                     Bitmap bitmap = BitmapFactory.decodeStream(in);
                     if (bitmap != null) {
                         bannerBackground.setImageBitmap(bitmap);

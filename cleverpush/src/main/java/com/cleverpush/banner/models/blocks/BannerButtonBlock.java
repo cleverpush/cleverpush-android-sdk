@@ -1,7 +1,6 @@
 package com.cleverpush.banner.models.blocks;
 
 import com.cleverpush.banner.models.BannerAction;
-import com.cleverpush.banner.models.BannerScreens;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,7 +12,9 @@ import java.util.List;
 public class BannerButtonBlock extends BannerBlock {
     private String text;
     private String color;
+    private String darkColor;
     private String background;
+    private String darkBackground;
     private int size;
     private Alignment alignment;
     private boolean dismiss;
@@ -32,8 +33,16 @@ public class BannerButtonBlock extends BannerBlock {
         return color;
     }
 
+    public String getDarkColor() {
+        return darkColor;
+    }
+
     public String getBackground() {
         return background;
+    }
+
+    public String getDarkBackground() {
+        return darkBackground;
     }
 
     public int getSize() {
@@ -61,9 +70,19 @@ public class BannerButtonBlock extends BannerBlock {
         BannerButtonBlock buttonBlock = new BannerButtonBlock();
 
         buttonBlock.type = BannerBlockType.Button;
+
         buttonBlock.text = json.getString("text");
+
         buttonBlock.color = json.getString("color");
+        if (json.has("darkColor") && !json.optString("darkColor").isEmpty()) {
+            buttonBlock.darkColor = json.optString("darkColor");
+        }
+
         buttonBlock.background = json.getString("background");
+        if (json.has("darkBackground") && !json.optString("darkBackground").isEmpty()) {
+            buttonBlock.darkBackground = json.optString("darkBackground");
+        }
+
         buttonBlock.size = json.getInt("size");
         buttonBlock.alignment = Alignment.fromString(json.getString("alignment"));
         buttonBlock.radius = json.getInt("radius");
@@ -76,7 +95,6 @@ public class BannerButtonBlock extends BannerBlock {
                 buttonBlock.blockScreens.add(BannerBlockScreen.create(blockArray.getJSONObject(i)));
             }
         }
-
 
         return buttonBlock;
     }
