@@ -3,6 +3,8 @@ package com.cleverpush;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.SharedPreferences;
+
+import com.cleverpush.listener.CompletionFailureListener;
 import com.cleverpush.util.Logger;
 
 import com.cleverpush.listener.AddTagCompletedListener;
@@ -21,14 +23,16 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
     private final String subscriptionId;
     private final String channelId;
     private final SharedPreferences sharedPreferences;
+    private CompletionFailureListener completionListener;
     private boolean finished = false;
     Set<String> tags;
 
-    public AddSubscriptionTags(String subscriptionId, String channelId, SharedPreferences sharedPreferences, String... tagIds) {
+    public AddSubscriptionTags(String subscriptionId, String channelId, SharedPreferences sharedPreferences, CompletionFailureListener completionListener, String... tagIds) {
         this.subscriptionId = subscriptionId;
         this.channelId = channelId;
         this.tagIds = tagIds;
         this.sharedPreferences = sharedPreferences;
+        this.completionListener = completionListener;
     }
 
     @Override
@@ -36,7 +40,17 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         if (currentPositionOfTagToAdd != tagIds.length - 1) {
             addSubscriptionTag(this, currentPositionOfTagToAdd + 1);
         } else {
+            if (completionListener != null) {
+                completionListener.onComplete();
+            }
             this.finished = true;
+        }
+    }
+
+    @Override
+    public void onFailure(Exception exception) {
+        if (completionListener != null) {
+            completionListener.onFailure(exception);
         }
     }
 

@@ -28,6 +28,9 @@ public class RemoveSubscriptionTagResponseHandler {
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
                 Logger.e("CleverPush", "Error removing tag - HTTP " + statusCode);
+                if (removeTagCompletedListener != null) {
+                    removeTagCompletedListener.onFailure(new Exception("Error removing tag - HTTP " + statusCode));
+                }
             }
         };
 

@@ -2,7 +2,7 @@ package com.cleverpush.responsehandlers;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
-import com.cleverpush.listener.CompletionListener;
+import com.cleverpush.listener.CompletionFailureListener;
 import com.cleverpush.listener.TopicsChangedListener;
 import com.cleverpush.util.Logger;
 
@@ -17,7 +17,7 @@ public class SetSubscriptionTopicsResponseHandler {
         this.cleverPush = cleverPush;
     }
 
-    public CleverPushHttpClient.ResponseHandler getResponseHandler(String[] topicIds, CompletionListener completionListener) {
+    public CleverPushHttpClient.ResponseHandler getResponseHandler(String[] topicIds, CompletionFailureListener completionListener) {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
@@ -33,6 +33,9 @@ public class SetSubscriptionTopicsResponseHandler {
             @Override
             public void onFailure(int statusCode, String response, Throwable throwable) {
                 Logger.e("CleverPush", "Error setting topics - HTTP " + statusCode + ": " + response);
+                if (completionListener != null) {
+                    completionListener.onFailure(new Exception("Error setting topics - HTTP " + statusCode + ": " + response));
+                }
             }
         };
     }

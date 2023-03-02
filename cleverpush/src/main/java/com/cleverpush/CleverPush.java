@@ -43,6 +43,7 @@ import com.cleverpush.listener.ChannelTagsListener;
 import com.cleverpush.listener.ChannelTopicsListener;
 import com.cleverpush.listener.ChatSubscribeListener;
 import com.cleverpush.listener.ChatUrlOpenedListener;
+import com.cleverpush.listener.CompletionFailureListener;
 import com.cleverpush.listener.CompletionListener;
 import com.cleverpush.listener.DeviceTokenListener;
 import com.cleverpush.listener.InitializeListener;
@@ -121,7 +122,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "1.28.0";
+    public static final String SDK_VERSION = "1.28.1";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -1787,10 +1788,30 @@ public class CleverPush {
     }
 
     public void addSubscriptionTags(String[] tagIds) {
-        addSubscriptionTagTrackingConsent(tagIds);
+        addSubscriptionTagTrackingConsent(null, tagIds);
+    }
+
+    public void addSubscriptionTopic(String topicId) {
+        addSubscriptionTopic(topicId, (CompletionListener) null);
     }
 
     public void addSubscriptionTopic(String topicId, CompletionListener completionListener) {
+        addSubscriptionTopic(topicId, new CompletionFailureListener() {
+            @Override
+            public void onComplete() {
+                if (completionListener != null) {
+                    completionListener.onComplete();
+                }
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+
+            }
+        });
+    }
+
+    public void addSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
         this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId == null) {
                 return;
@@ -1805,7 +1826,7 @@ public class CleverPush {
             topics.add(topicId);
             List<String> list = new ArrayList<>(topics);
             String[] topicsArray = (String[]) list.toArray();
-            this.setSubscriptionTopics(topicsArray, null);
+            this.setSubscriptionTopics(topicsArray);
 
             JSONObject jsonBody = new JSONObject();
             try {
@@ -1824,11 +1845,27 @@ public class CleverPush {
         });
     }
 
-    public void addSubscriptionTopic(String topicId) {
-        addSubscriptionTopic(topicId, null);
+    public void removeSubscriptionTopic(String topicId) {
+        removeSubscriptionTopic(topicId, (CompletionListener) null);
     }
 
-    public void removeSubscriptionTopic(String topicIds, CompletionListener completionListener) {
+    public void removeSubscriptionTopic(String topicId, CompletionListener listener) {
+        removeSubscriptionTopic(topicId, new CompletionFailureListener() {
+            @Override
+            public void onComplete() {
+                if (listener != null) {
+                    listener.onComplete();
+                }
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+
+            }
+        });
+    }
+
+    public void removeSubscriptionTopic(String topicIds, CompletionFailureListener completionListener) {
         this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId == null) {
                 return;
@@ -1843,7 +1880,7 @@ public class CleverPush {
             topics.add(topicIds);
             List<String> list = new ArrayList<>(topics);
             String[] topicsArray = (String[]) list.toArray();
-            this.setSubscriptionTopics(topicsArray, null);
+            this.setSubscriptionTopics(topicsArray);
 
             JSONObject jsonBody = new JSONObject();
             try {
@@ -1861,48 +1898,52 @@ public class CleverPush {
         });
     }
 
-    public void removeSubscriptionTopic(String topicId) {
-        removeSubscriptionTopic(topicId, null);
-    }
-
     public void addSubscriptionTag(String tagId) {
-        addSubscriptionTagTrackingConsent(tagId);
+        addSubscriptionTagTrackingConsent(null, tagId);
     }
 
-    private void addSubscriptionTagTrackingConsent(String... tagIds) {
-        startTrackingConsent(getAddSubscriptionTagsSubscribedListener(tagIds));
+    public void addSubscriptionTag(String tagId, CompletionFailureListener listener) {
+        addSubscriptionTagTrackingConsent(listener, tagId);
     }
 
-    private SubscribedListener getAddSubscriptionTagsSubscribedListener(String... tagIds) {
+    private void addSubscriptionTagTrackingConsent(CompletionFailureListener listener, String... tagIds) {
+        startTrackingConsent(getAddSubscriptionTagsSubscribedListener(listener, tagIds));
+    }
+
+    private SubscribedListener getAddSubscriptionTagsSubscribedListener(CompletionFailureListener completionListener, String... tagIds) {
         return subscriptionId -> {
             if (addSubscriptionTagsHelper != null && !addSubscriptionTagsHelper.isFinished()) {
                 addSubscriptionTagsHelper.addTagIds(tagIds);
                 return;
             }
-            addSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), tagIds);
+            addSubscriptionTagsHelper = new AddSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), completionListener, tagIds);
             addSubscriptionTagsHelper.addSubscriptionTags();
         };
     }
 
     public void removeSubscriptionTags(String[] tagIds) {
-        removeSubscriptionTagTrackingConsent(tagIds);
+        removeSubscriptionTagTrackingConsent(null, tagIds);
     }
 
     public void removeSubscriptionTag(String tagId) {
-        removeSubscriptionTagTrackingConsent(tagId);
+        removeSubscriptionTagTrackingConsent(null, tagId);
     }
 
-    private void removeSubscriptionTagTrackingConsent(String... tagIds) {
-        startTrackingConsent(getRemoveSubscriptionTagSubscribedListener(tagIds));
+    public void removeSubscriptionTag(String tagId, CompletionFailureListener listener) {
+        removeSubscriptionTagTrackingConsent(listener, tagId);
     }
 
-    private SubscribedListener getRemoveSubscriptionTagSubscribedListener(String... tagIds) {
+    private void removeSubscriptionTagTrackingConsent(CompletionFailureListener listener, String... tagIds) {
+        startTrackingConsent(getRemoveSubscriptionTagSubscribedListener(listener, tagIds));
+    }
+
+    private SubscribedListener getRemoveSubscriptionTagSubscribedListener(CompletionFailureListener listener, String... tagIds) {
         return subscriptionId -> {
             if (removeSubscriptionTagsHelper != null && !removeSubscriptionTagsHelper.isFinished()) {
                 removeSubscriptionTagsHelper.addTagIds(tagIds);
                 return;
             }
-            removeSubscriptionTagsHelper = new RemoveSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), tagIds);
+            removeSubscriptionTagsHelper = new RemoveSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), listener, tagIds);
             removeSubscriptionTagsHelper.removeSubscriptionTags();
         };
     }
@@ -1912,10 +1953,26 @@ public class CleverPush {
     }
 
     public void setSubscriptionTopics(String[] topicIds) {
-        setSubscriptionTopics(topicIds, null);
+        setSubscriptionTopics(topicIds, (CompletionListener) null);
     }
 
     public void setSubscriptionTopics(String[] topicIds, CompletionListener completionListener) {
+        setSubscriptionTopics(topicIds, new CompletionFailureListener() {
+            @Override
+            public void onComplete() {
+                if (completionListener != null) {
+                    completionListener.onComplete();
+                }
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+
+            }
+        });
+    }
+
+    public void setSubscriptionTopics(String[] topicIds, CompletionFailureListener completionListener) {
         new Thread(() -> {
             SharedPreferences sharedPreferences = getSharedPreferences(getContext());
             final int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
