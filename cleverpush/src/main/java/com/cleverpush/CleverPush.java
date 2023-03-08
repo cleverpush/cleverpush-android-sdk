@@ -122,7 +122,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-    public static final String SDK_VERSION = "1.28.1";
+    public static final String SDK_VERSION = "1.29.0";
 
     private static CleverPush instance;
     private static boolean isSubscribeForTopicsDialog = false;
@@ -144,7 +144,7 @@ public class CleverPush {
     private GoogleApiClient googleApiClient;
     private final ArrayList<Geofence> geofenceList = new ArrayList<>();
     private final Map<String, Boolean> autoAssignSessionsCounted = new HashMap<>();
-    private Map<String, String> pendingAppBannerEvents = new HashMap<>();
+    private List<TriggeredEvent> pendingAppBannerEvents = new ArrayList<>();
     private String pendingShowAppBannerId = null;
     private String pendingShowAppBannerNotificationId = null;
     private String currentPageUrl;
@@ -619,8 +619,8 @@ public class CleverPush {
         }
 
         if (getPendingAppBannerEvents() != null) {
-            for (Map.Entry<String, String> entry : getPendingAppBannerEvents().entrySet()) {
-                appBannerModule.triggerEvent(entry.getKey(), entry.getValue());
+            for (TriggeredEvent event : getPendingAppBannerEvents()) {
+                appBannerModule.triggerEvent(event);
             }
             pendingAppBannerEvents = null;
         }
@@ -2237,10 +2237,16 @@ public class CleverPush {
     }
 
     public void trackEvent(String eventName) {
-        this.trackEvent(eventName, null);
+        this.trackEvent(eventName, (Map<String, Object>) null);
     }
 
     public void trackEvent(String eventName, Float amount) {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("amount", amount);
+        this.trackEvent(eventName, properties);
+    }
+
+    public void trackEvent(String eventName, Map<String, Object> properties) {
         this.getChannelConfig(channelConfig -> {
             if (channelConfig == null) {
                 return;
@@ -2262,13 +2268,23 @@ public class CleverPush {
                     return;
                 }
 
+                String eventId = event.optString("_id");
+
                 this.getSubscriptionId(subscriptionId -> {
                     if (subscriptionId != null) {
                         JSONObject jsonBody = new JSONObject();
+
                         try {
+                            JSONObject propertiesObject = new JSONObject();
+                            if (properties != null) {
+                                for (Map.Entry<String, Object> entry : properties.entrySet()) {
+                                    propertiesObject.put(entry.getKey(), entry.getValue());
+                                }
+                            }
+
                             jsonBody.put("channelId", this.channelId);
-                            jsonBody.put("eventName", eventName);
-                            jsonBody.put("amount", amount);
+                            jsonBody.put("eventId", eventId);
+                            jsonBody.put("properties", propertiesObject);
                             jsonBody.put("subscriptionId", subscriptionId);
                         } catch (JSONException ex) {
                             Logger.e(LOG_TAG, ex.getMessage(), ex);
@@ -2278,6 +2294,12 @@ public class CleverPush {
                     }
                 });
 
+                TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
+                if (getAppBannerModule() == null) {
+                    pendingAppBannerEvents.add(triggeredEvent);
+                    return;
+                }
+                getAppBannerModule().triggerEvent(triggeredEvent);
             } catch (Exception ex) {
                 Logger.e(LOG_TAG, ex.getMessage());
             }
@@ -2353,14 +2375,6 @@ public class CleverPush {
         }
 
         CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
-    }
-
-    public void triggerAppBannerEvent(String key, String value) {
-        if (getAppBannerModule() == null) {
-            pendingAppBannerEvents.put(key, value);
-            return;
-        }
-        getAppBannerModule().triggerEvent(key, value);
     }
 
     public void showAppBanner(String bannerId) {
@@ -3104,7 +3118,7 @@ public class CleverPush {
         return trackingConsentListeners;
     }
 
-    public Map<String, String> getPendingAppBannerEvents() {
+    public List<TriggeredEvent> getPendingAppBannerEvents() {
         return pendingAppBannerEvents;
     }
 

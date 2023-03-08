@@ -13,6 +13,8 @@ import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedListener;
 import com.example.cleverpush.databinding.ActivityMainBinding;
 
+import java.util.HashMap;
+
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
 

@@ -14,6 +14,7 @@ import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.TriggeredEvent;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
@@ -22,6 +23,7 @@ import com.cleverpush.banner.models.BannerStopAtType;
 import com.cleverpush.banner.models.BannerSubscribedType;
 import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
+import com.cleverpush.banner.models.BannerTriggerConditionEventProperty;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.banner.models.CheckFilterRelation;
@@ -42,8 +44,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 public class AppBannerModule {
@@ -54,7 +56,7 @@ public class AppBannerModule {
     private static final long MIN_SESSION_LENGTH = 30 * 60 * 1000L;
     private static AppBannerModule instance;
     private final boolean showDrafts;
-    private final Map<String, String> events = new HashMap<>();
+    private final List<TriggeredEvent> events = new ArrayList<>();
     private final HandlerThread handlerThread = new HandlerThread("AppBannerModule");
     private final Handler handler;
     private final SharedPreferences sharedPreferences;
@@ -224,8 +226,8 @@ public class AppBannerModule {
         editor.apply();
     }
 
-    public void triggerEvent(String key, String value) {
-        events.put(key, value);
+    public void triggerEvent(TriggeredEvent event) {
+        events.add(event);
         this.startup();
     }
 
@@ -502,6 +504,34 @@ public class AppBannerModule {
         return allowed;
     }
 
+    private boolean checkEventTriggerCondition(BannerTriggerCondition condition) {
+        boolean conditionTrue = false;
+
+        for (TriggeredEvent triggeredEvent : events) {
+            if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(condition.getEvent())) {
+                continue;
+            }
+
+            conditionTrue = true;
+
+            if (condition.getEventProperties() == null || condition.getEventProperties().size() == 0) {
+                continue;
+            }
+
+            for (BannerTriggerConditionEventProperty eventProperty : condition.getEventProperties()) {
+                String propertyValue = String.valueOf(triggeredEvent.getProperties().get(eventProperty.getProperty()));
+                String comparePropertyValue = eventProperty.getValue();
+
+                boolean eventPropertiesMatching = this.checkRelationFilter(true, CheckFilterRelation.fromString(eventProperty.getRelation()), propertyValue, comparePropertyValue, comparePropertyValue, comparePropertyValue);
+                if (!eventPropertiesMatching) {
+                    return false;
+                }
+            }
+        }
+
+        return conditionTrue;
+    }
+
     private void createBanners(Collection<Banner> banners) {
         for (Banner banner : banners) {
             if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
@@ -525,9 +555,8 @@ public class AppBannerModule {
                                 } else {
                                     conditionTrue = sessions > condition.getSessions();
                                 }
-                            } else if (condition.getType().equals(BannerTriggerConditionType.Event)) {
-                                String event = events.get(condition.getKey());
-                                conditionTrue = event != null && event.equals(condition.getValue());
+                            } else if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
+                                conditionTrue = this.checkEventTriggerCondition(condition);
                             } else {
                                 conditionTrue = false;
                             }

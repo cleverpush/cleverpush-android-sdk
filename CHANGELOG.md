@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.0
+* Removed `triggerAppBannerEvent` method. App banners can now be triggered with the `trackEvent` method.
+
 ## 1.28.1
 * Added optional failure callbacks for `addSubscriptionTag`, `removeSubscriptionTag`, `addSubscriptionTopic` and `removeSubscriptionTopic`
 

@@ -1,11 +1,16 @@
 package com.cleverpush.banner.models;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BannerTriggerCondition {
 	private BannerTriggerConditionType type;
-	private String key;
-	private String value;
+	private String event;
+	private List<BannerTriggerConditionEventProperty> eventProperties;
 	private String relation;
 	private int sessions;
 	private int seconds;
@@ -14,9 +19,9 @@ public class BannerTriggerCondition {
 
 	public BannerTriggerConditionType getType() { return type; }
 
-	public String getKey() { return key; }
+	public String getEvent() { return event; }
 
-	public String getValue() { return value; }
+	public List<BannerTriggerConditionEventProperty> getEventProperties() { return eventProperties; }
 
 	public int getSessions() { return sessions; }
 
@@ -25,17 +30,29 @@ public class BannerTriggerCondition {
 	public String getRelation() { return relation; }
 
     public static BannerTriggerCondition create(JSONObject json) {
-        BannerTriggerCondition banner = new BannerTriggerCondition();
+        BannerTriggerCondition condition = new BannerTriggerCondition();
 
         if (json != null) {
-			banner.type = BannerTriggerConditionType.fromString(json.optString("type"));
-			banner.key = json.optString("key");
-			banner.value = json.optString("value");
-			banner.sessions = json.optInt("sessions");
-			banner.seconds = json.optInt("seconds");
-			banner.relation = json.optString("operator");
+			condition.type = BannerTriggerConditionType.fromString(json.optString("type"));
+			condition.event = json.optString("event");
+			condition.sessions = json.optInt("sessions");
+			condition.seconds = json.optInt("seconds");
+			condition.relation = json.optString("operator");
+
+			condition.eventProperties = new ArrayList<>();
+			JSONArray eventPropertiesArray = json.optJSONArray("eventProperties");
+			if (eventPropertiesArray != null) {
+				for (int i = 0; i < eventPropertiesArray.length(); ++i) {
+					try {
+						BannerTriggerConditionEventProperty property = BannerTriggerConditionEventProperty.create(eventPropertiesArray.getJSONObject(i));
+						condition.eventProperties.add(property);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		}
 
-        return banner;
+        return condition;
     }
 }
