@@ -192,6 +192,8 @@ public class AppBannerModule {
     }
 
     public void initSession(String channel) {
+        events.clear();
+
         this.channel = channel;
         if (!getCleverPushInstance().isDevelopmentModeEnabled()
                 && lastSessionTimestamp > 0
