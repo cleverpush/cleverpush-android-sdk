@@ -505,31 +505,36 @@ public class AppBannerModule {
     }
 
     private boolean checkEventTriggerCondition(BannerTriggerCondition condition) {
-        boolean conditionTrue = false;
-
         for (TriggeredEvent triggeredEvent : events) {
             if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(condition.getEvent())) {
                 continue;
             }
 
-            conditionTrue = true;
-
             if (condition.getEventProperties() == null || condition.getEventProperties().size() == 0) {
-                continue;
+                return true;
             }
+
+            boolean conditionTrue = true;
 
             for (BannerTriggerConditionEventProperty eventProperty : condition.getEventProperties()) {
                 String propertyValue = String.valueOf(triggeredEvent.getProperties().get(eventProperty.getProperty()));
                 String comparePropertyValue = eventProperty.getValue();
 
-                boolean eventPropertiesMatching = this.checkRelationFilter(true, CheckFilterRelation.fromString(eventProperty.getRelation()), propertyValue, comparePropertyValue, comparePropertyValue, comparePropertyValue);
+                boolean eventPropertiesMatching = this.checkRelationFilter(true, CheckFilterRelation.fromString(eventProperty.getRelation()),
+                        propertyValue, comparePropertyValue, comparePropertyValue, comparePropertyValue);
+
                 if (!eventPropertiesMatching) {
-                    return false;
+                    conditionTrue = false;
+                    break;
                 }
+            }
+
+            if(conditionTrue) {
+                return true;
             }
         }
 
-        return conditionTrue;
+        return false;
     }
 
     private void createBanners(Collection<Banner> banners) {
