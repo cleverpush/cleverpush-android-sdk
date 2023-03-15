@@ -520,8 +520,12 @@ public class AppBannerModule {
                 String propertyValue = String.valueOf(triggeredEvent.getProperties().get(eventProperty.getProperty()));
                 String comparePropertyValue = eventProperty.getValue();
 
-                boolean eventPropertiesMatching = this.checkRelationFilter(true, CheckFilterRelation.fromString(eventProperty.getRelation()),
-                        propertyValue, comparePropertyValue, comparePropertyValue, comparePropertyValue);
+                boolean eventPropertiesMatching = this.checkRelationFilter(true,
+                        CheckFilterRelation.fromString(eventProperty.getRelation()),
+                        propertyValue,
+                        comparePropertyValue,
+                        comparePropertyValue,
+                        comparePropertyValue);
 
                 if (!eventPropertiesMatching) {
                     conditionTrue = false;
@@ -529,7 +533,7 @@ public class AppBannerModule {
                 }
             }
 
-            if(conditionTrue) {
+            if (conditionTrue) {
                 return true;
             }
         }
