@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.1
+* Fixed logic for app banner conditions when using properties
+
 ## 1.29.0
 * Removed `triggerAppBannerEvent` method. App banners can now be triggered with the `trackEvent` method.
 
