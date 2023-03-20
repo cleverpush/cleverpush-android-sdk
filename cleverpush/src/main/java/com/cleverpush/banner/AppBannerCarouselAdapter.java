@@ -1,5 +1,7 @@
 package com.cleverpush.banner;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -329,9 +331,10 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             try {
                 encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
             } catch (UnsupportedEncodingException e) {
+                Logger.d(LOG_TAG, "AppBanner UnsupportedEncodingException");
                 e.printStackTrace();
             }
-            webView.loadData(encodedHtml, "text/html; charset=utf-8", "UTF-8");
+            webView.loadData(encodedHtml, "text/html; charset=utf-8", "base64");
 
             body.addView(webLayout);
         });
