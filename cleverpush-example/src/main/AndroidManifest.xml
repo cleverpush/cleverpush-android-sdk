@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
-        android:name="com.example.cleverpush.App"
+        android:name=".App"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -17,12 +17,25 @@
         android:theme="@style/Theme.Cleverpushandroidsdkmaster">
 
         <activity
-            android:name="com.example.cleverpush.MainActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".SecondViewActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="channels"
+                    android:scheme="de.prosieben.liveapp" />
             </intent-filter>
         </activity>
 
@@ -33,7 +46,6 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
         <service
             android:name=".MyNotificationExtenderService"
             android:exported="false"
@@ -42,7 +54,6 @@
                 <action android:name="com.cleverpush.service.NotificationExtender" />
             </intent-filter>
         </service>
-
     </application>
 
 </manifest>

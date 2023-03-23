@@ -2,6 +2,8 @@ package com.example.cleverpush;
 
 import static com.cleverpush.CleverPushHttpClient.BASE_URL;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -23,17 +25,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        CleverPush.getInstance(this).requestLocationPermission();
-        CleverPush.getInstance(this).initGeoFences();
+//        CleverPush.getInstance(this).requestLocationPermission();
+//        CleverPush.getInstance(this).initGeoFences();
 
         CleverPush.getInstance(this).enableDevelopmentMode();
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
-        CleverPush.getInstance(this).subscribe();
+//        CleverPush.getInstance(this).subscribe();
         CleverPush.getInstance(this).init(
                 getString(R.string.channel_id),
                 (NotificationReceivedListener) result -> System.out.println("Received CleverPush Notification: " + result.getNotification().getTitle()),
                 (NotificationOpenedListener) (result) -> {
                     System.out.println("Opened CleverPush Notification: " + result.getNotification().getUrl());
+
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(result.getNotification().getUrl()));
+                    startActivity(browserIntent);
                 },
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId)
                 );
@@ -62,5 +67,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+//        Intent browserIntent = new Intent(Intent.ACTION_VIEW);
+//        browserIntent.setData(Uri.parse("cleverpush-example://test"));
+//
+//        startActivity(browserIntent);
+
+//        Intent intent = new Intent(MainActivity.this, SecondViewActivity.class);
+//        startActivity(intent);
     }
 }
