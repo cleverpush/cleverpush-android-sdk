@@ -28,6 +28,7 @@ import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.cleverpush.banner.models.BannerType;
 import com.cleverpush.util.Logger;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
@@ -109,6 +110,10 @@ public class AppBannerPopup {
 
     public Banner getData() {
         return data;
+    }
+
+    public  ViewPager2 getViewPager2() {
+        return viewPager2;
     }
 
     public void init() {
@@ -277,6 +282,11 @@ public class AppBannerPopup {
     }
 
     private void displayBanner(LinearLayout body) {
+        // We cant move this code to composeHtmlBanner, because it wont work then anymore
+        if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(Banner.CONTENT_TYPE_HTML)) {
+            body.setPadding(0,0,0,0);
+        }
+
         if (!data.isCarouselEnabled() && !data.getEnableMultipleScreens()) {
             data.getScreens().clear();
             BannerScreens bannerScreens = new BannerScreens();
