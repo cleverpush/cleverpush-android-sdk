@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.29.2
+* Fixed a bug connected to removeSubscriptionTopic
+* Optimized HTML AppBanner support
+
 ## 1.29.1
 * Fixed logic for app banner conditions when using properties
 
