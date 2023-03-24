@@ -13,7 +13,10 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.util.Base64;
+
+import com.cleverpush.CleverPush;
 import com.cleverpush.util.Logger;
+
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -43,6 +46,7 @@ import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
+import com.google.gson.Gson;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -296,6 +300,16 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         return Math.max(Math.min(screenWidth / 400.0f, 10f), 1.0f);
     }
 
+    private  void fixFullscreenHtmlBannerUI(LinearLayout body, ConstraintLayout webLayout, WebView webView) {
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.constrainMinHeight(R.id.webView, Resources.getSystem().getDisplayMetrics().heightPixels);
+        constraintSet.applyTo(webLayout);
+        body.setPadding(0, 0, 0, 0);
+        ViewGroup.LayoutParams layoutParams = webView.getLayoutParams();
+        layoutParams.width = Resources.getSystem().getDisplayMetrics().widthPixels;
+        appBannerPopup.getViewPager2().getChildAt(0).setOverScrollMode(View.OVER_SCROLL_NEVER);
+    }
+
     /**
      * Will compose and add HTML Banner to the body of banner layout.
      *
@@ -311,7 +325,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                     "var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" +
                     "function onCloseClick() {\n" +
                     "  try {\n" +
-                    "    htmlBannerInterface.close();\n" +
+                    "    CleverPush.closeBanner();\n" +
                     "  } catch (error) {\n" +
                     "    console.log('Caught error on closeBtn click', error);\n" +
                     "  }\n" +
@@ -325,7 +339,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             WebView webView = webLayout.findViewById(R.id.webView);
             webView.getSettings().setJavaScriptEnabled(true);
             webView.getSettings().setLoadsImagesAutomatically(true);
-            webView.addJavascriptInterface(new HtmlBannerJavascriptInterface(), "htmlBannerInterface");
+            webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+
+            fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
             String encodedHtml = null;
             try {
@@ -344,10 +360,60 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         return (int) (px * Resources.getSystem().getDisplayMetrics().density);
     }
 
-    public class HtmlBannerJavascriptInterface {
+    public class CleverpushInterface {
         @JavascriptInterface
-        public void close() {
+        public void subscribe() {
+            CleverPush.getInstance(CleverPush.context).subscribe();
+        }
+
+        @JavascriptInterface
+        public void unsubscribe() {
+            CleverPush.getInstance(CleverPush.context).unsubscribe();
+        }
+
+        @JavascriptInterface
+        public void closeBanner() {
             appBannerPopup.dismiss();
+        }
+
+        @JavascriptInterface
+        public void trackEvent(String eventID, String propertiesJSON) {
+            try {
+                Map<String, Object> properties = new Gson().fromJson(propertiesJSON, Map.class);
+                CleverPush.getInstance(CleverPush.context).trackEvent(eventID, properties);
+            } catch (Exception ex) {
+                Logger.e(LOG_TAG, "trackEvent error " + ex.getMessage());
+            }
+        }
+
+        @JavascriptInterface
+        public void setSubscriptionAttribute(String attributeID,  String value) {
+            CleverPush.getInstance(CleverPush.context).setSubscriptionAttribute(attributeID, value);
+        }
+
+        @JavascriptInterface
+        public void addSubscriptionTag(String tagId) {
+            CleverPush.getInstance(CleverPush.context).addSubscriptionTag(tagId);
+        }
+
+        @JavascriptInterface
+        public void removeSubscriptionTag(String tagId) {
+            CleverPush.getInstance(CleverPush.context).removeSubscriptionTag(tagId);
+        }
+
+        @JavascriptInterface
+        public void setSubscriptionTopics(String[] topicIds) {
+            CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(topicIds);
+        }
+
+        @JavascriptInterface
+        public void addSubscriptionTopic(String topicId) {
+            CleverPush.getInstance(CleverPush.context).addSubscriptionTopic(topicId);
+        }
+
+        @JavascriptInterface
+        public void removeSubscriptionTopic(String topicId) {
+            CleverPush.getInstance(CleverPush.context).removeSubscriptionTopic(topicId);
         }
     }
 }

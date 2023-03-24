@@ -1825,7 +1825,7 @@ public class CleverPush {
             }
             topics.add(topicId);
             List<String> list = new ArrayList<>(topics);
-            String[] topicsArray = (String[]) list.toArray();
+            String[] topicsArray = list.toArray(new String[0]);
             this.setSubscriptionTopics(topicsArray);
 
             JSONObject jsonBody = new JSONObject();
@@ -1838,8 +1838,7 @@ public class CleverPush {
             }
             CleverPushHttpClient.ResponseHandler responseHandler = new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
             CleverPushHttpClient.post(
-                    "/subscription/topic/add" +
-                            getChannelId(getContext()),
+                    "/subscription/topic/add",
                     jsonBody,
                     responseHandler);
         });
@@ -1865,34 +1864,33 @@ public class CleverPush {
         });
     }
 
-    public void removeSubscriptionTopic(String topicIds, CompletionFailureListener completionListener) {
+    public void removeSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
         this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId == null) {
                 return;
             }
             Set<String> topics = this.getSubscriptionTopics();
-            if (!topics.contains(topicIds)) {
+            if (!topics.contains(topicId)) {
                 if (completionListener != null) {
                     completionListener.onComplete();
                 }
                 return;
             }
-            topics.add(topicIds);
+            topics.remove(topicId);
             List<String> list = new ArrayList<>(topics);
-            String[] topicsArray = (String[]) list.toArray();
+            String[] topicsArray = list.toArray(new String[0]);
             this.setSubscriptionTopics(topicsArray);
 
             JSONObject jsonBody = new JSONObject();
             try {
                 jsonBody.put("channelId", getChannelId(getContext()));
-                jsonBody.put("topicId", topicIds);
+                jsonBody.put("topicId", topicId);
                 jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException ex) {
                 Logger.e(LOG_TAG, ex.getMessage(), ex);
             }
             CleverPushHttpClient.ResponseHandler responseHandler = new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
-            CleverPushHttpClient.post("/subscription/topic/remove" +
-                    getChannelId(getContext()),
+            CleverPushHttpClient.post("/subscription/topic/remove",
                     jsonBody,
                     responseHandler);
         });

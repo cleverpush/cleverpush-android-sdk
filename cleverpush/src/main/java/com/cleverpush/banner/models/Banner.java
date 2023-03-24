@@ -22,6 +22,8 @@ import java.util.Locale;
 public class Banner {
     private static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
 
+    public static final String CONTENT_TYPE_HTML = "html";
+
     private String id;
     private String testId;
     private String channel;
