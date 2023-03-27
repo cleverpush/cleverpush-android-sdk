@@ -266,13 +266,8 @@ public class AppBannerModule {
             return;
         }
 
-        if (channelId != null) {
-            AppBannersListener filteringListener = createFilteringAppBannerListener(categoryId, listener);
-            bannersListeners.add(filteringListener);
-            getHandler().post(() -> {
-                this.loadBanners(channelId);
-            });
-        }
+        AppBannersListener filteringListener = createFilteringAppBannerListener(categoryId, listener);
+        getBannerList(filteringListener, channelId);
     }
 
     public void getBanners(AppBannersListener listener) {
