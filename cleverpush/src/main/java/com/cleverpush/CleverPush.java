@@ -3196,7 +3196,7 @@ public class CleverPush {
     }
 
     public void getAppBannersByCategory(AppBannersListener appBannersListener, String categoryId) {
-        if(appBannersListener == null) {
+        if (appBannersListener == null) {
             return;
         }
 

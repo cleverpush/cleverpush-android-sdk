@@ -250,7 +250,7 @@ public class AppBannerModule {
             LinkedList<Banner> filteredBanners = new LinkedList<>();
 
             for (Banner banner :loadedBanners) {
-                if(banner.getCategoryId() == null || !banner.getCategoryId().equals(categoryId)) {
+                if (banner.getCategoryId() == null || !banner.getCategoryId().equals(categoryId)) {
                     continue;
                 }
 
