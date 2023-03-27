@@ -245,6 +245,36 @@ public class AppBannerModule {
         }
     }
 
+    private AppBannersListener createFilteringAppBannerListener(String categoryId, AppBannersListener listener) {
+        return (Collection<Banner> loadedBanners) -> {
+            LinkedList<Banner> filteredBanners = new LinkedList<>();
+
+            for (Banner banner :loadedBanners) {
+                if(banner.getCategoryId() == null || !banner.getCategoryId().equals(categoryId)) {
+                    continue;
+                }
+
+                filteredBanners.add(banner);
+            }
+
+            listener.ready(filteredBanners);
+        };
+    }
+
+    public void getBannerListByCategory(AppBannersListener listener, String channelId, String categoryId) {
+        if (listener == null) {
+            return;
+        }
+
+        if (channelId != null) {
+            AppBannersListener filteringListener = createFilteringAppBannerListener(categoryId, listener);
+            bannersListeners.add(filteringListener);
+            getHandler().post(() -> {
+                this.loadBanners(channelId);
+            });
+        }
+    }
+
     public void getBanners(AppBannersListener listener) {
         this.getBanners(listener, null);
     }
