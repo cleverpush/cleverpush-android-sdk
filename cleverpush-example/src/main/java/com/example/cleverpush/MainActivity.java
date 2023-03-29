@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         CleverPush.getInstance(this).setAppBannerOpenedListener((bannerAction) -> {
             Logger.d(LOG_TAG, "AppBannerOpened " + bannerAction.getType());
             Map<String, Object> map = bannerAction.getCustomData();
-            if(map != null) {
+            if (map != null) {
                 Logger.d(LOG_TAG, "AppBannerOpened " + map.keySet());
             }
         });
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         binding.btnGetBannerCategory.setOnClickListener(view -> {
             String categoryId = "testCategoryId";
             CleverPush.getInstance(this).getAppBannersByCategory((Collection<Banner> banners) -> {
-                        for (Banner banner :banners) {
+                        for (Banner banner : banners) {
                             Logger.d(LOG_TAG, banner.getId());
                         }
                     },
