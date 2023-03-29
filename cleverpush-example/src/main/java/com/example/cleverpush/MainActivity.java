@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         CleverPush.getInstance(this).enableDevelopmentMode();
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
@@ -40,22 +39,12 @@ public class MainActivity extends AppCompatActivity {
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId)
                 );
 
-
-        testAppBannerTrackClickOpenedListener();
         setupBasicButtons();
     }
 
-    void testAppBannerTrackClickOpenedListener() {
-        CleverPush.getInstance(this).setAppBannerOpenedListener((bannerAction) -> {
-            Logger.d(LOG_TAG, "AppBannerOpened " + bannerAction.getType());
-            Map<String, Object> map = bannerAction.getCustomData();
-            if(map != null) {
-                Logger.d(LOG_TAG, "AppBannerOpened " + map.keySet());
-            }
-        });
-    }
-
     void setupBasicButtons() {
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+
         binding.btnSubscribe.setOnClickListener(view -> {
             CleverPush.getInstance(MainActivity.this).subscribe();
             binding.tvStatus.setText("Subscribe");
@@ -77,6 +66,16 @@ public class MainActivity extends AppCompatActivity {
                 binding.tvStatus.setText(CleverPush.getInstance(MainActivity.this).getSubscriptionId(this));
             } catch (Exception e) {
                 Toast.makeText(this, "Please subscribe first", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    void testAppBannerTrackClickOpenedListener() {
+        CleverPush.getInstance(this).setAppBannerOpenedListener((bannerAction) -> {
+            Logger.d(LOG_TAG, "AppBannerOpened " + bannerAction.getType());
+            Map<String, Object> map = bannerAction.getCustomData();
+            if(map != null) {
+                Logger.d(LOG_TAG, "AppBannerOpened " + map.keySet());
             }
         });
     }
