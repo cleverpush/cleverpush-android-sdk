@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class BannerAction {
     private String type;
@@ -20,6 +21,7 @@ public class BannerAction {
     private String attributeId;
     private String attributeValue;
     private String screen;
+    private Map<String, Object> customData;
 
     private BannerAction() {}
 
@@ -46,6 +48,8 @@ public class BannerAction {
     public String getAttributeId() { return attributeId; }
 
     public String getAttributeValue() { return attributeValue; }
+
+    public Map<String, Object> getCustomData() { return customData; }
 
     public static BannerAction create(JSONObject json) throws JSONException {
         BannerAction banner = new BannerAction();
@@ -91,6 +95,15 @@ public class BannerAction {
             banner.attributeId = json.optString("attributeId");
             banner.attributeValue = json.optString("attributeValue");
         }
+
+        return banner;
+    }
+
+    public static BannerAction create(String type, Map<String, Object> customData) {
+        BannerAction banner = new BannerAction();
+
+        banner.customData = customData;
+        banner.type = type;
 
         return banner;
     }
