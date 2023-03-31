@@ -1,6 +1,7 @@
 package com.example.cleverpush;
 
 import static com.cleverpush.CleverPushHttpClient.BASE_URL;
+import static com.cleverpush.Constants.LOG_TAG;
 
 import android.os.Bundle;
 import android.widget.Toast;
@@ -9,11 +10,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
 import com.cleverpush.CleverPush;
+import com.cleverpush.banner.WebViewActivity;
+import com.cleverpush.banner.models.Banner;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedListener;
+import com.cleverpush.util.Logger;
 import com.example.cleverpush.databinding.ActivityMainBinding;
 
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
@@ -21,10 +26,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
-        CleverPush.getInstance(this).requestLocationPermission();
-        CleverPush.getInstance(this).initGeoFences();
 
         CleverPush.getInstance(this).enableDevelopmentMode();
         CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
@@ -37,6 +38,12 @@ public class MainActivity extends AppCompatActivity {
                 },
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId)
                 );
+
+        setupBasicButtons();
+    }
+
+    void setupBasicButtons() {
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         binding.btnSubscribe.setOnClickListener(view -> {
             CleverPush.getInstance(MainActivity.this).subscribe();
@@ -61,6 +68,34 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please subscribe first", Toast.LENGTH_SHORT).show();
             }
         });
+    }
 
+    void testAppBannerTrackClickOpenedListener() {
+        CleverPush.getInstance(this).setAppBannerOpenedListener((bannerAction) -> {
+            Logger.d(LOG_TAG, "AppBannerOpened " + bannerAction.getType());
+            Map<String, Object> map = bannerAction.getCustomData();
+            if (map != null) {
+                Logger.d(LOG_TAG, "AppBannerOpened " + map.keySet());
+            }
+        });
+    }
+
+    void miscFunctions() {
+        CleverPush.getInstance(this).requestLocationPermission();
+        CleverPush.getInstance(this).initGeoFences();
+        WebViewActivity.launch(this, "https://www.google.de");
+    }
+
+    void getBannersByCategory() {
+        /*binding.btnGetBannerCategory.setOnClickListener(view -> {
+            String categoryId = "testCategoryId";
+            CleverPush.getInstance(this).getAppBannersByGroup((Collection<Banner> banners) -> {
+                        for (Banner banner : banners) {
+                            Logger.d(LOG_TAG, banner.getId());
+                        }
+                    },
+                    categoryId);
+            binding.tvStatus.setText("Got banners");
+        });*/
     }
 }

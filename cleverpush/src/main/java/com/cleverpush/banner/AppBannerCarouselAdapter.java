@@ -340,6 +340,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             webView.getSettings().setJavaScriptEnabled(true);
             webView.getSettings().setLoadsImagesAutomatically(true);
             webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+            webView.setWebViewClient(new AppBannerWebViewClient());
 
             fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
@@ -387,6 +388,37 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
 
         @JavascriptInterface
+        public void trackClick(String buttonId) {
+            trackClick(buttonId, null);
+        }
+
+        @JavascriptInterface
+        public void trackClick(String buttonId, String customDataJSON) {
+            CleverPush cleverPush = CleverPush.getInstance(CleverPush.context);
+            try {
+                Map<String, Object> customData = null;
+                if (customDataJSON != null) {
+                    customData = new Gson().fromJson(customDataJSON, Map.class);
+                }
+
+                BannerAction bannerAction = BannerAction.create("html", customData);
+                if (cleverPush.getAppBannerOpenedListener() != null) {
+                    cleverPush.getAppBannerOpenedListener().opened(bannerAction);
+                }
+            } catch (Exception ex) {
+                Logger.e(LOG_TAG, "trackEvent error " + ex.getMessage());
+            }
+
+            cleverPush.getAppBannerModule()
+                .sendBannerEvent("clicked", appBannerPopup.getData(), buttonId, null);
+        }
+
+        @JavascriptInterface
+        public void openWebView(String url) {
+            WebViewActivity.launch(activity, url);
+        }
+
+        @JavascriptInterface
         public void setSubscriptionAttribute(String attributeID,  String value) {
             CleverPush.getInstance(CleverPush.context).setSubscriptionAttribute(attributeID, value);
         }
@@ -414,6 +446,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         @JavascriptInterface
         public void removeSubscriptionTopic(String topicId) {
             CleverPush.getInstance(CleverPush.context).removeSubscriptionTopic(topicId);
+        }
+
+        @JavascriptInterface
+        public void showTopicsDialog() {
+            CleverPush.getInstance(CleverPush.context).showTopicsDialog();
         }
     }
 }

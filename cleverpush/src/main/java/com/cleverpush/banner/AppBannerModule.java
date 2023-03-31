@@ -158,12 +158,19 @@ public class AppBannerModule {
         });
     }
 
-    void sendBannerEventWithSubscriptionId(String event, Banner banner, String subscriptionId) {
+    void sendBannerEventWithSubscriptionId(String event, Banner banner, String subscriptionId,
+                                           String blockId, String screenId) {
         JSONObject jsonBody = getJsonObject();
         try {
             jsonBody.put("bannerId", banner.getId());
             if (banner.getTestId() != null) {
                 jsonBody.put("testId", banner.getTestId());
+            }
+            if (blockId != null) {
+                jsonBody.put("blockId", blockId);
+            }
+            if (screenId != null) {
+                jsonBody.put("screenId", screenId);
             }
             jsonBody.put("channelId", channel);
             jsonBody.put("subscriptionId", subscriptionId);
@@ -175,6 +182,10 @@ public class AppBannerModule {
     }
 
     void sendBannerEvent(String event, Banner banner) {
+        sendBannerEvent(event, banner, null, null);
+    }
+
+    void sendBannerEvent(String event, Banner banner, String blockId, String screenId) {
         Logger.d(TAG, "sendBannerEvent: " + event);
 
         if (!this.trackingEnabled) {
@@ -184,10 +195,10 @@ public class AppBannerModule {
 
         if (getCleverPushInstance().isSubscribed()) {
             getCleverPushInstance().getSubscriptionId(subscriptionId -> {
-                this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId);
+                this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId, blockId, screenId);
             });
         } else {
-            this.sendBannerEventWithSubscriptionId(event, banner, null);
+            this.sendBannerEventWithSubscriptionId(event, banner, null, blockId, screenId);
         }
     }
 
@@ -245,12 +256,12 @@ public class AppBannerModule {
         }
     }
 
-    private AppBannersListener createFilteringAppBannerListener(String category, AppBannersListener listener) {
+    private AppBannersListener createFilteringAppBannerListener(String group, AppBannersListener listener) {
         return (Collection<Banner> loadedBanners) -> {
             LinkedList<Banner> filteredBanners = new LinkedList<>();
 
             for (Banner banner : loadedBanners) {
-                if (banner.getCategory() == null || !banner.getCategory().equals(category)) {
+                if (banner.getGroup() == null || !banner.getGroup().equals(group)) {
                     continue;
                 }
 
@@ -261,12 +272,12 @@ public class AppBannerModule {
         };
     }
 
-    public void getBannerListByCategory(AppBannersListener listener, String channelId, String category) {
+    public void getBannerListByGroup(AppBannersListener listener, String channelId, String group) {
         if (listener == null) {
             return;
         }
 
-        AppBannersListener filteringListener = createFilteringAppBannerListener(category, listener);
+        AppBannersListener filteringListener = createFilteringAppBannerListener(group, listener);
         getBannerList(filteringListener, channelId);
     }
 
