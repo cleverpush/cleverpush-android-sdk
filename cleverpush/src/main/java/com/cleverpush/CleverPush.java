@@ -3195,13 +3195,13 @@ public class CleverPush {
         appBannerModule.getBannerList(listener, channelId);
     }
 
-    public void getAppBannersByCategory(AppBannersListener appBannersListener, String category) {
+    public void getAppBannersByGroup(AppBannersListener appBannersListener, String group) {
         if (appBannersListener == null) {
             return;
         }
 
         AppBannerModule appBannerModule = getAppBannerModule();
-        appBannerModule.getBannerListByCategory(appBannersListener, this.channelId, category);
+        appBannerModule.getBannerListByGroup(appBannersListener, this.channelId, group);
     }
 
     public boolean isAppOpen() {

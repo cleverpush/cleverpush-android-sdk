@@ -87,15 +87,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void getBannersByCategory() {
-        binding.btnGetBannerCategory.setOnClickListener(view -> {
+        /*binding.btnGetBannerCategory.setOnClickListener(view -> {
             String categoryId = "testCategoryId";
-            CleverPush.getInstance(this).getAppBannersByCategory((Collection<Banner> banners) -> {
+            CleverPush.getInstance(this).getAppBannersByGroup((Collection<Banner> banners) -> {
                         for (Banner banner : banners) {
                             Logger.d(LOG_TAG, banner.getId());
                         }
                     },
                     categoryId);
             binding.tvStatus.setText("Got banners");
-        });
+        });*/
     }
 }

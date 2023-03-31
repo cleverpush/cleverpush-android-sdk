@@ -256,12 +256,12 @@ public class AppBannerModule {
         }
     }
 
-    private AppBannersListener createFilteringAppBannerListener(String category, AppBannersListener listener) {
+    private AppBannersListener createFilteringAppBannerListener(String group, AppBannersListener listener) {
         return (Collection<Banner> loadedBanners) -> {
             LinkedList<Banner> filteredBanners = new LinkedList<>();
 
             for (Banner banner : loadedBanners) {
-                if (banner.getCategory() == null || !banner.getCategory().equals(category)) {
+                if (banner.getGroup() == null || !banner.getGroup().equals(group)) {
                     continue;
                 }
 
@@ -272,12 +272,12 @@ public class AppBannerModule {
         };
     }
 
-    public void getBannerListByCategory(AppBannersListener listener, String channelId, String category) {
+    public void getBannerListByGroup(AppBannersListener listener, String channelId, String group) {
         if (listener == null) {
             return;
         }
 
-        AppBannersListener filteringListener = createFilteringAppBannerListener(category, listener);
+        AppBannersListener filteringListener = createFilteringAppBannerListener(group, listener);
         getBannerList(filteringListener, channelId);
     }
 

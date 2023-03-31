@@ -340,6 +340,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             webView.getSettings().setJavaScriptEnabled(true);
             webView.getSettings().setLoadsImagesAutomatically(true);
             webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+            webView.setWebViewClient(new AppBannerWebViewClient());
 
             fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
@@ -445,6 +446,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         @JavascriptInterface
         public void removeSubscriptionTopic(String topicId) {
             CleverPush.getInstance(CleverPush.context).removeSubscriptionTopic(topicId);
+        }
+
+        @JavascriptInterface
+        public void showTopicsDialog() {
+            CleverPush.getInstance(CleverPush.context).showTopicsDialog();
         }
     }
 }

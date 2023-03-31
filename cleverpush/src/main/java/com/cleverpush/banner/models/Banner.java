@@ -28,7 +28,7 @@ public class Banner {
     private String testId;
     private String channel;
     private String name;
-    private String category;
+    private String group;
     private BannerType type;
     private BannerStatus status;
     private boolean carouselEnabled;
@@ -85,8 +85,8 @@ public class Banner {
         return name;
     }
 
-    public String getCategory() {
-        return category;
+    public String getGroup() {
+        return group;
     }
 
     public BannerType getType() {
@@ -270,8 +270,8 @@ public class Banner {
         }
         banner.channel = json.getString("channel");
         banner.name = json.getString("name");
-        if (json.has("category")) {
-            banner.category = json.getString("category");
+        if (json.has("group")) {
+            banner.group = json.getString("group");
         }
         banner.type = BannerType.fromString(json.optString("type"));
         banner.status = BannerStatus.fromString(json.optString("status"));
