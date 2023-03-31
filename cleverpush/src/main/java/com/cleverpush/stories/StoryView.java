@@ -91,7 +91,8 @@ public class StoryView extends LinearLayout {
                 loading = false;
                 Logger.e(TAG, "Something went wrong when loading stories." +
                         "\nStatus code: " + statusCode +
-                        "\nResponse: " + response
+                        "\nResponse: " + response +
+                        "\nError: " + throwable.getMessage()
                 );
             }
         };

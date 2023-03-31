@@ -333,6 +333,12 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                     "for (var i = 0; i < closeBtns.length; i++) {\n" +
                     "  closeBtns[i].addEventListener('click', onCloseClick);\n" +
                     "}\n" +
+                    "CleverPush.trackEvent = function(eventId, properties) {\n" +
+                    "  CleverPush.trackEventStringified(eventId, properties ? JSON.stringify(properties) : null);\n" +
+                    "};\n" +
+                    "CleverPush.trackClick = function(buttonId, customData) {\n" +
+                    "  CleverPush.trackClickStringified(buttonId, customData ? JSON.stringify(customData) : null);\n" +
+                    "};\n" +
                     "</script>\n" +
                     "</body>");
             ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
@@ -378,9 +384,12 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
 
         @JavascriptInterface
-        public void trackEvent(String eventID, String propertiesJSON) {
+        public void trackEventStringified(String eventID, String propertiesJSON) {
             try {
-                Map<String, Object> properties = new Gson().fromJson(propertiesJSON, Map.class);
+                Map<String, Object> properties = null;
+                if (propertiesJSON != null) {
+                    properties = new Gson().fromJson(propertiesJSON, Map.class);
+                }
                 CleverPush.getInstance(CleverPush.context).trackEvent(eventID, properties);
             } catch (Exception ex) {
                 Logger.e(LOG_TAG, "trackEvent error " + ex.getMessage());
@@ -388,12 +397,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
 
         @JavascriptInterface
-        public void trackClick(String buttonId) {
-            trackClick(buttonId, null);
-        }
-
-        @JavascriptInterface
-        public void trackClick(String buttonId, String customDataJSON) {
+        public void trackClickStringified(String buttonId, String customDataJSON) {
             CleverPush cleverPush = CleverPush.getInstance(CleverPush.context);
             try {
                 Map<String, Object> customData = null;
@@ -406,7 +410,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                     cleverPush.getAppBannerOpenedListener().opened(bannerAction);
                 }
             } catch (Exception ex) {
-                Logger.e(LOG_TAG, "trackEvent error " + ex.getMessage());
+                Logger.e(LOG_TAG, "trackClick error " + ex.getMessage());
             }
 
             cleverPush.getAppBannerModule()
@@ -419,7 +423,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
 
         @JavascriptInterface
-        public void setSubscriptionAttribute(String attributeID,  String value) {
+        public void setSubscriptionAttribute(String attributeID, String value) {
             CleverPush.getInstance(CleverPush.context).setSubscriptionAttribute(attributeID, value);
         }
 
