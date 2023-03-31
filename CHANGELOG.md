@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.3
+* Further Optimized HTML AppBanner support (added more JS bridge methods)
+
 ## 1.29.2
 * Fixed a bug connected to removeSubscriptionTopic
 * Optimized HTML AppBanner support
