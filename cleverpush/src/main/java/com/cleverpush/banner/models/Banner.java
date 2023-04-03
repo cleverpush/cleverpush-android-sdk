@@ -65,6 +65,9 @@ public class Banner {
     private boolean enableMultipleScreens;
     private boolean darkModeEnabled;
     private List<String> connectedBanners;
+    private String title;
+    private String description;
+    private String mediaUrl;
 
     private Banner() {
     }
@@ -259,6 +262,18 @@ public class Banner {
 
     public List<String> getConnectedBanners() {
         return connectedBanners;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getMediaUrl() {
+        return mediaUrl;
     }
 
     public static Banner create(JSONObject json) throws JSONException {
@@ -456,6 +471,10 @@ public class Banner {
                 }
             }
         }
+
+        banner.title = json.optString("title");
+        banner.description = json.optString("description");
+        banner.mediaUrl = json.optString("mediaUrl");
 
         return banner;
     }
