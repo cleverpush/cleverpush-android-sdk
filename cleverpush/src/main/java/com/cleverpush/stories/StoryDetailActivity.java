@@ -19,7 +19,6 @@ import com.cleverpush.stories.models.Story;
 
 import java.util.ArrayList;
 
-
 public class StoryDetailActivity extends Activity implements StoryChangeListener {
 
     private int selectedPosition = 0;

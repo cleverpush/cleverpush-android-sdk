@@ -2,6 +2,7 @@
 
 ## 1.29.4
 * Added `getTitle`, `getDescription` and `getMediaUrl` to banners
+* Optimized `StoryView` activity logic
 
 ## 1.29.3
 * Further Optimized HTML AppBanner support (added more JS bridge methods)

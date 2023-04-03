@@ -17,7 +17,6 @@ import com.cleverpush.stories.models.Story;
 
 import java.util.ArrayList;
 
-
 public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailViewHolder>  {
 
     private Activity activity;
