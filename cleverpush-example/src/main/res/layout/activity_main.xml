@@ -58,16 +58,5 @@
             android:layout_gravity="center"
             android:layout_marginTop="50dp"
             android:text="Status" />
-
-        <com.cleverpush.stories.StoryView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:background_color="#000"
-            app:border_color="#cA4000"
-            app:fontFamily="CabinSketch-Bold"
-            app:story_view_height="500dp"
-            app:story_view_width="700dp"
-            app:text_color="#fff"
-            app:widget_id="fSs24ggBjeZWjTWHZ" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 </layout>
