@@ -19,6 +19,7 @@ public class AddSubscriptionTagResponseHandler {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
+                tags.add(tagId);
                 updateSubscriptionTags(tags);
                 if (addTagCompletedListener != null) {
                     addTagCompletedListener.tagAdded(currentPositionOfTagToAdd);

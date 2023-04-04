@@ -33,6 +33,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
         this.tagIds = tagIds;
         this.sharedPreferences = sharedPreferences;
         this.completionListener = completionListener;
+        finished = false;
     }
 
     @Override
@@ -52,6 +53,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
         if (completionListener != null) {
             completionListener.onFailure(exception);
         }
+        this.finished = true;
     }
 
     public boolean isFinished() {
@@ -88,7 +90,6 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
             }
 
             tags = this.getSubscriptionTags();
-            tags.remove(tagIds[currentPositionOfTagToRemove]);
 
             CleverPushHttpClient.post("/subscription/untag", jsonBody, new RemoveSubscriptionTagResponseHandler().getResponseHandler(tagIds[currentPositionOfTagToRemove], onRemoveTagCompleted, currentPositionOfTagToRemove, tags));
         }
