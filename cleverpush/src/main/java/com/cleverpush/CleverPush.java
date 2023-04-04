@@ -122,7 +122,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.29.4";
+  public static final String SDK_VERSION = "1.29.5";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -203,6 +203,9 @@ public class CleverPush {
   public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
   private PendingIntent geofencePendingIntent;
   private GeofencingClient geofencingClient;
+
+  private String lastClickedNotificationId;
+  private long lastClickedNotificationTime;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -1172,6 +1175,7 @@ public class CleverPush {
 
       this.sessionStartedTimestamp = 0;
       this.sessionVisits = 0;
+      this.lastClickedNotificationId = null;
     }));
   }
 
@@ -2348,6 +2352,10 @@ public class CleverPush {
               jsonBody.put("eventId", eventId);
               jsonBody.put("properties", propertiesObject);
               jsonBody.put("subscriptionId", subscriptionId);
+
+              if (this.lastClickedNotificationId != null) {
+                jsonBody.put("notificationId", this.lastClickedNotificationId);
+              }
             } catch (JSONException ex) {
               Logger.e(LOG_TAG, ex.getMessage(), ex);
             }
@@ -2439,6 +2447,8 @@ public class CleverPush {
     }
 
     CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
+
+    lastClickedNotificationId = notificationId;
   }
 
   public void showAppBanner(String bannerId) {

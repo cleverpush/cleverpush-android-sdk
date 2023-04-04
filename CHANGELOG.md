@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.29.5
+* Fixed notification tracking for conversion events
+
 ## 1.29.4
 * Added `getTitle`, `getDescription` and `getMediaUrl` to banners
 * Optimized `StoryView` activity logic
