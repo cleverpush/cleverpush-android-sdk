@@ -33,6 +33,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         this.tagIds = tagIds;
         this.sharedPreferences = sharedPreferences;
         this.completionListener = completionListener;
+        finished = false;
     }
 
     @Override
@@ -52,6 +53,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         if (completionListener != null) {
             completionListener.onFailure(exception);
         }
+        this.finished = true;
     }
 
     public boolean isFinished() {
@@ -95,8 +97,6 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
             } catch (JSONException ex) {
                 Logger.e(LOG_TAG, ex.getMessage(), ex);
             }
-
-            tags.add(tagIds[currentPositionOfTagToAdd]);
 
             CleverPushHttpClient.post("/subscription/tag", jsonBody, new AddSubscriptionTagResponseHandler().getResponseHandler(tagIds[currentPositionOfTagToAdd], addTagCompletedListener, currentPositionOfTagToAdd, tags));
         }

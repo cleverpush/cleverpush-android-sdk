@@ -19,6 +19,7 @@ public class RemoveSubscriptionTagResponseHandler {
         return new CleverPushHttpClient.ResponseHandler() {
             @Override
             public void onSuccess(String response) {
+                tags.remove(tagId);
                 updateSubscriptionTags(tags);
                 if (removeTagCompletedListener != null) {
                     removeTagCompletedListener.tagRemoved(currentPositionOfTagToRemove);
