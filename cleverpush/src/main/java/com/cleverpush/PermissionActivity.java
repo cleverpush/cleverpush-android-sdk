@@ -17,64 +17,65 @@ import com.cleverpush.util.Logger;
 import java.util.HashMap;
 
 public class PermissionActivity extends Activity implements ActivityCompat.OnRequestPermissionsResultCallback {
-    interface PermissionCallback {
-        void onGrant();
-        void onDeny();
-    }
+  interface PermissionCallback {
+    void onGrant();
 
-    public static final String INTENT_EXTRA_PERMISSION_TYPE = "PERMISSION_TYPE";
-    private static final int PERMISSION_REQUEST_CODE = 100;
-    private static final String TAG = PermissionActivity.class.getCanonicalName();
+    void onDeny();
+  }
 
-    private static final HashMap<String, PermissionCallback> callbackMap = new HashMap<>();
+  public static final String INTENT_EXTRA_PERMISSION_TYPE = "PERMISSION_TYPE";
+  private static final int PERMISSION_REQUEST_CODE = 100;
+  private static final String TAG = PermissionActivity.class.getCanonicalName();
 
-    private String permissionType;
+  private static final HashMap<String, PermissionCallback> callbackMap = new HashMap<>();
 
-    public static void registerAsCallback(
-            @NonNull String permissionType,
-            @NonNull PermissionCallback callback
-    ) {
-        callbackMap.put(permissionType, callback);
-    }
+  private String permissionType;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        requestPermission(getIntent().getExtras());
-    }
+  public static void registerAsCallback(
+      @NonNull String permissionType,
+      @NonNull PermissionCallback callback
+  ) {
+    callbackMap.put(permissionType, callback);
+  }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        requestPermission(intent.getExtras());
-    }
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    requestPermission(getIntent().getExtras());
+  }
 
-    private void requestPermission(Bundle extras) {
-        permissionType = extras.getString(INTENT_EXTRA_PERMISSION_TYPE);
-        ActivityCompat.requestPermissions(this, new String[]{permissionType}, PERMISSION_REQUEST_CODE);
-    }
+  @Override
+  protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    requestPermission(intent.getExtras());
+  }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            boolean isGranted = ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED;
-            Logger.d(LOG_TAG, "onRequestPermissionsResult: " + permissions.length + " " + grantResults.length);
+  private void requestPermission(Bundle extras) {
+    permissionType = extras.getString(INTENT_EXTRA_PERMISSION_TYPE);
+    ActivityCompat.requestPermissions(this, new String[] {permissionType}, PERMISSION_REQUEST_CODE);
+  }
 
-            PermissionCallback callback = callbackMap.get(permissionType);
-            if (callback == null) {
-                Logger.w(LOG_TAG, "onRequestPermissionsResult: Missing callback for permissionType: " + permissionType);
-                finish();
-                return;
-            }
+  @Override
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    if (requestCode == PERMISSION_REQUEST_CODE) {
+      boolean isGranted = ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED;
+      Logger.d(LOG_TAG, "onRequestPermissionsResult: " + permissions.length + " " + grantResults.length);
 
-            if (isGranted) {
-                Logger.d(LOG_TAG, "Permission granted: " + permissionType);
-                callback.onGrant();
-            } else {
-                Logger.d(LOG_TAG, "Permission denied: " + permissionType);
-                callback.onDeny();
-            }
-        }
+      PermissionCallback callback = callbackMap.get(permissionType);
+      if (callback == null) {
+        Logger.w(LOG_TAG, "onRequestPermissionsResult: Missing callback for permissionType: " + permissionType);
         finish();
+        return;
+      }
+
+      if (isGranted) {
+        Logger.d(LOG_TAG, "Permission granted: " + permissionType);
+        callback.onGrant();
+      } else {
+        Logger.d(LOG_TAG, "Permission denied: " + permissionType);
+        callback.onDeny();
+      }
     }
+    finish();
+  }
 }

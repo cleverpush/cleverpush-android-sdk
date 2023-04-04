@@ -8,66 +8,66 @@ import java.io.Serializable;
 
 public class Content implements Serializable {
 
-    public static final long serialVersionUID = -4831841894049729349L;
+  public static final long serialVersionUID = -4831841894049729349L;
 
-    @SerializedName("version")
-    @Expose
-    private int version;
+  @SerializedName("version")
+  @Expose
+  private int version;
 
-    @SerializedName("supportsLandscape")
-    @Expose
-    private boolean supportsLandscape;
+  @SerializedName("supportsLandscape")
+  @Expose
+  private boolean supportsLandscape;
 
-    @SerializedName("title")
-    @Expose
-    private String title;
+  @SerializedName("title")
+  @Expose
+  private String title;
 
-    @SerializedName("canonicalUrl")
-    @Expose
-    private String canonicalUrl;
+  @SerializedName("canonicalUrl")
+  @Expose
+  private String canonicalUrl;
 
-    @SerializedName("preview")
-    @Expose
-    private Preview preview;
+  @SerializedName("preview")
+  @Expose
+  private Preview preview;
 
-    public int getVersion() {
-        return this.version;
-    }
+  public int getVersion() {
+    return this.version;
+  }
 
-    public void setVersion(int version) {
-        this.version = version;
-    }
+  public void setVersion(int version) {
+    this.version = version;
+  }
 
-    public boolean isSupportsLandscape() {
-        return this.supportsLandscape;
-    }
+  public boolean isSupportsLandscape() {
+    return this.supportsLandscape;
+  }
 
-    public void setSupportsLandscape(boolean supportsLandscape) {
-        this.supportsLandscape = supportsLandscape;
-    }
+  public void setSupportsLandscape(boolean supportsLandscape) {
+    this.supportsLandscape = supportsLandscape;
+  }
 
-    public String getTitle() {
-        return this.title;
-    }
+  public String getTitle() {
+    return this.title;
+  }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+  public void setTitle(String title) {
+    this.title = title;
+  }
 
-    public String getCanonicalUrl() {
-        return this.canonicalUrl;
-    }
+  public String getCanonicalUrl() {
+    return this.canonicalUrl;
+  }
 
-    public void setCanonicalUrl(String canonicalUrl) {
-        this.canonicalUrl = canonicalUrl;
-    }
+  public void setCanonicalUrl(String canonicalUrl) {
+    this.canonicalUrl = canonicalUrl;
+  }
 
-    public Preview getPreview() {
-        return this.preview;
-    }
+  public Preview getPreview() {
+    return this.preview;
+  }
 
-    public void setPreview(Preview preview) {
-        this.preview = preview;
-    }
+  public void setPreview(Preview preview) {
+    this.preview = preview;
+  }
 
 }

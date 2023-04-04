@@ -12,27 +12,27 @@ import org.json.JSONObject;
 
 public class SubscriptionManagerADM extends SubscriptionManagerBase {
 
-    public SubscriptionManagerADM(Context context) {
-        super(context, SubscriptionManagerType.ADM);
-    }
+  public SubscriptionManagerADM(Context context) {
+    super(context, SubscriptionManagerType.ADM);
+  }
 
-    @Override
-    public void subscribe(JSONObject channelConfig, final SubscribedCallbackListener subscribedListener) {
-        Context context = this.context;
-        new Thread(() -> {
-            final ADM adm = new ADM(context);
-            String registrationId = adm.getRegistrationId();
-            if (registrationId == null) {
-                adm.startRegister();
-            } else {
-                Logger.d(LOG_TAG, "ADM Already registered with ID:" + registrationId);
-                this.syncSubscription(registrationId, subscribedListener);
-            }
-        }).start();
-    }
+  @Override
+  public void subscribe(JSONObject channelConfig, final SubscribedCallbackListener subscribedListener) {
+    Context context = this.context;
+    new Thread(() -> {
+      final ADM adm = new ADM(context);
+      String registrationId = adm.getRegistrationId();
+      if (registrationId == null) {
+        adm.startRegister();
+      } else {
+        Logger.d(LOG_TAG, "ADM Already registered with ID:" + registrationId);
+        this.syncSubscription(registrationId, subscribedListener);
+      }
+    }).start();
+  }
 
-    @Override
-    public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
+  @Override
+  public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
 
-    }
+  }
 }

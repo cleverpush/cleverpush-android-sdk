@@ -4,20 +4,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum BannerStopAtType {
-    Forever,
-    SpecificTime;
+  Forever,
+  SpecificTime;
 
-    private static final Map<String, BannerStopAtType> mapStopAtType = new HashMap<>();
+  private static final Map<String, BannerStopAtType> mapStopAtType = new HashMap<>();
 
-    static {
-        mapStopAtType.put("forever", BannerStopAtType.Forever);
-        mapStopAtType.put("specific_time", BannerStopAtType.SpecificTime);
+  static {
+    mapStopAtType.put("forever", BannerStopAtType.Forever);
+    mapStopAtType.put("specific_time", BannerStopAtType.SpecificTime);
+  }
+
+  public static BannerStopAtType fromString(String raw) {
+    if (!mapStopAtType.containsKey(raw)) {
+      return Forever;
     }
-
-    public static BannerStopAtType fromString(String raw) {
-        if (!mapStopAtType.containsKey(raw)) {
-            return Forever;
-        }
-        return mapStopAtType.get(raw);
-    }
+    return mapStopAtType.get(raw);
+  }
 }

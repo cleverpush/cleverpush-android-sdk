@@ -5,5 +5,5 @@ import com.cleverpush.Notification;
 import java.util.List;
 
 public interface NotificationFromApiCallbackListener {
-    void ready(List<Notification> notifications);
+  void ready(List<Notification> notifications);
 }

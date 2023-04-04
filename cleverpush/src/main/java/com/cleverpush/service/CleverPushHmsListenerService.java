@@ -15,33 +15,33 @@ import com.huawei.hms.push.HmsMessageService;
 import com.huawei.hms.push.RemoteMessage;
 
 public class CleverPushHmsListenerService extends HmsMessageService {
-    @Override
-    public void onNewToken(String token) {
-        Logger.d(LOG_TAG, "CleverPushHmsListenerService onNewToken: " + token);
-        SubscriptionManager manager = CleverPush.getInstance(this).getSubscriptionManager();
-        if (manager.getType() == SubscriptionManager.SubscriptionManagerType.HMS) {
-            ((SubscriptionManagerHMS) manager).tokenCallback(token);
-        }
+  @Override
+  public void onNewToken(String token) {
+    Logger.d(LOG_TAG, "CleverPushHmsListenerService onNewToken: " + token);
+    SubscriptionManager manager = CleverPush.getInstance(this).getSubscriptionManager();
+    if (manager.getType() == SubscriptionManager.SubscriptionManagerType.HMS) {
+      ((SubscriptionManagerHMS) manager).tokenCallback(token);
     }
+  }
 
-    @Override
-    public void onMessageReceived(RemoteMessage message) {
-        String dataStr = message.getData();
+  @Override
+  public void onMessageReceived(RemoteMessage message) {
+    String dataStr = message.getData();
 
-        if (dataStr != null) {
-            Gson gson = new Gson();
-            RemoteMessageData messageData = gson.fromJson(dataStr, RemoteMessageData.class);
+    if (dataStr != null) {
+      Gson gson = new Gson();
+      RemoteMessageData messageData = gson.fromJson(dataStr, RemoteMessageData.class);
 
-            Notification notification = messageData.getNotification();
-            String notificationStr = gson.toJson(notification);
+      Notification notification = messageData.getNotification();
+      String notificationStr = gson.toJson(notification);
 
-            Subscription subscription = messageData.getSubscription();
-            String subscriptionStr = gson.toJson(subscription);
+      Subscription subscription = messageData.getSubscription();
+      String subscriptionStr = gson.toJson(subscription);
 
-            notification.setRawPayload(notificationStr);
-            subscription.setRawPayload(subscriptionStr);
+      notification.setRawPayload(notificationStr);
+      subscription.setRawPayload(subscriptionStr);
 
-            NotificationDataProcessor.process(this, notification, subscription);
-        }
+      NotificationDataProcessor.process(this, notification, subscription);
     }
+  }
 }

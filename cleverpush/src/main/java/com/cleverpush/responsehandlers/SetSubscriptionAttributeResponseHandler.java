@@ -17,38 +17,38 @@ import java.util.Map;
 
 public class SetSubscriptionAttributeResponseHandler {
 
-    public CleverPushHttpClient.ResponseHandler getResponseHandler(Map<String, Object> subscriptionAttributes) {
-        return new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-                try {
-                    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-                    if (sharedPreferences != null) {
-                        JSONObject jsonObject = new JSONObject(subscriptionAttributes);
-                        String jsonString = jsonObject.toString();
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
-                        editor.apply();
-                        editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-                        editor.commit();
-                    }
-                } catch (Exception ex) {
-                    Logger.e(LOG_TAG, ex.getMessage(), ex);
-                }
-            }
+  public CleverPushHttpClient.ResponseHandler getResponseHandler(Map<String, Object> subscriptionAttributes) {
+    return new CleverPushHttpClient.ResponseHandler() {
+      @Override
+      public void onSuccess(String response) {
+        try {
+          SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+          if (sharedPreferences != null) {
+            JSONObject jsonObject = new JSONObject(subscriptionAttributes);
+            String jsonString = jsonObject.toString();
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+            editor.apply();
+            editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
+            editor.commit();
+          }
+        } catch (Exception ex) {
+          Logger.e(LOG_TAG, ex.getMessage(), ex);
+        }
+      }
 
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
-                Logger.e("CleverPush", "Error setting attribute - HTTP " + statusCode);
-            }
-        };
-    }
+      @Override
+      public void onFailure(int statusCode, String response, Throwable throwable) {
+        Logger.e("CleverPush", "Error setting attribute - HTTP " + statusCode);
+      }
+    };
+  }
 
-    public SharedPreferences getSharedPreferences(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context);
-    }
+  public SharedPreferences getSharedPreferences(Context context) {
+    return PreferenceManager.getDefaultSharedPreferences(context);
+  }
 
-    public Context getContext() {
-        return CleverPush.context;
-    }
+  public Context getContext() {
+    return CleverPush.context;
+  }
 }

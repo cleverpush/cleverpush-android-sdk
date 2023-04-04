@@ -15,46 +15,48 @@ import java.util.Set;
 
 public class RemoveSubscriptionTagResponseHandler {
 
-    public CleverPushHttpClient.ResponseHandler getResponseHandler(String tagId, RemoveTagCompletedListener removeTagCompletedListener, int currentPositionOfTagToRemove, Set<String> tags) {
-        return new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-                tags.remove(tagId);
-                updateSubscriptionTags(tags);
-                if (removeTagCompletedListener != null) {
-                    removeTagCompletedListener.tagRemoved(currentPositionOfTagToRemove);
-                }
-            }
+  public CleverPushHttpClient.ResponseHandler getResponseHandler(String tagId,
+                                                                 RemoveTagCompletedListener removeTagCompletedListener,
+                                                                 int currentPositionOfTagToRemove, Set<String> tags) {
+    return new CleverPushHttpClient.ResponseHandler() {
+      @Override
+      public void onSuccess(String response) {
+        tags.remove(tagId);
+        updateSubscriptionTags(tags);
+        if (removeTagCompletedListener != null) {
+          removeTagCompletedListener.tagRemoved(currentPositionOfTagToRemove);
+        }
+      }
 
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
-                Logger.e("CleverPush", "Error removing tag - HTTP " + statusCode);
-                if (removeTagCompletedListener != null) {
-                    removeTagCompletedListener.onFailure(new Exception("Error removing tag - HTTP " + statusCode));
-                }
-            }
-        };
+      @Override
+      public void onFailure(int statusCode, String response, Throwable throwable) {
+        Logger.e("CleverPush", "Error removing tag - HTTP " + statusCode);
+        if (removeTagCompletedListener != null) {
+          removeTagCompletedListener.onFailure(new Exception("Error removing tag - HTTP " + statusCode));
+        }
+      }
+    };
 
-    }
+  }
 
-    public void updateSubscriptionTags(Set<String> tags) {
-        SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
-        editor.apply();
-        editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
-        editor.commit();
-    }
+  public void updateSubscriptionTags(Set<String> tags) {
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
+    editor.apply();
+    editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
+    editor.commit();
+  }
 
-    public Set<String> getSubscriptionTags() {
-        return getSharedPreferences(getContext()).getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
-    }
+  public Set<String> getSubscriptionTags() {
+    return getSharedPreferences(getContext()).getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>());
+  }
 
-    public SharedPreferences getSharedPreferences(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context);
-    }
+  public SharedPreferences getSharedPreferences(Context context) {
+    return PreferenceManager.getDefaultSharedPreferences(context);
+  }
 
-    public Context getContext() {
-        return CleverPush.context;
-    }
+  public Context getContext() {
+    return CleverPush.context;
+  }
 }

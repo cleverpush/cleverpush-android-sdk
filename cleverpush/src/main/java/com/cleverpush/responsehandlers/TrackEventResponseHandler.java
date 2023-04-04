@@ -5,17 +5,17 @@ import com.cleverpush.util.Logger;
 
 public class TrackEventResponseHandler {
 
-    public CleverPushHttpClient.ResponseHandler getResponseHandler(String eventName) {
-        return new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-                Logger.d("CleverPush", "Event successfully tracked: " + eventName);
-            }
+  public CleverPushHttpClient.ResponseHandler getResponseHandler(String eventName) {
+    return new CleverPushHttpClient.ResponseHandler() {
+      @Override
+      public void onSuccess(String response) {
+        Logger.d("CleverPush", "Event successfully tracked: " + eventName);
+      }
 
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
-                Logger.e("CleverPush", "Error tracking event - HTTP " + statusCode);
-            }
-        };
-    }
+      @Override
+      public void onFailure(int statusCode, String response, Throwable throwable) {
+        Logger.e("CleverPush", "Error tracking event - HTTP " + statusCode);
+      }
+    };
+  }
 }

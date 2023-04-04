@@ -21,47 +21,48 @@ import org.json.JSONObject;
 import java.util.Map;
 
 public class CleverPushFcmListenerService extends FirebaseMessagingService {
-    @Override
-    public void onMessageReceived(@NonNull RemoteMessage message) {
-        Logger.d(LOG_TAG, "FCM: onMessageReceived");
+  @Override
+  public void onMessageReceived(@NonNull RemoteMessage message) {
+    Logger.d(LOG_TAG, "FCM: onMessageReceived");
 
-        try {
-			Map<String, String> data = message.getData();
-			if (data.size() > 0) {
-				Logger.d(LOG_TAG, "Notification data: " + data.toString());
+    try {
+      Map<String, String> data = message.getData();
+      if (data.size() > 0) {
+        Logger.d(LOG_TAG, "Notification data: " + data.toString());
 
-				String notificationStr = (String) data.get("notification");
-				String subscriptionStr = (String) data.get("subscription");
+        String notificationStr = (String) data.get("notification");
+        String subscriptionStr = (String) data.get("subscription");
 
-				if (notificationStr != null && subscriptionStr != null) {
-					Gson gson = new Gson();
-					Notification notification = gson.fromJson(notificationStr, Notification.class);
-					notification.setRawPayload(notificationStr);
-					Subscription subscription = gson.fromJson(subscriptionStr, Subscription.class);
-					subscription.setRawPayload(subscriptionStr);
-					NotificationDataProcessor.process(this, notification, subscription);
-				}
+        if (notificationStr != null && subscriptionStr != null) {
+          Gson gson = new Gson();
+          Notification notification = gson.fromJson(notificationStr, Notification.class);
+          notification.setRawPayload(notificationStr);
+          Subscription subscription = gson.fromJson(subscriptionStr, Subscription.class);
+          subscription.setRawPayload(subscriptionStr);
+          NotificationDataProcessor.process(this, notification, subscription);
+        }
 
-			} else {
-				Logger.e(LOG_TAG, "Notification data is empty");
-			}
-		} catch (Exception exception) {
-			Logger.e(LOG_TAG, "Error in FCM onMessageReceived handler", exception);
-		}
+      } else {
+        Logger.e(LOG_TAG, "Notification data is empty");
+      }
+    } catch (Exception exception) {
+      Logger.e(LOG_TAG, "Error in FCM onMessageReceived handler", exception);
+    }
+  }
+
+  @Override
+  public void onNewToken(@NonNull String token) {
+    Logger.d(LOG_TAG, "FCM: onNewToken");
+
+    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+
+    if (subscriptionId == null) {
+      return;
     }
 
-    @Override
-	public void onNewToken(@NonNull String token) {
-		Logger.d(LOG_TAG, "FCM: onNewToken");
-
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-		String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-
-		if (subscriptionId == null) {
-			return;
-		}
-
-		CleverPush cleverPush = CleverPush.getInstance(this);
-		cleverPush.getChannelConfig((JSONObject channelConfig) -> cleverPush.getSubscriptionManager().checkChangedPushToken(channelConfig, token));
-	}
+    CleverPush cleverPush = CleverPush.getInstance(this);
+    cleverPush.getChannelConfig(
+        (JSONObject channelConfig) -> cleverPush.getSubscriptionManager().checkChangedPushToken(channelConfig, token));
+  }
 }

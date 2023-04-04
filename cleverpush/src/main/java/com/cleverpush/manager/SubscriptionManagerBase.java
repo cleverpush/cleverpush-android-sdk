@@ -26,162 +26,166 @@ import java.util.Set;
 import java.util.TimeZone;
 
 abstract class SubscriptionManagerBase implements SubscriptionManager {
-    Context context;
-    SubscriptionManagerType type;
+  Context context;
+  SubscriptionManagerType type;
 
-    SubscriptionManagerBase(Context context, SubscriptionManagerType type) {
-        this.context = context;
-        this.type = type;
+  SubscriptionManagerBase(Context context, SubscriptionManagerType type) {
+    this.context = context;
+    this.type = type;
+  }
+
+  void syncSubscription(String token, SubscribedCallbackListener subscribedListener) {
+    syncSubscription(token, subscribedListener, null);
+  }
+
+  void syncSubscription(String token, SubscribedCallbackListener subscribedListener, String senderId) {
+    syncSubscription(token, subscribedListener, senderId, false);
+  }
+
+  void syncSubscription(String token, SubscribedCallbackListener subscribedListener, String senderId, boolean isRetry) {
+    Logger.d(LOG_TAG, "syncSubscription");
+    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+    if (this.type == SubscriptionManagerType.ADM) {
+      sharedPreferences.edit().putString(CleverPushPreferences.ADM_TOKEN, token).apply();
+    } else if (this.type == SubscriptionManagerType.HMS) {
+      sharedPreferences.edit().putString(CleverPushPreferences.HMS_TOKEN, token).apply();
+    } else {
+      sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
     }
 
-    void syncSubscription(String token, SubscribedCallbackListener subscribedListener) {
-        syncSubscription(token, subscribedListener, null);
+    String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
+    String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+    String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
+    if (channelId == null) {
+      Logger.d(LOG_TAG, "channelId in preferences not found");
+      return;
     }
 
-    void syncSubscription(String token, SubscribedCallbackListener subscribedListener, String senderId) {
-        syncSubscription(token, subscribedListener, senderId, false);
+    String language = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
+    String country = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
+    TimeZone timeZone = TimeZone.getDefault();
+
+    Set<String> topics = null;
+    if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS)) {
+      topics = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, null);
     }
 
-    void syncSubscription(String token, SubscribedCallbackListener subscribedListener, String senderId, boolean isRetry) {
-        Logger.d(LOG_TAG, "syncSubscription");
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
-        if (this.type == SubscriptionManagerType.ADM) {
-            sharedPreferences.edit().putString(CleverPushPreferences.ADM_TOKEN, token).apply();
-        } else if (this.type == SubscriptionManagerType.HMS) {
-            sharedPreferences.edit().putString(CleverPushPreferences.HMS_TOKEN, token).apply();
-        } else {
-            sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
-        }
+    int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
 
-        String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
-        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
-        if (channelId == null) {
-            Logger.d(LOG_TAG, "channelId in preferences not found");
-            return;
-        }
+    String appVersion = "";
+    if (this.context != null) {
+      try {
+        PackageInfo pInfo = this.context.getPackageManager().getPackageInfo(this.context.getPackageName(), 0);
+        appVersion = pInfo.versionName;
+      } catch (PackageManager.NameNotFoundException e) {
+        e.printStackTrace();
+      }
+    }
 
-        String language = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
-        String country = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
-        TimeZone timeZone = TimeZone.getDefault();
+    JSONObject jsonBody = new JSONObject();
+    try {
+      if (this.type == SubscriptionManagerType.ADM) {
+        jsonBody.put("admToken", token);
+      } else if (this.type == SubscriptionManagerType.HMS) {
+        jsonBody.put("hmsToken", token);
+        jsonBody.put("hmsId", senderId);
+      } else {
+        jsonBody.put("fcmToken", token);
+        jsonBody.put("fcmId", senderId);
+      }
+      if (subscriptionId != null) {
+        jsonBody.put("subscriptionId", subscriptionId);
+      }
+      jsonBody.put("platformName", "Android");
+      jsonBody.put("platformVersion", Build.VERSION.RELEASE);
+      jsonBody.put("browserType", "SDK");
+      jsonBody.put("browserVersion", CleverPush.SDK_VERSION);
+      jsonBody.put("appVersion", appVersion);
+      if (language != null) {
+        jsonBody.put("language", language);
+      }
+      if (country != null) {
+        jsonBody.put("country", country);
+      }
+      if (timeZone != null && timeZone.getID() != null) {
+        jsonBody.put("timezone", timeZone.getID());
+      }
+      if (deviceId != null) {
+        jsonBody.put("deviceId", deviceId);
+      }
+      if (topics != null) {
+        jsonBody.put("topics", new JSONArray(topics));
+        jsonBody.put("topicsVersion", topicsVersion);
+      }
+    } catch (JSONException e) {
+      Logger.e(LOG_TAG, "Error", e);
+    }
 
-        Set<String> topics = null;
-        if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS)) {
-            topics = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, null);
-        }
-
-        int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
-
-        String appVersion = "";
-        if (this.context != null) {
-            try {
-                PackageInfo pInfo = this.context.getPackageManager().getPackageInfo(this.context.getPackageName(), 0);
-                appVersion = pInfo.versionName;
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-
-        JSONObject jsonBody = new JSONObject();
+    CleverPushHttpClient.post("/subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
+      @Override
+      public void onSuccess(String response) {
         try {
-            if (this.type == SubscriptionManagerType.ADM) {
-                jsonBody.put("admToken", token);
-            } else if (this.type == SubscriptionManagerType.HMS) {
-                jsonBody.put("hmsToken", token);
-                jsonBody.put("hmsId", senderId);
+          Logger.d(LOG_TAG, "sync response: " + response);
+          JSONObject responseJson = new JSONObject(response);
+          if (responseJson.has("id")) {
+            String newSubscriptionId = responseJson.getString("id");
+            sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, newSubscriptionId).apply();
+            sharedPreferences.edit()
+                .putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L))
+                .apply();
+            subscribedListener.onSuccess(newSubscriptionId);
+          }
+          if (responseJson.has("topics")) {
+            JSONArray topicsArray = responseJson.getJSONArray("topics");
+            List<String> topicIds = new ArrayList<>();
+            if (topicsArray != null) {
+              for (int i = 0; i < topicsArray.length(); i++) {
+                String topicId = topicsArray.getString(i);
+                if (topicId != null) {
+                  topicIds.add(topicId);
+                }
+              }
+            }
+            if (!CleverPush.isSubscribeForTopicsDialog()) {
+              sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(topicIds))
+                  .apply();
             } else {
-                jsonBody.put("fcmToken", token);
-                jsonBody.put("fcmId", senderId);
+              CleverPush.setIsSubscribeForTopicsDialog(false);
             }
-            if (subscriptionId != null) {
-                jsonBody.put("subscriptionId", subscriptionId);
+
+            if (responseJson.has("topicsVersion")) {
+              int topicsVersion = responseJson.getInt("topicsVersion");
+              if (topicsVersion > 0) {
+                sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion)
+                    .apply();
+              }
             }
-            jsonBody.put("platformName", "Android");
-            jsonBody.put("platformVersion", Build.VERSION.RELEASE);
-            jsonBody.put("browserType", "SDK");
-            jsonBody.put("browserVersion", CleverPush.SDK_VERSION);
-            jsonBody.put("appVersion", appVersion);
-            if (language != null) {
-                jsonBody.put("language", language);
-            }
-            if (country != null) {
-                jsonBody.put("country", country);
-            }
-            if (timeZone != null && timeZone.getID() != null) {
-                jsonBody.put("timezone", timeZone.getID());
-            }
-            if (deviceId != null) {
-                jsonBody.put("deviceId", deviceId);
-            }
-            if (topics != null) {
-                jsonBody.put("topics", new JSONArray(topics));
-                jsonBody.put("topicsVersion", topicsVersion);
-            }
-        } catch (JSONException e) {
-            Logger.e(LOG_TAG, "Error", e);
+          }
+        } catch (Throwable throwable) {
+          Logger.e(LOG_TAG, "Error", throwable);
         }
+      }
 
-        CleverPushHttpClient.post("/subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
-            @Override
-            public void onSuccess(String response) {
-                try {
-                    Logger.d(LOG_TAG, "sync response: " + response);
-                    JSONObject responseJson = new JSONObject(response);
-                    if (responseJson.has("id")) {
-                        String newSubscriptionId = responseJson.getString("id");
-                        sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, newSubscriptionId).apply();
-                        sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L)).apply();
-                        subscribedListener.onSuccess(newSubscriptionId);
-                    }
-                    if (responseJson.has("topics")) {
-                        JSONArray topicsArray = responseJson.getJSONArray("topics");
-                        List<String> topicIds = new ArrayList<>();
-                        if (topicsArray != null) {
-                            for (int i = 0; i < topicsArray.length(); i++) {
-                                String topicId = topicsArray.getString(i);
-                                if (topicId != null) {
-                                    topicIds.add(topicId);
-                                }
-                            }
-                        }
-                        if (!CleverPush.isSubscribeForTopicsDialog()) {
-                            sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(topicIds)).apply();
-                        } else {
-                            CleverPush.setIsSubscribeForTopicsDialog(false);
-                        }
+      @Override
+      public void onFailure(int statusCode, String response, Throwable throwable) {
+        if ((statusCode == 404 || statusCode == 410) && !isRetry) {
+          sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
+          syncSubscription(token, subscribedListener, senderId, true);
+          return;
+        }
+        subscribedListener.onFailure(throwable);
+        Logger.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, throwable);
+      }
+    });
+  }
 
-                        if (responseJson.has("topicsVersion")) {
-                            int topicsVersion = responseJson.getInt("topicsVersion");
-                            if (topicsVersion > 0) {
-                                sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion).apply();
-                            }
-                        }
-                    }
-                } catch (Throwable throwable) {
-                    Logger.e(LOG_TAG, "Error", throwable);
-                }
-            }
+  public SubscriptionManagerType getType() {
+    return this.type;
+  }
 
-            @Override
-            public void onFailure(int statusCode, String response, Throwable throwable) {
-                if ((statusCode == 404 || statusCode == 410) && !isRetry) {
-                    sharedPreferences.edit().remove(CleverPushPreferences.SUBSCRIPTION_ID).apply();
-                    syncSubscription(token, subscribedListener, senderId, true);
-                    return;
-                }
-                subscribedListener.onFailure(throwable);
-                Logger.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, throwable);
-            }
-        });
-    }
-
-    public SubscriptionManagerType getType() {
-        return this.type;
-    }
-
-    @Override
-    public void checkChangedPushToken(JSONObject channelConfig) {
-        this.checkChangedPushToken(channelConfig, null);
-    }
+  @Override
+  public void checkChangedPushToken(JSONObject channelConfig) {
+    this.checkChangedPushToken(channelConfig, null);
+  }
 
 }

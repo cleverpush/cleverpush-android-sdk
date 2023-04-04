@@ -9,138 +9,138 @@ import java.util.List;
 
 public class Widget {
 
-    public static final long serialVersionUID = -7102250436681274220L;
+  public static final long serialVersionUID = -7102250436681274220L;
 
-    @SerializedName("_id")
-    @Expose
-    private String id;
+  @SerializedName("_id")
+  @Expose
+  private String id;
 
-    @SerializedName("channel")
-    @Expose
-    private String channel;
+  @SerializedName("channel")
+  @Expose
+  private String channel;
 
-    @SerializedName("name")
-    @Expose
-    private String name;
+  @SerializedName("name")
+  @Expose
+  private String name;
 
-    @SerializedName("variant")
-    @Expose
-    private String variant;
+  @SerializedName("variant")
+  @Expose
+  private String variant;
 
-    @SerializedName("maxStoriesNumber")
-    @Expose
-    private int maxStoriesNumber;
+  @SerializedName("maxStoriesNumber")
+  @Expose
+  private int maxStoriesNumber;
 
-    @SerializedName("storyHeight")
-    @Expose
-    private int storyHeight;
+  @SerializedName("storyHeight")
+  @Expose
+  private int storyHeight;
 
-    @SerializedName("position")
-    @Expose
-    private String position;
+  @SerializedName("position")
+  @Expose
+  private String position;
 
-    @SerializedName("margin")
-    @Expose
-    private int margin;
+  @SerializedName("margin")
+  @Expose
+  private int margin;
 
-    @SerializedName("display")
-    @Expose
-    private String display;
+  @SerializedName("display")
+  @Expose
+  private String display;
 
-    @SerializedName("selectedStories")
-    @Expose
-    private List<Object> selectedStories = Collections.emptyList();
+  @SerializedName("selectedStories")
+  @Expose
+  private List<Object> selectedStories = Collections.emptyList();
 
-    @SerializedName("createdAt")
-    @Expose
-    private String createdAt;
+  @SerializedName("createdAt")
+  @Expose
+  private String createdAt;
 
-    public String getId() {
-        return this.id;
-    }
+  public String getId() {
+    return this.id;
+  }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+  public void setId(String id) {
+    this.id = id;
+  }
 
-    public String getChannel() {
-        return this.channel;
-    }
+  public String getChannel() {
+    return this.channel;
+  }
 
-    public void setChannel(String channel) {
-        this.channel = channel;
-    }
+  public void setChannel(String channel) {
+    this.channel = channel;
+  }
 
-    public String getName() {
-        return this.name;
-    }
+  public String getName() {
+    return this.name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public String getVariant() {
-        return this.variant;
-    }
+  public String getVariant() {
+    return this.variant;
+  }
 
-    public void setVariant(String variant) {
-        this.variant = variant;
-    }
+  public void setVariant(String variant) {
+    this.variant = variant;
+  }
 
-    public int getMaxStoriesNumber() {
-        return this.maxStoriesNumber;
-    }
+  public int getMaxStoriesNumber() {
+    return this.maxStoriesNumber;
+  }
 
-    public void setMaxStoriesNumber(int maxStoriesNumber) {
-        this.maxStoriesNumber = maxStoriesNumber;
-    }
+  public void setMaxStoriesNumber(int maxStoriesNumber) {
+    this.maxStoriesNumber = maxStoriesNumber;
+  }
 
-    public int getStoryHeight() {
-        return this.storyHeight;
-    }
+  public int getStoryHeight() {
+    return this.storyHeight;
+  }
 
-    public void setStoryHeight(int storyHeight) {
-        this.storyHeight = storyHeight;
-    }
+  public void setStoryHeight(int storyHeight) {
+    this.storyHeight = storyHeight;
+  }
 
-    public String getPosition() {
-        return this.position;
-    }
+  public String getPosition() {
+    return this.position;
+  }
 
-    public void setPosition(String position) {
-        this.position = position;
-    }
+  public void setPosition(String position) {
+    this.position = position;
+  }
 
-    public int getMargin() {
-        return this.margin;
-    }
+  public int getMargin() {
+    return this.margin;
+  }
 
-    public void setMargin(int margin) {
-        this.margin = margin;
-    }
+  public void setMargin(int margin) {
+    this.margin = margin;
+  }
 
-    public String getDisplay() {
-        return this.display;
-    }
+  public String getDisplay() {
+    return this.display;
+  }
 
-    public void setDisplay(String display) {
-        this.display = display;
-    }
+  public void setDisplay(String display) {
+    this.display = display;
+  }
 
-    public List<Object> getSelectedStories() {
-        return selectedStories;
-    }
+  public List<Object> getSelectedStories() {
+    return selectedStories;
+  }
 
-    public void setSelectedStories(List<Object> selectedStories) {
-        this.selectedStories = selectedStories;
-    }
+  public void setSelectedStories(List<Object> selectedStories) {
+    this.selectedStories = selectedStories;
+  }
 
-    public String getCreatedAt() {
-        return createdAt;
-    }
+  public String getCreatedAt() {
+    return createdAt;
+  }
 
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
+  public void setCreatedAt(String createdAt) {
+    this.createdAt = createdAt;
+  }
 
 }

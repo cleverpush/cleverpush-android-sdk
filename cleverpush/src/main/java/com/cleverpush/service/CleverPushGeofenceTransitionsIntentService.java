@@ -24,50 +24,52 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CleverPushGeofenceTransitionsIntentService extends IntentService {
-    protected static final String TAG = "CPGeofenceTransitionsIS";
+  protected static final String TAG = "CPGeofenceTransitionsIS";
 
-    public CleverPushGeofenceTransitionsIntentService() {
-        super(TAG);  // use TAG to name the IntentService worker thread
+  public CleverPushGeofenceTransitionsIntentService() {
+    super(TAG);  // use TAG to name the IntentService worker thread
+  }
+
+  @Override
+  protected void onHandleIntent(Intent intent) {
+
+    GeofencingEvent event = GeofencingEvent.fromIntent(intent);
+    if (event.hasError()) {
+      Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
+      return;
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
+    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        GeofencingEvent event = GeofencingEvent.fromIntent(intent);
-        if (event.hasError()) {
-            Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());
-            return;
+    String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
+    String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+    String transitionState =
+        event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? GEOFENCE_ENTER_STATE :
+            GEOFENCE_EXIT_STATE;
+
+    if (channelId != null && subscriptionId != null) {
+      for (Geofence geofence : event.getTriggeringGeofences()) {
+        JSONObject jsonBody = new JSONObject();
+        try {
+          jsonBody.put("geoFenceId", geofence.getRequestId());
+          jsonBody.put("channelId", channelId);
+          jsonBody.put("subscriptionId", subscriptionId);
+          jsonBody.put("state", transitionState);
+
+          CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, null);
+        } catch (JSONException e) {
+          Logger.e(LOG_TAG, "Error generating geo-fence json", e);
         }
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
-        String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-        String transitionState = event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? GEOFENCE_ENTER_STATE : GEOFENCE_EXIT_STATE;
-
-        if (channelId != null && subscriptionId != null) {
-            for (Geofence geofence : event.getTriggeringGeofences()) {
-                JSONObject jsonBody = new JSONObject();
-                try {
-                    jsonBody.put("geoFenceId", geofence.getRequestId());
-                    jsonBody.put("channelId", channelId);
-                    jsonBody.put("subscriptionId", subscriptionId);
-                    jsonBody.put("state", transitionState);
-
-                    CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, null);
-                } catch (JSONException e) {
-                    Logger.e(LOG_TAG, "Error generating geo-fence json", e);
-                }
-            }
-        }
+      }
     }
+  }
 
-    private static String getGeofenceTransitionDetails(GeofencingEvent event) {
-        String transitionString = GeofenceStatusCodes.getStatusCodeString(event.getGeofenceTransition());
-        List<String> triggeringIDs = new ArrayList<>();
-        for (Geofence geofence : event.getTriggeringGeofences()) {
-            triggeringIDs.add(geofence.getRequestId());
-        }
-        return String.format("%s: %s", transitionString, TextUtils.join(", ", triggeringIDs));
+  private static String getGeofenceTransitionDetails(GeofencingEvent event) {
+    String transitionString = GeofenceStatusCodes.getStatusCodeString(event.getGeofenceTransition());
+    List<String> triggeringIDs = new ArrayList<>();
+    for (Geofence geofence : event.getTriggeringGeofences()) {
+      triggeringIDs.add(geofence.getRequestId());
     }
+    return String.format("%s: %s", transitionString, TextUtils.join(", ", triggeringIDs));
+  }
 }

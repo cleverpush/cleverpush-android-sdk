@@ -8,20 +8,20 @@ import android.view.View.OnTouchListener;
 
 public class OnSwipeTouchListener implements OnTouchListener {
 
-    private GestureDetector gestureDetector;
+  private GestureDetector gestureDetector;
 
-    public OnSwipeTouchListener(Context ctx, View mainView, OnSwipeDownListener onSwipeDownListener) {
-        this.gestureDetector = new GestureDetector(ctx, new GestureListener(onSwipeDownListener));
-        mainView.setOnTouchListener(this);
-    }
+  public OnSwipeTouchListener(Context ctx, View mainView, OnSwipeDownListener onSwipeDownListener) {
+    this.gestureDetector = new GestureDetector(ctx, new GestureListener(onSwipeDownListener));
+    mainView.setOnTouchListener(this);
+  }
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        return gestureDetector.onTouchEvent(event);
-    }
+  @Override
+  public boolean onTouch(View v, MotionEvent event) {
+    return gestureDetector.onTouchEvent(event);
+  }
 
-    public GestureDetector getGestureDetector() {
-        return this.gestureDetector;
-    }
+  public GestureDetector getGestureDetector() {
+    return this.gestureDetector;
+  }
 
 }
