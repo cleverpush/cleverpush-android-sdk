@@ -20,11 +20,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.Notification;
 import com.cleverpush.R;
+import com.cleverpush.inbox.listener.OnItemClickListener;
 import com.cleverpush.listener.ChannelConfigListener;
-import com.cleverpush.stories.listener.OnItemClickListener;
 
 import org.json.JSONObject;
 
@@ -40,17 +41,14 @@ import java.util.Date;
 public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> {
 
   private static final String TAG = "CleverPush/InboxView";
-
   private int DEFAULT_COLOR = Color.BLACK;
   private int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
-
   private Context context;
   private ArrayList<Notification> notificationArrayList;
   private TypedArray typedArray;
   private OnItemClickListener onItemClickListener;
 
-  public InboxViewListAdapter(Context context, ArrayList<Notification> notifications, TypedArray typedArray,
-                              OnItemClickListener onItemClickListener) {
+  public InboxViewListAdapter(Context context, ArrayList<Notification> notifications, TypedArray typedArray, OnItemClickListener onItemClickListener) {
     this.context = context;
     this.notificationArrayList = notifications;
     this.typedArray = typedArray;
@@ -98,8 +96,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
       linearLayout.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_read_color, DEFAULT_BACKGROUND_COLOR));
       titleTextView.setTypeface(Typeface.create(titleTextView.getTypeface(), Typeface.NORMAL));
     } else {
-      linearLayout.setBackgroundColor(
-          typedArray.getColor(R.styleable.InboxView_unread_color, DEFAULT_BACKGROUND_COLOR));
+      linearLayout.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_unread_color, DEFAULT_BACKGROUND_COLOR));
       titleTextView.setTypeface(titleTextView.getTypeface(), Typeface.BOLD);
     }
 
@@ -169,6 +166,11 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
       Logger.e(TAG, e.getLocalizedMessage());
     }
     java.text.DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
+
+    if (date == null) {
+      return "";
+    }
+
     return dateFormat.format(date);
   }
 
@@ -199,7 +201,12 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
 
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream[0]);
         if (bitmap != null) {
-          image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 50, 50, false));
+          ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+              image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 50, 50, false));
+            }
+          });
         }
       } catch (Exception exception) {
         Logger.e(TAG, exception.getLocalizedMessage());

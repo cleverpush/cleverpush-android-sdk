@@ -13,20 +13,20 @@ import android.widget.ProgressBar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.Notification;
-import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.R;
+import com.cleverpush.inbox.listener.OnItemClickListener;
 import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.listener.NotificationClickListener;
 import com.cleverpush.listener.NotificationsCallbackListener;
-import com.cleverpush.stories.listener.OnItemClickListener;
 
 import java.util.ArrayList;
 import java.util.Set;
 
-public class InboxView extends LinearLayout implements OnItemClickListener {
+public class InboxView extends LinearLayout {
 
   private TypedArray typedArray;
   private InboxViewListAdapter inboxViewListAdapter;
@@ -85,7 +85,7 @@ public class InboxView extends LinearLayout implements OnItemClickListener {
     View view = LayoutInflater.from(context).inflate(R.layout.inbox_view, this, true);
     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
     recyclerView = view.findViewById(R.id.rvNotifications);
-    inboxViewListAdapter = new InboxViewListAdapter(context, notifications, typedArray, this);
+    inboxViewListAdapter = new InboxViewListAdapter(context, notifications, typedArray, getOnItemClickListener(notificationArrayList, recyclerView));
     recyclerView.setLayoutManager(linearLayoutManager);
     recyclerView.setAdapter(inboxViewListAdapter);
     progressBar.setVisibility(GONE);
@@ -110,18 +110,24 @@ public class InboxView extends LinearLayout implements OnItemClickListener {
     return typedArray;
   }
 
-  @Override
-  public void onClicked(int position) {
-    if (notificationClickListener != null) {
-      notificationClickListener.onClicked(notificationArrayList.get(position));
-    } else if (getCleverPushInstance().getNotificationOpenedListener() != null) {
-      NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
-      notificationOpenedResult.setNotification(notificationArrayList.get(position));
-      getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult);
-    }
+  private OnItemClickListener getOnItemClickListener(ArrayList<Notification> notificationArrayList, RecyclerView recyclerView) {
+    return position -> {
+      if (notificationClickListener != null) {
+        Notification clickedNotification = notificationArrayList.get(position);
 
-    notificationArrayList.get(position).setRead(true);
-    inboxViewListAdapter.notifyItemChanged(position, notificationArrayList.get(position));
-    recyclerView.smoothScrollToPosition(position);
+        if (clickedNotification.getAppBanner() != null) {
+          InboxDetailActivity.launch(ActivityLifecycleListener.currentActivity, notificationArrayList, position);
+        }
+        notificationClickListener.onClicked(notificationArrayList.get(position));
+      } else if (getCleverPushInstance().getNotificationOpenedListener() != null) {
+        NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
+        notificationOpenedResult.setNotification(notificationArrayList.get(position));
+        getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult);
+      }
+
+      notificationArrayList.get(position).setRead(true);
+      inboxViewListAdapter.notifyItemChanged(position, notificationArrayList.get(position));
+      recyclerView.smoothScrollToPosition(position);
+    };
   }
 }

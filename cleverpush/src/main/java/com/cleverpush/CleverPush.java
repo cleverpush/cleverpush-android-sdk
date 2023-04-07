@@ -3264,6 +3264,7 @@ public class CleverPush {
 
   public void setInitializeListener(InitializeListener initializeListener) {
     this.initializeListener = initializeListener;
+    fireInitializeListener();
   }
 
   public void fireInitializeListener() {

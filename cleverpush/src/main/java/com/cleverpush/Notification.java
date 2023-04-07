@@ -46,6 +46,9 @@ public class Notification implements Serializable {
   String createdAt;
   @SerializedName("appBanner")
   String appBanner;
+  @SerializedName("inboxViewDetailBanner")
+  String inboxViewDetailBanner;
+
   Boolean read = false;
   Boolean fromApi = false;
 
@@ -91,8 +94,7 @@ public class Notification implements Serializable {
     if (soundFilename != null && !soundFilename.isEmpty()) {
       return soundFilename;
     }
-    if (this.getCategory() != null && this.getCategory().getSoundFilename() != null && !this.getCategory()
-        .getSoundFilename().isEmpty()) {
+    if (this.getCategory() != null && this.getCategory().getSoundFilename() != null && !this.getCategory().getSoundFilename().isEmpty()) {
       return this.getCategory().getSoundFilename();
     }
     return null;
@@ -217,6 +219,10 @@ public class Notification implements Serializable {
 
   public String getAppBanner() {
     return appBanner;
+  }
+
+  public String getInboxViewDetailBanner() {
+    return inboxViewDetailBanner;
   }
 
   public Boolean getRead() {
