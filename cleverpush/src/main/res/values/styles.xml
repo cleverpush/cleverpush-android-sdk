@@ -22,6 +22,7 @@
         <item name="android:windowExitAnimation">@anim/banner_out_anim</item>
     </style>
 
-    <style name="alertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert"></style>
+    <style name="alertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+    </style>
 
 </resources>
