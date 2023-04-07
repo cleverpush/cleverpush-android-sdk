@@ -1,4 +1,5 @@
 // Subpackaged to prevent conflicts with other plugins
+
 package com.cleverpush.shortcutbadger.impl;
 
 import android.content.ComponentName;
@@ -17,30 +18,30 @@ import com.cleverpush.shortcutbadger.util.BroadcastHelper;
  */
 public class AdwHomeBadger implements Badger {
 
-    public static final String INTENT_UPDATE_COUNTER = "org.adw.launcher.counter.SEND";
-    public static final String PACKAGENAME = "PNAME";
-    public static final String CLASSNAME = "CNAME";
-    public static final String COUNT = "COUNT";
+  public static final String INTENT_UPDATE_COUNTER = "org.adw.launcher.counter.SEND";
+  public static final String PACKAGENAME = "PNAME";
+  public static final String CLASSNAME = "CNAME";
+  public static final String COUNT = "COUNT";
 
-    @Override
-    public void executeBadge(Context context, ComponentName componentName, int badgeCount) throws ShortcutBadgeException {
+  @Override
+  public void executeBadge(Context context, ComponentName componentName, int badgeCount) throws ShortcutBadgeException {
 
-        Intent intent = new Intent(INTENT_UPDATE_COUNTER);
-        intent.putExtra(PACKAGENAME, componentName.getPackageName());
-        intent.putExtra(CLASSNAME, componentName.getClassName());
-        intent.putExtra(COUNT, badgeCount);
-        if (BroadcastHelper.canResolveBroadcast(context, intent)) {
-            context.sendBroadcast(intent);
-        } else {
-            throw new ShortcutBadgeException("unable to resolve intent: " + intent.toString());
-        }
+    Intent intent = new Intent(INTENT_UPDATE_COUNTER);
+    intent.putExtra(PACKAGENAME, componentName.getPackageName());
+    intent.putExtra(CLASSNAME, componentName.getClassName());
+    intent.putExtra(COUNT, badgeCount);
+    if (BroadcastHelper.canResolveBroadcast(context, intent)) {
+      context.sendBroadcast(intent);
+    } else {
+      throw new ShortcutBadgeException("unable to resolve intent: " + intent.toString());
     }
+  }
 
-    @Override
-    public List<String> getSupportLaunchers() {
-        return Arrays.asList(
-                "org.adw.launcher",
-                "org.adwfreak.launcher"
-        );
-    }
+  @Override
+  public List<String> getSupportLaunchers() {
+    return Arrays.asList(
+        "org.adw.launcher",
+        "org.adwfreak.launcher"
+    );
+  }
 }

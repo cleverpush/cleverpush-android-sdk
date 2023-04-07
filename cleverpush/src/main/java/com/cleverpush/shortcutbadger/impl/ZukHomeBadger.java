@@ -1,4 +1,5 @@
 // Subpackaged to prevent conflicts with other plugins
+
 package com.cleverpush.shortcutbadger.impl;
 
 import android.annotation.TargetApi;
@@ -21,18 +22,18 @@ import com.cleverpush.shortcutbadger.ShortcutBadgeException;
 
 public class ZukHomeBadger implements Badger {
 
-    private final Uri CONTENT_URI = Uri.parse("content://com.android.badge/badge");
+  private final Uri CONTENT_URI = Uri.parse("content://com.android.badge/badge");
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    @Override
-    public void executeBadge(Context context, ComponentName componentName, int badgeCount) throws ShortcutBadgeException {
-        Bundle extra = new Bundle();
-        extra.putInt("app_badge_count", badgeCount);
-        context.getContentResolver().call(CONTENT_URI, "setAppBadgeCount", null, extra);
-    }
+  @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+  @Override
+  public void executeBadge(Context context, ComponentName componentName, int badgeCount) throws ShortcutBadgeException {
+    Bundle extra = new Bundle();
+    extra.putInt("app_badge_count", badgeCount);
+    context.getContentResolver().call(CONTENT_URI, "setAppBadgeCount", null, extra);
+  }
 
-    @Override
-    public List<String> getSupportLaunchers() {
-        return Collections.singletonList("com.zui.launcher");
-    }
+  @Override
+  public List<String> getSupportLaunchers() {
+    return Collections.singletonList("com.zui.launcher");
+  }
 }

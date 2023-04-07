@@ -5,5 +5,5 @@ import android.app.Activity;
 import com.cleverpush.NotificationOpenedResult;
 
 public interface NotificationOpenedListenerBase {
-    void notificationOpened(NotificationOpenedResult result);
+  void notificationOpened(NotificationOpenedResult result);
 }

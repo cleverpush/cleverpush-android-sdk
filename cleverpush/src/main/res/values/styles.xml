@@ -15,7 +15,7 @@
 
     <style name="notificationInfo" parent="" />
 
-	<style name="banner_body" parent="" />
+    <style name="banner_body" parent="" />
 
     <style name="banner_animation">
         <item name="android:windowEnterAnimation">@anim/banner_in_anim</item>

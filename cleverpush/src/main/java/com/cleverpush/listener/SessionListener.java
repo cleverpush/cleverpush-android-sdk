@@ -1,6 +1,6 @@
 package com.cleverpush.listener;
 
 public interface SessionListener {
-    public void stateChanged(boolean open);
+  public void stateChanged(boolean open);
 
 }

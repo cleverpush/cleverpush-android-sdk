@@ -1,4 +1,5 @@
 // Subpackaged to prevent conflicts with other plugins
+
 package com.cleverpush.shortcutbadger.util;
 
 import android.database.Cursor;
@@ -11,20 +12,20 @@ import java.io.IOException;
  */
 public class CloseHelper {
 
-    public static void close(Cursor cursor) {
-        if (cursor != null && !cursor.isClosed()) {
-            cursor.close();
-        }
+  public static void close(Cursor cursor) {
+    if (cursor != null && !cursor.isClosed()) {
+      cursor.close();
     }
+  }
 
 
-    public static void closeQuietly(Closeable closeable) {
-        try {
-            if (closeable != null) {
-                closeable.close();
-            }
-        } catch (IOException var2) {
+  public static void closeQuietly(Closeable closeable) {
+    try {
+      if (closeable != null) {
+        closeable.close();
+      }
+    } catch (IOException var2) {
 
-        }
     }
+  }
 }

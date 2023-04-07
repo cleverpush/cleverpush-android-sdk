@@ -10,13 +10,13 @@ import com.cleverpush.R;
 
 public class StoryDetailViewHolder extends RecyclerView.ViewHolder {
 
-    public WebView webView;
-    public ProgressBar progressBar;
+  public WebView webView;
+  public ProgressBar progressBar;
 
-    public StoryDetailViewHolder(View itemView) {
-        super(itemView);
-        webView = (WebView) itemView.findViewById(R.id.webView);
-        progressBar = (ProgressBar) itemView.findViewById(R.id.progressBar);
-    }
+  public StoryDetailViewHolder(View itemView) {
+    super(itemView);
+    webView = (WebView) itemView.findViewById(R.id.webView);
+    progressBar = (ProgressBar) itemView.findViewById(R.id.progressBar);
+  }
 
 }

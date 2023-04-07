@@ -8,7 +8,8 @@ import com.cleverpush.util.Logger;
 @Deprecated
 public class CleverPushInstanceIDListenerService {
 
-    public void CleverPushInstanceIDListenerService() {
-        Logger.w(LOG_TAG, "CleverPushInstanceIDListenerService is deprecated. Please remove it from your AndroidManifest.xml");
-    }
+  public void CleverPushInstanceIDListenerService() {
+    Logger.w(LOG_TAG,
+        "CleverPushInstanceIDListenerService is deprecated. Please remove it from your AndroidManifest.xml");
+  }
 }

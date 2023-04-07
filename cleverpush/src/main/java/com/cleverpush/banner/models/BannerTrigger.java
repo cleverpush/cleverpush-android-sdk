@@ -8,24 +8,27 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class BannerTrigger {
-	private List<BannerTriggerCondition> conditions;
+  private List<BannerTriggerCondition> conditions;
 
-    private BannerTrigger() {}
+  private BannerTrigger() {
+  }
 
-	public List<BannerTriggerCondition> getConditions() { return conditions; }
+  public List<BannerTriggerCondition> getConditions() {
+    return conditions;
+  }
 
-    public static BannerTrigger create(JSONObject json) throws JSONException {
-        BannerTrigger trigger = new BannerTrigger();
+  public static BannerTrigger create(JSONObject json) throws JSONException {
+    BannerTrigger trigger = new BannerTrigger();
 
-		trigger.conditions = new LinkedList<>();
+    trigger.conditions = new LinkedList<>();
 
-        if (json != null) {
-			JSONArray conditionsArray = json.getJSONArray("conditions");
-			for (int i = 0; i < conditionsArray.length(); ++i) {
-				trigger.conditions.add(BannerTriggerCondition.create(conditionsArray.getJSONObject(i)));
-			}
-		}
-
-        return trigger;
+    if (json != null) {
+      JSONArray conditionsArray = json.getJSONArray("conditions");
+      for (int i = 0; i < conditionsArray.length(); ++i) {
+        trigger.conditions.add(BannerTriggerCondition.create(conditionsArray.getJSONObject(i)));
+      }
     }
+
+    return trigger;
+  }
 }

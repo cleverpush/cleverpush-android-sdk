@@ -4,20 +4,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum BannerTriggerType {
-	AppOpen,
-	Conditions;
+  AppOpen,
+  Conditions;
 
-    private static Map<String, BannerTriggerType> mapTriggerType = new HashMap<>();
-    static {
-		mapTriggerType.put("app_open", BannerTriggerType.AppOpen);
-		mapTriggerType.put("conditions", BannerTriggerType.Conditions);
-    }
+  private static Map<String, BannerTriggerType> mapTriggerType = new HashMap<>();
 
-    public static BannerTriggerType fromString(String raw) {
-        if (mapTriggerType.containsKey(raw)) {
-            return mapTriggerType.get(raw);
-        } else {
-            return AppOpen;
-        }
+  static {
+    mapTriggerType.put("app_open", BannerTriggerType.AppOpen);
+    mapTriggerType.put("conditions", BannerTriggerType.Conditions);
+  }
+
+  public static BannerTriggerType fromString(String raw) {
+    if (mapTriggerType.containsKey(raw)) {
+      return mapTriggerType.get(raw);
+    } else {
+      return AppOpen;
     }
+  }
 }

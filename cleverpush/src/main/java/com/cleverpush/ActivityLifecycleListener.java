@@ -23,144 +23,147 @@ import java.util.ArrayList;
 
 public class ActivityLifecycleListener implements Application.ActivityLifecycleCallbacks {
 
-    @SuppressLint("StaticFieldLeak")
-    public static Activity currentActivity;
+  @SuppressLint("StaticFieldLeak")
+  public static Activity currentActivity;
 
-    private int counter = 0;
-    private static SessionListener sessionListener;
-    private static ArrayList<ActivityInitializedListener> activityInitializedListeners = new ArrayList<>();
+  private int counter = 0;
+  private static SessionListener sessionListener;
+  private static ArrayList<ActivityInitializedListener> activityInitializedListeners = new ArrayList<>();
 
-    public ActivityLifecycleListener(SessionListener sessionListener) {
-        this.sessionListener = sessionListener;
+  public ActivityLifecycleListener(SessionListener sessionListener) {
+    this.sessionListener = sessionListener;
+  }
+
+  @Nullable
+  private static ActivityLifecycleListener instance;
+
+  static void registerActivityLifecycleCallbacks(@NonNull final Application application,
+                                                 SessionListener sessionListener) {
+    if (instance == null) {
+      instance = new ActivityLifecycleListener(sessionListener);
+      application.registerActivityLifecycleCallbacks(instance);
+    }
+  }
+
+  static void registerActivityLifecycleCallbacks(@NonNull final Application application,
+                                                 SessionListener sessionListener, Activity activity) {
+    registerActivityLifecycleCallbacks(application, sessionListener);
+    instance.currentActivity = activity;
+  }
+
+  @Override
+  public void onActivityCreated(Activity activity, Bundle bundle) {
+
+  }
+
+  @Override
+  public void onActivityStarted(Activity activity) {
+
+  }
+
+  @Override
+  public void onActivityResumed(Activity activity) {
+    Logger.d(LOG_TAG, "onActivityResumed");
+    currentActivity = activity;
+
+    if (!isServiceRunning(CleanUpService.class)) {
+      try {
+        CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
+      } catch (IllegalStateException illegalStateException) {
+        Logger.e(LOG_TAG, illegalStateException.getMessage());
+      }
     }
 
-    @Nullable
-    private static ActivityLifecycleListener instance;
+    if (counter == 0 && sessionListener != null) {
+      sessionListener.stateChanged(true);
+    }
 
-    static void registerActivityLifecycleCallbacks(@NonNull final Application application, SessionListener sessionListener) {
-        if (instance == null) {
-            instance = new ActivityLifecycleListener(sessionListener);
-            application.registerActivityLifecycleCallbacks(instance);
+    try {
+      if (activityInitializedListeners != null && activityInitializedListeners.size() > 0) {
+        for (ActivityInitializedListener listener : activityInitializedListeners) {
+          listener.initialized();
         }
+        activityInitializedListeners.clear();
+      }
+    } catch (Exception error) {
+      Logger.e(LOG_TAG,
+          "activityInitializedListeners != null " + (activityInitializedListeners != null) + " " + error.getMessage());
     }
 
-    static void registerActivityLifecycleCallbacks(@NonNull final Application application, SessionListener sessionListener, Activity activity) {
-        registerActivityLifecycleCallbacks(application, sessionListener);
-        instance.currentActivity = activity;
+    counter++;
+  }
+
+  @Override
+  public void onActivityPaused(Activity activity) {
+    if (activity == currentActivity) {
+      currentActivity = null;
     }
 
-    @Override
-    public void onActivityCreated(Activity activity, Bundle bundle) {
-
+    if (counter > 0) {
+      counter--;
     }
 
-    @Override
-    public void onActivityStarted(Activity activity) {
-
-    }
-
-    @Override
-    public void onActivityResumed(Activity activity) {
-        Logger.d(LOG_TAG, "onActivityResumed");
-        currentActivity = activity;
-
-        if (!isServiceRunning(CleanUpService.class)) {
-            try {
-                CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
-            } catch (IllegalStateException illegalStateException) {
-                Logger.e(LOG_TAG, illegalStateException.getMessage());
-            }
+    if (counter == 0 && sessionListener != null) {
+      Handler handler = new Handler();
+      handler.postDelayed(new Runnable() {
+        public void run() {
+          if (counter == 0 && sessionListener != null) {
+            sessionListener.stateChanged(false);
+          }
         }
-
-        if (counter == 0 && sessionListener != null) {
-            sessionListener.stateChanged(true);
-        }
-
-        try {
-            if (activityInitializedListeners != null && activityInitializedListeners.size() > 0) {
-                for (ActivityInitializedListener listener : activityInitializedListeners) {
-                    listener.initialized();
-                }
-                activityInitializedListeners.clear();
-            }
-        } catch (Exception error) {
-            Logger.e(LOG_TAG, "activityInitializedListeners != null " + (activityInitializedListeners != null) + " " + error.getMessage());
-        }
-
-        counter++;
+      }, 1000);
     }
+  }
 
-    @Override
-    public void onActivityPaused(Activity activity) {
-        if (activity == currentActivity) {
-            currentActivity = null;
-        }
-
-        if (counter > 0) {
-            counter--;
-        }
-
-        if (counter == 0 && sessionListener != null) {
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                public void run() {
-                    if (counter == 0 && sessionListener != null) {
-                        sessionListener.stateChanged(false);
-                    }
-                }
-            }, 1000);
-        }
+  @Override
+  public void onActivityStopped(Activity activity) {
+    if (activity == currentActivity) {
+      currentActivity = null;
     }
+  }
 
-    @Override
-    public void onActivityStopped(Activity activity) {
-        if (activity == currentActivity) {
-            currentActivity = null;
-        }
+  @Override
+  public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+
+  }
+
+  @Override
+  public void onActivityDestroyed(Activity activity) {
+    if (activity == currentActivity) {
+      currentActivity = null;
     }
+  }
 
-    @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+  public static void clearSessionListener() {
+    sessionListener = null;
+    currentActivity = null;
+    activityInitializedListeners = null;
+  }
 
+  private boolean isServiceRunning(Class<?> serviceClass) {
+    ActivityManager manager = (ActivityManager) CleverPush.context.getSystemService(Context.ACTIVITY_SERVICE);
+    for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+      if (serviceClass.getName().equals(service.service.getClassName())) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    @Override
-    public void onActivityDestroyed(Activity activity) {
-        if (activity == currentActivity) {
-            currentActivity = null;
-        }
+  public void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
+
+    if (currentActivity == null) {
+      if (activityInitializedListeners == null) {
+        activityInitializedListeners = new ArrayList<>();
+      }
+      activityInitializedListeners.add(activityInitializedListener);
+    } else {
+      activityInitializedListener.initialized();
     }
+  }
 
-    public static void clearSessionListener() {
-        sessionListener = null;
-        currentActivity = null;
-        activityInitializedListeners = null;
-    }
-
-    private boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) CleverPush.context.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
-
-        if (currentActivity == null) {
-            if (activityInitializedListeners == null) {
-                activityInitializedListeners = new ArrayList<>();
-            }
-            activityInitializedListeners.add(activityInitializedListener);
-        } else {
-            activityInitializedListener.initialized();
-        }
-    }
-
-    @Nullable
-    public static ActivityLifecycleListener getInstance() {
-        return instance;
-    }
+  @Nullable
+  public static ActivityLifecycleListener getInstance() {
+    return instance;
+  }
 }

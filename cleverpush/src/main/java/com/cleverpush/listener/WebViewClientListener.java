@@ -16,49 +16,49 @@ import android.webkit.WebView;
 
 public interface WebViewClientListener {
 
-    void shouldOverrideUrlLoading(WebView view, String url);
+  void shouldOverrideUrlLoading(WebView view, String url);
 
-    void shouldOverrideUrlLoading(WebView view, WebResourceRequest request);
+  void shouldOverrideUrlLoading(WebView view, WebResourceRequest request);
 
-    void onPageStarted(WebView view, String url, Bitmap favicon);
+  void onPageStarted(WebView view, String url, Bitmap favicon);
 
-    void onPageFinished(WebView view, String url);
+  void onPageFinished(WebView view, String url);
 
-    void onLoadResource(WebView view, String url);
+  void onLoadResource(WebView view, String url);
 
-    void onPageCommitVisible(WebView view, String url);
+  void onPageCommitVisible(WebView view, String url);
 
-    void shouldInterceptRequest(WebView view, String url);
+  void shouldInterceptRequest(WebView view, String url);
 
-    void shouldInterceptRequest(WebView view, WebResourceRequest request);
+  void shouldInterceptRequest(WebView view, WebResourceRequest request);
 
-    void onTooManyRedirects(WebView view, Message cancelMsg, Message continueMsg);
+  void onTooManyRedirects(WebView view, Message cancelMsg, Message continueMsg);
 
-    void onReceivedError(WebView view, int errorCode, String description, String failingUrl);
+  void onReceivedError(WebView view, int errorCode, String description, String failingUrl);
 
-    void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error);
+  void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error);
 
-    void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse);
+  void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse);
 
-    void onFormResubmission(WebView view, Message dontResend, Message resend);
+  void onFormResubmission(WebView view, Message dontResend, Message resend);
 
-    void doUpdateVisitedHistory(WebView view, String url, boolean isReload);
+  void doUpdateVisitedHistory(WebView view, String url, boolean isReload);
 
-    void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error);
+  void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error);
 
-    void onReceivedClientCertRequest(WebView view, ClientCertRequest request);
+  void onReceivedClientCertRequest(WebView view, ClientCertRequest request);
 
-    void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm);
+  void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm);
 
-    void shouldOverrideKeyEvent(WebView view, KeyEvent event);
+  void shouldOverrideKeyEvent(WebView view, KeyEvent event);
 
-    void onUnhandledKeyEvent(WebView view, KeyEvent event);
+  void onUnhandledKeyEvent(WebView view, KeyEvent event);
 
-    void onScaleChanged(WebView view, float oldScale, float newScale);
+  void onScaleChanged(WebView view, float oldScale, float newScale);
 
-    void onReceivedLoginRequest(WebView view, String realm, String account, String args);
+  void onReceivedLoginRequest(WebView view, String realm, String account, String args);
 
-    void onRenderProcessGone(WebView view, RenderProcessGoneDetail detail);
+  void onRenderProcessGone(WebView view, RenderProcessGoneDetail detail);
 
-    void onSafeBrowsingHit(WebView view, WebResourceRequest request, int threatType, SafeBrowsingResponse callback);
+  void onSafeBrowsingHit(WebView view, WebResourceRequest request, int threatType, SafeBrowsingResponse callback);
 }

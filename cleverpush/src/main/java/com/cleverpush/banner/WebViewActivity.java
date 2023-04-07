@@ -11,39 +11,39 @@ import com.cleverpush.R;
 
 public class WebViewActivity extends Activity {
 
-    private String url;
+  private String url;
 
-    public static void launch(Activity activity, String url) {
-        Intent intent = new Intent(activity, WebViewActivity.class);
-        intent.putExtra("url", url);
-        activity.startActivity(intent);
+  public static void launch(Activity activity, String url) {
+    Intent intent = new Intent(activity, WebViewActivity.class);
+    intent.putExtra("url", url);
+    activity.startActivity(intent);
+  }
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_web_view);
+    handleBundleData(getIntent().getExtras());
+
+  }
+
+  private void handleBundleData(Bundle extras) {
+    if (extras.containsKey("url")) {
+      url = extras.getString("url");
+      init();
     }
+  }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_web_view);
-        handleBundleData(getIntent().getExtras());
+  private void init() {
+    WebView webView = findViewById(R.id.webView);
+    ImageView closeButton = findViewById(R.id.ivClose);
+    webView.loadUrl(url);
 
-    }
-
-    private void handleBundleData(Bundle extras) {
-        if (extras.containsKey("url")) {
-            url = extras.getString("url");
-            init();
-        }
-    }
-
-    private void init() {
-        WebView webView = findViewById(R.id.webView);
-        ImageView closeButton = findViewById(R.id.ivClose);
-        webView.loadUrl(url);
-
-        closeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
-    }
+    closeButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        finish();
+      }
+    });
+  }
 }

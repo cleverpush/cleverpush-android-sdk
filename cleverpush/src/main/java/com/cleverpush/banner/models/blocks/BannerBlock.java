@@ -9,28 +9,28 @@ import org.json.JSONObject;
 import java.util.List;
 
 public class BannerBlock {
-    protected BannerBlockType type;
+  protected BannerBlockType type;
 
-    protected BannerBlock() {
-    }
+  protected BannerBlock() {
+  }
 
-    public BannerBlockType getType() {
-        return type;
-    }
+  public BannerBlockType getType() {
+    return type;
+  }
 
-    public static BannerBlock create(JSONObject json) throws JSONException, IllegalArgumentException {
-        BannerBlockType blockType = BannerBlockType.fromString(json.getString("type"));
-        switch (blockType) {
-            case Text:
-                return BannerTextBlock.createTextBlock(json);
-            case Image:
-                return BannerImageBlock.createImageBlock(json);
-            case Button:
-                return BannerButtonBlock.createButtonBlock(json);
-            case HTML:
-                return BannerHTMLBlock.createHTMLBlock(json);
-            default:
-                throw new RuntimeException("Not implemented");
-        }
+  public static BannerBlock create(JSONObject json) throws JSONException, IllegalArgumentException {
+    BannerBlockType blockType = BannerBlockType.fromString(json.getString("type"));
+    switch (blockType) {
+      case Text:
+        return BannerTextBlock.createTextBlock(json);
+      case Image:
+        return BannerImageBlock.createImageBlock(json);
+      case Button:
+        return BannerButtonBlock.createButtonBlock(json);
+      case HTML:
+        return BannerHTMLBlock.createHTMLBlock(json);
+      default:
+        throw new RuntimeException("Not implemented");
     }
+  }
 }

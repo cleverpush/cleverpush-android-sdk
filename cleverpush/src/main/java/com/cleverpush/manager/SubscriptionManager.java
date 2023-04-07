@@ -6,17 +6,19 @@ import org.json.JSONObject;
 
 public interface SubscriptionManager {
 
-    enum SubscriptionManagerType {
-        FCM,
-        HMS,
-        ADM,
-    };
+  enum SubscriptionManagerType {
+    FCM,
+    HMS,
+    ADM,
+  }
 
-    void subscribe(JSONObject channelConfig, SubscribedCallbackListener callback);
+  ;
 
-    void checkChangedPushToken(JSONObject channelConfig);
+  void subscribe(JSONObject channelConfig, SubscribedCallbackListener callback);
 
-    void checkChangedPushToken(JSONObject channelConfig, String changedToken);
+  void checkChangedPushToken(JSONObject channelConfig);
 
-    SubscriptionManagerType getType();
+  void checkChangedPushToken(JSONObject channelConfig, String changedToken);
+
+  SubscriptionManagerType getType();
 }

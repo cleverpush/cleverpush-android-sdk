@@ -1,5 +1,5 @@
 package com.cleverpush.listener;
 
 public interface SubscriptionManagerTokenListener {
-    void ready(String token);
+  void ready(String token);
 }

@@ -5,5 +5,5 @@ import com.cleverpush.ChannelTopic;
 import java.util.Set;
 
 public interface ChannelTopicsListener {
-    void ready(Set<ChannelTopic> topics);
+  void ready(Set<ChannelTopic> topics);
 }
