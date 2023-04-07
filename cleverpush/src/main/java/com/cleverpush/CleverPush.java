@@ -2514,19 +2514,6 @@ public class CleverPush {
                 alert.setOnShowListener(dialog -> {
                     Logger.d(LOG_TAG, "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
                     showingTopicsDialog = true;
-                    int currentNightMode = dialogActivity.getResources().getConfiguration().uiMode
-                            & Configuration.UI_MODE_NIGHT_MASK;
-                    switch (currentNightMode) {
-                        case Configuration.UI_MODE_NIGHT_NO:
-                            alert.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(dialogActivity.getResources().getColor(R.color.cp_black));
-                            alert.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(dialogActivity.getResources().getColor(R.color.cp_black));
-                            break;
-                        case Configuration.UI_MODE_NIGHT_UNDEFINED:
-                        case Configuration.UI_MODE_NIGHT_YES:
-                            alert.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(dialogActivity.getResources().getColor(R.color.cp_bannerBackground));
-                            alert.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(dialogActivity.getResources().getColor(R.color.cp_bannerBackground));
-                            break;
-                    }
                 });
                 alert.show();
             });
