@@ -16,6 +16,8 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.text.TextUtils;
 import com.cleverpush.util.Logger;
+
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,6 +64,17 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   public void onBindViewHolder(StoryViewHolder holder, int position) {
     TextView nameTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
     ImageView image = (ImageView) holder.itemView.findViewById(R.id.ivChallenge);
+
+    ViewGroup.LayoutParams params = image.getLayoutParams();
+    params.height =
+            (int) typedArray.getDimension(R.styleable.StoryView_story_icon_height, 206);
+    params.width =
+            (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
+    image.setLayoutParams(params);
+
+    nameTextView.setVisibility(typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE));
+    int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
+    nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
     nameTextView.setText(stories.get(position).getTitle());
     nameTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
     applyFont(nameTextView, typedArray);
