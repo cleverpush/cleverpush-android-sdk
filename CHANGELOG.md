@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.30.0
+* Implemented inbox view detail screen
+* Fixed topics dialog style
+
 ## 1.29.5
 * Fixed notification tracking for conversion events
 
