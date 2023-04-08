@@ -93,11 +93,18 @@ public class StoryView extends LinearLayout {
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
         loading = false;
-        Logger.e(TAG, "Something went wrong when loading stories." +
-            "\nStatus code: " + statusCode +
-            "\nResponse: " + response +
-            "\nError: " + throwable.getMessage()
-        );
+        if (throwable != null) {
+          Logger.e(TAG, "Something went wrong when loading stories." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(TAG, "Something went wrong when loading stories." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     };
   }
