@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.1
+* Added more customization options and `setWidgetId` function for `StoryView`
+
 ## 1.30.0
 * Implemented inbox view detail screen
 * Fixed topics dialog style
