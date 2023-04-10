@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
                 },
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId)
                 );
-        /*StoryView.setStoryViewWidgetId("CyELm3daayQGuSGTD");*/
 
         setupBasicButtons();
     }
@@ -70,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please subscribe first", Toast.LENGTH_SHORT).show();
             }
         });
+
+        /*StoryView storyView = findViewById(R.id.storyView);
+        storyView.setWidgetId("CyELm3daayQGuSGTD");*/
     }
 
     void testAppBannerTrackClickOpenedListener() {

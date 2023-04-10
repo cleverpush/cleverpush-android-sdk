@@ -1,5 +1,7 @@
 package com.cleverpush.stories;
 
+import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
@@ -12,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,6 +27,7 @@ import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.stories.models.StoryListModel;
 import com.cleverpush.util.Logger;
+import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -41,14 +45,15 @@ public class StoryView extends LinearLayout {
   private boolean loading = false;
   private ArrayList<Story> stories = new ArrayList<>();
   String storyPath = "";
-  private static String StoryViewWidgetId = "";
+  private String widgetId = null;
 
-  public String getStoryViewWidgetId() {
-    return StoryViewWidgetId;
+  public String getWidgetId() {
+    return widgetId;
   }
 
-  public static void setStoryViewWidgetId(String storyViewWidgetId) {
-    StoryViewWidgetId = storyViewWidgetId;
+  public void setWidgetId(String widgetId) {
+    this.widgetId = widgetId;
+    loadStory();
   }
 
   public StoryView(Context context, AttributeSet attributeSet) {
@@ -59,24 +64,26 @@ public class StoryView extends LinearLayout {
   }
 
   private void loadStory() {
-    if (loading) {
-      return;
-    }
-    loading = true;
-
     if (attrArray.getString(R.styleable.StoryView_widget_id) == null ||
             attrArray.getString(R.styleable.StoryView_widget_id).equalsIgnoreCase("")) {
-      StoryViewWidgetId = getStoryViewWidgetId();
+      widgetId = getWidgetId();
     } else {
-      StoryViewWidgetId = attrArray.getString(R.styleable.StoryView_widget_id);
+      widgetId = attrArray.getString(R.styleable.StoryView_widget_id);
     }
-    storyPath = "/story-widget/" + StoryViewWidgetId + "/config";
 
-    Logger.d(TAG, "Loading stories: " + storyPath);
+    if (widgetId != null && widgetId.length() > 0) {
+      if (loading) {
+        return;
+      }
+      loading = true;
 
-    CleverPush.getInstance(this.context).getActivityLifecycleListener().setActivityInitializedListener(() -> {
-      CleverPushHttpClient.get(storyPath, getResponseHandler());
-    });
+      storyPath = "/story-widget/" + widgetId + "/config";
+      Logger.d(TAG, "Loading stories: " + storyPath);
+
+      CleverPush.getInstance(this.context).getActivityLifecycleListener().setActivityInitializedListener(() -> {
+        CleverPushHttpClient.get(storyPath, getResponseHandler());
+      });
+    }
   }
 
   private CleverPushHttpClient.ResponseHandler getResponseHandler() {
