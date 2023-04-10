@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
                 },
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId)
                 );
+        /*CleverPush.getInstance(this).setStoryView_widget_id("CyELm3daayQGuSGTD");*/
 
         setupBasicButtons();
     }
