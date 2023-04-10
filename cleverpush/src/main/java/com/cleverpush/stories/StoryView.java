@@ -41,6 +41,15 @@ public class StoryView extends LinearLayout {
   private boolean loading = false;
   private ArrayList<Story> stories = new ArrayList<>();
   String storyPath = "";
+  private static String StoryViewWidgetId = "";
+
+  public String getStoryViewWidgetId() {
+    return StoryViewWidgetId;
+  }
+
+  public static void setStoryViewWidgetId(String storyViewWidgetId) {
+    StoryViewWidgetId = storyViewWidgetId;
+  }
 
   public StoryView(Context context, AttributeSet attributeSet) {
     super(context, attributeSet);
@@ -55,11 +64,13 @@ public class StoryView extends LinearLayout {
     }
     loading = true;
 
-    if (attrArray.getString(R.styleable.StoryView_widget_id) == null || attrArray.getString(R.styleable.StoryView_widget_id).equalsIgnoreCase("")) {
-      storyPath = "/story-widget/" + CleverPush.getInstance(this.context).getStoryView_widget_id() + "/config";
+    if (attrArray.getString(R.styleable.StoryView_widget_id) == null ||
+            attrArray.getString(R.styleable.StoryView_widget_id).equalsIgnoreCase("")) {
+      StoryViewWidgetId = getStoryViewWidgetId();
     } else {
-      storyPath = "/story-widget/" + attrArray.getString(R.styleable.StoryView_widget_id) + "/config";
+      StoryViewWidgetId = attrArray.getString(R.styleable.StoryView_widget_id);
     }
+    storyPath = "/story-widget/" + StoryViewWidgetId + "/config";
 
     Logger.d(TAG, "Loading stories: " + storyPath);
 

@@ -206,15 +206,6 @@ public class CleverPush {
 
   private String lastClickedNotificationId;
   private long lastClickedNotificationTime;
-  private String StoryView_widget_id = "";
-
-  public String getStoryView_widget_id() {
-    return StoryView_widget_id;
-  }
-
-  public void setStoryView_widget_id(String storyView_widget_id) {
-    StoryView_widget_id = storyView_widget_id;
-  }
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {

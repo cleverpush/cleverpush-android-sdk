@@ -14,6 +14,7 @@ import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedListener;
+import com.cleverpush.stories.StoryView;
 import com.cleverpush.util.Logger;
 import com.example.cleverpush.databinding.ActivityMainBinding;
 
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
                 },
                 subscriptionId -> System.out.println("CleverPush Subscription ID: " + subscriptionId)
                 );
-        /*CleverPush.getInstance(this).setStoryView_widget_id("CyELm3daayQGuSGTD");*/
+        /*StoryView.setStoryViewWidgetId("CyELm3daayQGuSGTD");*/
 
         setupBasicButtons();
     }
