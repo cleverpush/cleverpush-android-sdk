@@ -11,14 +11,11 @@ import androidx.databinding.DataBindingUtil;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.banner.WebViewActivity;
-import com.cleverpush.banner.models.Banner;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedListener;
-import com.cleverpush.stories.StoryView;
 import com.cleverpush.util.Logger;
 import com.example.cleverpush.databinding.ActivityMainBinding;
 
-import java.util.Collection;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -69,9 +66,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please subscribe first", Toast.LENGTH_SHORT).show();
             }
         });
-
-        /*StoryView storyView = findViewById(R.id.storyView);
-        storyView.setWidgetId("CyELm3daayQGuSGTD");*/
     }
 
     void testAppBannerTrackClickOpenedListener() {
