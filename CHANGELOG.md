@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.2
+* Fixed HTML AppBanner background color transparent by default
+
 ## 1.30.1
 * Added more customization options and `setWidgetId` function for `StoryView`
 
