@@ -365,6 +365,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         Logger.d(LOG_TAG, "AppBanner UnsupportedEncodingException");
         e.printStackTrace();
       }
+      webView.setBackgroundColor(Color.TRANSPARENT);
       webView.loadData(encodedHtml, "text/html; charset=utf-8", "base64");
 
       body.addView(webLayout);
