@@ -112,6 +112,10 @@ public class AppBannerPopup {
     return data;
   }
 
+  public boolean isHTMLBanner() {
+    return data.getContentType() != null && data.getContentType().equalsIgnoreCase(Banner.CONTENT_TYPE_HTML);
+  }
+
   public ViewPager2 getViewPager2() {
     return viewPager2;
   }
@@ -234,6 +238,9 @@ public class AppBannerPopup {
       } else {
         drawableBG.setColor(Color.WHITE);
       }
+      if (isHTMLBanner()) {
+        drawableBG.setColor(Color.TRANSPARENT);
+      }
       bannerBackground.setBackground(drawableBG);
     } else if (bg.getImageUrl() != null) {
       new Thread(() -> {
@@ -285,7 +292,7 @@ public class AppBannerPopup {
 
   private void displayBanner(LinearLayout body) {
     // We cant move this code to composeHtmlBanner, because it wont work then anymore
-    if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(Banner.CONTENT_TYPE_HTML)) {
+    if (isHTMLBanner()) {
       body.setPadding(0, 0, 0, 0);
     }
 
