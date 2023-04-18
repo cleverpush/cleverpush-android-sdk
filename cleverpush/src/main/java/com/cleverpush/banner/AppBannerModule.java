@@ -39,7 +39,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -138,6 +141,37 @@ public class AppBannerModule {
             Banner banner = Banner.create(rawBanner);
             banners.add(banner);
           }
+
+          List<Banner> bannerList = new ArrayList<>(banners);
+          Collections.sort(bannerList, new Comparator<Banner>() {
+            @Override
+            public int compare(Banner banner1, Banner banner2) {
+              int result;
+              if (banner1.getStartAt() == null || banner2.getStartAt() == null) {
+                return 0;
+              }
+              Date date1 = banner1.getStartAt();
+              Date date2 = banner2.getStartAt();
+              Calendar calendar1 = Calendar.getInstance();
+              Calendar calendar2 = Calendar.getInstance();
+              calendar1.setTime(date1);
+              calendar2.setTime(date2);
+              calendar1.set(Calendar.MILLISECOND, 0);
+              calendar1.set(Calendar.SECOND, 0);
+              calendar2.set(Calendar.MILLISECOND, 0);
+              calendar2.set(Calendar.SECOND, 0);
+
+              result = calendar2.compareTo(calendar1);
+
+              if (result == 0) {
+                result = banner2.getName().compareTo(banner1.getName());
+              }
+              return result;
+            }
+          });
+
+          banners.clear();
+          banners.addAll(bannerList);
 
           for (AppBannersListener listener : getBannersListeners()) {
             listener.ready(banners);
