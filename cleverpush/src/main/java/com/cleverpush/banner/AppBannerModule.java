@@ -299,7 +299,7 @@ public class AppBannerModule {
       LinkedList<Banner> filteredBanners = new LinkedList<>();
 
       for (Banner banner : loadedBanners) {
-        if (banner.getGroup() == null || !banner.getGroup().equals(group)) {
+        if (banner.getGroup() == null || !banner.getGroup().equals(group) || banner.getStatus() == BannerStatus.Draft) {
           continue;
         }
 
