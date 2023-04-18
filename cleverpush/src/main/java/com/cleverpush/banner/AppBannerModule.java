@@ -160,11 +160,9 @@ public class AppBannerModule {
               calendar1.set(Calendar.SECOND, 0);
               calendar2.set(Calendar.MILLISECOND, 0);
               calendar2.set(Calendar.SECOND, 0);
-              if (calendar2.equals(calendar1)) {
-                result = 0;
-              } else {
-                result = calendar2.compareTo(calendar1);
-              }
+
+              result = calendar2.compareTo(calendar1);
+
               if (result == 0) {
                 result = banner2.getName().compareTo(banner1.getName());
               }
