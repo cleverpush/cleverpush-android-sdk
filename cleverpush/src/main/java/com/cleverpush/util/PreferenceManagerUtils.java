@@ -41,4 +41,17 @@ public final class PreferenceManagerUtils {
     SharedPreferences sharedPreferences = getSharedPreferences(context);
     sharedPreferences.edit().putString(key, value).apply();
   }
+
+  /**
+   * This function will update your shared preference based on key and value
+   *
+   * @param context
+   * @param key
+   * @param value
+   * @function updateSharedPreferenceByKey
+   */
+  public static void updateSharedPreferenceByKey(Context context, String key, boolean value) {
+    SharedPreferences sharedPreferences = getSharedPreferences(context);
+    sharedPreferences.edit().putBoolean(key, value).apply();
+  }
 }

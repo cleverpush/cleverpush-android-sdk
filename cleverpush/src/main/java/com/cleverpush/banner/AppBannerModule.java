@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.preference.PreferenceManager;
 import android.view.View;
 
 import com.cleverpush.ActivityLifecycleListener;
@@ -32,6 +33,7 @@ import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.PreferenceManagerUtils;
 import com.cleverpush.util.VersionComparator;
 
 import org.json.JSONArray;
@@ -70,6 +72,7 @@ public class AppBannerModule {
   private boolean loading = false;
   private Collection<AppBannerPopup> popups = new ArrayList<>();
   private Collection<AppBannerPopup> pendingBanners = new ArrayList<>();
+  private LinkedList<AppBannerPopup> queuedBanners = new LinkedList<>();
   private Collection<Banner> banners = null;
   private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
   private boolean trackingEnabled = true;
@@ -111,6 +114,50 @@ public class AppBannerModule {
 
   private void loadBanners() {
     loadBanners(null, channel);
+  }
+
+  private Comparator<Banner> createBannerComparator() {
+    return new Comparator<Banner>() {
+      @Override
+      public int compare(Banner banner1, Banner banner2) {
+        int result;
+        if (banner1.getStartAt() == null || banner2.getStartAt() == null) {
+          return 0;
+        }
+        Date date1 = banner1.getStartAt();
+        Date date2 = banner2.getStartAt();
+        Calendar calendar1 = Calendar.getInstance();
+        Calendar calendar2 = Calendar.getInstance();
+        calendar1.setTime(date1);
+        calendar2.setTime(date2);
+        calendar1.set(Calendar.MILLISECOND, 0);
+        calendar1.set(Calendar.SECOND, 0);
+        calendar2.set(Calendar.MILLISECOND, 0);
+        calendar2.set(Calendar.SECOND, 0);
+
+        result = calendar1.compareTo(calendar2);
+
+        if (result == 0) {
+          result = banner1.getName().compareTo(banner2.getName());
+        }
+
+        return result;
+      }
+    };
+  }
+
+  private Comparator<AppBannerPopup> createAppBannerPopupComparator() {
+    return new Comparator<AppBannerPopup>() {
+      @Override
+      public int compare(AppBannerPopup popup1, AppBannerPopup popup2) {
+        Banner banner1 = popup1.getData();
+        Banner banner2 = popup2.getData();
+
+        Comparator<Banner> bannerComparator = createBannerComparator();
+
+        return bannerComparator.compare(banner1, banner2);
+      }
+    };
   }
 
   void loadBanners(String notificationId, String channelId) {
@@ -749,6 +796,7 @@ public class AppBannerModule {
     try {
       Banner banner = bannerPopup.getData();
       if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
+        queuedBanners.add(bannerPopup);
         Logger.d(TAG, "Skipping Banner because: A Banner is already on the screen");
         return;
       }
@@ -823,6 +871,8 @@ public class AppBannerModule {
         if (action.getType().equals("switchScreen")) {
         }
       });
+
+      PreferenceManagerUtils.updateSharedPreferenceByKey(CleverPush.context, CleverPushPreferences.APP_BANNER_SHOWING, true);
 
       this.sendBannerEvent("delivered", bannerPopup.getData());
     } catch (Exception ex) {
@@ -913,6 +963,14 @@ public class AppBannerModule {
   }
 
   public Collection<AppBannerPopup> getPopups() {
+    List<AppBannerPopup> appBannerPopupList = new ArrayList<>(popups);
+    Collections.sort(appBannerPopupList, createAppBannerPopupComparator());
+
+    popups.clear();
+    for (AppBannerPopup appBannerPopup: appBannerPopupList) {
+      popups.add(appBannerPopup);
+    }
+
     return popups;
   }
 
@@ -938,6 +996,23 @@ public class AppBannerModule {
 
   public Collection<AppBannerPopup> getPendingBanners() {
     return pendingBanners;
+  }
+
+  void showQueuedBanners() {
+    if (queuedBanners.size() == 0) {
+      return;
+    }
+
+    int size = queuedBanners.size();
+    for (int i = 0; i < size; i++) {
+      AppBannerPopup bannerPopup = queuedBanners.get(0);
+      queuedBanners.remove(0);
+      getHandler().post(() -> showBanner(bannerPopup));
+    }
+  }
+
+  public void onAppBannerDismiss() {
+    showQueuedBanners();
   }
 
   public void clearPendingBanners() {

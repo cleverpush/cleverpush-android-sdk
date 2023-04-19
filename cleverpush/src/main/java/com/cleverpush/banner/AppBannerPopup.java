@@ -174,6 +174,7 @@ public class AppBannerPopup {
     runInMain(() -> {
       popup.dismiss();
       this.toggleShowing(false);
+      CleverPush.getInstance(CleverPush.context).getAppBannerModule().onAppBannerDismiss();
     }, 200);
 
   }
