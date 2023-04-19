@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.3
+* Fixed sorting and parallel showing of multiple app banners
+
 ## 1.30.2
 * Fixed HTML AppBanner background color transparent by default
 
