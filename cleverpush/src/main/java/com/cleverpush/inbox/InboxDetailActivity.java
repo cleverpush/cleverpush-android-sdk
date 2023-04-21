@@ -182,7 +182,7 @@ public class InboxDetailActivity extends AppCompatActivity {
       if (extras.containsKey("notifications")) {
         notifications = (ArrayList<Notification>) extras.getSerializable("notifications");
         Notification clickedNotification = notifications.get(selectedPosition);
-        appBannerId = clickedNotification.getAppBanner();
+        appBannerId = clickedNotification.getInboxAppBanner();
         appBannerNotificationId = clickedNotification.getId();
         showBannerById(appBannerId, appBannerNotificationId);
       }
@@ -318,12 +318,6 @@ public class InboxDetailActivity extends AppCompatActivity {
       new TabLayoutMediator(tabLayout, viewPager2, (tab, position) -> {
       }).attach();
     }
-
-    viewPager2.setPageTransformer((page, position) -> {
-//            if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
-      updatePagerHeightForChild(page, viewPager2);
-//            }
-    });
 
   }
 
