@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -15,13 +14,15 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.text.TextUtils;
+
+import com.bumptech.glide.Glide;
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.util.Logger;
 
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,9 +31,9 @@ import com.cleverpush.R;
 import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> {
 
@@ -63,7 +64,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   @Override
   public void onBindViewHolder(StoryViewHolder holder, int position) {
     TextView nameTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
-    ImageView image = (ImageView) holder.itemView.findViewById(R.id.ivChallenge);
+    CircleImageView image = (CircleImageView) holder.itemView.findViewById(R.id.ivChallenge);
 
     ViewGroup.LayoutParams params = image.getLayoutParams();
     params.height =
@@ -113,19 +114,20 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     return stories.size();
   }
 
-  private void loadImage(int position, ImageView image) {
-    new Thread(() -> {
-      try {
-        InputStream inputStream =
-            new URL(stories.get(position).getContent().getPreview().getPosterPortraitSrc()).openStream();
-        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-        if (bitmap != null) {
-          image.setImageBitmap(getRoundedCroppedBitmap(bitmap, bitmap.getWidth()));
+  private void loadImage(int position, CircleImageView image) {
+    try {
+      ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          String imageUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
+          Glide.with(context)
+                  .load(imageUrl)
+                  .into(image);
         }
-      } catch (Exception exception) {
-        Logger.e("CleverPush/StoryView", exception.getLocalizedMessage());
-      }
-    }).start();
+      });
+    } catch (Exception exception) {
+      Logger.e("CleverPush/StoryView", exception.getLocalizedMessage());
+    }
   }
 
   public static Bitmap getRoundedCroppedBitmap(Bitmap bitmap, int radius) {
