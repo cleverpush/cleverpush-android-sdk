@@ -48,6 +48,8 @@ public class Notification implements Serializable {
   String appBanner;
   @SerializedName("inboxViewDetailBanner")
   String inboxViewDetailBanner;
+  @SerializedName("inboxAppBanner")
+  String inboxAppBanner;
 
   Boolean read = false;
   Boolean fromApi = false;
@@ -223,6 +225,10 @@ public class Notification implements Serializable {
 
   public String getInboxViewDetailBanner() {
     return inboxViewDetailBanner;
+  }
+
+  public String getInboxAppBanner() {
+    return inboxAppBanner;
   }
 
   public Boolean getRead() {
