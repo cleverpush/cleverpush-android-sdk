@@ -46,8 +46,6 @@ public class Notification implements Serializable {
   String createdAt;
   @SerializedName("appBanner")
   String appBanner;
-  @SerializedName("inboxViewDetailBanner")
-  String inboxViewDetailBanner;
   @SerializedName("inboxAppBanner")
   String inboxAppBanner;
 
@@ -221,10 +219,6 @@ public class Notification implements Serializable {
 
   public String getAppBanner() {
     return appBanner;
-  }
-
-  public String getInboxViewDetailBanner() {
-    return inboxViewDetailBanner;
   }
 
   public String getInboxAppBanner() {
