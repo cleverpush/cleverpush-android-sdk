@@ -46,8 +46,8 @@ public class Notification implements Serializable {
   String createdAt;
   @SerializedName("appBanner")
   String appBanner;
-  @SerializedName("inboxViewDetailBanner")
-  String inboxViewDetailBanner;
+  @SerializedName("inboxAppBanner")
+  String inboxAppBanner;
 
   Boolean read = false;
   Boolean fromApi = false;
@@ -221,8 +221,8 @@ public class Notification implements Serializable {
     return appBanner;
   }
 
-  public String getInboxViewDetailBanner() {
-    return inboxViewDetailBanner;
+  public String getInboxAppBanner() {
+    return inboxAppBanner;
   }
 
   public Boolean getRead() {

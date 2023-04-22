@@ -115,7 +115,7 @@ public class InboxView extends LinearLayout {
       if (notificationClickListener != null) {
         Notification clickedNotification = notificationArrayList.get(position);
 
-        if (clickedNotification.getAppBanner() != null) {
+        if (clickedNotification.getInboxAppBanner() != null) {
           InboxDetailActivity.launch(ActivityLifecycleListener.currentActivity, notificationArrayList, position);
         }
         notificationClickListener.onClicked(notificationArrayList.get(position));
