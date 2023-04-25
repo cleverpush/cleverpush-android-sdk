@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.4
+* Optimized storyview performance and fixed a bug
+
 ## 1.30.3
 * Fixed sorting and parallel showing of multiple app banners
 
