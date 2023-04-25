@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.R;
 import com.cleverpush.stories.listener.OnSwipeDownListener;
 import com.cleverpush.stories.listener.OnSwipeTouchListener;
@@ -27,10 +28,15 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   private ArrayList<Story> stories = new ArrayList<>();
 
   public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition) {
-    Intent intent = new Intent(activity, StoryDetailActivity.class);
-    intent.putExtra("stories", stories);
-    intent.putExtra("selectedPosition", selectedPosition);
-    activity.startActivity(intent);
+    ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        Intent intent = new Intent(activity, StoryDetailActivity.class);
+        intent.putExtra("stories", stories);
+        intent.putExtra("selectedPosition", selectedPosition);
+        activity.startActivity(intent);
+      }
+    });
   }
 
   @Override

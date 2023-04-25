@@ -16,6 +16,8 @@ import android.os.Build;
 import android.text.TextUtils;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.Priority;
+import com.bumptech.glide.request.RequestOptions;
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.util.Logger;
 
@@ -120,8 +122,16 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         @Override
         public void run() {
           String imageUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
+
+          RequestOptions options = new RequestOptions()
+                  .fitCenter()
+                  .placeholder(R.drawable.ic_story_placeholder)
+                  .error(R.drawable.ic_story_placeholder)
+                  .priority(Priority.HIGH);
+
           Glide.with(context)
                   .load(imageUrl)
+                  .apply(options)
                   .into(image);
         }
       });
@@ -195,5 +205,15 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       throw new RuntimeException(message);
     }
     return typeface;
+  }
+
+  @Override
+  public long getItemId(int position) {
+    return position;
+  }
+
+  @Override
+  public int getItemViewType(int position) {
+    return position;
   }
 }

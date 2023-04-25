@@ -37,7 +37,7 @@ public class StoryDetailJavascriptInterface {
       public void run() {
         activity.runOnUiThread(() -> storyDetailViewHolder.progressBar.setVisibility(View.GONE));
       }
-    }, 4500);
+    }, 800);
 
   }
 
