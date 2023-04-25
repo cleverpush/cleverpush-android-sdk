@@ -153,21 +153,26 @@ public class StoryView extends LinearLayout {
 
   private OnItemClickListener getOnItemClickListener(ArrayList<Story> stories, RecyclerView recyclerView) {
     return position -> {
-      SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-      SharedPreferences.Editor editor = sharedPreferences.edit();
-      String storyId = stories.get(position).getId();
-      String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
-      if (preferencesString.isEmpty()) {
-        editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
-      } else {
-        if (!preferencesString.contains(storyId)) {
-          editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
+      ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+          SharedPreferences.Editor editor = sharedPreferences.edit();
+          String storyId = stories.get(position).getId();
+          String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+          if (preferencesString.isEmpty()) {
+            editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
+          } else {
+            if (!preferencesString.contains(storyId)) {
+              editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
+            }
+          }
+          StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position);
+          stories.get(position).setOpened(true);
+          storyViewListAdapter.notifyDataSetChanged();
+          recyclerView.smoothScrollToPosition(position);
         }
-      }
-      StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position);
-      stories.get(position).setOpened(true);
-      storyViewListAdapter.notifyDataSetChanged();
-      recyclerView.smoothScrollToPosition(position);
+      });
     };
   }
 

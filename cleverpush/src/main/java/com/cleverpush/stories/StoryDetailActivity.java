@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.R;
 import com.cleverpush.stories.listener.OnSwipeDownListener;
 import com.cleverpush.stories.listener.OnSwipeTouchListener;
@@ -21,16 +22,21 @@ import java.util.ArrayList;
 
 public class StoryDetailActivity extends Activity implements StoryChangeListener {
 
-  private int selectedPosition = 0;
+  public static int selectedPosition = 0;
   private RecyclerView recyclerView;
   private OnSwipeTouchListener onSwipeTouchListener;
   private ArrayList<Story> stories = new ArrayList<>();
 
   public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition) {
-    Intent intent = new Intent(activity, StoryDetailActivity.class);
-    intent.putExtra("stories", stories);
-    intent.putExtra("selectedPosition", selectedPosition);
-    activity.startActivity(intent);
+    ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        Intent intent = new Intent(activity, StoryDetailActivity.class);
+        intent.putExtra("stories", stories);
+        intent.putExtra("selectedPosition", selectedPosition);
+        activity.startActivity(intent);
+      }
+    });
   }
 
   @Override
@@ -90,6 +96,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   @Override
   public void onNext(int position) {
     if (position != stories.size() - 1) {
+      selectedPosition = position + 1;
       recyclerView.smoothScrollToPosition(position + 1);
     }
   }
@@ -97,6 +104,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   @Override
   public void onPrevious(int position) {
     if (position != 0) {
+      selectedPosition = position - 1;
       recyclerView.smoothScrollToPosition(position - 1);
     }
   }

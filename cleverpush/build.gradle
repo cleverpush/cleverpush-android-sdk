@@ -91,6 +91,12 @@ dependencies {
     // Android Material Components
     api 'com.google.android.material:material:1.4.0'
 
+    //glide
+    api 'com.github.bumptech.glide:glide:4.15.1'
+
+    //Circle Image View
+    api 'de.hdodenhof:circleimageview:3.1.0'
+
     // Junit5
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.2'
