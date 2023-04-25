@@ -32,13 +32,7 @@ public class StoryDetailJavascriptInterface {
 
   @JavascriptInterface
   public void ready() {
-    new Handler().postDelayed(new Runnable() {
-      @Override
-      public void run() {
-        activity.runOnUiThread(() -> storyDetailViewHolder.progressBar.setVisibility(View.GONE));
-      }
-    }, 800);
-
+    activity.runOnUiThread(() -> storyDetailViewHolder.progressBar.setVisibility(View.GONE));
   }
 
 }
