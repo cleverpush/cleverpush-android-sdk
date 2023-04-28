@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.5
+* App Banners: Support "Copy to clipboard" action
+
 ## 1.30.4
 * Optimized storyview performance and fixed a bug
 

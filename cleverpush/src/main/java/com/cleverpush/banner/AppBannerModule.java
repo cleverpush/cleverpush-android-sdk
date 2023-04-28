@@ -3,6 +3,8 @@ package com.cleverpush.banner;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -868,7 +870,10 @@ public class AppBannerModule {
           getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
         }
 
-        if (action.getType().equals("switchScreen")) {
+        if (action.getType().equals("copyToClipboard")) {
+          ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
+          ClipData clip = ClipData.newPlainText("Voucher Code", action.getName());
+          clipboard.setPrimaryClip(clip);
         }
       });
 
