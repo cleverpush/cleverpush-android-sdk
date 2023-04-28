@@ -352,6 +352,14 @@ public class AppBannerModule {
           continue;
         }
 
+        if (!isBannerTimeAllowed(banner)) {
+          continue;
+        }
+
+        if (!isBannerTargetingAllowed(banner)) {
+          continue;
+        }
+
         filteredBanners.add(banner);
       }
 
