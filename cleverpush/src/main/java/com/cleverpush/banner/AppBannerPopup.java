@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 
@@ -15,6 +16,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -28,7 +30,7 @@ import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.cleverpush.banner.models.BannerType;
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.util.Logger;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
@@ -73,6 +75,8 @@ public class AppBannerPopup {
   private View popupRoot;
   private ViewPager2 viewPager2;
   private LinearLayout body;
+  private int currentStatusBarColor;
+  private int currentNavigationBarColor;
 
   private AppBannerOpenedListener openedListener;
 
@@ -142,6 +146,10 @@ public class AppBannerPopup {
         true
     );
 
+    if (isHTMLBanner()) {
+      setNotchColor(false);
+    }
+
     composeBackground(bannerBackGroundImage, body);
     popup.setAnimationStyle(R.style.banner_animation);
 
@@ -173,6 +181,9 @@ public class AppBannerPopup {
     runInMain(() -> animateBody(0f, getRoot().getHeight()));
     runInMain(() -> {
       popup.dismiss();
+      if (isHTMLBanner()) {
+        setNotchColor(true);
+      }
       this.toggleShowing(false);
       CleverPush.getInstance(CleverPush.context).getAppBannerModule().onAppBannerDismiss();
     }, 200);
@@ -442,6 +453,42 @@ public class AppBannerPopup {
           Logger.e(TAG, e.getLocalizedMessage());
         }
       }
+    }
+  }
+
+  private void setNotchColor(boolean isFinish) {
+    try {
+      final String notchColor;
+      BannerBackground bg = data.getBackground();
+      if (data.isDarkModeEnabled(activity) && bg.getDarkColor() != null) {
+        notchColor = bg.getDarkColor();
+      } else if (bg.getColor() != null) {
+        notchColor = bg.getColor();
+      } else {
+        notchColor = null;
+      }
+
+      if (notchColor != null && notchColor.length() > 0) {
+        Window window = ActivityLifecycleListener.currentActivity.getWindow();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+          ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+              if (!isFinish) {
+                currentStatusBarColor = window.getStatusBarColor();
+                currentNavigationBarColor = window.getNavigationBarColor();
+                window.setStatusBarColor(Color.parseColor(notchColor));
+                window.setNavigationBarColor(Color.parseColor(notchColor));
+              } else {
+                window.setStatusBarColor(currentStatusBarColor);
+                window.setNavigationBarColor(currentNavigationBarColor);
+              }
+            }
+          });
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Notch Color Exception: " + e.getMessage());
     }
   }
 }
