@@ -148,9 +148,18 @@ public class AppBannerPopup {
 
     if (isHTMLBanner()) {
       setNotchColor(false);
+      FrameLayout frameLayout = popupRoot.findViewById(R.id.frameLayout);
+      ConstraintLayout parent = popupRoot.findViewById(R.id.parent);
+
+      parent.setBackgroundColor(Color.TRANSPARENT);
+      frameLayout.setBackgroundColor(Color.TRANSPARENT);
+      body.setBackgroundColor(Color.TRANSPARENT);
+      bannerBackGroundImage.setVisibility(View.GONE);
+    } else {
+      bannerBackGroundImage.setVisibility(View.VISIBLE);
+      composeBackground(bannerBackGroundImage, body);
     }
 
-    composeBackground(bannerBackGroundImage, body);
     popup.setAnimationStyle(R.style.banner_animation);
 
     popup.setOnDismissListener(() -> toggleShowing(false));
