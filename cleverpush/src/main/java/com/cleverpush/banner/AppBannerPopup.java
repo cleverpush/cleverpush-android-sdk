@@ -159,9 +159,8 @@ public class AppBannerPopup {
       bannerBackGroundImage.setVisibility(View.VISIBLE);
       composeBackground(bannerBackGroundImage, body);
     }
-
+    
     popup.setAnimationStyle(R.style.banner_animation);
-
     popup.setOnDismissListener(() -> toggleShowing(false));
 
     isInitialized = true;
