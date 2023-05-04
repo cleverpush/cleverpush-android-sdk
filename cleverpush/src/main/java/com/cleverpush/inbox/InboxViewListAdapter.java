@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -162,7 +161,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
     Date date = null;
     try {
       date = sdf.parse(dateToFormat);
-    } catch (ParseException e) {
+    } catch (Exception e) {
       Logger.e(TAG, e.getLocalizedMessage());
     }
     java.text.DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
