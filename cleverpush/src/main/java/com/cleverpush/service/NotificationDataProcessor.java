@@ -114,7 +114,12 @@ public class NotificationDataProcessor {
       }
       notifications.setCapacity(maximumNotifications);
       if (notification.getCreatedAt() == null || notification.getCreatedAt().equalsIgnoreCase("")) {
-        String currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).format(new Date());
+        String currentDate = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+          currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).format(new Date());
+        } else {
+          currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date());
+        }
         notification.setCreatedAt(currentDate);
       }
 

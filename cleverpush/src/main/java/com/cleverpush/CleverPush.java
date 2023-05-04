@@ -101,7 +101,6 @@ import org.json.JSONObject;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2867,7 +2866,7 @@ public class CleverPush {
       } else {
         return topic.optString("name");
       }
-    } catch (ParseException e) {
+    } catch (Exception e) {
       return topic.optString("name");
     }
   }
@@ -2914,7 +2913,7 @@ public class CleverPush {
           if (topicCreatedAt + oneHour > topicLastChecked) {
             return true;
           }
-        } catch (ParseException e) {
+        } catch (Exception e) {
           Date date = new Date();
           int topicCreatedAt = (int) (date.getTime() / 1000);
           if (topicCreatedAt + oneHour > topicLastChecked) {

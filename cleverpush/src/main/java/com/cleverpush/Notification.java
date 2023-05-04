@@ -1,5 +1,7 @@
 package com.cleverpush;
 
+import android.os.Build;
+
 import androidx.core.app.NotificationCompat;
 
 import com.google.gson.annotations.SerializedName;
@@ -138,7 +140,11 @@ public class Notification implements Serializable {
   public Date getCreatedAtDate() {
     if (this.getCreatedAt() != null) {
       try {
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).parse(this.getCreatedAt());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+          return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).parse(this.getCreatedAt());
+        } else {
+          return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(this.getCreatedAt());
+        }
       } catch (Exception ignored) {
 
       }
@@ -209,7 +215,12 @@ public class Notification implements Serializable {
 
     try {
       if (this.createdAt == null) {
-        DateFormat date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+        DateFormat date = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+          date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+        } else {
+          date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        }
         setCreatedAt(date.format(new Date()));
       }
     } catch (Exception ignored) {

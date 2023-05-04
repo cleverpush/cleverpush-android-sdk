@@ -2,6 +2,7 @@ package com.cleverpush.banner.models;
 
 import android.app.Activity;
 import android.content.res.Configuration;
+import android.os.Build;
 
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.banner.models.blocks.BannerBlock;
@@ -10,7 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class Banner {
-  private static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+  private static String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
 
   public static final String CONTENT_TYPE_HTML = "html";
 
@@ -311,11 +311,12 @@ public class Banner {
 
     try {
       SimpleDateFormat format = null;
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-        format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+        DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
       }
+      format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
       banner.startAt = format.parse(json.optString("startAt"));
-    } catch (ParseException e) {
+    } catch (Exception e) {
       banner.startAt = new Date();
     }
 
@@ -336,21 +337,23 @@ public class Banner {
 
     try {
       SimpleDateFormat format = null;
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-        format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+        DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
       }
+      format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
       banner.stopAt = json.isNull("stopAt") ? null : format.parse(json.optString("stopAt"));
-    } catch (ParseException e) {
+    } catch (Exception e) {
       banner.stopAt = null;
     }
 
     try {
       SimpleDateFormat format = null;
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-        format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+        DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
       }
+      format = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT, Locale.US);
       banner.createdAt = json.isNull("createdAt") ? null : format.parse(json.optString("createdAt"));
-    } catch (ParseException e) {
+    } catch (Exception e) {
       banner.createdAt = null;
     }
 
