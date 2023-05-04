@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.30.6
+* App Banners: disabled animations for images while loading
+* App Banners: filter banners for timing + targeting before returning in `getAppBannersByGroup`
+* App Banners: timing fixed for Android 6
+* App Banners: support for notch background color
+
 ## 1.30.5
 * App Banners: Support "Copy to clipboard" action
 
