@@ -69,9 +69,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void testStoryViewTrackUrlOpenedListener() {
-        /*binding.storyView.setOpenedListener((webResourceRequest) -> {
-            Logger.d(LOG_TAG, "StoryView URl: " + webResourceRequest.getUrl());
-            Logger.d(LOG_TAG, "StoryView method: " + webResourceRequest.getMethod());
+        /*binding.storyView.setOpenedListener((url) -> {
+            Logger.d(LOG_TAG, "StoryView URl: " + url);
         });*/
     }
 

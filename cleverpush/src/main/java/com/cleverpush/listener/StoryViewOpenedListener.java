@@ -1,9 +1,9 @@
 package com.cleverpush.listener;
 
-import android.webkit.WebResourceRequest;
+import android.net.Uri;
 
 import java.io.Serializable;
 
 public interface StoryViewOpenedListener extends Serializable {
-  void opened(WebResourceRequest request);
+  void opened(Uri request);
 }

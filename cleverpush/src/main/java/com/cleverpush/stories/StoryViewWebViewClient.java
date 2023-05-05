@@ -18,17 +18,14 @@ public class StoryViewWebViewClient  extends WebViewClient {
 
   public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
     String GET_METHOD = "GET";
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && request.isForMainFrame() && request.getUrl() != null
+            && request.getMethod().equals(GET_METHOD)) {
       if (storyViewOpenedListener != null) {
-        storyViewOpenedListener.opened(request);
-        return true;
+        storyViewOpenedListener.opened(request.getUrl());
       } else {
-        if (request.isForMainFrame() && request.getUrl() != null
-                && request.getMethod().equals(GET_METHOD)) {
-          view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
-          return true;
-        }
+        view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
       }
+      return true;
     }
     return false;
   }
