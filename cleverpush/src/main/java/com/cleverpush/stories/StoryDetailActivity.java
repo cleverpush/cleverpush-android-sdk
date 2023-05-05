@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.SnapHelper;
 
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.R;
+import com.cleverpush.listener.StoryViewOpenedListener;
 import com.cleverpush.stories.listener.OnSwipeDownListener;
 import com.cleverpush.stories.listener.OnSwipeTouchListener;
 import com.cleverpush.stories.listener.StoryChangeListener;
@@ -26,14 +27,16 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   private RecyclerView recyclerView;
   private OnSwipeTouchListener onSwipeTouchListener;
   private ArrayList<Story> stories = new ArrayList<>();
+  public StoryViewOpenedListener storyViewOpenedListener;
 
-  public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition) {
+  public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewOpenedListener storyViewOpenedListener) {
     ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
       @Override
       public void run() {
         Intent intent = new Intent(activity, StoryDetailActivity.class);
         intent.putExtra("stories", stories);
         intent.putExtra("selectedPosition", selectedPosition);
+        intent.putExtra("storyViewOpenedListener", storyViewOpenedListener);
         activity.startActivity(intent);
       }
     });
@@ -70,6 +73,9 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       if (extras.containsKey("selectedPosition")) {
         selectedPosition = extras.getInt("selectedPosition");
       }
+      if (extras.containsKey("storyViewOpenedListener")) {
+        storyViewOpenedListener = (StoryViewOpenedListener) getIntent().getSerializableExtra("storyViewOpenedListener");
+      }
       if (extras.containsKey("stories")) {
         stories = (ArrayList<Story>) extras.getSerializable("stories");
         loadStoryDetails();
@@ -86,7 +92,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   private void loadStoryDetails() {
     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
     SnapHelper snapHelper = new PagerSnapHelper();
-    StoryDetailListAdapter storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this);
+    StoryDetailListAdapter storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this, storyViewOpenedListener);
     recyclerView.setLayoutManager(linearLayoutManager);
     snapHelper.attachToRecyclerView(recyclerView);
     recyclerView.setAdapter(storyDetailListAdapter);
