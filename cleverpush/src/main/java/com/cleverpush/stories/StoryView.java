@@ -54,7 +54,7 @@ public class StoryView extends LinearLayout {
     loadStory();
   }
 
-  public void setStoryViewOpenedListener(StoryViewOpenedListener storyViewOpenedListener) {
+  public void setOpenedListener(StoryViewOpenedListener storyViewOpenedListener) {
     this.storyViewOpenedListener = storyViewOpenedListener;
   }
 
