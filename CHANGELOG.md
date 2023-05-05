@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.7
+* Added StoryViewOpenedListener
+
 ## 1.30.6
 * App Banners: disabled animations for images while loading
 * App Banners: filter banners for timing + targeting before returning in `getAppBannersByGroup`
