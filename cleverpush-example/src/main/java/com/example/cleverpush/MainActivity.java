@@ -68,6 +68,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    void testStoryViewTrackUrlOpenedListener() {
+        /*binding.storyView.setOpenedListener((url) -> {
+            Logger.d(LOG_TAG, "StoryView URl: " + url);
+        });*/
+    }
+
     void testAppBannerTrackClickOpenedListener() {
         CleverPush.getInstance(this).setAppBannerOpenedListener((bannerAction) -> {
             Logger.d(LOG_TAG, "AppBannerOpened " + bannerAction.getType());

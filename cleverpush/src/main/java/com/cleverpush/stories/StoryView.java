@@ -20,6 +20,7 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
+import com.cleverpush.listener.StoryViewOpenedListener;
 import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.stories.models.StoryListModel;
@@ -42,6 +43,8 @@ public class StoryView extends LinearLayout {
   private ArrayList<Story> stories = new ArrayList<>();
   private String widgetId = null;
 
+  public StoryViewOpenedListener storyViewOpenedListener;
+
   public String getWidgetId() {
     return widgetId;
   }
@@ -49,6 +52,10 @@ public class StoryView extends LinearLayout {
   public void setWidgetId(String widgetId) {
     this.widgetId = widgetId;
     loadStory();
+  }
+
+  public void setOpenedListener(StoryViewOpenedListener storyViewOpenedListener) {
+    this.storyViewOpenedListener = storyViewOpenedListener;
   }
 
   public StoryView(Context context, AttributeSet attributeSet) {
@@ -167,7 +174,7 @@ public class StoryView extends LinearLayout {
               editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
             }
           }
-          StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position);
+          StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewOpenedListener);
           stories.get(position).setOpened(true);
           storyViewListAdapter.notifyDataSetChanged();
           recyclerView.smoothScrollToPosition(position);

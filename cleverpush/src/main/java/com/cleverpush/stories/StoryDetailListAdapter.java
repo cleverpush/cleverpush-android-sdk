@@ -2,21 +2,17 @@ package com.cleverpush.stories;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.cleverpush.R;
+import com.cleverpush.listener.StoryViewOpenedListener;
 import com.cleverpush.stories.listener.StoryChangeListener;
 import com.cleverpush.stories.listener.StoryDetailJavascriptInterface;
 import com.cleverpush.stories.models.Story;
@@ -28,11 +24,13 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
   private Activity activity;
   private ArrayList<Story> stories;
   private StoryChangeListener storyChangeListener;
+  public StoryViewOpenedListener storyViewOpenedListener;
 
-  public StoryDetailListAdapter(Activity activity, ArrayList<Story> stories, StoryChangeListener storyChangeListener) {
+  public StoryDetailListAdapter(Activity activity, ArrayList<Story> stories, StoryChangeListener storyChangeListener, StoryViewOpenedListener storyViewOpenedListener) {
     this.activity = activity;
     this.stories = stories;
     this.storyChangeListener = storyChangeListener;
+    this.storyViewOpenedListener = storyViewOpenedListener;
   }
 
   @Override
@@ -87,9 +85,11 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
         "</html>";
 
     storyDetailViewHolder.webView.getSettings().setJavaScriptEnabled(true);
+    storyDetailViewHolder.webView.getSettings().setLoadsImagesAutomatically(true);
     storyDetailViewHolder.webView.addJavascriptInterface(
         new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity),
         "storyDetailJavascriptInterface");
+    storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener));
     storyDetailViewHolder.webView.loadData(htmlContent, "text/html; charset=utf-8", "UTF-8");
   }
 
