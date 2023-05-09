@@ -5,6 +5,7 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -48,6 +49,7 @@ import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -229,12 +231,32 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     if (block.getFamily() != null) {
       try {
-        Typeface font = Typeface.createFromAsset(activity.getAssets(), block.getFamily() + ".ttf");
-        textView.setTypeface(font);
+        String fontFilename = block.getFamily() + ".ttf";
+        String fontPath = null;
+
+        AssetManager assetManager = activity.getAssets();
+
+        try {
+          String[] assetsList = assetManager.list("");
+          for (String asset : assetsList) {
+            if (asset.equals(fontFilename)) {
+              fontPath = fontFilename;
+              break;
+            }
+          }
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+
+        if (fontPath == null) {
+          fontPath = "fonts/" + fontFilename;
+        }
+
+        Typeface typeface = Typeface.createFromAsset(assetManager, fontPath);
+        textView.setTypeface(typeface);
       } catch (Exception ex) {
         Logger.e(TAG, ex.getMessage(), ex);
       }
-
     }
 
     Integer alignment = alignmentMap.get(block.getAlignment());
