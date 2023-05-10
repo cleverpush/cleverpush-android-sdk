@@ -17,6 +17,15 @@ import java.util.Map;
 
 public class SetSubscriptionAttributeResponseHandler {
 
+  private Runnable successCallback;
+
+  public SetSubscriptionAttributeResponseHandler(Runnable suppliedSuccessCallback) {
+    successCallback = suppliedSuccessCallback;
+  }
+
+  public SetSubscriptionAttributeResponseHandler() {
+  }
+
   public CleverPushHttpClient.ResponseHandler getResponseHandler(Map<String, Object> subscriptionAttributes) {
     return new CleverPushHttpClient.ResponseHandler() {
       @Override
@@ -31,6 +40,10 @@ public class SetSubscriptionAttributeResponseHandler {
             editor.apply();
             editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
             editor.commit();
+          }
+
+          if (successCallback != null) {
+            successCallback.run();
           }
         } catch (Exception ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
