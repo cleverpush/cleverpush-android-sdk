@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.preference.PreferenceManager;
 import android.view.View;
 
 import com.cleverpush.ActivityLifecycleListener;
@@ -721,7 +720,7 @@ public class AppBannerModule {
         }
 
         if (!triggers) {
-          Logger.d(TAG, "Skipping Banner because: Trigger not satisfied " + sessions);
+          Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Trigger not satisfied " + sessions);
           continue;
         }
       }
@@ -807,7 +806,7 @@ public class AppBannerModule {
       Banner banner = bannerPopup.getData();
       if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
         queuedBanners.add(bannerPopup);
-        Logger.d(TAG, "Skipping Banner because: A Banner is already on the screen");
+        Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: A Banner is already on the screen");
         return;
       }
 
@@ -817,12 +816,12 @@ public class AppBannerModule {
       }
 
       if (!isBannerTimeAllowed(banner)) {
-        Logger.d(TAG, "Skipping Banner because: Stop Time");
+        Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Stop Time");
         return;
       }
 
       if (!isBannerTargetingAllowed(banner)) {
-        Logger.d(TAG, "Skipping Banner because: Targeting not allowed");
+        Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting not allowed");
         return;
       }
 
