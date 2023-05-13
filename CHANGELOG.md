@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.30.9
+* Fixed Topics Dialog theme
+* Support custom fonts for app banners in `res/**` folders
+
 ## 1.30.8
 * Added callback to SetSubscriptionAttributeResponseHandler
 
