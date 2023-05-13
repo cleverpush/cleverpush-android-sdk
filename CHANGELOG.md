@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.8
+* Added callback to SetSubscriptionAttributeResponseHandler
+
 ## 1.30.7
 * Added StoryViewOpenedListener
 

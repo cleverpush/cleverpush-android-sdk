@@ -121,7 +121,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.30.7";
+  public static final String SDK_VERSION = "1.30.8";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -2065,6 +2065,10 @@ public class CleverPush {
   }
 
   public void setSubscriptionAttribute(String attributeId, String value) {
+    setSubscriptionAttribute(attributeId, value, new SetSubscriptionAttributeResponseHandler());
+  }
+
+  public void setSubscriptionAttribute(String attributeId, String value, SetSubscriptionAttributeResponseHandler responseHandler) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId != null) {
         JSONObject jsonBody = getJsonObject();
@@ -2079,8 +2083,7 @@ public class CleverPush {
 
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
         subscriptionAttributes.put(attributeId, value);
-        CleverPushHttpClient.post("/subscription/attribute", jsonBody,
-            new SetSubscriptionAttributeResponseHandler().getResponseHandler(subscriptionAttributes));
+        CleverPushHttpClient.post("/subscription/attribute", jsonBody, responseHandler.getResponseHandler(subscriptionAttributes));
       }
     })).start());
   }
