@@ -1,6 +1,5 @@
 package com.example.cleverpush;
 
-import static com.cleverpush.CleverPushHttpClient.BASE_URL;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.os.Bundle;
@@ -26,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         CleverPush.getInstance(this).enableDevelopmentMode();
-        CleverPush.getInstance(this).setApiEndpoint(BASE_URL);
         CleverPush.getInstance(this).subscribe();
         CleverPush.getInstance(this).init(
                 getString(R.string.channel_id),
