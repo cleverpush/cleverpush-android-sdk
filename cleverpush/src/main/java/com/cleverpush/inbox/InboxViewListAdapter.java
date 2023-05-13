@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.TextUtils;
+import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -65,7 +66,6 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
   @SuppressLint("ResourceType")
   @Override
   public void onBindViewHolder(InboxViewHolder holder, int position) {
-
     LinearLayout linearLayout = (LinearLayout) holder.itemView.findViewById(R.id.llItemViewInBox);
     TextView titleTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
     TextView dateTextView = (TextView) holder.itemView.findViewById(R.id.tvDate);
@@ -105,7 +105,6 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
         onItemClickListener.onClicked(position);
       }
     });
-
   }
 
   @Override
@@ -148,7 +147,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
   private Typeface getTypeface(Context context, String path) throws RuntimeException {
     Typeface typeface;
     try {
-      typeface = Typeface.createFromAsset(context.getAssets(), path + ".ttf");
+      typeface = FontUtils.findFont(context, path);
     } catch (RuntimeException exception) {
       String message = "Font assets/" + path + " cannot be loaded";
       throw new RuntimeException(message);

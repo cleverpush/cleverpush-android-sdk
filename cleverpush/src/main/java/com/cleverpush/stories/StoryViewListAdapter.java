@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.request.RequestOptions;
 import com.cleverpush.ActivityLifecycleListener;
+import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 
 import android.util.TypedValue;
@@ -199,7 +200,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   public Typeface getTypeface(Context context, String path) throws RuntimeException {
     Typeface typeface;
     try {
-      typeface = Typeface.createFromAsset(context.getAssets(), path + ".ttf");
+      typeface = FontUtils.findFont(context, path);
     } catch (RuntimeException exception) {
       String message = "Font assets/" + path + " cannot be loaded";
       throw new RuntimeException(message);

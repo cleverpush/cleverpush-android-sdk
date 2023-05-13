@@ -13,10 +13,6 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.util.Base64;
-
-import com.cleverpush.CleverPush;
-import com.cleverpush.util.Logger;
-
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -28,12 +24,11 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.cleverpush.CleverPush;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
@@ -46,8 +41,9 @@ import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
+import com.cleverpush.util.FontUtils;
+import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
-
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -213,6 +209,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.addView(button);
   }
 
+
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
@@ -229,7 +226,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     if (block.getFamily() != null) {
       try {
-        Typeface font = Typeface.createFromAsset(activity.getAssets(), block.getFamily() + ".ttf");
+        Typeface font = FontUtils.findFont(activity, block.getFamily());
         textView.setTypeface(font);
       } catch (Exception ex) {
         Logger.e(TAG, ex.getMessage(), ex);
