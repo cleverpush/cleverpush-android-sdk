@@ -2374,7 +2374,11 @@ public class CleverPush {
         }
         getAppBannerModule().triggerEvent(triggeredEvent);
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, ex.getMessage());
+        String message = ex.getMessage();
+        if (message == null) {
+          message = ex.toString();
+        }
+        Logger.e(LOG_TAG, message);
       }
     });
   }
