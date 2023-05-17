@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.10
+* Fixed a bug with logging which could result in crashes
+
 ## 1.30.9
 * Fixed Topics Dialog theme
 * Support custom fonts for app banners in `res/**` folders
