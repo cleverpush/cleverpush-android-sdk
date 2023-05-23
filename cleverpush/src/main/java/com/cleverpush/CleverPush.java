@@ -2750,7 +2750,7 @@ public class CleverPush {
     } catch (Exception ignored) {
     }
     boolean defaultUncheckedAndEmptyTopics =
-        selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked;
+        selectedTopics.size() == 0 && !defaultUnchecked;
     return defaultUncheckedAndEmptyTopics || selectedTopics.contains(id);
   }
 
