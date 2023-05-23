@@ -632,7 +632,9 @@ public class CleverPush {
 
     this.pendingInitFeaturesCall = false;
 
-    this.showTopicDialogOnNewAdded();
+    if (this.isSubscribed()) {
+      this.showTopicDialogOnNewAdded();
+    }
     this.initAppReview();
     this.initGeoFences();
 
@@ -2868,7 +2870,7 @@ public class CleverPush {
       simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       Date date = simpleDateFormat.parse(topic.optString("createdAt"));
       int topicCreatedAt = (int) (date.getTime() / 1000);
-      if (topicsDialogShowWhenNewAdded && topicCreatedAt + oneHour > topicLastChecked) {
+      if (this.isSubscribed() && topicsDialogShowWhenNewAdded && topicCreatedAt + oneHour > topicLastChecked) {
         return topic.optString("name") + " ●";
       } else {
         return topic.optString("name");
