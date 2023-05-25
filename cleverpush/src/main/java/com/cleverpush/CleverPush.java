@@ -2751,8 +2751,7 @@ public class CleverPush {
       defaultUnchecked = topic.optBoolean("defaultUnchecked");
     } catch (Exception ignored) {
     }
-    boolean defaultUncheckedAndEmptyTopics =
-        selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked;
+    boolean defaultUncheckedAndEmptyTopics = selectedTopics.size() == 0 && !defaultUnchecked && !this.isSubscribed();
     return defaultUncheckedAndEmptyTopics || selectedTopics.contains(id);
   }
 
