@@ -2752,7 +2752,7 @@ public class CleverPush {
     } catch (Exception ignored) {
     }
     boolean defaultUncheckedAndEmptyTopics =
-        selectedTopics.size() == 0 && !defaultUnchecked;
+        selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked;
     return defaultUncheckedAndEmptyTopics || selectedTopics.contains(id);
   }
 
@@ -2870,7 +2870,7 @@ public class CleverPush {
       simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       Date date = simpleDateFormat.parse(topic.optString("createdAt"));
       int topicCreatedAt = (int) (date.getTime() / 1000);
-      if (this.isSubscribed() && topicsDialogShowWhenNewAdded && topicCreatedAt + oneHour > topicLastChecked) {
+      if (this.isSubscribed() && topicsDialogShowWhenNewAdded && topicLastChecked > 0 && topicCreatedAt + oneHour > topicLastChecked) {
         return topic.optString("name") + " ●";
       } else {
         return topic.optString("name");
