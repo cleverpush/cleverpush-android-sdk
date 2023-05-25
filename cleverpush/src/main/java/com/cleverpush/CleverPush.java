@@ -632,7 +632,9 @@ public class CleverPush {
 
     this.pendingInitFeaturesCall = false;
 
-    this.showTopicDialogOnNewAdded();
+    if (this.isSubscribed()) {
+      this.showTopicDialogOnNewAdded();
+    }
     this.initAppReview();
     this.initGeoFences();
 
@@ -2749,8 +2751,7 @@ public class CleverPush {
       defaultUnchecked = topic.optBoolean("defaultUnchecked");
     } catch (Exception ignored) {
     }
-    boolean defaultUncheckedAndEmptyTopics =
-        selectedTopics.size() == 0 && !this.hasSubscriptionTopics() && !defaultUnchecked;
+    boolean defaultUncheckedAndEmptyTopics = selectedTopics.size() == 0 && !defaultUnchecked && !this.isSubscribed();
     return defaultUncheckedAndEmptyTopics || selectedTopics.contains(id);
   }
 
@@ -2868,7 +2869,7 @@ public class CleverPush {
       simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       Date date = simpleDateFormat.parse(topic.optString("createdAt"));
       int topicCreatedAt = (int) (date.getTime() / 1000);
-      if (topicsDialogShowWhenNewAdded && topicCreatedAt + oneHour > topicLastChecked) {
+      if (this.isSubscribed() && topicsDialogShowWhenNewAdded && topicLastChecked > 0 && topicCreatedAt + oneHour > topicLastChecked) {
         return topic.optString("name") + " ●";
       } else {
         return topic.optString("name");
