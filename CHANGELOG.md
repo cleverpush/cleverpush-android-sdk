@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.11
+* Fixed logic in topics dialog when feature "show topics dialog again on changed topics" is enabled
+
 ## 1.30.10
 * Fixed a bug with logging which could result in crashes
 
