@@ -36,6 +36,16 @@
             android:orientation="vertical"
             android:padding="15dp">
 
+            <ImageButton
+                android:id="@+id/buttonClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:background="@drawable/drawable_circle_filled_dark_gray"
+                android:padding="10dp"
+                android:src="@drawable/ic_close"
+                android:visibility="gone" />
+
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/carousel_pager"
                 android:layout_width="match_parent"
@@ -43,18 +53,19 @@
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/carousel_pager_tab_layout"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:visibility="gone"
                 app:tabBackground="@drawable/tab_pager_selector"
                 app:tabGravity="center"
+                android:layout_gravity="center"
                 app:tabIndicatorHeight="0dp"
                 app:tabPaddingStart="10dp" />
         </LinearLayout>
 
         <ImageButton
-            android:id="@+id/buttonClose"
+            android:id="@+id/buttonCloseOverlap"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
