@@ -380,9 +380,14 @@ public class AppBannerPopup {
   private void setUpBannerBlocks() {
     viewPager2 = popupRoot.findViewById(R.id.carousel_pager);
     TabLayout tabLayout = popupRoot.findViewById(R.id.carousel_pager_tab_layout);
-    ImageButton buttonClose = popupRoot.findViewById(R.id.buttonClose);
 
     if (data.isCloseButtonEnabled()) {
+      ImageButton buttonClose;
+      if (data.isCloseButtonPositionStaticEnabled()) {
+        buttonClose = popupRoot.findViewById(R.id.buttonClose);
+      } else {
+        buttonClose = popupRoot.findViewById(R.id.buttonCloseOverlap);
+      }
       buttonClose.setVisibility(View.VISIBLE);
       buttonClose.setOnClickListener(view -> dismiss());
     }

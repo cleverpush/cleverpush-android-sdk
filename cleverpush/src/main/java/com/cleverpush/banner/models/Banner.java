@@ -58,6 +58,7 @@ public class Banner {
   private List<HashMap<String, String>> attributes;
   private boolean marginEnabled;
   private boolean closeButtonEnabled;
+  private boolean closeButtonPositionStaticEnabled;
   private CheckFilterRelation bannerAppVersionFilterRelation;
   private String appVersionFilterValue;
   private String fromVersion;
@@ -256,6 +257,10 @@ public class Banner {
     return closeButtonEnabled;
   }
 
+  public boolean isCloseButtonPositionStaticEnabled() {
+    return closeButtonPositionStaticEnabled;
+  }
+
   public boolean isDarkModeEnabled() {
     return darkModeEnabled;
   }
@@ -448,6 +453,10 @@ public class Banner {
 
     if (json.has("closeButtonEnabled")) {
       banner.closeButtonEnabled = json.optBoolean("closeButtonEnabled");
+    }
+
+    if (json.has("closeButtonPositionStaticEnabled")) {
+      banner.closeButtonPositionStaticEnabled = json.optBoolean("closeButtonPositionStaticEnabled");
     }
 
     if (json.has("enableMultipleScreens")) {
