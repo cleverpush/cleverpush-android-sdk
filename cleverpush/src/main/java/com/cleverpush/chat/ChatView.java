@@ -15,6 +15,96 @@ import com.cleverpush.listener.ChatUrlOpenedListener;
 public class ChatView extends WebView {
   private String lastSubscriptionId;
   private Handler handler;
+  String chatBackgroundColor;
+  String chatSenderBubbleTextColor;
+  String chatSenderBubbleBackgroundColor;
+  String chatSendButtonBackgroundColor;
+  String chatInputTextColor;
+  String chatInputBackgroundColor;
+  String chatReceiverBubbleBackgroundColor;
+  String chatReceiverBubbleTextColor;
+  String chatInputContainerBackgroundColor;
+  String chatTimestampTextColor;
+
+  public String getChatBackgroundColor() {
+    return chatBackgroundColor;
+  }
+
+  public void setChatBackgroundColor(String chatBackgroundColor) {
+    this.chatBackgroundColor = chatBackgroundColor;
+  }
+
+  public String getChatSenderBubbleTextColor() {
+    return chatSenderBubbleTextColor;
+  }
+
+  public void setChatSenderBubbleTextColor(String chatSenderBubbleTextColor) {
+    this.chatSenderBubbleTextColor = chatSenderBubbleTextColor;
+  }
+
+  public String getChatSenderBubbleBackgroundColor() {
+    return chatSenderBubbleBackgroundColor;
+  }
+
+  public void setChatSenderBubbleBackgroundColor(String chatSenderBubbleBackgroundColor) {
+    this.chatSenderBubbleBackgroundColor = chatSenderBubbleBackgroundColor;
+  }
+
+  public String getChatSendButtonBackgroundColor() {
+    return chatSendButtonBackgroundColor;
+  }
+
+  public void setChatSendButtonBackgroundColor(String chatSendButtonBackgroundColor) {
+    this.chatSendButtonBackgroundColor = chatSendButtonBackgroundColor;
+  }
+
+  public String getChatInputTextColor() {
+    return chatInputTextColor;
+  }
+
+  public void setChatInputTextColor(String chatInputTextColor) {
+    this.chatInputTextColor = chatInputTextColor;
+  }
+
+  public String getChatInputBackgroundColor() {
+    return chatInputBackgroundColor;
+  }
+
+  public void setChatInputBackgroundColor(String chatInputBackgroundColor) {
+    this.chatInputBackgroundColor = chatInputBackgroundColor;
+  }
+
+  public String getChatReceiverBubbleBackgroundColor() {
+    return chatReceiverBubbleBackgroundColor;
+  }
+
+  public void setChatReceiverBubbleBackgroundColor(String chatReceiverBubbleBackgroundColor) {
+    this.chatReceiverBubbleBackgroundColor = chatReceiverBubbleBackgroundColor;
+  }
+
+  public String getChatReceiverBubbleTextColor() {
+    return chatReceiverBubbleTextColor;
+  }
+
+  public void setChatReceiverBubbleTextColor(String chatReceiverBubbleTextColor) {
+    this.chatReceiverBubbleTextColor = chatReceiverBubbleTextColor;
+  }
+
+  public String getChatInputContainerBackgroundColor() {
+    return chatInputContainerBackgroundColor;
+  }
+
+  public void setChatInputContainerBackgroundColor(String chatInputContainerBackgroundColor) {
+    this.chatInputContainerBackgroundColor = chatInputContainerBackgroundColor;
+  }
+
+  public String getChatTimestampTextColor() {
+    return chatTimestampTextColor;
+  }
+
+  public void setChatTimestampTextColor(String chatTimestampTextColor) {
+    this.chatTimestampTextColor = chatTimestampTextColor;
+  }
 
   public ChatView(Context context) {
     super(context);
@@ -50,17 +140,47 @@ public class ChatView extends WebView {
     new Thread(() -> {
       getCleverPushInstance().getChannelConfig(config -> {
         String configJson = config != null ? config.toString() : "null";
-        String brandingColorStr = "";
+        String brandingColorStr = "", backgroundColor = "", chatSenderBubbleTextColor = "", chatSenderBubbleBackgroundColor = "", chatSendButtonBackgroundColor = "", chatReceiverBubbleBackgroundColor ="",
+                chatReceiverBubbleTextColor = "", chatInputContainerBackgroundColor = "", chatTimestampTextColor = "", chatInputTextColor = "", chatInputBackgroundColor = "";
         int brandingColor = getCleverPushInstance().getBrandingColor();
         if (brandingColor != 0) {
           brandingColorStr = "#" + Integer.toHexString(brandingColor).substring(2);
+        }
+        if (getChatBackgroundColor() != null && getChatBackgroundColor().length() > 0) {
+          backgroundColor = getChatBackgroundColor();
+        }
+        if (getChatSenderBubbleTextColor() != null && getChatSenderBubbleTextColor().length() > 0) {
+          chatSenderBubbleTextColor = getChatSenderBubbleTextColor();
+        }
+        if (getChatSenderBubbleBackgroundColor() != null && getChatSenderBubbleBackgroundColor().length() > 0) {
+          chatSenderBubbleBackgroundColor = getChatSenderBubbleBackgroundColor();
+        }
+        if (getChatSendButtonBackgroundColor() != null && getChatSendButtonBackgroundColor().length() > 0) {
+          chatSendButtonBackgroundColor = getChatSendButtonBackgroundColor();
+        }
+        if (getChatReceiverBubbleBackgroundColor() != null && getChatReceiverBubbleBackgroundColor().length() > 0) {
+          chatReceiverBubbleBackgroundColor = getChatReceiverBubbleBackgroundColor();
+        }
+        if (getChatReceiverBubbleTextColor() != null && getChatReceiverBubbleTextColor().length() > 0) {
+          chatReceiverBubbleTextColor = getChatReceiverBubbleTextColor();
+        }
+        if (getChatInputContainerBackgroundColor() != null && getChatInputContainerBackgroundColor().length() > 0) {
+          chatInputContainerBackgroundColor = getChatInputContainerBackgroundColor();
+        }
+        if (getChatTimestampTextColor() != null && getChatTimestampTextColor().length() > 0) {
+          chatTimestampTextColor = getChatTimestampTextColor();
+        }
+        if (getChatInputTextColor() != null && getChatInputTextColor().length() > 0) {
+          chatInputTextColor = getChatInputTextColor();
+        }
+        if (getChatInputBackgroundColor() != null && getChatInputBackgroundColor().length() > 0) {
+          chatInputBackgroundColor = getChatInputBackgroundColor();
         }
 
         String data = "<!DOCTYPE html>\n" +
             "<html>\n" +
             "<head>\n" +
-            "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>\n"
-            +
+            "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>\n" +
             "<style>\n" +
             "html, body { margin: 0; padding: 0; height: 100%; }\n" +
             "</style>\n" +
@@ -70,9 +190,20 @@ public class ChatView extends WebView {
             "<script>\n" +
             "window.cleverpushHandleSubscribe = function() { window.cleverpushAppInterface.subscribe() };\n" +
             "var cleverpushConfig = " + configJson + ";\n" +
+            "cleverpushConfig.chatStylingOptions = {};\n" +
             "(cleverpushConfig || {}).nativeApp = true;\n" +
             "(cleverpushConfig || {}).nativeAppPlatform = 'Android';\n" +
             "(cleverpushConfig || {}).brandingColor = '" + brandingColorStr + "';\n" +
+            "(cleverpushConfig || {}).chatBackgroundColor = '" + backgroundColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.widgetTextColor = '" + chatSenderBubbleTextColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.chatButtonColor = '" + chatSendButtonBackgroundColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.widgetInputBoxColor = '" + chatInputBackgroundColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.widgetInputTextColor = '" + chatInputTextColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.receiverBubbleColor = '" + chatReceiverBubbleBackgroundColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.inputContainer = '" + chatInputContainerBackgroundColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.dateColor = '" + chatTimestampTextColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.receiverTextColor = '" + chatReceiverBubbleTextColor + "';\n" +
+            "(cleverpushConfig || {}).chatStylingOptions.chatSenderBubbleBackgroundColor = '" + chatSenderBubbleBackgroundColor + "';\n" +
             "var cleverpushSubscriptionId = '" + subscriptionId + "';\n" +
             "</script>\n" +
             "<script>\n" +
