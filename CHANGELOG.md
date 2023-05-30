@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.30.12
+* Added feature to set the app banner close button position 
+* Added feature to for chat view theme color customization
+
 ## 1.30.11
 * Fixed logic in topics dialog when feature "show topics dialog again on changed topics" is enabled
 
