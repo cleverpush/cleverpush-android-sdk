@@ -653,7 +653,7 @@ public class CleverPush {
     }
 
     if (getPendingShowAppBannerId() != null) {
-      appBannerModule.showBannerById(pendingShowAppBannerId, pendingShowAppBannerNotificationId, false);
+      appBannerModule.showBanner(pendingShowAppBannerId, pendingShowAppBannerNotificationId);
       pendingShowAppBannerId = null;
       pendingShowAppBannerNotificationId = null;
     }
@@ -2469,7 +2469,7 @@ public class CleverPush {
       pendingShowAppBannerNotificationId = notificationId;
       return;
     }
-    appBannerModule.showBannerById(bannerId, notificationId, true);
+    appBannerModule.showBanner(bannerId, notificationId);
   }
 
   /**
