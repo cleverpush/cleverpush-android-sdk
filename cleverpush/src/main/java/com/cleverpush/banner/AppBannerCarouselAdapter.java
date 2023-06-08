@@ -21,7 +21,7 @@ import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -87,22 +87,19 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   @Override
   public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
     LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
-    ProgressBar progressBar = holder.itemView.findViewById(R.id.progressBar);
     body.removeAllViews();
 
     if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
       composeHtmlBanner(body, data.getContent());
     } else {
       for (BannerBlock bannerBlock : data.getScreens().get(position).getBlocks()) {
-        progressBar.setVisibility(View.GONE);
         activity.runOnUiThread(() -> {
           switch (bannerBlock.getType()) {
             case Text:
               composeTextBlock(body, (BannerTextBlock) bannerBlock, position);
               break;
             case Image:
-              progressBar.setVisibility(View.VISIBLE);
-              composeImageBlock(body, (BannerImageBlock) bannerBlock, position, progressBar);
+              composeImageBlock(body, (BannerImageBlock) bannerBlock, position);
               break;
             case Button:
               composeButtonBlock(body, (BannerButtonBlock) bannerBlock, position);
@@ -244,11 +241,12 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.addView(textView);
   }
 
-  private void composeImageBlock(LinearLayout body, BannerImageBlock block, int position, ProgressBar progressBar) {
-    @SuppressLint("InflateParams") LinearLayout imageLayout =
-            (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
+  private void composeImageBlock(LinearLayout body, BannerImageBlock block, int position) {
+    @SuppressLint("InflateParams") FrameLayout imageLayout =
+            (FrameLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
     AspectRatioImageView img = imageLayout.findViewById(R.id.imageView);
-
+    ProgressBar progressBar = imageLayout.findViewById(R.id.progressBar);
+    progressBar.setVisibility(View.VISIBLE);
     int height = block.getImageHeight();
     int width = block.getImageWidth();
 

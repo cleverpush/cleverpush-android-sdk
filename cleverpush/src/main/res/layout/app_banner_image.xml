@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center"
+        android:progressTint="@color/cp_black_trans"
+        android:visibility="gone" />
 
     <com.cleverpush.banner.AspectRatioImageView
         android:id="@+id/imageView"
@@ -13,4 +21,4 @@
         android:scaleType="fitCenter"
         tools:srcCompat="@drawable/app_banner_default_image" />
 
-</LinearLayout>
+</FrameLayout>
