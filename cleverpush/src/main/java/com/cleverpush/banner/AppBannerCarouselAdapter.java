@@ -21,8 +21,9 @@ import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -86,6 +87,8 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   @Override
   public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
     LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
+    body.removeAllViews();
+
     if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
       composeHtmlBanner(body, data.getContent());
     } else {
@@ -114,7 +117,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   public int getItemCount() {
     return screens.size();
   }
-
 
   public static class ViewHolder extends RecyclerView.ViewHolder {
     public ViewHolder(@NonNull View itemView) {
@@ -209,7 +211,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.addView(button);
   }
 
-
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
@@ -241,17 +242,17 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   }
 
   private void composeImageBlock(LinearLayout body, BannerImageBlock block, int position) {
-    @SuppressLint("InflateParams") ConstraintLayout imageLayout =
-        (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
-    ImageView img = imageLayout.findViewById(R.id.imageView);
+    @SuppressLint("InflateParams") FrameLayout imageLayout =
+            (FrameLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
+    AspectRatioImageView img = imageLayout.findViewById(R.id.imageView);
+    ProgressBar progressBar = imageLayout.findViewById(R.id.progressBar);
+    progressBar.setVisibility(View.VISIBLE);
+    int height = block.getImageHeight();
+    int width = block.getImageWidth();
 
-    ConstraintSet imgConstraints = new ConstraintSet();
-    imgConstraints.clone(imageLayout);
-    float widthPercentage = Math.min(100, Math.max(0, block.getScale())) / 100.0f;
-    imgConstraints.constrainPercentWidth(img.getId(), widthPercentage);
-    imgConstraints.applyTo(imageLayout);
+    float aspectRatio = (float) height / width;
 
-    body.addView(imageLayout);
+    img.setAspectRatio(aspectRatio);
 
     new Thread(() -> {
       try {
@@ -267,10 +268,13 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         if (bitmap != null) {
           img.setImageBitmap(bitmap);
         }
+        progressBar.setVisibility(View.GONE);
       } catch (Exception ignored) {
-
+        progressBar.setVisibility(View.GONE);
       }
     }).start();
+
+    body.addView(imageLayout);
 
     if (block.getAction() != null) {
       img.setOnClickListener(view -> this.onClickListener(block.getAction()));

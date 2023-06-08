@@ -16,6 +16,9 @@ public class BannerImageBlock extends BannerBlock {
   private boolean dismiss;
   private BannerAction action;
   private List<BannerBlockScreen> blockScreens;
+  private String id;
+  private int imageWidth;
+  private int imageHeight;
 
   private BannerImageBlock() {
   }
@@ -44,6 +47,18 @@ public class BannerImageBlock extends BannerBlock {
     return blockScreens;
   }
 
+  public String getId() {
+    return id;
+  }
+
+  public int getImageWidth() {
+    return imageWidth;
+  }
+
+  public int getImageHeight() {
+    return imageHeight;
+  }
+
   public static BannerImageBlock createImageBlock(JSONObject json) throws JSONException {
     BannerImageBlock imageBlock = new BannerImageBlock();
 
@@ -70,6 +85,18 @@ public class BannerImageBlock extends BannerBlock {
       for (int i = 0; i < screens.length(); ++i) {
         imageBlock.blockScreens.add(BannerBlockScreen.create(screens.getJSONObject(i)));
       }
+    }
+
+    imageBlock.id = json.getString("id");
+
+    imageBlock.imageWidth = 100;
+    if (json.has("imageWidth") && json.getInt("imageWidth") > 0) {
+      imageBlock.imageWidth = json.getInt("imageWidth");
+    }
+
+    imageBlock.imageHeight = 100;
+    if (json.has("imageHeight") && json.getInt("imageHeight") > 0) {
+      imageBlock.imageHeight = json.getInt("imageHeight");
     }
 
     return imageBlock;
