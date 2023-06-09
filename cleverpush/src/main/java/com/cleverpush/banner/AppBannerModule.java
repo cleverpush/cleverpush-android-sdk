@@ -759,13 +759,13 @@ public class AppBannerModule {
 
       if (banner.getStartAt().before(now)) {
         if (banner.getDelaySeconds() > 0) {
-          getHandler().postDelayed(() -> showBanner(bannerPopup), 1000L * banner.getDelaySeconds());
+          getHandler().postDelayed(() -> showBanner(bannerPopup, false), 1000L * banner.getDelaySeconds());
         } else {
-          getHandler().post(() -> showBanner(bannerPopup));
+          getHandler().post(() -> showBanner(bannerPopup, false));
         }
       } else {
         long delay = banner.getStartAt().getTime() - now.getTime();
-        getHandler().postDelayed(() -> showBanner(bannerPopup), delay + (1000L * banner.getDelaySeconds()));
+        getHandler().postDelayed(() -> showBanner(bannerPopup, false), delay + (1000L * banner.getDelaySeconds()));
       }
     }
   }
@@ -788,7 +788,7 @@ public class AppBannerModule {
                 pendingBanners.add(popup);
                 break;
               }
-              getHandler().post(() -> showBanner(popup, true));
+              getHandler().post(() -> showBanner(popup));
               break;
             }
           }
@@ -896,90 +896,7 @@ public class AppBannerModule {
 
   void showBanner(AppBannerPopup bannerPopup) {
     try {
-      Banner banner = bannerPopup.getData();
-      if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
-        pendingFilteredBanners.add(bannerPopup);
-        Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: A Banner is already on the screen");
-        return;
-      }
-
-      if (banner.getStatus() == BannerStatus.Draft && !showDrafts) {
-        Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Draft");
-        return;
-      }
-
-      if (!isBannerTimeAllowed(banner)) {
-        Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Stop Time");
-        return;
-      }
-
-      if (!isBannerTargetingAllowed(banner)) {
-        Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting not allowed");
-        return;
-      }
-
-      bannerPopup.init();
-      bannerPopup.show();
-
-      if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
-        getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
-          @Override
-          public void initialized() {
-            setBannerIsShown(bannerPopup.getData());
-          }
-        });
-      }
-
-      if (bannerPopup.getData().getDismissType() == BannerDismissType.Timeout) {
-        long timeout = Math.max(0, bannerPopup.getData().getDismissTimeout());
-        getHandler().postDelayed(bannerPopup::dismiss, timeout * 1000);
-      }
-
-      bannerPopup.setOpenedListener(action -> {
-        sendBannerEvent("clicked", bannerPopup.getData());
-
-        if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
-          getCleverPushInstance().getAppBannerOpenedListener().opened(action);
-        }
-
-        if (action.getType().equals("subscribe")) {
-          getCleverPushInstance().subscribe();
-        }
-
-        if (action.getType().equals("addTags")) {
-          getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
-        }
-
-        if (action.getType().equals("removeTags")) {
-          getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
-        }
-
-        if (action.getType().equals("addTopics")) {
-          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-          topics.addAll(action.getTopics());
-          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-        }
-
-        if (action.getType().equals("removeTopics")) {
-          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-          topics.removeAll(action.getTopics());
-          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-        }
-
-        if (action.getType().equals("setAttribute")) {
-          getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
-        }
-
-        if (action.getType().equals("copyToClipboard")) {
-          ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
-          ClipData clip = ClipData.newPlainText("Voucher Code", action.getName());
-          clipboard.setPrimaryClip(clip);
-        }
-      });
-
-      PreferenceManagerUtils.updateSharedPreferenceByKey(CleverPush.context, CleverPushPreferences.APP_BANNER_SHOWING, true);
-
-      this.sendBannerEvent("delivered", bannerPopup.getData());
+      showBanner(bannerPopup, true);
     } catch (Exception ex) {
       Logger.e(TAG, ex.getMessage(), ex);
     }
@@ -1112,7 +1029,7 @@ public class AppBannerModule {
     for (int i = 0; i < size; i++) {
       AppBannerPopup bannerPopup = pendingFilteredBanners.get(0);
       pendingFilteredBanners.remove(0);
-      getHandler().post(() -> showBanner(bannerPopup));
+      getHandler().post(() -> showBanner(bannerPopup, false));
     }
   }
 

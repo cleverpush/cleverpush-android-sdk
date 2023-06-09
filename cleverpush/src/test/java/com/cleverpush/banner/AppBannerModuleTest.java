@@ -800,7 +800,7 @@ class AppBannerModuleTest {
             doReturn(handler).when(appBannerModule).getHandler();
             doReturn(appBannerPopup).when(appBannerModule).getAppBannerPopup(banner);
             doReturn("channelId").when(appBannerModule).getChannel();
-            doNothing().when(appBannerModule).showBanner(appBannerPopup);
+            doNothing().when(appBannerModule).showBanner(appBannerPopup, true);
 
             Answer<Void> appBannersListenerAnswer = new Answer<Void>() {
                 public Void answer(InvocationOnMock invocation) {
@@ -828,7 +828,7 @@ class AppBannerModuleTest {
 
             appBannerModule.showBanner("xuMpMKmoKhAZ8XRKr", null);
 
-            verify(appBannerModule).showBanner(appBannerPopup);
+            verify(appBannerModule).showBanner(appBannerPopup, true);
         } catch (JSONException exception) {
             exception.printStackTrace();
         }
@@ -913,7 +913,7 @@ class AppBannerModuleTest {
             exception.printStackTrace();
         }
 
-        appBannerModule.showBanner(appBannerPopup);
+        appBannerModule.showBanner(appBannerPopup, false);
 
         verify(appBannerModule).bannerIsShown("xuMpMKmoKhAZ8XRKr");
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
@@ -991,7 +991,7 @@ class AppBannerModuleTest {
             exception.printStackTrace();
         }
 
-        appBannerModule.showBanner(appBannerPopup);
+        appBannerModule.showBanner(appBannerPopup, false);
 
         verify(appBannerPopup).dismiss();
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
@@ -1094,7 +1094,7 @@ class AppBannerModuleTest {
             exception.printStackTrace();
         }
 
-        appBannerModule.showBanner(appBannerPopup);
+        appBannerModule.showBanner(appBannerPopup, false);
 
         verify(appBannerModule).bannerIsShown("xuMpMKmoKhAZ8XRKr");
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
@@ -1199,7 +1199,7 @@ class AppBannerModuleTest {
             exception.printStackTrace();
         }
 
-        appBannerModule.showBanner(appBannerPopup);
+        appBannerModule.showBanner(appBannerPopup, false);
 
         verify(appBannerModule).bannerIsShown("xuMpMKmoKhAZ8XRKr");
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
@@ -1235,11 +1235,11 @@ class AppBannerModuleTest {
             ((Runnable) invocation.getArgument(0)).run();
             return null;
         });
-        doNothing().when(appBannerModule).showBanner(appBannerPopup);
+        doNothing().when(appBannerModule).showBanner(appBannerPopup, false);
 
         appBannerModule.scheduledFilteredBanners();
 
-        verify(appBannerModule).showBanner(appBannerPopup);
+        verify(appBannerModule).showBanner(appBannerPopup, false);
     }
 
     @Test
@@ -1259,11 +1259,11 @@ class AppBannerModuleTest {
             ((Runnable) invocation.getArgument(0)).run();
             return null;
         });
-        doNothing().when(appBannerModule).showBanner(appBannerPopup);
+        doNothing().when(appBannerModule).showBanner(appBannerPopup, false);
 
         appBannerModule.scheduledFilteredBanners();
 
-        verify(appBannerModule).showBanner(appBannerPopup);
+        verify(appBannerModule).showBanner(appBannerPopup, false);
     }
 
     @Test
@@ -1283,11 +1283,11 @@ class AppBannerModuleTest {
             ((Runnable) invocation.getArgument(0)).run();
             return null;
         });
-        doNothing().when(appBannerModule).showBanner(appBannerPopup);
+        doNothing().when(appBannerModule).showBanner(appBannerPopup, false);
 
         appBannerModule.scheduledFilteredBanners();
 
-        verify(appBannerModule).showBanner(appBannerPopup);
+        verify(appBannerModule).showBanner(appBannerPopup, false);
     }
 
     @AfterEach
