@@ -773,6 +773,7 @@ public class AppBannerModule {
   public void showBanner(String bannerId, String notificationId) {
     showBanner(bannerId, notificationId, false);
   }
+
   public void showBanner(String bannerId, String notificationId, boolean force) {
     getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
       @Override
