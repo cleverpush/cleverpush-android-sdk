@@ -404,7 +404,7 @@ public class AppBannerModule {
 
     this.getBanners(banners -> {
       createBanners(banners);
-      scheduledFilteredBanners();
+      scheduleFilteredBanners();
     });
   }
 
@@ -740,7 +740,7 @@ public class AppBannerModule {
     }
   }
 
-  void scheduledFilteredBanners() {
+  void scheduleFilteredBanners() {
     if (getCleverPushInstance().isAppBannersDisabled()) {
       pendingBanners.addAll(getFilteredBanners());
       getFilteredBanners().removeAll(pendingBanners);
@@ -950,7 +950,7 @@ public class AppBannerModule {
     if (getPendingBanners() != null && getPendingBanners().size() > 0) {
       filteredBanners.addAll(getPendingBanners());
       getPendingBanners().clear();
-      this.scheduledFilteredBanners();
+      this.scheduleFilteredBanners();
     }
   }
 
