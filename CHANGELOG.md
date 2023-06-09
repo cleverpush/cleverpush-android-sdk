@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.13
+* Added loading spinner
+
 ## 1.30.12
 * Added feature to set the app banner close button position 
 * Added feature for chat view theme color customization
