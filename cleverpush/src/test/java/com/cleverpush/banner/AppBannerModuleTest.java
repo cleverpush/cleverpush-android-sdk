@@ -913,7 +913,7 @@ class AppBannerModuleTest {
             exception.printStackTrace();
         }
 
-        appBannerModule.showBanner(appBannerPopup, false);
+        appBannerModule.showBanner(appBannerPopup);
 
         verify(appBannerModule).bannerIsShown("xuMpMKmoKhAZ8XRKr");
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
@@ -991,7 +991,7 @@ class AppBannerModuleTest {
             exception.printStackTrace();
         }
 
-        appBannerModule.showBanner(appBannerPopup, false);
+        appBannerModule.showBanner(appBannerPopup);
 
         verify(appBannerPopup).dismiss();
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
@@ -1094,7 +1094,7 @@ class AppBannerModuleTest {
             exception.printStackTrace();
         }
 
-        appBannerModule.showBanner(appBannerPopup, false);
+        appBannerModule.showBanner(appBannerPopup);
 
         verify(appBannerModule).bannerIsShown("xuMpMKmoKhAZ8XRKr");
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
@@ -1199,7 +1199,7 @@ class AppBannerModuleTest {
             exception.printStackTrace();
         }
 
-        appBannerModule.showBanner(appBannerPopup, false);
+        appBannerModule.showBanner(appBannerPopup);
 
         verify(appBannerModule).bannerIsShown("xuMpMKmoKhAZ8XRKr");
         verify(appBannerModule).sendBannerEvent("delivered", appBannerPopup.getData());
@@ -1235,11 +1235,11 @@ class AppBannerModuleTest {
             ((Runnable) invocation.getArgument(0)).run();
             return null;
         });
-        doNothing().when(appBannerModule).showBanner(appBannerPopup, false);
+        doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
         appBannerModule.scheduledFilteredBanners();
 
-        verify(appBannerModule).showBanner(appBannerPopup, false);
+        verify(appBannerModule).showBanner(appBannerPopup);
     }
 
     @Test
@@ -1259,11 +1259,11 @@ class AppBannerModuleTest {
             ((Runnable) invocation.getArgument(0)).run();
             return null;
         });
-        doNothing().when(appBannerModule).showBanner(appBannerPopup, false);
+        doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
         appBannerModule.scheduledFilteredBanners();
 
-        verify(appBannerModule).showBanner(appBannerPopup, false);
+        verify(appBannerModule).showBanner(appBannerPopup);
     }
 
     @Test
@@ -1283,11 +1283,11 @@ class AppBannerModuleTest {
             ((Runnable) invocation.getArgument(0)).run();
             return null;
         });
-        doNothing().when(appBannerModule).showBanner(appBannerPopup, false);
+        doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
         appBannerModule.scheduledFilteredBanners();
 
-        verify(appBannerModule).showBanner(appBannerPopup, false);
+        verify(appBannerModule).showBanner(appBannerPopup);
     }
 
     @AfterEach

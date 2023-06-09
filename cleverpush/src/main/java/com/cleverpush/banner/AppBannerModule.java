@@ -759,22 +759,21 @@ public class AppBannerModule {
 
       if (banner.getStartAt().before(now)) {
         if (banner.getDelaySeconds() > 0) {
-          getHandler().postDelayed(() -> showBanner(bannerPopup, false), 1000L * banner.getDelaySeconds());
+          getHandler().postDelayed(() -> showBanner(bannerPopup), 1000L * banner.getDelaySeconds());
         } else {
-          getHandler().post(() -> showBanner(bannerPopup, false));
+          getHandler().post(() -> showBanner(bannerPopup));
         }
       } else {
         long delay = banner.getStartAt().getTime() - now.getTime();
-        getHandler().postDelayed(() -> showBanner(bannerPopup, false), delay + (1000L * banner.getDelaySeconds()));
+        getHandler().postDelayed(() -> showBanner(bannerPopup), delay + (1000L * banner.getDelaySeconds()));
       }
     }
   }
 
-  public void showBannerById(String bannerId) {
-    showBanner(bannerId, null);
-  }
-
   public void showBanner(String bannerId, String notificationId) {
+    showBanner(bannerId, notificationId, false);
+  }
+  public void showBanner(String bannerId, String notificationId, boolean force) {
     getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
       @Override
       public void initialized() {
@@ -788,7 +787,7 @@ public class AppBannerModule {
                 pendingBanners.add(popup);
                 break;
               }
-              getHandler().post(() -> showBanner(popup));
+              getHandler().post(() -> showBanner(popup, force));
               break;
             }
           }
@@ -896,7 +895,7 @@ public class AppBannerModule {
 
   void showBanner(AppBannerPopup bannerPopup) {
     try {
-      showBanner(bannerPopup, true);
+      showBanner(bannerPopup, false);
     } catch (Exception ex) {
       Logger.e(TAG, ex.getMessage(), ex);
     }
@@ -1029,7 +1028,7 @@ public class AppBannerModule {
     for (int i = 0; i < size; i++) {
       AppBannerPopup bannerPopup = pendingFilteredBanners.get(0);
       pendingFilteredBanners.remove(0);
-      getHandler().post(() -> showBanner(bannerPopup, false));
+      getHandler().post(() -> showBanner(bannerPopup));
     }
   }
 

@@ -2460,16 +2460,20 @@ public class CleverPush {
   }
 
   public void showAppBanner(String bannerId) {
-    showAppBanner(bannerId, null);
+    showAppBanner(bannerId, null, true);
   }
 
-  public void showAppBanner(String bannerId, String notificationId) {
+  public void showAppBanner(String bannerId, String notificationId, boolean force) {
     if (appBannerModule == null) {
       pendingShowAppBannerId = bannerId;
       pendingShowAppBannerNotificationId = notificationId;
       return;
     }
-    appBannerModule.showBanner(bannerId, notificationId);
+    appBannerModule.showBanner(bannerId, notificationId, force);
+  }
+
+  public void showAppBanner(String bannerId, String notificationId) {
+    showAppBanner(bannerId, notificationId, false);
   }
 
   /**
