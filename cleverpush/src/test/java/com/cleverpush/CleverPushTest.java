@@ -356,7 +356,7 @@ class CleverPushTest {
         verify(cleverPush).initGeoFences();
         verify(appBannerModule).initSession(any());
         verify(appBannerModule).triggerEvent("key", "value");
-        verify(appBannerModule).showBannerById(any(), any());
+        verify(appBannerModule).showBanner(any(), any());
     }
 
     @Test

@@ -208,18 +208,18 @@ class AppBannerModuleTest {
 
         assertThat(appBannerModule.getLastSessionTimestamp()).isLessThan(System.currentTimeMillis());
         assertThat(appBannerModule.getListOfBanners()).isEqualTo(null);
-        assertThat(appBannerModule.getPopups().size()).isEqualTo(0);
+        assertThat(appBannerModule.getFilteredBanners().size()).isEqualTo(0);
         verify(appBannerModule).saveSessions();
         verify(appBannerModule).startup();
     }
 
     @Test
     void testInitSessionWhenThereIsPopupList() {
-        Collection<AppBannerPopup> popups = new ArrayList<>();
-        popups.add(appBannerPopup);
+        Collection<AppBannerPopup> filteredBanners = new ArrayList<>();
+        filteredBanners.add(appBannerPopup);
 
         doReturn(activity).when(appBannerModule).getCurrentActivity();
-        doReturn(popups).when(appBannerModule).getPopups();
+        doReturn(filteredBanners).when(appBannerModule).getFilteredBanners();
 
         appBannerModule.initSession("channelId");
 
@@ -447,19 +447,19 @@ class AppBannerModuleTest {
 
     @Test
     void testGetBannersWhenNotificationIdIsNullAndBannersAreNotNull() {
-        Collection<Banner> banners = new LinkedList<>();
-        doReturn(banners).when(appBannerModule).getListOfBanners();
+        Collection<Banner> allBanners = new LinkedList<>();
+        doReturn(allBanners).when(appBannerModule).getListOfBanners();
         appBannerModule.getBanners(appBannersListener, null);
 
-        verify(appBannersListener).ready(banners);
+        verify(appBannersListener).ready(allBanners);
     }
 
     @Test
     void testGetBannersWhenNotificationIdIsNotNull() {
-        Collection<Banner> banners = new LinkedList<>();
+        Collection<Banner> allBanners = new LinkedList<>();
 
         doReturn(activity).when(appBannerModule).getCurrentActivity();
-        doReturn(banners).when(appBannerModule).getListOfBanners();
+        doReturn(allBanners).when(appBannerModule).getListOfBanners();
         doReturn(handler).when(appBannerModule).getHandler();
 
         when(handler.post(any(Runnable.class))).thenAnswer((Answer) invocation -> {
@@ -727,13 +727,13 @@ class AppBannerModuleTest {
         pendingBanners.add(appBannerPopup);
 
         doReturn(pendingBanners).when(appBannerModule).getPendingBanners();
-        doNothing().when(appBannerModule).scheduleBanners();
+        doNothing().when(appBannerModule).scheduledFilteredBanners();
 
         appBannerModule.enableBanners();
 
-        assertThat(appBannerModule.getPopups().size()).isEqualTo(1);
+        assertThat(appBannerModule.getFilteredBanners().size()).isEqualTo(1);
         assertThat(appBannerModule.getPendingBanners().size()).isEqualTo(0);
-        verify(appBannerModule).scheduleBanners();
+        verify(appBannerModule).scheduledFilteredBanners();
     }
 
     @Test
@@ -751,9 +751,9 @@ class AppBannerModuleTest {
         try {
             bannerJson = new JSONObject(singleBannerObject);
             Banner banner = Banner.create(bannerJson);
-            Collection<Banner> banners = new LinkedList<>();
-            banners.add(banner);
-            doReturn(banners).when(appBannerModule).getListOfBanners();
+            Collection<Banner> allBanners = new LinkedList<>();
+            allBanners.add(banner);
+            doReturn(allBanners).when(appBannerModule).getListOfBanners();
             doReturn(activityLifecycleListener).when(appBannerModule).getActivityLifecycleListener();
             doReturn(activity).when(appBannerModule).getCurrentActivity();
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
@@ -762,7 +762,7 @@ class AppBannerModuleTest {
             Answer<Void> appBannersListenerAnswer = new Answer<Void>() {
                 public Void answer(InvocationOnMock invocation) {
                     AppBannersListener callback = (AppBannersListener) invocation.getArguments()[0];
-                    callback.ready(banners);
+                    callback.ready(allBanners);
                     return null;
                 }
             };
@@ -778,7 +778,7 @@ class AppBannerModuleTest {
         } catch (JSONException exception) {
             exception.printStackTrace();
         }
-        appBannerModule.showBannerById("xuMpMKmoKhAZ8XRKr", null);
+        appBannerModule.showBanner("xuMpMKmoKhAZ8XRKr", null);
 
         assertThat(appBannerModule.getPendingBanners().size()).isEqualTo(1);
     }
@@ -790,22 +790,22 @@ class AppBannerModuleTest {
         try {
             bannerJson = new JSONObject(singleBannerObject);
             Banner banner = Banner.create(bannerJson);
-            Collection<Banner> banners = new LinkedList<>();
-            banners.add(banner);
+            Collection<Banner> allBanners = new LinkedList<>();
+            allBanners.add(banner);
 
-            doReturn(banners).when(appBannerModule).getListOfBanners();
+            doReturn(allBanners).when(appBannerModule).getListOfBanners();
             doReturn(activityLifecycleListener).when(appBannerModule).getActivityLifecycleListener();
             doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
             doReturn(false).when(cleverPush).isAppBannersDisabled();
             doReturn(handler).when(appBannerModule).getHandler();
             doReturn(appBannerPopup).when(appBannerModule).getAppBannerPopup(banner);
             doReturn("channelId").when(appBannerModule).getChannel();
-            doNothing().when(appBannerModule).showBanner(appBannerPopup);
+            doNothing().when(appBannerModule).showBanner(appBannerPopup, true);
 
             Answer<Void> appBannersListenerAnswer = new Answer<Void>() {
                 public Void answer(InvocationOnMock invocation) {
                     AppBannersListener callback = (AppBannersListener) invocation.getArguments()[0];
-                    callback.ready(banners);
+                    callback.ready(allBanners);
                     return null;
                 }
             };
@@ -826,9 +826,9 @@ class AppBannerModuleTest {
                 return null;
             });
 
-            appBannerModule.showBannerById("xuMpMKmoKhAZ8XRKr", null);
+            appBannerModule.showBanner("xuMpMKmoKhAZ8XRKr", null);
 
-            verify(appBannerModule).showBanner(appBannerPopup);
+            verify(appBannerModule).showBanner(appBannerPopup, true);
         } catch (JSONException exception) {
             exception.printStackTrace();
         }
@@ -1208,26 +1208,26 @@ class AppBannerModuleTest {
     }
 
     @Test
-    void testScheduleBannersWhenAppBannersDisabled() {
+    void testScheduledFilteredBannersWhenAppBannersDisabled() {
         doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
         doReturn(true).when(cleverPush).isAppBannersDisabled();
 
         appBannerModule.clearPendingBanners();
-        appBannerModule.scheduleBanners();
+        appBannerModule.scheduledFilteredBanners();
 
         assertThat(appBannerModule.getPendingBanners().size()).isEqualTo(1);
-        assertThat(appBannerModule.getPopups().size()).isEqualTo(0);
+        assertThat(appBannerModule.getFilteredBanners().size()).isEqualTo(0);
     }
 
     @Test
-    void testScheduleBannersWhenAppBannersIsBeforeCurrentTimeAndNoDelay() {
-        Collection<AppBannerPopup> popups = new ArrayList<>();
-        popups.add(appBannerPopup);
+    void testScheduledFilteredBannersWhenAppBannersIsBeforeCurrentTimeAndNoDelay() {
+        Collection<AppBannerPopup> filteredBanners = new ArrayList<>();
+        filteredBanners.add(appBannerPopup);
         Date yesterDay = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
 
         doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
         doReturn(false).when(cleverPush).isAppBannersDisabled();
-        doReturn(popups).when(appBannerModule).getPopups();
+        doReturn(filteredBanners).when(appBannerModule).getFilteredBanners();
         doReturn(banner).when(appBannerPopup).getData();
         doReturn(yesterDay).when(banner).getStartAt();
         doReturn(handler).when(appBannerModule).getHandler();
@@ -1237,20 +1237,20 @@ class AppBannerModuleTest {
         });
         doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
-        appBannerModule.scheduleBanners();
+        appBannerModule.scheduledFilteredBanners();
 
         verify(appBannerModule).showBanner(appBannerPopup);
     }
 
     @Test
-    void testScheduleBannersWhenAppBannersIsBeforeCurrentTimeAndDelay() {
-        Collection<AppBannerPopup> popups = new ArrayList<>();
-        popups.add(appBannerPopup);
+    void testScheduledFilteredBannersWhenAppBannersIsBeforeCurrentTimeAndDelay() {
+        Collection<AppBannerPopup> filteredBanners = new ArrayList<>();
+        filteredBanners.add(appBannerPopup);
         Date yesterDay = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
 
         doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
         doReturn(false).when(cleverPush).isAppBannersDisabled();
-        doReturn(popups).when(appBannerModule).getPopups();
+        doReturn(filteredBanners).when(appBannerModule).getFilteredBanners();
         doReturn(banner).when(appBannerPopup).getData();
         doReturn(yesterDay).when(banner).getStartAt();
         doReturn(5).when(banner).getDelaySeconds();
@@ -1261,20 +1261,20 @@ class AppBannerModuleTest {
         });
         doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
-        appBannerModule.scheduleBanners();
+        appBannerModule.scheduledFilteredBanners();
 
         verify(appBannerModule).showBanner(appBannerPopup);
     }
 
     @Test
-    void testScheduleBannersWhenAppBannersIsAfterCurrentTime() {
-        Collection<AppBannerPopup> popups = new ArrayList<>();
-        popups.add(appBannerPopup);
+    void testScheduledFilteredBannersWhenAppBannersIsAfterCurrentTime() {
+        Collection<AppBannerPopup> filteredBanners = new ArrayList<>();
+        filteredBanners.add(appBannerPopup);
         Date yesterDay = new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24));
 
         doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
         doReturn(false).when(cleverPush).isAppBannersDisabled();
-        doReturn(popups).when(appBannerModule).getPopups();
+        doReturn(filteredBanners).when(appBannerModule).getFilteredBanners();
         doReturn(banner).when(appBannerPopup).getData();
         doReturn(yesterDay).when(banner).getStartAt();
         doReturn(5).when(banner).getDelaySeconds();
@@ -1285,7 +1285,7 @@ class AppBannerModuleTest {
         });
         doNothing().when(appBannerModule).showBanner(appBannerPopup);
 
-        appBannerModule.scheduleBanners();
+        appBannerModule.scheduledFilteredBanners();
 
         verify(appBannerModule).showBanner(appBannerPopup);
     }
