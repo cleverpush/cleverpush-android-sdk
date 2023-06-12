@@ -117,10 +117,13 @@ public class ChatView extends WebView {
   }
 
   public void loadChat() {
-    Context context = this.getContext();
-    getCleverPushInstance().getSubscriptionId(subscriptionId -> {
-      this.loadChat(subscriptionId);
-    });
+    if (getCleverPushInstance().isSubscribed()) {
+      getCleverPushInstance().getSubscriptionId(subscriptionId -> {
+        this.loadChat(subscriptionId);
+      });
+    } else {
+      this.loadChat("preview");
+    }
   }
 
   public void lockChat() {

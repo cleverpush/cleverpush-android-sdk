@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.14
+* Added support for preview ChatView (unsubscribed)
+
 ## 1.30.13
 * Added loading spinner
 
