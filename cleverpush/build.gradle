@@ -82,7 +82,7 @@ dependencies {
 
     // Google & Firebase
     implementation 'com.google.android.gms:play-services-base:[10.2.1, 18.0.99]'
-    implementation 'com.google.android.gms:play-services-location:[16.0.0, 19.0.99]'
+    implementation 'com.google.android.gms:play-services-location:[16.0.0, 21.0.99]'
     api 'com.google.firebase:firebase-messaging:[10.2.1, 23.0.99]'
 
     // Huawei
