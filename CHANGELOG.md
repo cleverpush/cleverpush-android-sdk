@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.15
+* Increased supported Google Play Services Location Version to 21.0.X
+
 ## 1.30.14
 * Added support for preview ChatView (unsubscribed)
 
