@@ -71,21 +71,21 @@ public class BannerButtonBlock extends BannerBlock {
 
     buttonBlock.type = BannerBlockType.Button;
 
-    buttonBlock.text = json.getString("text");
+    buttonBlock.text = json.optString("text");
 
-    buttonBlock.color = json.getString("color");
+    buttonBlock.color = json.optString("color");
     if (json.has("darkColor") && !json.optString("darkColor").isEmpty()) {
       buttonBlock.darkColor = json.optString("darkColor");
     }
 
-    buttonBlock.background = json.getString("background");
+    buttonBlock.background = json.optString("background");
     if (json.has("darkBackground") && !json.optString("darkBackground").isEmpty()) {
       buttonBlock.darkBackground = json.optString("darkBackground");
     }
 
-    buttonBlock.size = json.getInt("size");
-    buttonBlock.alignment = Alignment.fromString(json.getString("alignment"));
-    buttonBlock.radius = json.getInt("radius");
+    buttonBlock.size = json.optInt("size");
+    buttonBlock.alignment = Alignment.fromString(json.optString("alignment"));
+    buttonBlock.radius = json.optInt("radius");
     buttonBlock.action = BannerAction.create(json.getJSONObject("action"));
     buttonBlock.blockScreens = new LinkedList<>();
 
