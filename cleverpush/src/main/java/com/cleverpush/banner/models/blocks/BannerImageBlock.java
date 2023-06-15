@@ -87,7 +87,9 @@ public class BannerImageBlock extends BannerBlock {
       }
     }
 
-    imageBlock.id = json.getString("id");
+    if (json.has("id")) {
+      imageBlock.id = json.getString("id");
+    }
 
     imageBlock.imageWidth = 100;
     if (json.has("imageWidth") && json.getInt("imageWidth") > 0) {
