@@ -63,17 +63,17 @@ public class BannerImageBlock extends BannerBlock {
     BannerImageBlock imageBlock = new BannerImageBlock();
 
     imageBlock.type = BannerBlockType.Image;
-    if (json.getString("imageUrl") != null) {
-      imageBlock.imageUrl = json.getString("imageUrl");
+    if (json.optString("imageUrl") != null) {
+      imageBlock.imageUrl = json.optString("imageUrl");
     }
 
     if (json.has("darkImageUrl") && !json.optString("darkImageUrl").isEmpty()) {
       imageBlock.darkImageUrl = json.optString("darkImageUrl");
     }
 
-    imageBlock.scale = json.getInt("scale");
+    imageBlock.scale = json.optInt("scale");
 
-    imageBlock.dismiss = json.getBoolean("dismiss");
+    imageBlock.dismiss = json.optBoolean("dismiss");
 
     if (json.has("action")) {
       imageBlock.action = BannerAction.create(json.getJSONObject("action"));
@@ -87,16 +87,18 @@ public class BannerImageBlock extends BannerBlock {
       }
     }
 
-    imageBlock.id = json.getString("id");
+    if (json.has("id")) {
+      imageBlock.id = json.optString("id");
+    }
 
     imageBlock.imageWidth = 100;
-    if (json.has("imageWidth") && json.getInt("imageWidth") > 0) {
-      imageBlock.imageWidth = json.getInt("imageWidth");
+    if (json.has("imageWidth") && json.optInt("imageWidth") > 0) {
+      imageBlock.imageWidth = json.optInt("imageWidth");
     }
 
     imageBlock.imageHeight = 100;
-    if (json.has("imageHeight") && json.getInt("imageHeight") > 0) {
-      imageBlock.imageHeight = json.getInt("imageHeight");
+    if (json.has("imageHeight") && json.optInt("imageHeight") > 0) {
+      imageBlock.imageHeight = json.optInt("imageHeight");
     }
 
     return imageBlock;
