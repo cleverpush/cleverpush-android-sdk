@@ -6,6 +6,9 @@ import android.preference.PreferenceManager;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.Constants;
+import com.cleverpush.TriggeredEvent;
+import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.UnsubscribedListener;
 import com.cleverpush.util.Logger;
 
@@ -31,6 +34,9 @@ public class UnsubscribeResponseHandler {
           SharedPreferences.Editor editor = sharedPreferences.edit();
           editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, true);
           editor.commit();
+
+          TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
+          CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
 
           if (listener != null) {
             listener.onSuccess();

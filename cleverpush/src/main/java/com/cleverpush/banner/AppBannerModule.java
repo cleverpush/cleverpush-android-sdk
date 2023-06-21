@@ -694,7 +694,11 @@ public class AppBannerModule {
             // true by default to make the AND check work
             boolean conditionTrue = true;
             if (condition.getType() != null) {
-              if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
+              boolean isUnsubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
+              if (condition.getType().equals(BannerTriggerConditionType.Unsubscribe)
+                      && isUnsubscribed) {
+                conditionTrue = true;
+              } else if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
                 banner.setDelaySeconds(condition.getSeconds());
               } else if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
                 if (condition.getRelation().equals("lt")) {
