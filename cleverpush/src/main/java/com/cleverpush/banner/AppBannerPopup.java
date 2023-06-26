@@ -12,7 +12,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -218,12 +220,27 @@ public class AppBannerPopup {
   }
 
   private View createLayout(int layoutId) {
+    boolean isExceptionGenerate = false;
+    View layout = null;
     try {
-      View layout = activity.getLayoutInflater().inflate(layoutId, null);
-      layout.setOnClickListener(view -> dismiss());
-      return layout;
+      layout = activity.getLayoutInflater().inflate(layoutId, null);
     } catch (Exception exception) {
       Logger.e(TAG, exception.getLocalizedMessage());
+      isExceptionGenerate = true;
+    } finally {
+      try {
+        if (isExceptionGenerate) {
+          int themeId = R.style.app_banner;
+          ContextThemeWrapper contextThemeWrapper = new ContextThemeWrapper(activity, themeId);
+
+          LayoutInflater inflater = LayoutInflater.from(contextThemeWrapper);
+          layout = inflater.inflate(layoutId, null);
+        }
+        layout.setOnClickListener(view -> dismiss());
+        return layout;
+      } catch (Exception exception) {
+        Logger.e(TAG, exception.getLocalizedMessage());
+      }
     }
     return null;
   }
