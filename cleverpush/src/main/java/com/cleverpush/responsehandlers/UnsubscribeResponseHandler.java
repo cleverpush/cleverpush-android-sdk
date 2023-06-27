@@ -6,9 +6,6 @@ import android.preference.PreferenceManager;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
-import com.cleverpush.Constants;
-import com.cleverpush.TriggeredEvent;
-import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.UnsubscribedListener;
 import com.cleverpush.util.Logger;
 
