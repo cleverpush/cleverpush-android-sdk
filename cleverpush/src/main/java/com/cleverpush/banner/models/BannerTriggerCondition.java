@@ -1,5 +1,7 @@
 package com.cleverpush.banner.models;
 
+import com.cleverpush.Constants;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,6 +53,11 @@ public class BannerTriggerCondition {
       condition.sessions = json.optInt("sessions");
       condition.seconds = json.optInt("seconds");
       condition.relation = json.optString("operator");
+
+      if (condition.type.equals(BannerTriggerConditionType.Unsubscribe)) {
+        condition.type = BannerTriggerConditionType.Event;
+        condition.event = Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT;
+      }
 
       condition.eventProperties = new ArrayList<>();
       JSONArray eventPropertiesArray = json.optJSONArray("eventProperties");

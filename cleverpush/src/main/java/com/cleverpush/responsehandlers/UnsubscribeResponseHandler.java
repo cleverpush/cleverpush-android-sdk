@@ -35,9 +35,6 @@ public class UnsubscribeResponseHandler {
           editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, true);
           editor.commit();
 
-          TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
-          CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
-
           if (listener != null) {
             listener.onSuccess();
           }

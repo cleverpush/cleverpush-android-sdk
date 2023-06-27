@@ -265,12 +265,18 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
         InputStream in = new URL(imageUrl).openStream();
         Bitmap bitmap = BitmapFactory.decodeStream(in);
-        if (bitmap != null) {
-          img.setImageBitmap(bitmap);
-        }
-        progressBar.setVisibility(View.GONE);
+        activity.runOnUiThread(() -> {
+          if (bitmap != null) {
+            img.setImageBitmap(bitmap);
+          }
+          progressBar.setVisibility(View.GONE);
+        });
+
       } catch (Exception ignored) {
-        progressBar.setVisibility(View.GONE);
+        Logger.d(TAG, ignored.getLocalizedMessage());
+        activity.runOnUiThread(() -> {
+          progressBar.setVisibility(View.GONE);
+        });
       }
     }).start();
 
