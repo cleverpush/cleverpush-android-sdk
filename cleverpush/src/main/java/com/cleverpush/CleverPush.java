@@ -1361,6 +1361,8 @@ public class CleverPush {
 
       CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody,
           new UnsubscribeResponseHandler(this, listener).getResponseHandler());
+    } else {
+      clearSubscriptionData();
     }
   }
 
@@ -3074,6 +3076,8 @@ public class CleverPush {
       editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
     }
     editor.commit();
+    TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
+    CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
   }
 
   public boolean isAppBannersDisabled() {
