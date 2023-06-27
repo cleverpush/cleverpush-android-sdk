@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.preference.PreferenceManager;
 import android.view.ContextThemeWrapper;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -166,27 +167,25 @@ public class InboxDetailActivity extends AppCompatActivity {
   }
 
   private View createLayout(int layoutId) {
-    boolean isExceptionGenerate = false;
     View layout = null;
     try {
       layout = activity.getLayoutInflater().inflate(layoutId, null);
-    } catch (Exception exception) {
-      Logger.e(TAG, exception.getLocalizedMessage());
-      isExceptionGenerate = true;
-    } finally {
+      layout.setOnClickListener(view -> dismiss());
+      return layout;
+    } catch (InflateException inflateException) {
       try {
-        if (isExceptionGenerate) {
-          int themeId = R.style.app_banner;
-          ContextThemeWrapper contextThemeWrapper = new ContextThemeWrapper(activity, themeId);
+        int themeId = R.style.cleverpush_app_banner_theme;
+        ContextThemeWrapper contextThemeWrapper = new ContextThemeWrapper(activity, themeId);
 
-          LayoutInflater inflater = LayoutInflater.from(contextThemeWrapper);
-          layout = inflater.inflate(layoutId, null);
-        }
+        LayoutInflater inflater = LayoutInflater.from(contextThemeWrapper);
+        layout = inflater.inflate(layoutId, null);
         layout.setOnClickListener(view -> dismiss());
         return layout;
       } catch (Exception exception) {
-        Logger.e(TAG, exception.getLocalizedMessage());
+        Logger.e(TAG, "InflateException: " + exception.getLocalizedMessage());
       }
+    } catch (Exception exception) {
+      Logger.e(TAG, exception.getLocalizedMessage());
     }
     return null;
   }
