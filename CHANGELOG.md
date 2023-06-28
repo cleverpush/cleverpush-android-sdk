@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.31.0
+* Added feature for app banner unsubscribe trigger
+* Fixed logic for displaying app banners image block
+* Fixed bug for material TabLayout in app banner
+
 ## 1.30.15
 * Increased supported Google Play Services Location Version to 21.0.X
 
