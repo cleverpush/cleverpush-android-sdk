@@ -25,7 +25,7 @@
     <style name="alertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
     </style>
 
-    <style name="cleverpush_app_banner_theme" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="cleverpush_app_banner_theme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
     </style>
 
 </resources>
