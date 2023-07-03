@@ -25,4 +25,7 @@
     <style name="alertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
     </style>
 
+    <style name="cleverpush_alertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+    </style>
+
 </resources>
