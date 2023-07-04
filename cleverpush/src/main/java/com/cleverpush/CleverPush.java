@@ -2621,7 +2621,6 @@ public class CleverPush {
             Logger.d(LOG_TAG, "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
             showingTopicsDialog = true;
           });
-          Logger.d("Topic Dialog", "Test 1");
           if (alert != null) {
             alert.show();
           }
