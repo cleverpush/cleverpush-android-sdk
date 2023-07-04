@@ -26,6 +26,10 @@ public class CleverPushHttpClient {
 
   public static void post(final String url, final JSONObject jsonBody, final ResponseHandler responseHandler) {
     try {
+      String authorizerToken = CleverPush.getInstance(CleverPush.context).getAuthorizerToken();
+      if (authorizerToken != null && authorizerToken.length() > 0) {
+        jsonBody.put("authorizationToken", authorizerToken);
+      }
       new Thread(() -> makeRequest(url, "POST", jsonBody, responseHandler)).start();
     } catch (Exception e) {
       Logger.e("CleverPushHttpClient", e.getLocalizedMessage());
