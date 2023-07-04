@@ -2616,13 +2616,13 @@ public class CleverPush {
           AlertDialog.Builder alertBuilder =
                   getTopicAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics,
                           hasDeSelectAllInitial, checkboxLayout, unsubscribeCheckbox, selectedTopics);
-          AlertDialog alert = alertBuilder.create();
-          alert.setOnShowListener(dialog -> {
+          AlertDialog topicDialogAlert = alertBuilder.create();
+          topicDialogAlert.setOnShowListener(dialog -> {
             Logger.d(LOG_TAG, "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
             showingTopicsDialog = true;
           });
-          if (alert != null) {
-            alert.show();
+          if (topicDialogAlert != null) {
+            topicDialogAlert.show();
           }
         } catch (Exception e) {
           Logger.d(LOG_TAG, e.getLocalizedMessage());
