@@ -205,6 +205,7 @@ public class CleverPush {
 
   private String lastClickedNotificationId;
   private long lastClickedNotificationTime;
+  private String authorizerToken;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -3348,5 +3349,13 @@ public class CleverPush {
 
   public void setNotificationOpenedActivityDestroyedAt(long notificationOpenedActivityDestroyedAt) {
     this.notificationOpenedActivityDestroyedAt = notificationOpenedActivityDestroyedAt;
+  }
+
+  public String getAuthorizerToken() {
+    return authorizerToken;
+  }
+
+  public void setAuthorizerToken(String authorizerToken) {
+    this.authorizerToken = authorizerToken;
   }
 }
