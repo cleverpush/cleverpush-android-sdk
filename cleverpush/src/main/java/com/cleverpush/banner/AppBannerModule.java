@@ -77,6 +77,7 @@ public class AppBannerModule {
   private Collection<Banner> allBanners = null;
   private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
   private boolean trackingEnabled = true;
+  HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -1051,5 +1052,13 @@ public class AppBannerModule {
 
   public String getChannel() {
     return channel;
+  }
+
+  public HashMap<String, String> getCurrentVoucherCodePlaceholder() {
+    return currentVoucherCodePlaceholder;
+  }
+
+  public void setCurrentVoucherCodePlaceholder(HashMap<String, String> currentVoucherCodePlaceholder) {
+    this.currentVoucherCodePlaceholder = currentVoucherCodePlaceholder;
   }
 }

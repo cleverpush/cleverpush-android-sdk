@@ -62,6 +62,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private final Banner data;
   private final List<BannerScreens> screens = new LinkedList<>();
   private final AppBannerPopup appBannerPopup;
+  private String voucherCode;
 
   static {
     alignmentMap.put(Alignment.Left, View.TEXT_ALIGNMENT_TEXT_START);
@@ -88,6 +89,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
     LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
     body.removeAllViews();
+
+    HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
+    if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.size() > 0 && currentVoucherCodePlaceholder.containsKey(data.getId())) {
+      voucherCode = currentVoucherCodePlaceholder.get(data.getId());
+    }
 
     if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
       composeHtmlBanner(body, data.getContent());
@@ -153,7 +159,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private void composeButtonBlock(LinearLayout body, BannerButtonBlock block, int position) {
     @SuppressLint("InflateParams") Button button =
         (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
-    button.setText(block.getText());
+    String text = block.getText();
+    if (voucherCode != null && voucherCode.length() > 0 && text.contains("{voucherCode}")) {
+      text = text.replace("{voucherCode}", voucherCode);
+    }
+    button.setText(text);
     button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
     String textColor;
@@ -214,7 +224,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
-    textView.setText(block.getText());
+    String text = block.getText();
+    if (voucherCode != null && voucherCode.length() > 0 && text.contains("{voucherCode}")) {
+      text = text.replace("{voucherCode}", voucherCode);
+    }
+    textView.setText(text);
     textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
     String textColor;
@@ -331,7 +345,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   @SuppressLint("SetJavaScriptEnabled")
   private void composeHtmlBanner(LinearLayout body, String htmlContent) {
     activity.runOnUiThread(() -> {
-      String htmlWithJs = htmlContent.replace("</body>", "" +
+      String html = htmlContent;
+      if (voucherCode != null && voucherCode.length() > 0 && html.contains("{voucherCode}")) {
+        html = html.replace("{voucherCode}", voucherCode);
+      }
+      String htmlWithJs = html.replace("</body>", "" +
           "<script type=\"text/javascript\">\n" +
           "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n"
           +

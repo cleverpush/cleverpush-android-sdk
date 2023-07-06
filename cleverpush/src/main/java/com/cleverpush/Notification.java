@@ -50,6 +50,8 @@ public class Notification implements Serializable {
   String appBanner;
   @SerializedName("inboxAppBanner")
   String inboxAppBanner;
+  @SerializedName("voucherCode")
+  String voucherCode;
 
   Boolean read = false;
   Boolean fromApi = false;
@@ -254,5 +256,9 @@ public class Notification implements Serializable {
 
   public void setCreatedAt(String createdAt) {
     this.createdAt = createdAt;
+  }
+
+  public String getVoucherCode() {
+    return voucherCode;
   }
 }
