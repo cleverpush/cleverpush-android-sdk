@@ -12,7 +12,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
+import android.view.InflateException;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -218,10 +221,23 @@ public class AppBannerPopup {
   }
 
   private View createLayout(int layoutId) {
+    View layout = null;
     try {
-      View layout = activity.getLayoutInflater().inflate(layoutId, null);
+      layout = activity.getLayoutInflater().inflate(layoutId, null);
       layout.setOnClickListener(view -> dismiss());
       return layout;
+    } catch (InflateException inflateException) {
+      try {
+        int themeId = R.style.cleverpush_app_banner_theme;
+        ContextThemeWrapper contextThemeWrapper = new ContextThemeWrapper(activity, themeId);
+
+        LayoutInflater inflater = LayoutInflater.from(contextThemeWrapper);
+        layout = inflater.inflate(layoutId, null);
+        layout.setOnClickListener(view -> dismiss());
+        return layout;
+      } catch (Exception exception) {
+        Logger.e(TAG, "InflateException: " + exception.getLocalizedMessage());
+      }
     } catch (Exception exception) {
       Logger.e(TAG, exception.getLocalizedMessage());
     }

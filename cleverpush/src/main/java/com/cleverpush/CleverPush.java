@@ -121,7 +121,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.30.15";
+  public static final String SDK_VERSION = "1.31.0";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -205,6 +205,7 @@ public class CleverPush {
 
   private String lastClickedNotificationId;
   private long lastClickedNotificationTime;
+  private String authorizerToken;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -3362,5 +3363,13 @@ public class CleverPush {
 
   public void setNotificationOpenedActivityDestroyedAt(long notificationOpenedActivityDestroyedAt) {
     this.notificationOpenedActivityDestroyedAt = notificationOpenedActivityDestroyedAt;
+  }
+
+  public String getAuthorizerToken() {
+    return authorizerToken;
+  }
+
+  public void setAuthorizerToken(String authorizerToken) {
+    this.authorizerToken = authorizerToken;
   }
 }
