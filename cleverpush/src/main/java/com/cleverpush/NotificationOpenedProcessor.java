@@ -46,8 +46,7 @@ public class NotificationOpenedProcessor {
             && notification.getVoucherCode() != null && notification.getVoucherCode().length() > 0) {
       HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
 
-      if (cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder() != null
-              && cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder().size() > 0) {
+      if (cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder() != null) {
         currentVoucherCodePlaceholder = cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder();
       }
 

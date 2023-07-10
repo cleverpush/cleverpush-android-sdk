@@ -91,7 +91,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.removeAllViews();
 
     HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
-    if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.size() > 0 && currentVoucherCodePlaceholder.containsKey(data.getId())) {
+    if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(data.getId())) {
       voucherCode = currentVoucherCodePlaceholder.get(data.getId());
     }
 
@@ -160,7 +160,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     @SuppressLint("InflateParams") Button button =
         (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
     String text = block.getText();
-    if (voucherCode != null && voucherCode.length() > 0 && text.contains("{voucherCode}")) {
+    if (voucherCode != null && text.contains("{voucherCode}")) {
       text = text.replace("{voucherCode}", voucherCode);
     }
     button.setText(text);
@@ -225,7 +225,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
     String text = block.getText();
-    if (voucherCode != null && voucherCode.length() > 0 && text.contains("{voucherCode}")) {
+    if (voucherCode != null && text.contains("{voucherCode}")) {
       text = text.replace("{voucherCode}", voucherCode);
     }
     textView.setText(text);
@@ -346,7 +346,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private void composeHtmlBanner(LinearLayout body, String htmlContent) {
     activity.runOnUiThread(() -> {
       String html = htmlContent;
-      if (voucherCode != null && voucherCode.length() > 0 && html.contains("{voucherCode}")) {
+      if (voucherCode != null && html.contains("{voucherCode}")) {
         html = html.replace("{voucherCode}", voucherCode);
       }
       String htmlWithJs = html.replace("</body>", "" +
