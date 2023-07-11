@@ -40,7 +40,6 @@ import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerScreens;
-import com.cleverpush.banner.models.blocks.Alignment;
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
@@ -50,8 +49,6 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -61,13 +58,6 @@ public class AppBannerPopup {
   private static final String POSITION_TYPE_BOTTOM = "bottom";
   private static final String POSITION_TYPE_FULL = "full";
   private static final String TAG = "CleverPush/AppBanner";
-  private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
-
-  static {
-    alignmentMap.put(Alignment.Left, View.TEXT_ALIGNMENT_TEXT_START);
-    alignmentMap.put(Alignment.Center, View.TEXT_ALIGNMENT_CENTER);
-    alignmentMap.put(Alignment.Right, View.TEXT_ALIGNMENT_TEXT_END);
-  }
 
   private final int TAB_LAYOUT_DEFAULT_HEIGHT = 48;
   private final int MAIN_LAYOUT_PADDING = 15;
