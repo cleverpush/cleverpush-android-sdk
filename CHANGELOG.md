@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.2
+* Fixed logic for displaying text alignment in app banner
+* Fixed bug for inbox view detail screen 
+
 ## 1.31.1
 * Added feature for displaying voucher code in app banner comes from notification
 * Fixed bug for displaying topic dialog
