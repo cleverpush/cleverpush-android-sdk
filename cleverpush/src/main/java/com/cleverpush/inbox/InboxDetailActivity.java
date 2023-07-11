@@ -39,7 +39,6 @@ import com.cleverpush.Notification;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerScreens;
-import com.cleverpush.banner.models.blocks.Alignment;
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
@@ -57,27 +56,14 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class InboxDetailActivity extends AppCompatActivity {
 
-  private static final String POSITION_TYPE_TOP = "top";
-  private static final String POSITION_TYPE_BOTTOM = "bottom";
-  private static final String POSITION_TYPE_FULL = "full";
-  private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
   private static final String TAG = "CleverPush/InboxDetail";
-
-  static {
-    alignmentMap.put(Alignment.Left, View.TEXT_ALIGNMENT_TEXT_START);
-    alignmentMap.put(Alignment.Center, View.TEXT_ALIGNMENT_CENTER);
-    alignmentMap.put(Alignment.Right, View.TEXT_ALIGNMENT_TEXT_END);
-  }
-
   private final int TAB_LAYOUT_DEFAULT_HEIGHT = 48;
   private final int MAIN_LAYOUT_PADDING = 15;
   private final HandlerThread handlerThread = new HandlerThread("InboxViewModule");

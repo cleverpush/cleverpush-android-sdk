@@ -14,6 +14,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.util.Base64;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -58,6 +59,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private static final String TAG = "CleverPush/AppBanner";
   private static final String CONTENT_TYPE_HTML = "html";
   private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
+  private static final Map<Alignment, Integer> gravityMap = new HashMap<>();
   private final Activity activity;
   private final Banner data;
   private final List<BannerScreens> screens = new LinkedList<>();
@@ -68,6 +70,12 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     alignmentMap.put(Alignment.Left, View.TEXT_ALIGNMENT_TEXT_START);
     alignmentMap.put(Alignment.Center, View.TEXT_ALIGNMENT_CENTER);
     alignmentMap.put(Alignment.Right, View.TEXT_ALIGNMENT_TEXT_END);
+  }
+
+  static {
+    gravityMap.put(Alignment.Left, Gravity.START);
+    gravityMap.put(Alignment.Center, Gravity.CENTER);
+    gravityMap.put(Alignment.Right, Gravity.END);
   }
 
   AppBannerCarouselAdapter(Activity activity, Banner banner, AppBannerPopup appBannerPopup,
@@ -177,6 +185,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     Integer alignment = alignmentMap.get(block.getAlignment());
     button.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
 
+    Integer gravity = gravityMap.get(block.getAlignment());
+    button.setGravity(gravity == null ? Gravity.CENTER : gravity);
+
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
         LinearLayout.LayoutParams.MATCH_PARENT
@@ -251,6 +262,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     Integer alignment = alignmentMap.get(block.getAlignment());
     textView.setTextAlignment(alignment == null ? View.TEXT_ALIGNMENT_CENTER : alignment);
+
+    Integer gravity = gravityMap.get(block.getAlignment());
+    textView.setGravity(gravity == null ? Gravity.CENTER : gravity);
 
     body.addView(textView);
   }
