@@ -2545,7 +2545,7 @@ public class CleverPush {
       if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
         showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
       } else {
-        showTopicsDialog(dialogActivity, topicsDialogListener, R.style.alertDialogTheme);
+        showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme_overlay);
       }
     } catch (IllegalStateException ex) {
       showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
@@ -2627,7 +2627,7 @@ public class CleverPush {
         } catch (Exception e) {
           Logger.d(LOG_TAG, e.getLocalizedMessage());
           if (!isRecursiveCall) {
-            showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_alertDialogTheme, true);
+            showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme, true);
           }
         }
       });
