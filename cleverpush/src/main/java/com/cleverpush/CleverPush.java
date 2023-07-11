@@ -2545,7 +2545,7 @@ public class CleverPush {
       if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
         showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
       } else {
-        showTopicsDialog(dialogActivity, topicsDialogListener, R.style.alertDialogTheme);
+        showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme_overlay);
       }
     } catch (IllegalStateException ex) {
       showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
@@ -2554,6 +2554,11 @@ public class CleverPush {
 
   public void showTopicsDialog(Activity dialogActivity, TopicsDialogListener topicsDialogListener,
                                @StyleRes int themeResId) {
+    showTopicsDialog(dialogActivity, topicsDialogListener, themeResId, false);
+  }
+
+  public void showTopicsDialog(Activity dialogActivity, TopicsDialogListener topicsDialogListener,
+                               @StyleRes int themeResId, boolean isRecursiveCall) {
     // Ensure it will only be shown once at a time
     if (isShowingTopicsDialog()) {
       return;
@@ -2607,15 +2612,24 @@ public class CleverPush {
 
         checkboxLayout.addView(scrollView);
 
-        AlertDialog.Builder alertBuilder =
-            getTopicAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics,
-                hasDeSelectAllInitial, checkboxLayout, unsubscribeCheckbox, selectedTopics);
-        AlertDialog alert = alertBuilder.create();
-        alert.setOnShowListener(dialog -> {
-          Logger.d(LOG_TAG, "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
-          showingTopicsDialog = true;
-        });
-        alert.show();
+        try {
+          AlertDialog.Builder alertBuilder =
+                  getTopicAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics,
+                          hasDeSelectAllInitial, checkboxLayout, unsubscribeCheckbox, selectedTopics);
+          AlertDialog topicDialogAlert = alertBuilder.create();
+          topicDialogAlert.setOnShowListener(dialog -> {
+            Logger.d(LOG_TAG, "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
+            showingTopicsDialog = true;
+          });
+          if (topicDialogAlert != null) {
+            topicDialogAlert.show();
+          }
+        } catch (Exception e) {
+          Logger.d(LOG_TAG, e.getLocalizedMessage());
+          if (!isRecursiveCall) {
+            showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme, true);
+          }
+        }
       });
 
     });

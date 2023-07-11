@@ -22,10 +22,13 @@
         <item name="android:windowExitAnimation">@anim/banner_out_anim</item>
     </style>
 
-    <style name="alertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+    <style name="cleverpush_topics_dialog_theme_overlay" parent="ThemeOverlay.AppCompat.Dialog.Alert">
     </style>
 
-    <style name="cleverpush_app_banner_theme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="cleverpush_topics_dialog_theme" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+    </style>
+
+    <style name="cleverpush_app_banner_theme" parent="Theme.AppCompat.DayNight.NoActionBar">
     </style>
 
 </resources>
