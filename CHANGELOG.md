@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.31.1
+* Added feature for displaying voucher code in app banner comes from notification
+* Fixed bug for displaying topic dialog
+* Added feature to set an authorization token that will be used in an API call.
+
 ## 1.31.0
 * Added feature for app banner unsubscribe trigger
 * Fixed logic for displaying app banners image block
