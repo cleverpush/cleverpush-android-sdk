@@ -9,6 +9,8 @@ import android.content.Intent;
 import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
+import java.util.HashMap;
+
 public class NotificationOpenedProcessor {
 
   public static void processIntent(Context context, Intent intent) {
@@ -39,6 +41,18 @@ public class NotificationOpenedProcessor {
     cleverPush.trackNotificationClicked(notificationId, subscriptionId);
 
     cleverPush.fireNotificationOpenedListener(result);
+
+    if (notification.getAppBanner() != null && notification.getAppBanner().length() > 0
+            && notification.getVoucherCode() != null && notification.getVoucherCode().length() > 0) {
+      HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
+
+      if (cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder() != null) {
+        currentVoucherCodePlaceholder = cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder();
+      }
+
+      currentVoucherCodePlaceholder.put(notification.getAppBanner(), notification.getVoucherCode());
+      cleverPush.getAppBannerModule().setCurrentVoucherCodePlaceholder(currentVoucherCodePlaceholder);
+    }
 
     // open launcher activity
     boolean shouldStartActivity = cleverPush.notificationOpenShouldStartActivity();
