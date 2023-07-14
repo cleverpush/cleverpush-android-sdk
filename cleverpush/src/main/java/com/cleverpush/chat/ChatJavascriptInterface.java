@@ -5,6 +5,7 @@ import android.webkit.JavascriptInterface;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.listener.ChatSubscribeListener;
+import com.cleverpush.listener.SubscribedCallbackListener;
 
 public class ChatJavascriptInterface {
   private Context context;
@@ -24,8 +25,17 @@ public class ChatJavascriptInterface {
         return;
       }
 
-      CleverPush.getInstance(context).subscribe();
-      chatView.loadChat();
+      CleverPush.getInstance(context).subscribe(new SubscribedCallbackListener() {
+        @Override
+        public void onSuccess(String subscriptionId) {
+          chatView.loadChat();
+        }
+
+        @Override
+        public void onFailure(Throwable exception) {
+
+        }
+      });
     }).start();
   }
 
