@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.3
+* Optimized `subscribe` method for ChatView
+
 ## 1.31.2
 * Fixed logic for displaying text alignment in app banner
 * Fixed bug for inbox view detail screen 
