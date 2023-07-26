@@ -5,6 +5,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.webkit.WebSettings;
+import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
@@ -135,6 +136,13 @@ public class ChatView extends WebView {
 
     Context context = this.getContext();
     WebView webView = this;
+
+    boolean isSubscriptionChanged = CleverPush.getInstance(CleverPush.context).isSubscriptionChanged();
+    if (isSubscriptionChanged
+            || !CleverPush.getInstance(CleverPush.context).isSubscribed()) {
+      CleverPush.getInstance(CleverPush.context).setSubscriptionChanged(false);
+      WebStorage.getInstance().deleteAllData();
+    }
 
     if (this.handler == null) {
       this.handler = new Handler();

@@ -206,6 +206,7 @@ public class CleverPush {
   private String lastClickedNotificationId;
   private long lastClickedNotificationTime;
   private String authorizerToken;
+  private boolean isSubscriptionChanged = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -3371,5 +3372,13 @@ public class CleverPush {
 
   public void setAuthorizerToken(String authorizerToken) {
     this.authorizerToken = authorizerToken;
+  }
+
+  public boolean isSubscriptionChanged() {
+    return isSubscriptionChanged;
+  }
+
+  public void setSubscriptionChanged(boolean subscriptionChanged) {
+    isSubscriptionChanged = subscriptionChanged;
   }
 }
