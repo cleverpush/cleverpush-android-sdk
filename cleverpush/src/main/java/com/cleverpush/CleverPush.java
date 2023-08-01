@@ -431,6 +431,7 @@ public class CleverPush {
       this.setSubscribedListener(subscribedListener);
     }
     channelConfig = null;
+    initialized = false;
 
     // try to get cached Channel ID from Shared Preferences
     if (this.channelId == null) {
@@ -447,11 +448,7 @@ public class CleverPush {
       // Maybe the user switched from Dev to Live environment.
       if (isChannelIdChanged(storedChannelId, storedSubscriptionId)) {
         try {
-          if (subscriptionId != null) {
-            this.unsubscribe();
-          } else {
-            this.clearSubscriptionData();
-          }
+          this.clearSubscriptionData();
         } catch (Throwable throwable) {
           Logger.e(LOG_TAG, "Error", throwable);
         }
