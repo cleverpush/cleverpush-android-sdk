@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.4
+* Optimized ChatView behaviour when Channel ID changes
+
 ## 1.31.3
 * Optimized `subscribe` method for ChatView
 

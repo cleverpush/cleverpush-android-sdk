@@ -129,6 +129,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
           JSONObject responseJson = new JSONObject(response);
           if (responseJson.has("id")) {
             String newSubscriptionId = responseJson.getString("id");
+            String oldSubscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
+            boolean isSubscriptionChanged = newSubscriptionId.equalsIgnoreCase(oldSubscriptionId);
+            CleverPush.getInstance(CleverPush.context).setSubscriptionChanged(isSubscriptionChanged);
             sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, newSubscriptionId).apply();
             sharedPreferences.edit()
                 .putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L))
