@@ -459,7 +459,19 @@ public class CleverPush {
         try {
           if (subscriptionId != null) {
             isUnsubscribing = true;
-            this.unsubscribe(initializeListener);
+            this.unsubscribe(new UnsubscribedListener() {
+              @Override
+              public void onSuccess() {
+                if (initializeListener != null) {
+                  initializeListener.onInitialized();
+                }
+              }
+
+              @Override
+              public void onFailure(Throwable throwable) {
+
+              }
+            });
           } else {
             this.clearSubscriptionData();
           }
@@ -1362,10 +1374,10 @@ public class CleverPush {
   }
 
   public void unsubscribe() {
-    this.unsubscribe(null, null);
+    this.unsubscribe(null);
   }
 
-  public void unsubscribe(InitializeListener initializeListener, UnsubscribedListener listener) {
+  public void unsubscribe(UnsubscribedListener listener) {
     String subscriptionId = getSubscriptionId(getContext());
     if (subscriptionId != null) {
       JSONObject jsonBody = getJsonObject();
@@ -1377,14 +1389,10 @@ public class CleverPush {
       }
 
       CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody,
-              new UnsubscribeResponseHandler(this, listener, initializeListener).getResponseHandler());
+              new UnsubscribeResponseHandler(this, listener).getResponseHandler());
     } else {
       clearSubscriptionData();
     }
-  }
-
-  public void unsubscribe(InitializeListener initializeListener) {
-    unsubscribe(initializeListener, null);
   }
 
   JSONObject getJsonObject() {
