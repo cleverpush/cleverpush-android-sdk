@@ -465,11 +465,15 @@ public class CleverPush {
                 if (initializeListener != null) {
                   initializeListener.onInitialized();
                 }
+                fireInitializeListener();
               }
 
               @Override
               public void onFailure(Throwable throwable) {
-
+                if (initializeListener != null) {
+                  initializeListener.onInitialized();
+                }
+                fireInitializeListener();
               }
             });
           } else {
@@ -482,7 +486,7 @@ public class CleverPush {
       addOrUpdateChannelId(getContext(), this.channelId);
       if (!isUnsubscribing) {
         if (initializeListener != null) {
-          this.initializeListener = initializeListener;
+          initializeListener.onInitialized();
         }
         fireInitializeListener();
       }
