@@ -55,6 +55,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
           cleverPush.fireSubscribedListener(subscriptionId);
           cleverPush.setSubscriptionId(subscriptionId);
           cleverPush.setChannelConfig(null);
+          cleverPush.setInitialized(false);
         }
       }
     };
