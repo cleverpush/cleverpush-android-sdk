@@ -420,6 +420,13 @@ public class CleverPush {
   public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener,
                    @Nullable final NotificationOpenedListenerBase notificationOpenedListener,
                    @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
+    init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, autoRegister, null);
+  }
+
+  public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener,
+                   @Nullable final NotificationOpenedListenerBase notificationOpenedListener,
+                   @Nullable final SubscribedListener subscribedListener, boolean autoRegister,
+                   @Nullable final InitializeListener initializeListener) {
     this.channelId = channelId;
 
     if (notificationReceivedListener != null) {
@@ -447,15 +454,26 @@ public class CleverPush {
 
       // Check if the channel id changed. Remove the Subscription ID in this case.
       // Maybe the user switched from Dev to Live environment.
+      boolean isUnsubscribing = false;
       if (isChannelIdChanged(storedChannelId, storedSubscriptionId)) {
         try {
-          this.clearSubscriptionData();
+          if (subscriptionId != null) {
+            isUnsubscribing = true;
+            this.unsubscribe(initializeListener);
+          } else {
+            this.clearSubscriptionData();
+          }
         } catch (Throwable throwable) {
           Logger.e(LOG_TAG, "Error", throwable);
         }
       }
       addOrUpdateChannelId(getContext(), this.channelId);
-      fireInitializeListener();
+      if (!isUnsubscribing) {
+        if (initializeListener != null) {
+          this.initializeListener = initializeListener;
+        }
+        fireInitializeListener();
+      }
       // get channel config
       getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId);
     } else {
@@ -1344,10 +1362,10 @@ public class CleverPush {
   }
 
   public void unsubscribe() {
-    this.unsubscribe(null);
+    this.unsubscribe(null, null);
   }
 
-  public void unsubscribe(UnsubscribedListener listener) {
+  public void unsubscribe(InitializeListener initializeListener, UnsubscribedListener listener) {
     String subscriptionId = getSubscriptionId(getContext());
     if (subscriptionId != null) {
       JSONObject jsonBody = getJsonObject();
@@ -1359,10 +1377,14 @@ public class CleverPush {
       }
 
       CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody,
-          new UnsubscribeResponseHandler(this, listener).getResponseHandler());
+              new UnsubscribeResponseHandler(this, listener, initializeListener).getResponseHandler());
     } else {
       clearSubscriptionData();
     }
+  }
+
+  public void unsubscribe(InitializeListener initializeListener) {
+    unsubscribe(initializeListener, null);
   }
 
   JSONObject getJsonObject() {

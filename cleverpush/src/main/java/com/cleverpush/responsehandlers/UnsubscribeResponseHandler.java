@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.listener.UnsubscribedListener;
 import com.cleverpush.util.Logger;
 
@@ -13,10 +14,12 @@ public class UnsubscribeResponseHandler {
 
   private final CleverPush cleverPush;
   private final UnsubscribedListener listener;
+  private final InitializeListener initializeListener;
 
-  public UnsubscribeResponseHandler(CleverPush cleverPush, UnsubscribedListener listener) {
+  public UnsubscribeResponseHandler(CleverPush cleverPush, UnsubscribedListener listener, InitializeListener initializeListener) {
     this.cleverPush = cleverPush;
     this.listener = listener;
+    this.initializeListener = initializeListener;
   }
 
   public CleverPushHttpClient.ResponseHandler getResponseHandler() {
@@ -42,11 +45,18 @@ public class UnsubscribeResponseHandler {
             listener.onFailure(throwable);
           }
         }
+
+        if (initializeListener != null) {
+          initializeListener.onInitialized();
+        }
       }
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
         Logger.e("CleverPush", "Failed while unsubscribe request - " + statusCode + " - " + response, throwable);
+        if (initializeListener != null) {
+          initializeListener.onInitialized();
+        }
 
         if (listener != null) {
           listener.onFailure(throwable);
