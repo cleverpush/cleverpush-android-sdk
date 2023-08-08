@@ -70,6 +70,7 @@ public class AppBannerPopup {
   private LinearLayout body;
   private int currentStatusBarColor;
   private int currentNavigationBarColor;
+  private boolean isNotchColorChange = false;
 
   private AppBannerOpenedListener openedListener;
 
@@ -154,7 +155,12 @@ public class AppBannerPopup {
     }
     
     popup.setAnimationStyle(R.style.banner_animation);
-    popup.setOnDismissListener(() -> toggleShowing(false));
+    popup.setOnDismissListener(() -> {
+      toggleShowing(false);
+      if (isHTMLBanner() && isNotchColorChange) {
+        setNotchColor(true);
+      }
+    });
 
     isInitialized = true;
   }
@@ -182,7 +188,7 @@ public class AppBannerPopup {
     runInMain(() -> animateBody(0f, getRoot().getHeight()));
     runInMain(() -> {
       popup.dismiss();
-      if (isHTMLBanner()) {
+      if (isHTMLBanner() && isNotchColorChange) {
         setNotchColor(true);
       }
       this.toggleShowing(false);
@@ -494,11 +500,13 @@ public class AppBannerPopup {
             @Override
             public void run() {
               if (!isFinish) {
+                isNotchColorChange = true;
                 currentStatusBarColor = window.getStatusBarColor();
                 currentNavigationBarColor = window.getNavigationBarColor();
                 window.setStatusBarColor(Color.parseColor(notchColor));
                 window.setNavigationBarColor(Color.parseColor(notchColor));
               } else {
+                isNotchColorChange = false;
                 window.setStatusBarColor(currentStatusBarColor);
                 window.setNavigationBarColor(currentNavigationBarColor);
               }

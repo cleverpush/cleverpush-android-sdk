@@ -422,6 +422,13 @@ public class CleverPush {
   public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener,
                    @Nullable final NotificationOpenedListenerBase notificationOpenedListener,
                    @Nullable final SubscribedListener subscribedListener, boolean autoRegister) {
+    init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, autoRegister, null);
+  }
+
+  public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener,
+                   @Nullable final NotificationOpenedListenerBase notificationOpenedListener,
+                   @Nullable final SubscribedListener subscribedListener, boolean autoRegister,
+                   @Nullable final InitializeListener initializeListener) {
     this.channelId = channelId;
 
     if (notificationReceivedListener != null) {
@@ -434,6 +441,7 @@ public class CleverPush {
       this.setSubscribedListener(subscribedListener);
     }
     channelConfig = null;
+    initialized = false;
 
     // try to get cached Channel ID from Shared Preferences
     if (this.channelId == null) {
@@ -448,10 +456,28 @@ public class CleverPush {
 
       // Check if the channel id changed. Remove the Subscription ID in this case.
       // Maybe the user switched from Dev to Live environment.
+      boolean isUnsubscribing = false;
       if (isChannelIdChanged(storedChannelId, storedSubscriptionId)) {
         try {
           if (subscriptionId != null) {
-            this.unsubscribe();
+            isUnsubscribing = true;
+            this.unsubscribe(new UnsubscribedListener() {
+              @Override
+              public void onSuccess() {
+                if (initializeListener != null) {
+                  initializeListener.onInitialized();
+                }
+                fireInitializeListener();
+              }
+
+              @Override
+              public void onFailure(Throwable throwable) {
+                if (initializeListener != null) {
+                  initializeListener.onInitialized();
+                }
+                fireInitializeListener();
+              }
+            });
           } else {
             this.clearSubscriptionData();
           }
@@ -460,7 +486,12 @@ public class CleverPush {
         }
       }
       addOrUpdateChannelId(getContext(), this.channelId);
-      fireInitializeListener();
+      if (!isUnsubscribing) {
+        if (initializeListener != null) {
+          initializeListener.onInitialized();
+        }
+        fireInitializeListener();
+      }
       // get channel config
       getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId);
     } else {
@@ -1364,7 +1395,7 @@ public class CleverPush {
       }
 
       CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody,
-          new UnsubscribeResponseHandler(this, listener).getResponseHandler());
+              new UnsubscribeResponseHandler(this, listener).getResponseHandler());
     } else {
       clearSubscriptionData();
     }
