@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.5
+* Implemented `setAppBannerShownListener`
+
 ## 1.31.4
 * Optimized ChatView behaviour when Channel ID changes
 

@@ -890,6 +890,10 @@ public class AppBannerModule {
       PreferenceManagerUtils.updateSharedPreferenceByKey(CleverPush.context, CleverPushPreferences.APP_BANNER_SHOWING, true);
 
       this.sendBannerEvent("delivered", bannerPopup.getData());
+
+      if (getCleverPushInstance().getAppBannerShownListener() != null) {
+        getCleverPushInstance().getAppBannerShownListener().shown(banner);
+      }
     } catch (Exception ex) {
       Logger.e(TAG, ex.getMessage(), ex);
     }

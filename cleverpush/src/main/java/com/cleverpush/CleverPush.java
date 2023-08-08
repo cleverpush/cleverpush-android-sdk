@@ -36,6 +36,7 @@ import androidx.core.content.ContextCompat;
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
+import com.cleverpush.listener.AppBannerShownListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
@@ -121,7 +122,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.31.4";
+  public static final String SDK_VERSION = "1.31.5";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -134,6 +135,7 @@ public class CleverPush {
   private ChatUrlOpenedListener chatUrlOpenedListener;
   private ChatSubscribeListener chatSubscribeListener;
   private TopicsChangedListener topicsChangedListener;
+  private AppBannerShownListener appBannerShownListener;
   private AppBannerOpenedListener appBannerOpenedListener;
   private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
   private static Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
@@ -3015,6 +3017,14 @@ public class CleverPush {
 
   public void setTopicsChangedListener(TopicsChangedListener listener) {
     topicsChangedListener = listener;
+  }
+
+  public void setAppBannerShownListener(AppBannerShownListener listener) {
+    appBannerShownListener = listener;
+  }
+
+  public AppBannerShownListener getAppBannerShownListener() {
+    return appBannerShownListener;
   }
 
   public void setAppBannerOpenedListener(AppBannerOpenedListener listener) {
