@@ -4,9 +4,6 @@
 * Fixed bug for `trackEvent`
 
 ## 1.31.6
-* Fixed bug for `trackEvent`
-
-## 1.31.6
 * Implemented `setAppBannerShownListener`
 
 ## 1.31.5
