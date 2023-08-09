@@ -1,10 +1,13 @@
 # Changelog
 
 ## 1.31.6
+* Fixed bug for `trackEvent`
+
+## 1.31.6
 * Implemented `setAppBannerShownListener`
 
 ## 1.31.5
-*  Added support for InitializeListener in init() method
+* Added support for `InitializeListener` in `init()` method
 
 ## 1.31.4
 * Optimized ChatView behaviour when Channel ID changes
