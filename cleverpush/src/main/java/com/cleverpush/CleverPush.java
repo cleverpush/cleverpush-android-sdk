@@ -2413,9 +2413,12 @@ public class CleverPush {
         }
         getAppBannerModule().triggerEvent(triggeredEvent);
       } catch (Exception ex) {
-        String message = ex.getMessage();
-        if (message == null) {
-          message = ex.toString();
+        String message = "Track event failed because of error";
+        if (ex != null) {
+          message = ex.getMessage();
+          if (message == null) {
+            message = ex.toString();
+          }
         }
         Logger.e(LOG_TAG, message);
       }
