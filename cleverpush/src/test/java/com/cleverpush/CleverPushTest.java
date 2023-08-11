@@ -1752,7 +1752,7 @@ class CleverPushTest {
         verify(editor).apply();
         verify(editor).putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(Arrays.asList(topicIds)));
         verify(editor).putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 1);
-        verify(editor).commit();
+        verify(editor).apply();
 
         try {
             RecordedRequest recordedRequest = mockWebServer.takeRequest();

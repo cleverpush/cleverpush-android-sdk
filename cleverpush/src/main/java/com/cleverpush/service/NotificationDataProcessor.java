@@ -129,7 +129,7 @@ public class NotificationDataProcessor {
       editor.remove(CleverPushPreferences.NOTIFICATIONS).apply();
       editor.putString(CleverPushPreferences.NOTIFICATIONS_JSON, gson.toJson(notifications, type));
       editor.putString(CleverPushPreferences.LAST_NOTIFICATION_ID, notificationId);
-      editor.commit();
+      editor.apply();
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error saving notification to shared preferences", e);
     }

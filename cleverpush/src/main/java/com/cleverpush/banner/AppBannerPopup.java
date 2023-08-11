@@ -169,7 +169,7 @@ public class AppBannerPopup {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, isShowing);
-    editor.commit();
+    editor.apply();
   }
 
   public void show() {

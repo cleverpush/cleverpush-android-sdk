@@ -94,7 +94,7 @@ class SetSubscriptionAttributeResponseHandlerTest {
         JSONObject jsonObject = new JSONObject(subscriptionAttributes);
         String jsonString = jsonObject.toString();
         verify(editor).putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-        verify(editor).commit();
+        verify(editor).apply();
     }
 
     @Test

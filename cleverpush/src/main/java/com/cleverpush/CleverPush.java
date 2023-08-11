@@ -1302,7 +1302,7 @@ public class CleverPush {
     this.subscriptionInProgress = true;
     SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
     editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
-    editor.commit();
+    editor.apply();
 
     this.getChannelConfig(config -> {
       SubscriptionManager subscriptionManager = this.getSubscriptionManager();
@@ -1359,7 +1359,7 @@ public class CleverPush {
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, pendingTopicsDialog);
-    editor.commit();
+    editor.apply();
     CleverPush.instance.showPendingTopicsDialog();
   }
 
@@ -1727,7 +1727,7 @@ public class CleverPush {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, deSelectAll);
-    editor.commit();
+    editor.apply();
   }
 
   public Map<String, Object> getSubscriptionAttributes() {
@@ -2073,7 +2073,7 @@ public class CleverPush {
       editor.apply();
       editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(Arrays.asList(topicIds)));
       editor.putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion);
-      editor.commit();
+      editor.apply();
 
       this.getSubscriptionId(subscriptionId -> {
         if (subscriptionId != null) {
@@ -2175,7 +2175,7 @@ public class CleverPush {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
             editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-            editor.commit();
+            editor.apply();
           }
         } catch (Exception ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
@@ -2240,7 +2240,7 @@ public class CleverPush {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES).apply();
             editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-            editor.commit();
+            editor.apply();
           }
         } catch (Exception ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
@@ -2287,7 +2287,7 @@ public class CleverPush {
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.remove(CleverPushPreferences.SUBSCRIPTION_LANGUAGE).apply();
       editor.putString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, language);
-      editor.commit();
+      editor.apply();
 
       this.trySubscriptionSync();
     }
@@ -2300,7 +2300,7 @@ public class CleverPush {
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.remove(CleverPushPreferences.SUBSCRIPTION_COUNTRY).apply();
       editor.putString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, country);
-      editor.commit();
+      editor.apply();
 
       this.trySubscriptionSync();
     }
@@ -2338,7 +2338,7 @@ public class CleverPush {
     }
     getSharedPreferences(getContext()).edit().putString(CleverPushPreferences.NOTIFICATIONS_JSON,
         new Gson().toJson(notifications, new TypeToken<List<Notification>>() {
-        }.getType())).commit();
+        }.getType())).apply();
   }
 
   public void trackEvent(String eventName) {
@@ -2550,7 +2550,7 @@ public class CleverPush {
                 if (sharedPreferences.getBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, false)) {
                   SharedPreferences.Editor editor = sharedPreferences.edit();
                   editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, false);
-                  editor.commit();
+                  editor.apply();
 
                   this.showTopicsDialog();
                 }
@@ -3122,7 +3122,7 @@ public class CleverPush {
       editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
       editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
     }
-    editor.commit();
+    editor.apply();
     TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
     CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
   }
@@ -3138,7 +3138,7 @@ public class CleverPush {
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.remove(CleverPushPreferences.APP_BANNERS_DISABLED).apply();
     editor.putBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, appBannersDisabled);
-    editor.commit();
+    editor.apply();
   }
 
   public void enableAppBanners() {

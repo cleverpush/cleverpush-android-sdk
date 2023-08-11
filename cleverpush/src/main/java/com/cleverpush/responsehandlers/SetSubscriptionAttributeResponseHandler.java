@@ -39,7 +39,7 @@ public class SetSubscriptionAttributeResponseHandler {
             editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
             editor.apply();
             editor.putString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, jsonString);
-            editor.commit();
+            editor.apply();
           }
 
           if (successCallback != null) {

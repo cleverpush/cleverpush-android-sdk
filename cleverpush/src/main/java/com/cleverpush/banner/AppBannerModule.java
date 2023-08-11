@@ -90,7 +90,7 @@ public class AppBannerModule {
     handlerThread.start();
     handler = new Handler(handlerThread.getLooper());
     editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false);
-    editor.commit();
+    editor.apply();
   }
 
   public static AppBannerModule init(String channel, SharedPreferences sharedPreferences,
@@ -944,7 +944,7 @@ public class AppBannerModule {
     editor.remove(SHOWN_APP_BANNER_PREF);
     editor.apply();
     editor.putStringSet(SHOWN_APP_BANNER_PREF, shownBanners);
-    editor.commit();
+    editor.apply();
   }
 
   public void enableBanners() {
