@@ -45,7 +45,7 @@ public class RemoveSubscriptionTagResponseHandler {
     editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
     editor.apply();
     editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, tags);
-    editor.commit();
+    editor.apply();
   }
 
   public Set<String> getSubscriptionTags() {

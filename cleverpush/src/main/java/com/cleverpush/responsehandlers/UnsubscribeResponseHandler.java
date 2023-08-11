@@ -30,7 +30,7 @@ public class UnsubscribeResponseHandler {
           SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
           SharedPreferences.Editor editor = sharedPreferences.edit();
           editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, true);
-          editor.commit();
+          editor.apply();
 
           if (listener != null) {
             listener.onSuccess();
