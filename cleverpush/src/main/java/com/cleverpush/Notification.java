@@ -264,7 +264,7 @@ public class Notification implements Serializable {
     return voucherCode;
   }
 
-  public boolean isAutoHandleDeepLink() {
+  public Boolean isAutoHandleDeepLink() {
     return autoHandleDeepLink != null && autoHandleDeepLink;
   }
 }
