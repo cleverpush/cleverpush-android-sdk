@@ -5,6 +5,7 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 
 import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
@@ -64,6 +65,12 @@ public class NotificationOpenedProcessor {
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         context.startActivity(launchIntent);
       }
+    }
+
+    boolean autoHandleDeepLink = notification.isAutoHandleDeepLink();
+    if (autoHandleDeepLink) {
+      Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(result.getNotification().getUrl()));
+      context.startActivity(browserIntent);
     }
 
     boolean badgeEnabled = notification.getCategory() == null || !notification.getCategory().getBadgeDisabled();
