@@ -53,7 +53,7 @@ public class Notification implements Serializable {
   @SerializedName("voucherCode")
   String voucherCode;
   @SerializedName("autoHandleDeepLink")
-  boolean autoHandleDeepLink;
+  Boolean autoHandleDeepLink;
 
   Boolean read = false;
   Boolean fromApi = false;
@@ -265,6 +265,6 @@ public class Notification implements Serializable {
   }
 
   public boolean isAutoHandleDeepLink() {
-    return autoHandleDeepLink;
+    return autoHandleDeepLink != null && autoHandleDeepLink;
   }
 }
