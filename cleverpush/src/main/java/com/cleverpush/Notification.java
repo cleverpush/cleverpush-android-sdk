@@ -52,6 +52,8 @@ public class Notification implements Serializable {
   String inboxAppBanner;
   @SerializedName("voucherCode")
   String voucherCode;
+  @SerializedName("autoHandleDeepLink")
+  Boolean autoHandleDeepLink;
 
   Boolean read = false;
   Boolean fromApi = false;
@@ -260,5 +262,9 @@ public class Notification implements Serializable {
 
   public String getVoucherCode() {
     return voucherCode;
+  }
+
+  public Boolean isAutoHandleDeepLink() {
+    return autoHandleDeepLink != null && autoHandleDeepLink;
   }
 }
