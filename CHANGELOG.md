@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.8
+* Added feature of auto handle deep link for notification
+* Code optimization for ANR
+
 ## 1.31.7
 * Fixed bug for `trackEvent`
 
