@@ -625,13 +625,13 @@ public class AppBannerModule {
       }
 
       if (allowed && relation.equals(CheckFilterRelation.Contains)) {
-        if (!compareValue.contains(appVersion)) {
+        if (!appVersion.contains(compareValue)) {
           allowed = false;
         }
       }
 
       if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
-        if (compareValue.contains(appVersion)) {
+        if (appVersion.contains(compareValue)) {
           allowed = false;
         }
       }
