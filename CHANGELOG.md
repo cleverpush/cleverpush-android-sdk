@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.9
+* Fixed a bug with AppBanner AppVersion Targeting
+
 ## 1.31.8
 * Added feature of auto handle deep link for notification
 * Code optimization for ANR
