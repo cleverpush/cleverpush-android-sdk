@@ -1494,7 +1494,7 @@ public class CleverPush {
     return subscriptionId;
   }
 
-  public void getSubscriptionId(SubscribedListener listener) {
+  public synchronized void getSubscriptionId(SubscribedListener listener) {
     if (listener != null) {
       if (subscriptionId == null) {
         getSubscriptionIdListeners.add(listener);
