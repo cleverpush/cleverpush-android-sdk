@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.request.RequestOptions;
 import com.cleverpush.ActivityLifecycleListener;
+import com.cleverpush.CleverPush;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 
@@ -47,10 +48,17 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   private ArrayList<Story> stories;
   private OnItemClickListener onItemClickListener;
   private TypedArray typedArray;
+  private static final String TAG = "CleverPush/StoryViewAdapter";
 
   public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray,
                               OnItemClickListener onItemClickListener) {
-    this.context = context;
+    if (context == null) {
+      if (CleverPush.getInstance(CleverPush.context).getCurrentContext() != null) {
+        this.context = CleverPush.getInstance(CleverPush.context).getCurrentContext();
+      }
+    } else {
+      this.context = context;
+    }
     this.stories = stories;
     this.typedArray = typedArray;
     this.onItemClickListener = onItemClickListener;
@@ -58,6 +66,10 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
   @Override
   public StoryViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    if (context == null) {
+      Logger.e(TAG, "Context is null");
+      return null;
+    }
     LayoutInflater inflater = LayoutInflater.from(context);
     View itemViewStoryHead = inflater.inflate(R.layout.item_view_story, parent, false);
     return new StoryViewHolder(itemViewStoryHead);
@@ -137,7 +149,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         }
       });
     } catch (Exception exception) {
-      Logger.e("CleverPush/StoryView", exception.getLocalizedMessage());
+      Logger.e(TAG, exception.getLocalizedMessage());
     }
   }
 

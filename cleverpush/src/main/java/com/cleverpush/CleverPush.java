@@ -3257,6 +3257,16 @@ public class CleverPush {
     return ActivityLifecycleListener.currentActivity;
   }
 
+  public Context getCurrentContext() {
+    if (getCurrentActivity() != null) {
+      return getCurrentActivity();
+    } else if (context != null) {
+      return context;
+    }
+    Logger.e(LOG_TAG, "Current context is null.");
+    return null;
+  }
+
   public boolean isPendingInitFeaturesCall() {
     return pendingInitFeaturesCall;
   }
