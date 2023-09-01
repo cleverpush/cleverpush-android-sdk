@@ -113,6 +113,8 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         }
       }, 1000);
     }
+
+    CleverPush.getInstance(CleverPush.context).resetInitSessionCalled();
   }
 
   @Override

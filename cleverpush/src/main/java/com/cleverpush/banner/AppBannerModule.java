@@ -78,6 +78,7 @@ public class AppBannerModule {
   private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
   private boolean trackingEnabled = true;
   HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
+  public boolean isInitSessionCalled = false;
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -290,6 +291,11 @@ public class AppBannerModule {
   }
 
   public void initSession(String channel) {
+    if (isInitSessionCalled) {
+      return;
+    }
+    isInitSessionCalled = true;
+
     events.clear();
 
     this.channel = channel;

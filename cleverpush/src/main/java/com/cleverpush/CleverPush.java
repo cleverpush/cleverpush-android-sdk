@@ -528,9 +528,7 @@ public class CleverPush {
         }
 
         if (this.appBannerModule != null && this.getCurrentActivity() != null) {
-          if (!this.pendingInitFeaturesCall) {
-            this.appBannerModule.initSession(channelId);
-          }
+          this.appBannerModule.initSession(channelId);
         } else if (this.getCurrentActivity() == null) {
           Logger.e(LOG_TAG, "getCurrentActivity() is null");
         }
@@ -3278,6 +3276,12 @@ public class CleverPush {
     }
 
     return ActivityLifecycleListener.currentActivity;
+  }
+
+  public void resetInitSessionCalled() {
+    if (this.appBannerModule != null) {
+      this.appBannerModule.isInitSessionCalled = false;
+    }
   }
 
   public boolean isPendingInitFeaturesCall() {
