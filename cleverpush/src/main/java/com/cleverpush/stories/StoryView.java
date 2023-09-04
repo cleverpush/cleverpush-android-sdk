@@ -137,49 +137,57 @@ public class StoryView extends LinearLayout {
   }
 
   private void displayStoryHead(ArrayList<Story> stories) {
-    View view = LayoutInflater.from(context).inflate(R.layout.story_view, this, true);
+    try {
+      View view = LayoutInflater.from(context).inflate(R.layout.story_view, this, true);
 
-    RelativeLayout relativeLayout = view.findViewById(R.id.rlMain);
-    relativeLayout.setBackgroundColor(
-        attrArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR));
-    ViewGroup.LayoutParams params = relativeLayout.getLayoutParams();
-    params.height =
-        (int) attrArray.getDimension(R.styleable.StoryView_story_view_height, ViewGroup.LayoutParams.WRAP_CONTENT);
-    params.width =
-        (int) attrArray.getDimension(R.styleable.StoryView_story_view_width, ViewGroup.LayoutParams.WRAP_CONTENT);
-    relativeLayout.setLayoutParams(params);
+      RelativeLayout relativeLayout = view.findViewById(R.id.rlMain);
+      relativeLayout.setBackgroundColor(
+              attrArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR));
+      ViewGroup.LayoutParams params = relativeLayout.getLayoutParams();
+      params.height =
+              (int) attrArray.getDimension(R.styleable.StoryView_story_view_height, ViewGroup.LayoutParams.WRAP_CONTENT);
+      params.width =
+              (int) attrArray.getDimension(R.styleable.StoryView_story_view_width, ViewGroup.LayoutParams.WRAP_CONTENT);
+      relativeLayout.setLayoutParams(params);
 
-    LinearLayoutManager linearLayoutManager =
-        new LinearLayoutManager(ActivityLifecycleListener.currentActivity, LinearLayoutManager.HORIZONTAL, false);
-    RecyclerView recyclerView = view.findViewById(R.id.rvStories);
-    storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, attrArray,
-        getOnItemClickListener(stories, recyclerView));
-    recyclerView.setLayoutManager(linearLayoutManager);
-    recyclerView.setAdapter(storyViewListAdapter);
+      LinearLayoutManager linearLayoutManager =
+              new LinearLayoutManager(ActivityLifecycleListener.currentActivity, LinearLayoutManager.HORIZONTAL, false);
+      RecyclerView recyclerView = view.findViewById(R.id.rvStories);
+      storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, attrArray,
+              getOnItemClickListener(stories, recyclerView));
+      recyclerView.setLayoutManager(linearLayoutManager);
+      recyclerView.setAdapter(storyViewListAdapter);
+    } catch (Exception e) {
+      Logger.e(TAG, e.getLocalizedMessage());
+    }
   }
 
   private OnItemClickListener getOnItemClickListener(ArrayList<Story> stories, RecyclerView recyclerView) {
     return position -> {
-      ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-          SharedPreferences.Editor editor = sharedPreferences.edit();
-          String storyId = stories.get(position).getId();
-          String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
-          if (preferencesString.isEmpty()) {
-            editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
-          } else {
-            if (!preferencesString.contains(storyId)) {
-              editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
+      try {
+        ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            String storyId = stories.get(position).getId();
+            String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+            if (preferencesString.isEmpty()) {
+              editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
+            } else {
+              if (!preferencesString.contains(storyId)) {
+                editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
+              }
             }
+            StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewOpenedListener);
+            stories.get(position).setOpened(true);
+            storyViewListAdapter.notifyDataSetChanged();
+            recyclerView.smoothScrollToPosition(position);
           }
-          StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewOpenedListener);
-          stories.get(position).setOpened(true);
-          storyViewListAdapter.notifyDataSetChanged();
-          recyclerView.smoothScrollToPosition(position);
-        }
-      });
+        });
+      } catch (Exception e) {
+        Logger.e(TAG, e.getLocalizedMessage());
+      }
     };
   }
 
