@@ -35,8 +35,6 @@ public class ChannelConfigFromChannelIdResponseHandler {
           cleverPush.subscribeOrSync(
               autoRegister || cleverPush.isChannelIdChanged(storedChannelId, storedSubscriptionId));
 
-          cleverPush.initFeatures();
-
         } catch (Throwable ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
         }

@@ -618,11 +618,31 @@ public class CleverPush {
 
     if (shouldAutoSubscribe(sharedPreferences, autoRegister, subscriptionId)) {
       boolean newSubscription = subscriptionId == null;
-      this.subscribe(newSubscription);
+      this.subscribe(newSubscription, new SubscribedCallbackListener() {
+        @Override
+        public void onSuccess(String subscriptionId) {
+          initFeatures();
+        }
+
+        @Override
+        public void onFailure(Throwable exception) {
+          initFeatures();
+        }
+      });
     } else if (subscriptionId != null && !this.areNotificationsEnabled()
         && !this.ignoreDisabledNotificationPermission) {
       Logger.d(LOG_TAG, "notification authorization revoked, unsubscribing");
-      this.unsubscribe();
+      this.unsubscribe(new UnsubscribedListener() {
+        @Override
+        public void onSuccess() {
+          initFeatures();
+        }
+
+        @Override
+        public void onFailure(Throwable throwable) {
+          initFeatures();
+        }
+      });
     } else {
       if (subscriptionId != null) {
         Date nextSyncDate = new Date(getNextSync(sharedPreferences) * MILLISECONDS_PER_SECOND);
@@ -634,6 +654,7 @@ public class CleverPush {
       }
       this.fireSubscribedListener(subscriptionId);
       this.setSubscriptionId(subscriptionId);
+      initFeatures();
     }
   }
 
@@ -646,7 +667,7 @@ public class CleverPush {
                                       String subscriptionId) {
     int nextSync = getNextSync(sharedPreferences);
     boolean isUnsubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
-    return !isUnsubscribed && subscriptionId == null && autoRegister || isSyncTimePassed(nextSync, subscriptionId);
+    return (!isUnsubscribed && subscriptionId == null && autoRegister) || isSyncTimePassed(nextSync, subscriptionId);
   }
 
   private boolean isSyncTimePassed(int nextSync, String subscriptionId) {
@@ -3265,6 +3286,12 @@ public class CleverPush {
     }
     Logger.e(LOG_TAG, "Current context is null.");
     return null;
+  }
+
+  public void resetInitSessionCalled() {
+    if (this.appBannerModule != null) {
+      this.appBannerModule.isInitSessionCalled = false;
+    }
   }
 
   public boolean isPendingInitFeaturesCall() {
