@@ -66,62 +66,71 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
   @Override
   public StoryViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-    if (context == null) {
-      Logger.e(TAG, "Context is null");
+    try {
+      if (context == null) {
+        Logger.e(TAG, "Context is null");
+        return null;
+      }
+      LayoutInflater inflater = LayoutInflater.from(context);
+      View itemViewStoryHead = inflater.inflate(R.layout.item_view_story, parent, false);
+      return new StoryViewHolder(itemViewStoryHead);
+    } catch (Exception e) {
+      Logger.e(TAG, e.getMessage());
       return null;
     }
-    LayoutInflater inflater = LayoutInflater.from(context);
-    View itemViewStoryHead = inflater.inflate(R.layout.item_view_story, parent, false);
-    return new StoryViewHolder(itemViewStoryHead);
   }
 
   @SuppressLint("ResourceType")
   @Override
   public void onBindViewHolder(StoryViewHolder holder, int position) {
-    TextView nameTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
-    CircleImageView image = (CircleImageView) holder.itemView.findViewById(R.id.ivChallenge);
+    try {
+      TextView nameTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
+      CircleImageView image = (CircleImageView) holder.itemView.findViewById(R.id.ivChallenge);
 
-    ViewGroup.LayoutParams params = image.getLayoutParams();
-    params.height =
-            (int) typedArray.getDimension(R.styleable.StoryView_story_icon_height, 206);
-    params.width =
-            (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
-    image.setLayoutParams(params);
+      ViewGroup.LayoutParams params = image.getLayoutParams();
+      params.height =
+              (int) typedArray.getDimension(R.styleable.StoryView_story_icon_height, 206);
+      params.width =
+              (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
+      image.setLayoutParams(params);
 
-    nameTextView.setVisibility(typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE));
-    int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
-    nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
-    nameTextView.setText(stories.get(position).getTitle());
-    nameTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
-    applyFont(nameTextView, typedArray);
+      nameTextView.setVisibility(typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE));
+      int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
+      nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
+      nameTextView.setText(stories.get(position).getTitle());
+      nameTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
+      applyFont(nameTextView, typedArray);
 
-    loadImage(position, image);
+      loadImage(position, image);
 
-    if (stories.get(position).isOpened()) {
-      image.setBackground(null);
-    } else {
-      GradientDrawable border = new GradientDrawable();
-      border.setShape(GradientDrawable.OVAL);
-      border.setCornerRadii(new float[] {0, 0, 0, 0, 0, 0, 0, 0});
-      border.setColor(0xFFFFFFFF); //white background
-      border.setStroke(5, typedArray.getColor(R.styleable.StoryView_border_color,
-          DEFAULT_BORDER_COLOR)); //black border with full opacity
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-        image.setBackgroundDrawable(border);
+      if (stories.get(position).isOpened()) {
+        image.setBackground(null);
       } else {
-        image.setBackground(border);
-      }
-    }
-
-    image.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        if (onItemClickListener == null) {
-          return;
+        GradientDrawable border = new GradientDrawable();
+        border.setShape(GradientDrawable.OVAL);
+        border.setCornerRadii(new float[]{0, 0, 0, 0, 0, 0, 0, 0});
+        border.setColor(0xFFFFFFFF); //white background
+        border.setStroke(5, typedArray.getColor(R.styleable.StoryView_border_color,
+                DEFAULT_BORDER_COLOR)); //black border with full opacity
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+          image.setBackgroundDrawable(border);
+        } else {
+          image.setBackground(border);
         }
-        onItemClickListener.onClicked(position);
       }
-    });
+
+      image.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+          if (onItemClickListener == null) {
+            return;
+          }
+          onItemClickListener.onClicked(position);
+        }
+      });
+    } catch (Exception e) {
+      Logger.e(TAG, e.getLocalizedMessage());
+    }
   }
 
   @Override

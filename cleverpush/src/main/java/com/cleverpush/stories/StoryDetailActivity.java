@@ -18,6 +18,7 @@ import com.cleverpush.stories.listener.OnSwipeDownListener;
 import com.cleverpush.stories.listener.OnSwipeTouchListener;
 import com.cleverpush.stories.listener.StoryChangeListener;
 import com.cleverpush.stories.models.Story;
+import com.cleverpush.util.Logger;
 
 import java.util.ArrayList;
 
@@ -28,6 +29,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   private OnSwipeTouchListener onSwipeTouchListener;
   private ArrayList<Story> stories = new ArrayList<>();
   public StoryViewOpenedListener storyViewOpenedListener;
+  private static final String TAG = "CleverPush/AppStoryDetails";
 
   public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewOpenedListener storyViewOpenedListener) {
     ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
@@ -69,17 +71,21 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   }
 
   private void handleBundleData(Bundle extras) {
-    if (extras != null) {
-      if (extras.containsKey("selectedPosition")) {
-        selectedPosition = extras.getInt("selectedPosition");
+    try {
+      if (extras != null) {
+        if (extras.containsKey("selectedPosition")) {
+          selectedPosition = extras.getInt("selectedPosition");
+        }
+        if (extras.containsKey("storyViewOpenedListener")) {
+          storyViewOpenedListener = (StoryViewOpenedListener) getIntent().getSerializableExtra("storyViewOpenedListener");
+        }
+        if (extras.containsKey("stories")) {
+          stories = (ArrayList<Story>) extras.getSerializable("stories");
+          loadStoryDetails();
+        }
       }
-      if (extras.containsKey("storyViewOpenedListener")) {
-        storyViewOpenedListener = (StoryViewOpenedListener) getIntent().getSerializableExtra("storyViewOpenedListener");
-      }
-      if (extras.containsKey("stories")) {
-        stories = (ArrayList<Story>) extras.getSerializable("stories");
-        loadStoryDetails();
-      }
+    } catch (Exception e) {
+      Logger.e(TAG, e.getLocalizedMessage());
     }
   }
 
@@ -90,13 +96,17 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   }
 
   private void loadStoryDetails() {
-    LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-    SnapHelper snapHelper = new PagerSnapHelper();
-    StoryDetailListAdapter storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this, storyViewOpenedListener);
-    recyclerView.setLayoutManager(linearLayoutManager);
-    snapHelper.attachToRecyclerView(recyclerView);
-    recyclerView.setAdapter(storyDetailListAdapter);
-    recyclerView.smoothScrollToPosition(selectedPosition);
+    try {
+      LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+      SnapHelper snapHelper = new PagerSnapHelper();
+      StoryDetailListAdapter storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this, storyViewOpenedListener);
+      recyclerView.setLayoutManager(linearLayoutManager);
+      snapHelper.attachToRecyclerView(recyclerView);
+      recyclerView.setAdapter(storyDetailListAdapter);
+      recyclerView.smoothScrollToPosition(selectedPosition);
+    } catch (Exception e) {
+      Logger.e(TAG, e.getLocalizedMessage());
+    }
   }
 
   @Override
