@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.31.10
+* Fixed a bug with `StoryView` which could result in crashes
+* Fixed race condition in `init` for `subscribe` and `AppBanner`
+* Fixed a bug for `setSubscriptionAttribute`
+
 ## 1.31.9
 * Fixed a bug with AppBanner AppVersion Targeting
 
