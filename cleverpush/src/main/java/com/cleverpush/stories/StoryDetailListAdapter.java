@@ -16,6 +16,7 @@ import com.cleverpush.listener.StoryViewOpenedListener;
 import com.cleverpush.stories.listener.StoryChangeListener;
 import com.cleverpush.stories.listener.StoryDetailJavascriptInterface;
 import com.cleverpush.stories.models.Story;
+import com.cleverpush.util.Logger;
 
 import java.util.ArrayList;
 
@@ -25,6 +26,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
   private ArrayList<Story> stories;
   private StoryChangeListener storyChangeListener;
   public StoryViewOpenedListener storyViewOpenedListener;
+  private static final String TAG = "CleverPush/StoryDetailAdapter";
 
   public StoryDetailListAdapter(Activity activity, ArrayList<Story> stories, StoryChangeListener storyChangeListener, StoryViewOpenedListener storyViewOpenedListener) {
     this.activity = activity;
@@ -42,55 +44,59 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
 
   @Override
   public void onBindViewHolder(@NonNull StoryDetailViewHolder storyDetailViewHolder, int position) {
-    storyDetailViewHolder.setIsRecyclable(false);
-    storyDetailViewHolder.progressBar.setVisibility(View.VISIBLE);
+    try {
+      storyDetailViewHolder.setIsRecyclable(false);
+      storyDetailViewHolder.progressBar.setVisibility(View.VISIBLE);
 
-    int measuredWidth = 0;
-    int measuredHeight = 0;
-    WindowManager windowManager = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
-    Display display = windowManager.getDefaultDisplay();
-    measuredWidth = display.getWidth();
-    measuredHeight = display.getHeight();
+      int measuredWidth = 0;
+      int measuredHeight = 0;
+      WindowManager windowManager = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
+      Display display = windowManager.getDefaultDisplay();
+      measuredWidth = display.getWidth();
+      measuredHeight = display.getHeight();
 
-    String htmlContent = "<!DOCTYPE html>\n" +
-        "<html>\n" +
-        "<head>\n" +
-        "  <script     async src=\"https://cdn.ampproject.org/v0.js\"></script>\n" +
-        "  <script\n" +
-        "    async\n" +
-        "    custom-element=\"amp-story-player\"\n" +
-        "    src=\"https://cdn.ampproject.org/v0/amp-story-player-0.1.js\"\n" +
-        "  ></script>\n" +
-        "</head>\n" +
-        "<body>\n" +
-        "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, activity) + " height="
-        + convertPixelsToDp(measuredHeight, activity) + ">\n" +
-        " <a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + stories.get(
-        position).getId() + "/html\">\n" +
-        "    </a>\n" +
-        "  </amp-story-player>\n" +
-        "  <script>\n" +
-        "    var player = document.querySelector('amp-story-player');\n" +
-        "    player.addEventListener('noPreviousStory', function (event) {\n" +
-        "      storyDetailJavascriptInterface.previous(" + position + ");" +
-        "    });\n" +
-        "    player.addEventListener('noNextStory', function (event) {\n" +
-        "      storyDetailJavascriptInterface.next(" + position + ");" +
-        "    });\n" +
-        "    player.addEventListener('ready', function (event) {\n" +
-        "       storyDetailJavascriptInterface.ready();" +
-        "    });\n" +
-        "  </script>\n" +
-        "</body>\n" +
-        "</html>";
+      String htmlContent = "<!DOCTYPE html>\n" +
+              "<html>\n" +
+              "<head>\n" +
+              "  <script     async src=\"https://cdn.ampproject.org/v0.js\"></script>\n" +
+              "  <script\n" +
+              "    async\n" +
+              "    custom-element=\"amp-story-player\"\n" +
+              "    src=\"https://cdn.ampproject.org/v0/amp-story-player-0.1.js\"\n" +
+              "  ></script>\n" +
+              "</head>\n" +
+              "<body>\n" +
+              "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, activity) + " height="
+              + convertPixelsToDp(measuredHeight, activity) + ">\n" +
+              " <a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + stories.get(
+              position).getId() + "/html\">\n" +
+              "    </a>\n" +
+              "  </amp-story-player>\n" +
+              "  <script>\n" +
+              "    var player = document.querySelector('amp-story-player');\n" +
+              "    player.addEventListener('noPreviousStory', function (event) {\n" +
+              "      storyDetailJavascriptInterface.previous(" + position + ");" +
+              "    });\n" +
+              "    player.addEventListener('noNextStory', function (event) {\n" +
+              "      storyDetailJavascriptInterface.next(" + position + ");" +
+              "    });\n" +
+              "    player.addEventListener('ready', function (event) {\n" +
+              "       storyDetailJavascriptInterface.ready();" +
+              "    });\n" +
+              "  </script>\n" +
+              "</body>\n" +
+              "</html>";
 
-    storyDetailViewHolder.webView.getSettings().setJavaScriptEnabled(true);
-    storyDetailViewHolder.webView.getSettings().setLoadsImagesAutomatically(true);
-    storyDetailViewHolder.webView.addJavascriptInterface(
-        new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity),
-        "storyDetailJavascriptInterface");
-    storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener));
-    storyDetailViewHolder.webView.loadData(htmlContent, "text/html; charset=utf-8", "UTF-8");
+      storyDetailViewHolder.webView.getSettings().setJavaScriptEnabled(true);
+      storyDetailViewHolder.webView.getSettings().setLoadsImagesAutomatically(true);
+      storyDetailViewHolder.webView.addJavascriptInterface(
+              new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity),
+              "storyDetailJavascriptInterface");
+      storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener));
+      storyDetailViewHolder.webView.loadData(htmlContent, "text/html; charset=utf-8", "UTF-8");
+    } catch (Exception e) {
+      Logger.e(TAG, e.getLocalizedMessage());
+    }
   }
 
   @Override
