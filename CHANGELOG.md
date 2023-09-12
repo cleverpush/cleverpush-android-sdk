@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.11
+* Fixed a bug in `AppBanner`, JavaScript is not working in WebView 
+* Fixed a race condition for `AppBanner` not displaying from notification 
+
 ## 1.31.10
 * Fixed a bug with `StoryView` which could result in crashes
 * Fixed race condition in `init` for `subscribe` and `AppBanner`
