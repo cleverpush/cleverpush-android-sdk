@@ -79,6 +79,9 @@ public class AppBannerModule {
   private boolean trackingEnabled = true;
   HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
   public boolean isInitSessionCalled = false;
+  private Collection<String> pendingBannerAPI= new ArrayList<>();
+  private String pendingShowAppBannerId = null;
+  private String pendingShowAppBannerNotificationId = null;
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -165,6 +168,9 @@ public class AppBannerModule {
 
   void loadBanners(String notificationId, String channelId) {
     if (isLoading()) {
+      if (notificationId != null) {
+        pendingBannerAPI.add(notificationId);
+      }
       return;
     }
 
@@ -232,15 +238,37 @@ public class AppBannerModule {
           Logger.e(TAG, ex.getMessage(), ex);
         }
 
+        try {
+          if (!pendingBannerAPI.isEmpty()) {
+            for (String notificationId : pendingBannerAPI) {
+              if (notificationId.equalsIgnoreCase(pendingShowAppBannerNotificationId)) {
+                showBanner(pendingShowAppBannerId, pendingShowAppBannerNotificationId);
+                pendingShowAppBannerId = null;
+                pendingShowAppBannerNotificationId = null;
+                pendingBannerAPI.clear();
+              }
+            }
+          }
+        } catch (Exception e) {
+          Logger.e(TAG, e.getLocalizedMessage());
+        }
       }
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
         setLoading(false);
-        Logger.e(TAG, "Something went wrong when loading banners." +
-            "\nStatus code: " + statusCode +
-            "\nResponse: " + response
-        );
+        if (throwable != null) {
+          Logger.e("CleverPush", "Something went wrong when loading banners." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e("CleverPush", "Something went wrong when loading banners." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     });
   }
@@ -391,11 +419,9 @@ public class AppBannerModule {
       return;
     }
     if (notificationId != null) {
-      // reload banners because the banner might have been created just seconds agox
-      bannersListeners.add(listener);
-
       getHandler().post(() -> {
         this.loadBanners(notificationId, channel);
+        bannersListeners.add(listener);
       });
     } else {
       if (getListOfBanners() == null) {
@@ -786,6 +812,10 @@ public class AppBannerModule {
       @Override
       public void initialized() {
         Logger.d(TAG, "showBannerById: " + bannerId);
+        if (bannerId != null && notificationId != null) {
+          pendingShowAppBannerId = bannerId;
+          pendingShowAppBannerNotificationId = notificationId;
+        }
         getBanners(banners -> {
           for (Banner banner : banners) {
             if (banner.getId().equals(bannerId)) {
