@@ -1,5 +1,6 @@
 package com.cleverpush.banner;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -34,9 +35,12 @@ public class WebViewActivity extends Activity {
     }
   }
 
+  @SuppressLint("SetJavaScriptEnabled")
   private void init() {
     WebView webView = findViewById(R.id.webView);
     ImageView closeButton = findViewById(R.id.ivClose);
+
+    webView.getSettings().setJavaScriptEnabled(true);
     webView.loadUrl(url);
 
     closeButton.setOnClickListener(new View.OnClickListener() {
