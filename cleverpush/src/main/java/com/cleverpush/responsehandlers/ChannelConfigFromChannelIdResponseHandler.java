@@ -44,7 +44,18 @@ public class ChannelConfigFromChannelIdResponseHandler {
       public void onFailure(int statusCode, String response, Throwable throwable) {
         cleverPush.setInitialized(true);
 
-        Logger.e("CleverPush", "Failed to fetch Channel Config", throwable);
+        if (throwable != null) {
+          Logger.e("CleverPush", "Failed to fetch Channel Config." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e("CleverPush", "Failed to fetch Channel Config." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
 
         // trigger listeners
         if (cleverPush.getChannelConfig() == null) {
