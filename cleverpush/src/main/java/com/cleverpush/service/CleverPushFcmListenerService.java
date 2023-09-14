@@ -58,6 +58,7 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
 
     if (subscriptionId == null) {
+      Logger.d(LOG_TAG, "CleverPushFcmListenerService onNewToken: There is no subscription for CleverPush SDK.");
       return;
     }
 

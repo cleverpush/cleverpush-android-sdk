@@ -1,5 +1,7 @@
 package com.cleverpush.chat;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -12,6 +14,7 @@ import android.widget.Toast;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.listener.ChatUrlOpenedListener;
+import com.cleverpush.util.Logger;
 
 public class ChatView extends WebView {
   private String lastSubscriptionId;
@@ -123,6 +126,7 @@ public class ChatView extends WebView {
         this.loadChat(subscriptionId);
       });
     } else {
+      Logger.d(LOG_TAG, "loadChat: There is no subscription for CleverPush SDK.");
       this.loadChat("preview");
     }
   }

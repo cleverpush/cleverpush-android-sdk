@@ -17,10 +17,18 @@ public class SendBannerEventResponseHandler {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e(TAG, "App Banner Event failed." +
-            "\nStatus code: " + statusCode +
-            "\nResponse: " + response
-        );
+        if (throwable != null) {
+          Logger.e(TAG, "App Banner Event failed." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(TAG, "App Banner Event failed." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     };
 

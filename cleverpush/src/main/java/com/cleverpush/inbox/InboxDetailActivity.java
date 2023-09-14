@@ -441,7 +441,18 @@ public class InboxDetailActivity extends AppCompatActivity {
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
         setLoading(false);
-        Logger.e(TAG, "Something went wrong when loading inbox view banner." + "\nStatus code: " + statusCode + "\nResponse: " + response + "\nError: " + throwable.getMessage());
+        if (throwable != null) {
+          Logger.e(TAG, "Something went wrong when loading inbox view banner." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(TAG, "Something went wrong when loading inbox view banner." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     });
   }

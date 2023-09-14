@@ -99,7 +99,18 @@ public class StoredNotificationsService {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e(LOG_TAG, "Error got Response - HTTP " + statusCode);
+        if (throwable != null) {
+          Logger.e(LOG_TAG, "Failed while received-notifications request." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(LOG_TAG, "Failed while received-notifications request." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     });
   }

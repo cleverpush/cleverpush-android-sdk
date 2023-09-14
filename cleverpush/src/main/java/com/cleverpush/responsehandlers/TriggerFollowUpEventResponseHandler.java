@@ -14,7 +14,18 @@ public class TriggerFollowUpEventResponseHandler {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e("CleverPush", "Error tracking follow-up event - HTTP " + statusCode);
+        if (throwable != null) {
+          Logger.e("CleverPush", "Error tracking follow-up event." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e("CleverPush", "Error tracking follow-up event." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     };
   }
