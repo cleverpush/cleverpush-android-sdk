@@ -479,6 +479,7 @@ public class CleverPush {
               }
             });
           } else {
+            Logger.d(LOG_TAG, "There is no subscription for CleverPush SDK.");
             this.clearSubscriptionData();
           }
         } catch (Throwable throwable) {
@@ -1261,7 +1262,18 @@ public class CleverPush {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e(LOG_TAG, "Error setting topics - HTTP " + statusCode + ": " + response);
+        if (throwable != null) {
+          Logger.e(LOG_TAG, "Failed to end session." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(LOG_TAG, "Failed to end session." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     });
   }
@@ -1418,6 +1430,7 @@ public class CleverPush {
       CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody,
               new UnsubscribeResponseHandler(this, listener).getResponseHandler());
     } else {
+      Logger.d(LOG_TAG, "unsubscribe: There is no subscription for CleverPush SDK.");
       clearSubscriptionData();
     }
   }
@@ -1518,6 +1531,7 @@ public class CleverPush {
   public synchronized void getSubscriptionId(SubscribedListener listener) {
     if (listener != null) {
       if (subscriptionId == null) {
+        Logger.d(LOG_TAG, "getSubscriptionId: There is no subscription for CleverPush SDK.");
         getSubscriptionIdListeners.add(listener);
       } else {
         listener.subscribed(subscriptionId);
@@ -1545,6 +1559,8 @@ public class CleverPush {
         listener.subscribed(subscriptionId);
       }
       getSubscriptionIdListeners = new ArrayList<>();
+    } else {
+      Logger.d(LOG_TAG, "setSubscriptionId: There is no subscription for CleverPush SDK.");
     }
   }
 
@@ -1923,6 +1939,7 @@ public class CleverPush {
   public void addSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
     this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId == null) {
+        Logger.d(LOG_TAG, "addSubscriptionTopic: There is no subscription for CleverPush SDK.");
         return;
       }
       Set<String> topics = this.getSubscriptionTopics();
@@ -1977,6 +1994,7 @@ public class CleverPush {
   public void removeSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
     this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId == null) {
+        Logger.d(LOG_TAG, "removeSubscriptionTopic: There is no subscription for CleverPush SDK.");
         return;
       }
       Set<String> topics = this.getSubscriptionTopics();
@@ -2119,6 +2137,8 @@ public class CleverPush {
 
           CleverPushHttpClient.post("/subscription/sync/" + getChannelId(getContext()), jsonBody,
               new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicIds, completionListener));
+        } else {
+          Logger.d(LOG_TAG, "setSubscriptionTopics: There is no subscription for CleverPush SDK.");
         }
       });
     }).start();
@@ -2144,6 +2164,8 @@ public class CleverPush {
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
         subscriptionAttributes.put(attributeId, value);
         CleverPushHttpClient.post("/subscription/attribute", jsonBody, responseHandler.getResponseHandler(subscriptionAttributes));
+      } else {
+        Logger.d(LOG_TAG, "setSubscriptionAttribute: There is no subscription for CleverPush SDK.");
       }
     })).start());
   }
@@ -2181,6 +2203,8 @@ public class CleverPush {
 
         CleverPushHttpClient.post("/subscription/attribute/push-value", jsonBody,
             pushSubscriptionAttributeValueResponseHandler(subscriptionAttributes));
+      } else {
+        Logger.d(LOG_TAG, "pushSubscriptionAttributeValue: There is no subscription for CleverPush SDK.");
       }
     })).start());
   }
@@ -2207,7 +2231,18 @@ public class CleverPush {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e(LOG_TAG, "Error pushing attribute value - HTTP " + statusCode);
+        if (throwable != null) {
+          Logger.e(LOG_TAG, "Error pushing attribute value" +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(LOG_TAG, "Error pushing attribute value" +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     };
   }
@@ -2246,6 +2281,8 @@ public class CleverPush {
 
         CleverPushHttpClient.post("/subscription/attribute/pull-value", jsonBody,
             pullSubscriptionAttributeValueResponseHandler(subscriptionAttributes));
+      } else {
+        Logger.d(LOG_TAG, "pullSubscriptionAttributeValue: There is no subscription for CleverPush SDK.");
       }
     })).start());
   }
@@ -2272,7 +2309,18 @@ public class CleverPush {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e(LOG_TAG, "Error pulling attribute value - HTTP " + statusCode);
+        if (throwable != null) {
+          Logger.e(LOG_TAG, "Error pulling attribute value" +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(LOG_TAG, "Error pulling attribute value" +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     };
   }
@@ -2424,6 +2472,8 @@ public class CleverPush {
 
             CleverPushHttpClient.post("/subscription/conversion", jsonBody,
                 new TrackEventResponseHandler().getResponseHandler(eventName));
+          } else {
+            Logger.d(LOG_TAG, "trackEvent: There is no subscription for CleverPush SDK.");
           }
         });
 
@@ -2478,6 +2528,8 @@ public class CleverPush {
 
             CleverPushHttpClient.post("/subscription/event", jsonBody,
                 new TriggerFollowUpEventResponseHandler().getResponseHandler(eventName));
+          } else {
+            Logger.d(LOG_TAG, "triggerFollowUpEvent: There is no subscription for CleverPush SDK.");
           }
         });
       } catch (Exception ex) {

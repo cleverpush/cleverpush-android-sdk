@@ -46,7 +46,18 @@ public class UnsubscribeResponseHandler {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e("CleverPush", "Failed while unsubscribe request - " + statusCode + " - " + response, throwable);
+        if (throwable != null) {
+          Logger.e("CleverPush", "Failed while unsubscribe request." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e("CleverPush", "Failed while unsubscribe request." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
         if (listener != null) {
           listener.onFailure(throwable);
         }

@@ -314,6 +314,7 @@ public class AppBannerModule {
         this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId, blockId, screenId);
       });
     } else {
+      Logger.d(LOG_TAG, "sendBannerEvent: There is no subscription for CleverPush SDK.");
       this.sendBannerEventWithSubscriptionId(event, banner, null, blockId, screenId);
     }
   }

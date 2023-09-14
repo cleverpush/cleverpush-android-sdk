@@ -95,6 +95,8 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       }
       if (subscriptionId != null) {
         jsonBody.put("subscriptionId", subscriptionId);
+      } else {
+        Logger.d(LOG_TAG, "syncSubscription: There is no subscription for CleverPush SDK.");
       }
       jsonBody.put("platformName", "Android");
       jsonBody.put("platformVersion", Build.VERSION.RELEASE);
@@ -177,7 +179,18 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
           return;
         }
         subscribedListener.onFailure(throwable);
-        Logger.e(LOG_TAG, "Failed while sync subscription request - " + statusCode + " - " + response, throwable);
+        if (throwable != null) {
+          Logger.e(LOG_TAG, "Failed while sync subscription request." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(LOG_TAG, "Failed while sync subscription request." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     });
   }

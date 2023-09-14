@@ -105,6 +105,18 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                     @Override
                     public void onFailure(int statusCode, String response, Throwable throwable) {
                       Logger.e("onFailure", response);
+                      if (throwable != null) {
+                        Logger.e("CleverPush", "Failed while geo-fence request." +
+                                "\nStatus code: " + statusCode +
+                                "\nResponse: " + response +
+                                "\nError: " + throwable.getMessage()
+                        );
+                      } else {
+                        Logger.e("CleverPush", "Failed while geo-fence request." +
+                                "\nStatus code: " + statusCode +
+                                "\nResponse: " + response
+                        );
+                      }
                     }
                   });
             }

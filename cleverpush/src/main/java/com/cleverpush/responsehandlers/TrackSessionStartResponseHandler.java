@@ -17,7 +17,18 @@ public class TrackSessionStartResponseHandler {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e(LOG_TAG, "Error setting topics - HTTP " + statusCode + ": " + response);
+        if (throwable != null) {
+          Logger.e(LOG_TAG, "Failed to track session start." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e(LOG_TAG, "Failed to track session start." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
       }
     };
   }

@@ -30,7 +30,18 @@ public class AddSubscriptionTagResponseHandler {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e("CleverPush", "Error adding tag - HTTP " + statusCode);
+        if (throwable != null) {
+          Logger.e("CleverPush", "Error adding tag." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  "\nError: " + throwable.getMessage()
+          );
+        } else {
+          Logger.e("CleverPush", "Error adding tag." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response
+          );
+        }
         if (addTagCompletedListener != null) {
           addTagCompletedListener.onFailure(new Exception("Error adding tag - HTTP " + statusCode));
         }

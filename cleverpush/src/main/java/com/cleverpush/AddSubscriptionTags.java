@@ -102,6 +102,8 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
       CleverPushHttpClient.post("/subscription/tag", jsonBody,
           new AddSubscriptionTagResponseHandler().getResponseHandler(tagIds[currentPositionOfTagToAdd],
               addTagCompletedListener, currentPositionOfTagToAdd, tags));
+    } else {
+      Logger.d(LOG_TAG, "addSubscriptionTag: There is no subscription for CleverPush SDK.");
     }
   }
 
