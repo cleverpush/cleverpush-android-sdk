@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.12
+* Fixed a bug in `ChantView`, removed setWebContentsDebuggingEnabled
+
 ## 1.31.11
 * Fixed a bug in `AppBanner`, JavaScript is not working in WebView 
 * Fixed a race condition for `AppBanner` not displaying from notification 
