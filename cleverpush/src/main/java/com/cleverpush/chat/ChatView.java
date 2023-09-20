@@ -283,10 +283,6 @@ public class ChatView extends WebView {
       webSettings.setDomStorageEnabled(true);
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-      this.setWebContentsDebuggingEnabled(true);
-    }
-
     this.addJavascriptInterface(getChatJavascriptInterface(context), "cleverpushAppInterface");
 
     this.loadUrl("about:blank");
