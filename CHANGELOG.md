@@ -2,6 +2,7 @@
 
 ## 1.31.13
 * Optimized `setAuthorizerToken` method for GET request
+* Add provision for the .otf font family and button's text font family in `AppBanner`
 
 ## 1.31.12
 * Fixed a bug in `ChatView`, removed setWebContentsDebuggingEnabled
