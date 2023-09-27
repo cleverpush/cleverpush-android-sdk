@@ -174,6 +174,15 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     button.setText(text);
     button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
+    if (block.getFamily() != null) {
+      try {
+        Typeface font = FontUtils.findFont(activity, block.getFamily());
+        button.setTypeface(font);
+      } catch (Exception ex) {
+        Logger.e(TAG, ex.getMessage(), ex);
+      }
+    }
+
     String textColor;
     if (appBannerPopup.getData().isDarkModeEnabled(activity) && block.getDarkColor() != null) {
       textColor = block.getDarkColor();
@@ -257,7 +266,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       } catch (Exception ex) {
         Logger.e(TAG, ex.getMessage(), ex);
       }
-
     }
 
     Integer alignment = alignmentMap.get(block.getAlignment());

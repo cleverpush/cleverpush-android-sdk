@@ -21,6 +21,7 @@ public class BannerButtonBlock extends BannerBlock {
   private int radius;
   private BannerAction action;
   private List<BannerBlockScreen> blockScreens;
+  private String family = null;
 
   private BannerButtonBlock() {
   }
@@ -65,6 +66,9 @@ public class BannerButtonBlock extends BannerBlock {
     return blockScreens;
   }
 
+  public String getFamily() {
+    return family;
+  }
 
   public static BannerButtonBlock createButtonBlock(JSONObject json) throws JSONException {
     BannerButtonBlock buttonBlock = new BannerButtonBlock();
@@ -94,6 +98,10 @@ public class BannerButtonBlock extends BannerBlock {
       for (int i = 0; i < blockArray.length(); ++i) {
         buttonBlock.blockScreens.add(BannerBlockScreen.create(blockArray.getJSONObject(i)));
       }
+    }
+
+    if (json.has("family") && !json.optString("family").isEmpty()) {
+      buttonBlock.family = json.optString("family");
     }
 
     return buttonBlock;

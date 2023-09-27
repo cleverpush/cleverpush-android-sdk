@@ -23,12 +23,27 @@ public class FontUtils {
 
     }
     try {
+      return Typeface.createFromAsset(context.getAssets(), name + ".otf");
+    } catch (Exception ignored) {
+
+    }
+    try {
       return Typeface.createFromAsset(context.getAssets(), "font/" + name + ".ttf");
     } catch (Exception ignored) {
 
     }
     try {
+      return Typeface.createFromAsset(context.getAssets(), "font/" + name + ".otf");
+    } catch (Exception ignored) {
+
+    }
+    try {
       return Typeface.createFromAsset(context.getAssets(), "fonts/" + name + ".ttf");
+    } catch (Exception ignored) {
+
+    }
+    try {
+      return Typeface.createFromAsset(context.getAssets(), "fonts/" + name + ".otf");
     } catch (Exception ignored) {
 
     }
