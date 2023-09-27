@@ -115,6 +115,7 @@
 ## 1.29.2
 * Fixed a bug connected to removeSubscriptionTopic
 * Optimized HTML AppBanner support
+* Fixed base64 encoding for AppBanner webview
 
 ## 1.29.1
 * Fixed logic for app banner conditions when using properties
