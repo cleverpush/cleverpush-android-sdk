@@ -36,8 +36,17 @@ public class CleverPushHttpClient {
     }
   }
 
-  public static void get(final String url, final ResponseHandler responseHandler) {
-    new Thread(() -> makeRequest(url, null, null, responseHandler)).start();
+  public static void get(String url, final ResponseHandler responseHandler) {
+    String authorizerToken = CleverPush.getInstance(CleverPush.context).getAuthorizerToken();
+    if (authorizerToken != null && authorizerToken.length() > 0) {
+      if (url.contains("?")) {
+        url += "&authorizationToken=" + authorizerToken;
+      } else {
+        url += "?authorizationToken=" + authorizerToken;
+      }
+    }
+    String finalUrl = url;
+    new Thread(() -> makeRequest(finalUrl, null, null, responseHandler)).start();
   }
 
   private static void makeRequest(String url, String method, JSONObject jsonBody, ResponseHandler responseHandler) {
