@@ -1,7 +1,10 @@
 # Changelog
 
+## 1.31.13
+* Optimized `setAuthorizerToken` method for GET request
+
 ## 1.31.12
-* Fixed a bug in `ChantView`, removed setWebContentsDebuggingEnabled
+* Fixed a bug in `ChatView`, removed setWebContentsDebuggingEnabled
 
 ## 1.31.11
 * Fixed a bug in `AppBanner`, JavaScript is not working in WebView 
