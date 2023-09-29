@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.14
+* Fixed a potential crash when `currentActivity` is null in GeoFences
+
 ## 1.31.13
 * Optimized `setAuthorizerToken` method for GET request
 * Add provision for the .otf font family and button's text font family in `AppBanner`
