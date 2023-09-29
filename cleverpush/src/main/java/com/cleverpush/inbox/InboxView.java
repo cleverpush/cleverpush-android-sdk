@@ -22,12 +22,14 @@ import com.cleverpush.inbox.listener.OnItemClickListener;
 import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.listener.NotificationClickListener;
 import com.cleverpush.listener.NotificationsCallbackListener;
+import com.cleverpush.util.Logger;
 
 import java.util.ArrayList;
 import java.util.Set;
 
 public class InboxView extends LinearLayout {
 
+  private static final String TAG = "CleverPush/InboxView";
   private TypedArray typedArray;
   private InboxViewListAdapter inboxViewListAdapter;
   private NotificationClickListener notificationClickListener;
@@ -67,18 +69,22 @@ public class InboxView extends LinearLayout {
   }
 
   void getNotifications(boolean combineWithApi) {
-    getCleverPushInstance().getNotifications(combineWithApi, new NotificationsCallbackListener() {
-      @Override
-      public void ready(Set<Notification> notifications) {
-        notificationArrayList.addAll(notifications);
-        getCleverPushInstance().getCurrentActivity().runOnUiThread(new Runnable() {
-          @Override
-          public void run() {
-            setupInboxView(notificationArrayList);
-          }
-        });
-      }
-    });
+    try {
+      getCleverPushInstance().getNotifications(combineWithApi, new NotificationsCallbackListener() {
+        @Override
+        public void ready(Set<Notification> notifications) {
+          notificationArrayList.addAll(notifications);
+          getCleverPushInstance().getCurrentActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+              setupInboxView(notificationArrayList);
+            }
+          });
+        }
+      });
+    } catch (Exception e) {
+      Logger.e(TAG, "getNotifications Exception: " + e.getLocalizedMessage());
+    }
   }
 
   public void setupInboxView(ArrayList<Notification> notifications) {
@@ -112,22 +118,26 @@ public class InboxView extends LinearLayout {
 
   private OnItemClickListener getOnItemClickListener(ArrayList<Notification> notificationArrayList, RecyclerView recyclerView) {
     return position -> {
-      if (notificationClickListener != null) {
-        Notification clickedNotification = notificationArrayList.get(position);
+      try {
+        if (notificationClickListener != null) {
+          Notification clickedNotification = notificationArrayList.get(position);
 
-        if (clickedNotification.getInboxAppBanner() != null) {
-          InboxDetailActivity.launch(ActivityLifecycleListener.currentActivity, notificationArrayList, position);
+          if (clickedNotification.getInboxAppBanner() != null) {
+            InboxDetailActivity.launch(ActivityLifecycleListener.currentActivity, notificationArrayList, position);
+          }
+          notificationClickListener.onClicked(notificationArrayList.get(position));
+        } else if (getCleverPushInstance().getNotificationOpenedListener() != null) {
+          NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
+          notificationOpenedResult.setNotification(notificationArrayList.get(position));
+          getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult);
         }
-        notificationClickListener.onClicked(notificationArrayList.get(position));
-      } else if (getCleverPushInstance().getNotificationOpenedListener() != null) {
-        NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
-        notificationOpenedResult.setNotification(notificationArrayList.get(position));
-        getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult);
-      }
 
-      notificationArrayList.get(position).setRead(true);
-      inboxViewListAdapter.notifyItemChanged(position, notificationArrayList.get(position));
-      recyclerView.smoothScrollToPosition(position);
+        notificationArrayList.get(position).setRead(true);
+        inboxViewListAdapter.notifyItemChanged(position, notificationArrayList.get(position));
+        recyclerView.smoothScrollToPosition(position);
+      } catch (Exception e) {
+        Logger.e(TAG, "getOnItemClickListener Exception: " + e.getLocalizedMessage());
+      }
     };
   }
 }

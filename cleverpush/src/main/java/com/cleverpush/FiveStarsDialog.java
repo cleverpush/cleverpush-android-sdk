@@ -27,7 +27,7 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
   private final static String DEFAULT_POSITIVE = "Ok";
   private final static String DEFAULT_NEGATIVE = "Not Now";
   private final static String DEFAULT_NEVER = "Never";
-  private static final String TAG = FiveStarsDialog.class.getSimpleName();
+  private static final String TAG = "CleverPush/FiveStarsDialog";
   private final Context context;
   private boolean isForceMode = false;
   private String supportEmail;
@@ -51,36 +51,40 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
   }
 
   private void build() {
-    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-    LayoutInflater inflater = LayoutInflater.from(context);
-    dialogView = inflater.inflate(R.layout.stars, null);
-    String titleToAdd = (title == null) ? DEFAULT_TITLE : title;
-    String textToAdd = (rateText == null) ? DEFAULT_TEXT : rateText;
-    contentTextView = dialogView.findViewById(R.id.text_content);
-    contentTextView.setText(textToAdd);
-    ratingBar = dialogView.findViewById(R.id.ratingBar);
-    ratingBar.setOnRatingBarChangeListener((ratingBar, v, b) -> {
-      Logger.d(TAG, "Rating changed : " + v);
-      if (isForceMode && v >= upperBound) {
-        openMarket();
-        if (reviewListener != null) {
-          reviewListener.onReview((int) ratingBar.getRating());
+    try {
+      AlertDialog.Builder builder = new AlertDialog.Builder(context);
+      LayoutInflater inflater = LayoutInflater.from(context);
+      dialogView = inflater.inflate(R.layout.stars, null);
+      String titleToAdd = (title == null) ? DEFAULT_TITLE : title;
+      String textToAdd = (rateText == null) ? DEFAULT_TEXT : rateText;
+      contentTextView = dialogView.findViewById(R.id.text_content);
+      contentTextView.setText(textToAdd);
+      ratingBar = dialogView.findViewById(R.id.ratingBar);
+      ratingBar.setOnRatingBarChangeListener((ratingBar, v, b) -> {
+        Logger.d(TAG, "Rating changed : " + v);
+        if (isForceMode && v >= upperBound) {
+          openMarket();
+          if (reviewListener != null) {
+            reviewListener.onReview((int) ratingBar.getRating());
+          }
         }
+      });
+
+      if (starColor != -1) {
+        LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
+        stars.getDrawable(1).setColorFilter(starColor, PorterDuff.Mode.SRC_ATOP);
+        stars.getDrawable(2).setColorFilter(starColor, PorterDuff.Mode.SRC_ATOP);
       }
-    });
 
-    if (starColor != -1) {
-      LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
-      stars.getDrawable(1).setColorFilter(starColor, PorterDuff.Mode.SRC_ATOP);
-      stars.getDrawable(2).setColorFilter(starColor, PorterDuff.Mode.SRC_ATOP);
+      alertDialog = builder.setTitle(titleToAdd)
+              .setView(dialogView)
+              .setNegativeButton((negativeButtonText == null) ? DEFAULT_NEGATIVE : negativeButtonText, this)
+              .setPositiveButton((positiveButtonText == null) ? DEFAULT_POSITIVE : positiveButtonText, this)
+              .setNeutralButton((neverButtonText == null) ? DEFAULT_NEVER : neverButtonText, this)
+              .create();
+    } catch (Exception e) {
+      Logger.e(TAG, "FiveStarsDialog build Exception: " + e.getLocalizedMessage());
     }
-
-    alertDialog = builder.setTitle(titleToAdd)
-        .setView(dialogView)
-        .setNegativeButton((negativeButtonText == null) ? DEFAULT_NEGATIVE : negativeButtonText, this)
-        .setPositiveButton((positiveButtonText == null) ? DEFAULT_POSITIVE : positiveButtonText, this)
-        .setNeutralButton((neverButtonText == null) ? DEFAULT_NEVER : neverButtonText, this)
-        .create();
   }
 
   private void openMarket() {
@@ -109,28 +113,32 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
 
   @Override
   public void onClick(DialogInterface dialogInterface, int i) {
-    if (i == DialogInterface.BUTTON_POSITIVE) {
-      if (ratingBar.getRating() < upperBound) {
-        if (negativeReviewListener == null) {
-          sendEmail();
-        } else {
-          negativeReviewListener.onNegativeReview((int) ratingBar.getRating());
+    try {
+      if (i == DialogInterface.BUTTON_POSITIVE) {
+        if (ratingBar.getRating() < upperBound) {
+          if (negativeReviewListener == null) {
+            sendEmail();
+          } else {
+            negativeReviewListener.onNegativeReview((int) ratingBar.getRating());
+          }
+
+        } else if (!isForceMode) {
+          openMarket();
         }
-
-      } else if (!isForceMode) {
-        openMarket();
+        if (reviewListener != null) {
+          reviewListener.onReview((int) ratingBar.getRating());
+        }
       }
-      if (reviewListener != null) {
-        reviewListener.onReview((int) ratingBar.getRating());
+      if (i == DialogInterface.BUTTON_NEUTRAL) {
+
       }
-    }
-    if (i == DialogInterface.BUTTON_NEUTRAL) {
+      if (i == DialogInterface.BUTTON_NEGATIVE) {
 
+      }
+      alertDialog.hide();
+    } catch (Exception e) {
+      Logger.e(TAG, "onClick Exception: " + e.getLocalizedMessage());
     }
-    if (i == DialogInterface.BUTTON_NEGATIVE) {
-
-    }
-    alertDialog.hide();
   }
 
   public FiveStarsDialog setTitle(String title) {

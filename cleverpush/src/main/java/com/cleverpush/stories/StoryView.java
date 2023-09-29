@@ -94,27 +94,31 @@ public class StoryView extends LinearLayout {
     return new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
-        loading = false;
+        try {
+          loading = false;
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        Gson gson = gsonBuilder.create();
-        StoryListModel model = gson.fromJson(response, StoryListModel.class);
-        stories.addAll(model.getStories());
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        for (int i = 0; i < stories.size(); i++) {
-          if (sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "")
-              .contains(stories.get(i).getId())) {
-            stories.get(i).setOpened(true);
-          } else {
-            stories.get(i).setOpened(false);
+          GsonBuilder gsonBuilder = new GsonBuilder();
+          Gson gson = gsonBuilder.create();
+          StoryListModel model = gson.fromJson(response, StoryListModel.class);
+          stories.addAll(model.getStories());
+          SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+          for (int i = 0; i < stories.size(); i++) {
+            if (sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "")
+                    .contains(stories.get(i).getId())) {
+              stories.get(i).setOpened(true);
+            } else {
+              stories.get(i).setOpened(false);
+            }
           }
+          ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+              displayStoryHead(stories);
+            }
+          });
+        } catch (Exception e) {
+          Logger.e(TAG, "getResponseHandler onSuccess Exception: " + e.getLocalizedMessage());
         }
-        ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
-          @Override
-          public void run() {
-            displayStoryHead(stories);
-          }
-        });
       }
 
       @Override
@@ -158,7 +162,7 @@ public class StoryView extends LinearLayout {
       recyclerView.setLayoutManager(linearLayoutManager);
       recyclerView.setAdapter(storyViewListAdapter);
     } catch (Exception e) {
-      Logger.e(TAG, e.getLocalizedMessage());
+      Logger.e(TAG, "displayStoryHead Exception: " + e.getLocalizedMessage());
     }
   }
 
@@ -186,7 +190,7 @@ public class StoryView extends LinearLayout {
           }
         });
       } catch (Exception e) {
-        Logger.e(TAG, e.getLocalizedMessage());
+        Logger.e(TAG, "getOnItemClickListener Exception: " + e.getLocalizedMessage());
       }
     };
   }

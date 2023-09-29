@@ -207,7 +207,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
           });
         }
       } catch (Exception exception) {
-        Logger.e(TAG, exception.getLocalizedMessage());
+        Logger.e(TAG, "loadImage Exception: " + exception.getLocalizedMessage());
       }
     }).start();
   }
