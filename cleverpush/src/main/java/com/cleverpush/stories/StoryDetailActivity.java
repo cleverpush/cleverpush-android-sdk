@@ -32,16 +32,20 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   private static final String TAG = "CleverPush/AppStoryDetails";
 
   public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewOpenedListener storyViewOpenedListener) {
-    ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        Intent intent = new Intent(activity, StoryDetailActivity.class);
-        intent.putExtra("stories", stories);
-        intent.putExtra("selectedPosition", selectedPosition);
-        intent.putExtra("storyViewOpenedListener", storyViewOpenedListener);
-        activity.startActivity(intent);
-      }
-    });
+    try {
+      ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          Intent intent = new Intent(activity, StoryDetailActivity.class);
+          intent.putExtra("stories", stories);
+          intent.putExtra("selectedPosition", selectedPosition);
+          intent.putExtra("storyViewOpenedListener", storyViewOpenedListener);
+          activity.startActivity(intent);
+        }
+      });
+    } catch (Exception e) {
+      Logger.e(TAG, "launch Exception: " + e.getLocalizedMessage());
+    }
   }
 
   @Override

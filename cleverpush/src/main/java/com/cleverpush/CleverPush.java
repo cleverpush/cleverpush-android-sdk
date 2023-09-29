@@ -512,36 +512,40 @@ public class CleverPush {
 
   public SessionListener initSessionListener() {
     return open -> {
-      this.isAppOpen = open;
-      if (open) {
-        this.trackSessionStart();
+      try {
+        this.isAppOpen = open;
+        if (open) {
+          this.trackSessionStart();
 
-        if (this.pendingRequestLocationPermissionCall) {
-          this.requestLocationPermission();
-        }
-
-        if (this.pendingRequestNotificationPermissionCall && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          this.requestNotificationPermission(this.getCurrentActivity());
-        }
-
-        if (this.pendingInitFeaturesCall) {
-          this.initFeatures();
-        }
-
-        if (this.appBannerModule != null && this.getCurrentActivity() != null) {
-          this.appBannerModule.initSession(channelId);
-        } else if (this.getCurrentActivity() == null) {
-          Logger.e(LOG_TAG, "getCurrentActivity() is null");
-        }
-
-        if (this.pendingPageViews.size() > 0) {
-          for (PageView pageView : this.pendingPageViews) {
-            this.trackPageView(pageView.getUrl(), pageView.getParams());
+          if (this.pendingRequestLocationPermissionCall) {
+            this.requestLocationPermission();
           }
-          this.pendingPageViews = new ArrayList<>();
+
+          if (this.pendingRequestNotificationPermissionCall && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.requestNotificationPermission(this.getCurrentActivity());
+          }
+
+          if (this.pendingInitFeaturesCall) {
+            this.initFeatures();
+          }
+
+          if (this.appBannerModule != null && this.getCurrentActivity() != null) {
+            this.appBannerModule.initSession(channelId);
+          } else if (this.getCurrentActivity() == null) {
+            Logger.e(LOG_TAG, "getCurrentActivity() is null");
+          }
+
+          if (this.pendingPageViews.size() > 0) {
+            for (PageView pageView : this.pendingPageViews) {
+              this.trackPageView(pageView.getUrl(), pageView.getParams());
+            }
+            this.pendingPageViews = new ArrayList<>();
+          }
+        } else {
+          this.trackSessionEnd();
         }
-      } else {
-        this.trackSessionEnd();
+      } catch (Exception e) {
+        Logger.e(LOG_TAG, "initSessionListener Exception: " + e.getLocalizedMessage());
       }
     };
   }
@@ -680,44 +684,48 @@ public class CleverPush {
    * initialize the features
    */
   public void initFeatures() {
-    if (getCurrentActivity() == null) {
-      this.pendingInitFeaturesCall = true;
-      return;
-    }
-
-    Logger.d(LOG_TAG, "initFeatures");
-
-    this.pendingInitFeaturesCall = false;
-
-    if (this.isSubscribed()) {
-      this.showTopicDialogOnNewAdded();
-    }
-    this.initAppReview();
-    this.initGeoFences();
-
-    appBannerModule = getAppBannerModule();
-
-    if (pendingAppBannerTrackingEnabled != null) {
-      appBannerModule.setTrackingEnabled(pendingAppBannerTrackingEnabled);
-      pendingAppBannerTrackingEnabled = null;
-    }
-
-    if (getPendingAppBannerEvents() != null) {
-      for (TriggeredEvent event : getPendingAppBannerEvents()) {
-        appBannerModule.triggerEvent(event);
+    try {
+      if (getCurrentActivity() == null) {
+        this.pendingInitFeaturesCall = true;
+        return;
       }
-      pendingAppBannerEvents = null;
+
+      Logger.d(LOG_TAG, "initFeatures");
+
+      this.pendingInitFeaturesCall = false;
+
+      if (this.isSubscribed()) {
+        this.showTopicDialogOnNewAdded();
+      }
+      this.initAppReview();
+      this.initGeoFences();
+
+      appBannerModule = getAppBannerModule();
+
+      if (pendingAppBannerTrackingEnabled != null) {
+        appBannerModule.setTrackingEnabled(pendingAppBannerTrackingEnabled);
+        pendingAppBannerTrackingEnabled = null;
+      }
+
+      if (getPendingAppBannerEvents() != null) {
+        for (TriggeredEvent event : getPendingAppBannerEvents()) {
+          appBannerModule.triggerEvent(event);
+        }
+        pendingAppBannerEvents = null;
+      }
+
+      if (getPendingShowAppBannerId() != null) {
+        appBannerModule.showBanner(pendingShowAppBannerId, pendingShowAppBannerNotificationId);
+        pendingShowAppBannerId = null;
+        pendingShowAppBannerNotificationId = null;
+      }
+
+      appBannerModule.initSession(channelId);
+
+      BroadcastReceiverUtils.registerReceiver(this);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "initFeatures Exception: " + e.getLocalizedMessage());
     }
-
-    if (getPendingShowAppBannerId() != null) {
-      appBannerModule.showBanner(pendingShowAppBannerId, pendingShowAppBannerNotificationId);
-      pendingShowAppBannerId = null;
-      pendingShowAppBannerNotificationId = null;
-    }
-
-    appBannerModule.initSession(channelId);
-
-    BroadcastReceiverUtils.registerReceiver(this);
   }
 
   /**
@@ -756,41 +764,49 @@ public class CleverPush {
             }
           }
         } catch (Exception ex) {
-          Logger.d(LOG_TAG, ex.getMessage());
+          Logger.d(LOG_TAG, "initAppReview Exception: " + ex.getMessage());
         }
       }
     });
   }
 
   void showFiveStarsDialog(JSONObject config) {
-    FiveStarsDialog dialog = new FiveStarsDialog(
-        getCurrentActivity(),
-        config.optString("appReviewEmail")
-    );
-    dialog.setRateText(config.optString("appReviewText"))
-        .setTitle(config.optString("appReviewTitle"))
-        .setPositiveButtonText(config.optString("appReviewYes"))
-        .setNegativeButtonText(config.optString("appReviewLater"))
-        .setNeverButtonText(config.optString("appReviewNo"))
-        .setForceMode(false)
-        .show();
+    try {
+      FiveStarsDialog dialog = new FiveStarsDialog(
+              getCurrentActivity(),
+              config.optString("appReviewEmail")
+      );
+      dialog.setRateText(config.optString("appReviewText"))
+              .setTitle(config.optString("appReviewTitle"))
+              .setPositiveButtonText(config.optString("appReviewYes"))
+              .setNegativeButtonText(config.optString("appReviewLater"))
+              .setNeverButtonText(config.optString("appReviewNo"))
+              .setForceMode(false)
+              .show();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "showFiveStarsDialog Exception: " + e.getLocalizedMessage());
+    }
   }
 
   private void requestPermission(Activity dialogActivity, String permissionType,
                                  PermissionActivity.PermissionCallback callback) {
-    if (dialogActivity == null || dialogActivity.getClass().equals(PermissionActivity.class)) {
-      return;
+    try {
+      if (dialogActivity == null || dialogActivity.getClass().equals(PermissionActivity.class)) {
+        return;
+      }
+
+      Logger.d(LOG_TAG, "Requesting permission: " + permissionType);
+
+      PermissionActivity.registerAsCallback(permissionType, callback);
+
+      Intent intent = new Intent(dialogActivity, PermissionActivity.class);
+      intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+      intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+      intent.putExtra(PermissionActivity.INTENT_EXTRA_PERMISSION_TYPE, permissionType);
+      dialogActivity.startActivity(intent);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "requestPermission Exception: " + e.getLocalizedMessage());
     }
-
-    Logger.d(LOG_TAG, "Requesting permission: " + permissionType);
-
-    PermissionActivity.registerAsCallback(permissionType, callback);
-
-    Intent intent = new Intent(dialogActivity, PermissionActivity.class);
-    intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-    intent.putExtra(PermissionActivity.INTENT_EXTRA_PERMISSION_TYPE, permissionType);
-    dialogActivity.startActivity(intent);
   }
 
   public void requestLocationPermission() {
@@ -827,6 +843,7 @@ public class CleverPush {
    */
   @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
   public void requestNotificationPermission(Activity dialogActivity) {
+
     if (this.hasNotificationPermission()) {
       return;
     }
@@ -1059,8 +1076,8 @@ public class CleverPush {
           }
         }
       });
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "checkTags Exception: " + e.getLocalizedMessage());
     }
   }
 
@@ -1136,20 +1153,28 @@ public class CleverPush {
       @Override
       @SuppressWarnings({"MissingPermission"})
       public void onConnected(@Nullable Bundle bundle) {
-        Logger.d(LOG_TAG, "GoogleApiClient onConnected");
+        try {
+          Logger.d(LOG_TAG, "GoogleApiClient onConnected");
 
-        if (geofenceList.size() > 0) {
-          geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
-              .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void aVoid) {
-                }
-              })
-              .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                }
-              });
+          if (getCurrentActivity() != null) {
+            if (geofenceList.size() > 0) {
+              geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                      .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                        }
+                      })
+                      .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                        }
+                      });
+            }
+          } else {
+            Logger.e(LOG_TAG, "getConnectionCallbacks onConnected getCurrentActivity() is null");
+          }
+        } catch (Exception e) {
+          Logger.e(LOG_TAG, "getConnectionCallbacks onConnected Exception: " + e.getLocalizedMessage());
         }
       }
 
@@ -1165,14 +1190,18 @@ public class CleverPush {
   }
 
   public void trackPageView(String url, Map<String, ?> params) {
-    if (getCurrentActivity() == null) {
-      this.pendingPageViews.add(new PageView(url, params));
-      return;
+    try {
+      if (getCurrentActivity() == null) {
+        this.pendingPageViews.add(new PageView(url, params));
+        return;
+      }
+
+      this.currentPageUrl = url;
+
+      this.checkTags(url, params);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "trackPageView Exception: " + e.getLocalizedMessage());
     }
-
-    this.currentPageUrl = url;
-
-    this.checkTags(url, params);
   }
 
   public void autoTrackWebViewPages(String url) {
@@ -1304,90 +1333,94 @@ public class CleverPush {
 
   private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener,
                          Activity dialogActivity) {
-    if (isSubscriptionInProgress()) {
-      if (subscribedCallbackListener != null) {
-        subscribedCallbackListener.onFailure(new Exception("Subscription is already in progress"));
-      }
-      return;
-    }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission()) {
-      if (!this.ignoreDisabledNotificationPermission) {
-        this.pendingSubscribeCallbackListener = subscribedCallbackListener;
-      }
-
-      this.requestNotificationPermission(dialogActivity);
-
-      if (!this.ignoreDisabledNotificationPermission) {
+    try {
+      if (isSubscriptionInProgress()) {
+        if (subscribedCallbackListener != null) {
+          subscribedCallbackListener.onFailure(new Exception("Subscription is already in progress"));
+        }
         return;
       }
-    }
 
-    if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
-      String error =
-          "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
-      Logger.d(LOG_TAG, error);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission()) {
+        if (!this.ignoreDisabledNotificationPermission) {
+          this.pendingSubscribeCallbackListener = subscribedCallbackListener;
+        }
 
-      if (subscribedCallbackListener != null) {
-        subscribedCallbackListener.onFailure(new Exception(error));
+        this.requestNotificationPermission(dialogActivity);
+
+        if (!this.ignoreDisabledNotificationPermission) {
+          return;
+        }
       }
-      return;
-    }
 
-    this.subscriptionInProgress = true;
-    SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
-    editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
-    editor.apply();
+      if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
+        String error =
+                "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
+        Logger.d(LOG_TAG, error);
 
-    this.getChannelConfig(config -> {
-      SubscriptionManager subscriptionManager = this.getSubscriptionManager();
-      CleverPush self = this;
-      subscriptionManager.subscribe(config, new SubscribedCallbackListener() {
-        @Override
-        public void onSuccess(String newSubscriptionId) {
-          self.subscriptionInProgress = false;
-          Logger.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
+        if (subscribedCallbackListener != null) {
+          subscribedCallbackListener.onFailure(new Exception(error));
+        }
+        return;
+      }
 
-          self.fireSubscribedListener(newSubscriptionId);
-          self.setSubscriptionId(newSubscriptionId);
+      this.subscriptionInProgress = true;
+      SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
+      editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
+      editor.apply();
 
-          if (subscribedCallbackListener != null) {
-            subscribedCallbackListener.onSuccess(newSubscriptionId);
-          }
+      this.getChannelConfig(config -> {
+        SubscriptionManager subscriptionManager = this.getSubscriptionManager();
+        CleverPush self = this;
+        subscriptionManager.subscribe(config, new SubscribedCallbackListener() {
+          @Override
+          public void onSuccess(String newSubscriptionId) {
+            self.subscriptionInProgress = false;
+            Logger.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
 
-          if (!isSubscribeForTopicsDialog) {
-            if (newSubscriptionId != null && newSubscription) {
-              if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
-                JSONArray channelTopics = config.optJSONArray("channelTopics");
-                if (channelTopics != null && channelTopics.length() > 0) {
-                  Set<String> topics = self.getSubscriptionTopics();
-                  if (topics == null || topics.size() == 0) {
-                    self.setSubscriptionTopics(setUpSelectedTopicIds(channelTopics).toArray(new String[0]));
+            self.fireSubscribedListener(newSubscriptionId);
+            self.setSubscriptionId(newSubscriptionId);
+
+            if (subscribedCallbackListener != null) {
+              subscribedCallbackListener.onSuccess(newSubscriptionId);
+            }
+
+            if (!isSubscribeForTopicsDialog) {
+              if (newSubscriptionId != null && newSubscription) {
+                if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
+                  JSONArray channelTopics = config.optJSONArray("channelTopics");
+                  if (channelTopics != null && channelTopics.length() > 0) {
+                    Set<String> topics = self.getSubscriptionTopics();
+                    if (topics == null || topics.size() == 0) {
+                      self.setSubscriptionTopics(setUpSelectedTopicIds(channelTopics).toArray(new String[0]));
+                    }
+                    updatePendingTopicsDialog(true);
                   }
-                  updatePendingTopicsDialog(true);
                 }
-              }
 
-              if (!isConfirmAlertShown()) {
-                // If the confirm alert has not been tracked by the customer already,
-                // we will track it here retroperspectively to ensure opt-in rate statistics
-                // are correct
-                self.setConfirmAlertShown();
+                if (!isConfirmAlertShown()) {
+                  // If the confirm alert has not been tracked by the customer already,
+                  // we will track it here retroperspectively to ensure opt-in rate statistics
+                  // are correct
+                  self.setConfirmAlertShown();
+                }
               }
             }
           }
-        }
 
-        @Override
-        public void onFailure(Throwable exception) {
-          self.subscriptionInProgress = false;
+          @Override
+          public void onFailure(Throwable exception) {
+            self.subscriptionInProgress = false;
 
-          if (subscribedCallbackListener != null) {
-            subscribedCallbackListener.onFailure(exception);
+            if (subscribedCallbackListener != null) {
+              subscribedCallbackListener.onFailure(exception);
+            }
           }
-        }
+        });
       });
-    });
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "subscribe Exception: " + e.getLocalizedMessage());
+    }
   }
 
   public void updatePendingTopicsDialog(Boolean pendingTopicsDialog) {
@@ -2637,7 +2670,7 @@ public class CleverPush {
           }
         }
       } catch (Exception ex) {
-        Logger.d(LOG_TAG, ex.getMessage());
+        Logger.d(LOG_TAG, "showPendingTopicsDialog Exception: " + ex.getMessage());
       }
     });
   }
@@ -2669,80 +2702,84 @@ public class CleverPush {
 
   public void showTopicsDialog(Activity dialogActivity, TopicsDialogListener topicsDialogListener,
                                @StyleRes int themeResId, boolean isRecursiveCall) {
-    // Ensure it will only be shown once at a time
-    if (isShowingTopicsDialog()) {
-      return;
-    }
-
-    this.getChannelConfig(channelConfig -> {
-      if (channelConfig == null) {
-        if (topicsDialogListener != null) {
-          topicsDialogListener.callback(false);
-        }
-        showingTopicsDialog = false;
+    try {
+      // Ensure it will only be shown once at a time
+      if (isShowingTopicsDialog()) {
         return;
       }
 
-      JSONArray channelTopics = channelConfig.optJSONArray("channelTopics");
-      topicsDialogShowWhenNewAdded = channelConfig.optBoolean("topicsDialogShowWhenNewAdded");
-
-      if (channelTopics == null || channelTopics.length() == 0) {
-        Logger.w(LOG_TAG,
-            "CleverPush: showTopicsDialog: No topics found. Create some first in the CleverPush channel settings.");
-        return;
-      }
-
-      dialogActivity.runOnUiThread(() -> {
-        if (!instance.hasSubscriptionTopics()) {
-          instance.setSubscriptionTopics(setUpSelectedTopicIds(channelTopics).toArray(new String[0]));
-        }
-
-        Set<String> selectedTopics = new HashSet<>(instance.getSubscriptionTopics());
-        final boolean hasDeSelectAllInitial = this.hasDeSelectAll();
-        boolean showUnsubscribeCheckbox = channelConfig.optBoolean("topicsDialogShowUnsubscribe", false);
-
-        LinearLayout checkboxLayout = getTopicCheckboxLayout();
-        LinearLayout parentLayout = getTopicParentLayout();
-
-        ScrollView scrollView = new ScrollView(context);
-        LinearLayout.LayoutParams scrollViewLayoutParams =
-            new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        scrollViewLayoutParams.setMargins(45, 45, 45, 45);
-        scrollView.setLayoutParams(scrollViewLayoutParams);
-        scrollView.addView(parentLayout);
-
-        CheckBox unsubscribeCheckbox = null;
-        if (showUnsubscribeCheckbox) {
-          unsubscribeCheckbox = getTopicCheckbox(getNightModeFlags(), context.getText(R.string.deselect_all));
-        }
-
-        setTopicCheckboxList(parentLayout, channelTopics, unsubscribeCheckbox, hasDeSelectAll(), getNightModeFlags(),
-            selectedTopics);
-
-        checkboxLayout.addView(scrollView);
-
-        try {
-          AlertDialog.Builder alertBuilder =
-                  getTopicAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics,
-                          hasDeSelectAllInitial, checkboxLayout, unsubscribeCheckbox, selectedTopics);
-          AlertDialog topicDialogAlert = alertBuilder.create();
-          topicDialogAlert.setOnShowListener(dialog -> {
-            Logger.d(LOG_TAG, "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
-            showingTopicsDialog = true;
-          });
-          if (topicDialogAlert != null) {
-            topicDialogAlert.show();
+      this.getChannelConfig(channelConfig -> {
+        if (channelConfig == null) {
+          if (topicsDialogListener != null) {
+            topicsDialogListener.callback(false);
           }
-        } catch (Exception e) {
-          Logger.d(LOG_TAG, e.getLocalizedMessage());
-          if (!isRecursiveCall) {
-            showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme, true);
-          }
+          showingTopicsDialog = false;
+          return;
         }
+
+        JSONArray channelTopics = channelConfig.optJSONArray("channelTopics");
+        topicsDialogShowWhenNewAdded = channelConfig.optBoolean("topicsDialogShowWhenNewAdded");
+
+        if (channelTopics == null || channelTopics.length() == 0) {
+          Logger.w(LOG_TAG,
+                  "CleverPush: showTopicsDialog: No topics found. Create some first in the CleverPush channel settings.");
+          return;
+        }
+
+        dialogActivity.runOnUiThread(() -> {
+          if (!instance.hasSubscriptionTopics()) {
+            instance.setSubscriptionTopics(setUpSelectedTopicIds(channelTopics).toArray(new String[0]));
+          }
+
+          Set<String> selectedTopics = new HashSet<>(instance.getSubscriptionTopics());
+          final boolean hasDeSelectAllInitial = this.hasDeSelectAll();
+          boolean showUnsubscribeCheckbox = channelConfig.optBoolean("topicsDialogShowUnsubscribe", false);
+
+          LinearLayout checkboxLayout = getTopicCheckboxLayout();
+          LinearLayout parentLayout = getTopicParentLayout();
+
+          ScrollView scrollView = new ScrollView(context);
+          LinearLayout.LayoutParams scrollViewLayoutParams =
+                  new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                          LinearLayout.LayoutParams.WRAP_CONTENT);
+          scrollViewLayoutParams.setMargins(45, 45, 45, 45);
+          scrollView.setLayoutParams(scrollViewLayoutParams);
+          scrollView.addView(parentLayout);
+
+          CheckBox unsubscribeCheckbox = null;
+          if (showUnsubscribeCheckbox) {
+            unsubscribeCheckbox = getTopicCheckbox(getNightModeFlags(), context.getText(R.string.deselect_all));
+          }
+
+          setTopicCheckboxList(parentLayout, channelTopics, unsubscribeCheckbox, hasDeSelectAll(), getNightModeFlags(),
+                  selectedTopics);
+
+          checkboxLayout.addView(scrollView);
+
+          try {
+            AlertDialog.Builder alertBuilder =
+                    getTopicAlertBuilder(dialogActivity, topicsDialogListener, themeResId, channelConfig, channelTopics,
+                            hasDeSelectAllInitial, checkboxLayout, unsubscribeCheckbox, selectedTopics);
+            AlertDialog topicDialogAlert = alertBuilder.create();
+            topicDialogAlert.setOnShowListener(dialog -> {
+              Logger.d(LOG_TAG, "showTopicsDialog activity: " + dialogActivity.getClass().getCanonicalName());
+              showingTopicsDialog = true;
+            });
+            if (topicDialogAlert != null) {
+              topicDialogAlert.show();
+            }
+          } catch (Exception e) {
+            Logger.d(LOG_TAG, e.getLocalizedMessage());
+            if (!isRecursiveCall) {
+              showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme, true);
+            }
+          }
+        });
+
       });
-
-    });
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "showTopicsDialog Exception: " + e.getLocalizedMessage());
+    }
   }
 
   private int getNightModeFlags() {

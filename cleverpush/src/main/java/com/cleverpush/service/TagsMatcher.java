@@ -56,7 +56,7 @@ public class TagsMatcher {
           });
         });
       } catch (Exception ex) {
-        Logger.d(LOG_TAG, "Exception", ex);
+        Logger.e(LOG_TAG, "autoAssignTagMatches Exception: " + ex.getLocalizedMessage());
         callback.tagMatches(false);
       }
       return;

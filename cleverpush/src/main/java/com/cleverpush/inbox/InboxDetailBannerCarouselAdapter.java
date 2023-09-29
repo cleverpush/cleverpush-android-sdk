@@ -102,28 +102,32 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
 
   @Override
   public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-    LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
-    if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
-      composeHtmlBanner(body, data.getContent());
-    } else {
-      for (BannerBlock bannerBlock : data.getScreens().get(position).getBlocks()) {
-        activity.runOnUiThread(() -> {
-          switch (bannerBlock.getType()) {
-            case Text:
-              composeTextBlock(body, (BannerTextBlock) bannerBlock, position);
-              break;
-            case Image:
-              composeImageBlock(body, (BannerImageBlock) bannerBlock, position);
-              break;
-            case Button:
-              composeButtonBlock(body, (BannerButtonBlock) bannerBlock, position);
-              break;
-            case HTML:
-              composeHtmlBLock(body, (BannerHTMLBlock) bannerBlock);
-              break;
-          }
-        });
+    try {
+      LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
+      if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+        composeHtmlBanner(body, data.getContent());
+      } else {
+        for (BannerBlock bannerBlock : data.getScreens().get(position).getBlocks()) {
+          activity.runOnUiThread(() -> {
+            switch (bannerBlock.getType()) {
+              case Text:
+                composeTextBlock(body, (BannerTextBlock) bannerBlock, position);
+                break;
+              case Image:
+                composeImageBlock(body, (BannerImageBlock) bannerBlock, position);
+                break;
+              case Button:
+                composeButtonBlock(body, (BannerButtonBlock) bannerBlock, position);
+                break;
+              case HTML:
+                composeHtmlBLock(body, (BannerHTMLBlock) bannerBlock);
+                break;
+            }
+          });
+        }
       }
+    } catch (Exception e) {
+      Logger.e(TAG, "onBindViewHolder Exception: " + e.getLocalizedMessage());
     }
   }
 
@@ -283,9 +287,11 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
 
       } catch (Exception ignored) {
         Logger.d(TAG, ignored.getLocalizedMessage());
-        activity.runOnUiThread(() -> {
-          progressBar.setVisibility(View.GONE);
-        });
+        if (activity != null) {
+          activity.runOnUiThread(() -> {
+            progressBar.setVisibility(View.GONE);
+          });
+        }
       }
     }).start();
 
@@ -335,22 +341,26 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
    */
   @SuppressLint("SetJavaScriptEnabled")
   private void composeHtmlBanner(LinearLayout body, String htmlContent) {
-    activity.runOnUiThread(() -> {
-      String htmlWithJs = htmlContent.replace("</body>", "" + "<script type=\"text/javascript\">\n" + "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" + "var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" + "function onCloseClick() {\n" + "  try {\n" + "    CleverPush.closeBanner();\n" + "  } catch (error) {\n" + "    console.log('Caught error on closeBtn click', error);\n" + "  }\n" + "}\n" + "for (var i = 0; i < closeBtns.length; i++) {\n" + "  closeBtns[i].addEventListener('click', onCloseClick);\n" + "}\n" + "</script>\n" + "</body>");
-      ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
-      WebView webView = webLayout.findViewById(R.id.webView);
-      webView.getSettings().setJavaScriptEnabled(true);
-      webView.getSettings().setLoadsImagesAutomatically(true);
-      webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+    try {
+      activity.runOnUiThread(() -> {
+        String htmlWithJs = htmlContent.replace("</body>", "" + "<script type=\"text/javascript\">\n" + "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" + "var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" + "function onCloseClick() {\n" + "  try {\n" + "    CleverPush.closeBanner();\n" + "  } catch (error) {\n" + "    console.log('Caught error on closeBtn click', error);\n" + "  }\n" + "}\n" + "for (var i = 0; i < closeBtns.length; i++) {\n" + "  closeBtns[i].addEventListener('click', onCloseClick);\n" + "}\n" + "</script>\n" + "</body>");
+        ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
+        WebView webView = webLayout.findViewById(R.id.webView);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setLoadsImagesAutomatically(true);
+        webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
 
-      fixFullscreenHtmlBannerUI(body, webLayout, webView);
+        fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
-      String encodedHtml = null;
-      encodedHtml = Base64.encodeToString(htmlWithJs.getBytes(StandardCharsets.UTF_8), Base64.NO_PADDING);
-      webView.loadData(encodedHtml, "text/html; charset=utf-8", "base64");
+        String encodedHtml = null;
+        encodedHtml = Base64.encodeToString(htmlWithJs.getBytes(StandardCharsets.UTF_8), Base64.NO_PADDING);
+        webView.loadData(encodedHtml, "text/html; charset=utf-8", "base64");
 
-      body.addView(webLayout);
-    });
+        body.addView(webLayout);
+      });
+    } catch (Exception e) {
+      Logger.e(TAG, "composeHtmlBanner Exception: " + e.getLocalizedMessage());
+    }
   }
 
   public class ViewHolder extends RecyclerView.ViewHolder {
