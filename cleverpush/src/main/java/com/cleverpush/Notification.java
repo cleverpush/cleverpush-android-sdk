@@ -126,11 +126,24 @@ public class Notification implements Serializable {
   }
 
   public String getCreatedAt() {
+    if (createdAt == null || createdAt.isEmpty()) {
+      try {
+        SimpleDateFormat dateFormat;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+          dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+        } else {
+          dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        }
+        return dateFormat.format(new Date());
+      } catch (Exception ignored) {
+
+      }
+    }
     return createdAt;
   }
 
   public int getCreatedAtTime() {
-    if (this.getCreatedAt() != null) {
+    if (this.getCreatedAt() != null && !this.getCreatedAt().isEmpty()) {
       try {
         Date date = this.getCreatedAtDate();
         return (int) (date.getTime() / 1000);
@@ -142,13 +155,26 @@ public class Notification implements Serializable {
   }
 
   public Date getCreatedAtDate() {
-    if (this.getCreatedAt() != null) {
+    if (this.getCreatedAt() != null && !this.getCreatedAt().isEmpty()) {
       try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
           return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).parse(this.getCreatedAt());
         } else {
           return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(this.getCreatedAt());
         }
+      } catch (Exception ignored) {
+
+      }
+    } else {
+      try {
+        Date currentDate = new Date();
+        SimpleDateFormat dateFormat;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+          dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+        } else {
+          dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        }
+        return dateFormat.parse(dateFormat.format(currentDate));
       } catch (Exception ignored) {
 
       }
