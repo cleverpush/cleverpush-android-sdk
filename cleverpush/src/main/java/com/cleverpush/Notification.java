@@ -126,32 +126,31 @@ public class Notification implements Serializable {
   }
 
   public String getCreatedAt() {
+    if (createdAt == null || createdAt.isEmpty()) {
+      return getCurrentDate();
+    }
     return createdAt;
   }
 
   public int getCreatedAtTime() {
-    if (this.getCreatedAt() != null) {
-      try {
-        Date date = this.getCreatedAtDate();
-        return (int) (date.getTime() / 1000);
-      } catch (Exception ignored) {
+    try {
+      Date date = this.getCreatedAtDate();
+      return (int) (date.getTime() / 1000);
+    } catch (Exception ignored) {
 
-      }
     }
     return 0;
   }
 
   public Date getCreatedAtDate() {
-    if (this.getCreatedAt() != null) {
-      try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-          return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).parse(this.getCreatedAt());
-        } else {
-          return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(this.getCreatedAt());
-        }
-      } catch (Exception ignored) {
-
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US).parse(this.getCreatedAt());
+      } else {
+        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(this.getCreatedAt());
       }
+    } catch (Exception ignored) {
+
     }
     return null;
   }
@@ -219,13 +218,7 @@ public class Notification implements Serializable {
 
     try {
       if (this.createdAt == null) {
-        DateFormat date = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-          date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
-        } else {
-          date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-        }
-        setCreatedAt(date.format(new Date()));
+        setCreatedAt(getCurrentDate());
       }
     } catch (Exception ignored) {
 
@@ -266,5 +259,20 @@ public class Notification implements Serializable {
 
   public Boolean isAutoHandleDeepLink() {
     return autoHandleDeepLink != null && autoHandleDeepLink;
+  }
+
+  public String getCurrentDate() {
+    try {
+      SimpleDateFormat dateFormat;
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US);
+      } else {
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+      }
+      return dateFormat.format(new Date());
+    } catch (Exception ignored) {
+
+    }
+    return "";
   }
 }
