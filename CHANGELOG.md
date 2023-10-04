@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.15
+* Fixed a potential crash when `createdAt` is null in Notification
+
 ## 1.31.14
 * Fixed a potential crash when `currentActivity` is null in GeoFences
 
