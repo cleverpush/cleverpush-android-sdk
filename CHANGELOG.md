@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.16
+* Fixed a bug in `AppBanner`, image scale is not being applied.
+* Improved analytics for `AppBanner`: track unique-total click and unique-total delivered
+
 ## 1.31.15
 * Fixed a potential crash when `createdAt` is null in Notification
 
