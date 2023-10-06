@@ -22,7 +22,7 @@ import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -34,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
-import com.cleverpush.banner.AspectRatioImageView;
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
@@ -255,17 +254,22 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   }
 
   private void composeImageBlock(LinearLayout body, BannerImageBlock block, int position) {
-    @SuppressLint("InflateParams") FrameLayout imageLayout =
-            (FrameLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
-    AspectRatioImageView img = imageLayout.findViewById(R.id.imageView);
+    @SuppressLint("InflateParams") ConstraintLayout imageLayout =
+            (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
+    ImageView img = imageLayout.findViewById(R.id.imageView);
     ProgressBar progressBar = imageLayout.findViewById(R.id.progressBar);
     progressBar.setVisibility(View.VISIBLE);
-    int height = block.getImageHeight();
-    int width = block.getImageWidth();
 
-    float aspectRatio = (float) height / width;
+    ConstraintSet imgConstraints = new ConstraintSet();
+    imgConstraints.clone(imageLayout);
 
-    img.setAspectRatio(aspectRatio);
+    float widthPercentage = Math.min(100, Math.max(0, block.getScale())) / 100.0f;
+    imgConstraints.constrainPercentWidth(img.getId(), widthPercentage);
+    float aspectRatio = 1.0f;
+    float height = widthPercentage / aspectRatio * 100;
+    imgConstraints.constrainPercentHeight(img.getId(), height);
+
+    imgConstraints.applyTo(imageLayout);
 
     new Thread(() -> {
       try {
