@@ -79,11 +79,11 @@ public class AppBannerModule {
   private boolean trackingEnabled = true;
   HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
   public boolean isInitSessionCalled = false;
-  private Collection<String> pendingBannerAPI= new ArrayList<>();
+  private Collection<String> pendingBannerAPI = new ArrayList<>();
   private String pendingShowAppBannerId = null;
   private String pendingShowAppBannerNotificationId = null;
-  Set<String> bannerClickedList =  new HashSet<>();
-  Set<String> bannerDeliveredList =  new HashSet<>();
+  private Set<String> bannerClickedList = new HashSet<>();
+  private Set<String> bannerDeliveredList = new HashSet<>();
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -896,7 +896,7 @@ public class AppBannerModule {
 
       bannerPopup.setOpenedListener(action -> {
         String blockId, screenId;
-        blockId = action.getBlockID();
+        blockId = action.getBlockId();
         screenId = action.getScreen();
 
         boolean isElementAlreadyClicked = isBannerElementClicked(blockId);

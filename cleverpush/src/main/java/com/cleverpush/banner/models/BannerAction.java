@@ -22,7 +22,7 @@ public class BannerAction {
   private String attributeValue;
   private String screen;
   private Map<String, Object> customData;
-  private String blockID;
+  private String blockId;
 
   private BannerAction() {
   }
@@ -79,12 +79,12 @@ public class BannerAction {
     return customData;
   }
 
-  public String getBlockID() {
-    return blockID;
+  public String getBlockId() {
+    return blockId;
   }
 
-  public void setBlockID(String blockID) {
-    this.blockID = blockID;
+  public void setBlockId(String blockId) {
+    this.blockId = blockId;
   }
 
   public static BannerAction create(JSONObject json) throws JSONException {
