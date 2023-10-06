@@ -222,7 +222,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     button.setBackground(bg);
 
     if (block.getAction() != null) {
-      button.setOnClickListener(view -> this.onClickListener(block.getAction()));
+      BannerAction action = block.getAction();
+      action.setBlockId(block.getId());
+      button.setOnClickListener(view -> this.onClickListener(action));
     }
 
     button.setOnTouchListener((view, motionEvent) -> {
@@ -330,7 +332,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.addView(imageLayout);
 
     if (block.getAction() != null) {
-      img.setOnClickListener(view -> this.onClickListener(block.getAction()));
+      BannerAction action = block.getAction();
+      action.setBlockId(block.getId());
+      img.setOnClickListener(view -> this.onClickListener(action));
     }
   }
 

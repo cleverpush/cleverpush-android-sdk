@@ -22,6 +22,7 @@ public class BannerAction {
   private String attributeValue;
   private String screen;
   private Map<String, Object> customData;
+  private String blockId;
 
   private BannerAction() {
   }
@@ -76,6 +77,14 @@ public class BannerAction {
 
   public Map<String, Object> getCustomData() {
     return customData;
+  }
+
+  public String getBlockId() {
+    return blockId;
+  }
+
+  public void setBlockId(String blockId) {
+    this.blockId = blockId;
   }
 
   public static BannerAction create(JSONObject json) throws JSONException {

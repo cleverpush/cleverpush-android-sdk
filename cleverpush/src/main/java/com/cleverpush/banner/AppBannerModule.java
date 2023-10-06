@@ -79,9 +79,11 @@ public class AppBannerModule {
   private boolean trackingEnabled = true;
   HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
   public boolean isInitSessionCalled = false;
-  private Collection<String> pendingBannerAPI= new ArrayList<>();
+  private Collection<String> pendingBannerAPI = new ArrayList<>();
   private String pendingShowAppBannerId = null;
   private String pendingShowAppBannerNotificationId = null;
+  private Set<String> bannerClickedList = new HashSet<>();
+  private Set<String> bannerDeliveredList = new HashSet<>();
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -274,21 +276,27 @@ public class AppBannerModule {
   }
 
   void sendBannerEventWithSubscriptionId(String event, Banner banner, String subscriptionId,
-                                         String blockId, String screenId) {
+                                         String blockId, String screenId, boolean isElementAlreadyClicked, boolean isScreenAlreadyShown) {
     JSONObject jsonBody = getJsonObject();
     try {
       jsonBody.put("bannerId", banner.getId());
       if (banner.getTestId() != null) {
         jsonBody.put("testId", banner.getTestId());
       }
-      if (blockId != null) {
+      if (blockId != null && !blockId.isEmpty()) {
         jsonBody.put("blockId", blockId);
       }
-      if (screenId != null) {
+      if (screenId != null && !screenId.isEmpty()) {
         jsonBody.put("screenId", screenId);
       }
       jsonBody.put("channelId", channel);
       jsonBody.put("subscriptionId", subscriptionId);
+
+      if (event.equalsIgnoreCase("clicked")) {
+        jsonBody.put("isElementAlreadyClicked", isElementAlreadyClicked);
+      } else {
+        jsonBody.put("isScreenAlreadyShown", isScreenAlreadyShown);
+      }
     } catch (JSONException ex) {
       Logger.e(LOG_TAG, ex.getMessage(), ex);
     }
@@ -302,6 +310,10 @@ public class AppBannerModule {
   }
 
   void sendBannerEvent(String event, Banner banner, String blockId, String screenId) {
+    sendBannerEvent(event, banner, blockId, screenId, false, false);
+  }
+
+  void sendBannerEvent(String event, Banner banner, String blockId, String screenId, boolean isElementAlreadyClicked, boolean isScreenAlreadyShown) {
     Logger.d(TAG, "sendBannerEvent: " + event);
 
     if (!this.trackingEnabled) {
@@ -311,11 +323,11 @@ public class AppBannerModule {
 
     if (getCleverPushInstance().isSubscribed()) {
       getCleverPushInstance().getSubscriptionId(subscriptionId -> {
-        this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId, blockId, screenId);
+        this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId, blockId, screenId, isElementAlreadyClicked, isScreenAlreadyShown);
       });
     } else {
       Logger.d(LOG_TAG, "sendBannerEvent: There is no subscription for CleverPush SDK.");
-      this.sendBannerEventWithSubscriptionId(event, banner, null, blockId, screenId);
+      this.sendBannerEventWithSubscriptionId(event, banner, null, blockId, screenId, isElementAlreadyClicked, isScreenAlreadyShown);
     }
   }
 
@@ -883,7 +895,16 @@ public class AppBannerModule {
       }
 
       bannerPopup.setOpenedListener(action -> {
-        sendBannerEvent("clicked", bannerPopup.getData());
+        String blockId, screenId;
+        blockId = action.getBlockId();
+        screenId = action.getScreen();
+
+        boolean isElementAlreadyClicked = isBannerElementClicked(blockId);
+        if (!isElementAlreadyClicked) {
+          setIsBannerElementClicked(blockId);
+        }
+
+        sendBannerEvent("clicked", bannerPopup.getData(), blockId, screenId, isElementAlreadyClicked, false);
 
         if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
           getCleverPushInstance().getAppBannerOpenedListener().opened(action);
@@ -925,8 +946,6 @@ public class AppBannerModule {
       });
 
       PreferenceManagerUtils.updateSharedPreferenceByKey(CleverPush.context, CleverPushPreferences.APP_BANNER_SHOWING, true);
-
-      this.sendBannerEvent("delivered", bannerPopup.getData());
 
       if (getCleverPushInstance().getAppBannerShownListener() != null) {
         getCleverPushInstance().getAppBannerShownListener().shown(banner);
@@ -1101,5 +1120,38 @@ public class AppBannerModule {
 
   public void setCurrentVoucherCodePlaceholder(HashMap<String, String> currentVoucherCodePlaceholder) {
     this.currentVoucherCodePlaceholder = currentVoucherCodePlaceholder;
+  }
+
+  private boolean isBannerElementClicked(String id) {
+    if (bannerClickedList == null) {
+      return false;
+    }
+
+    return bannerClickedList.contains(id);
+  }
+
+  void setIsBannerElementClicked(String id) {
+    if (bannerClickedList != null) {
+      bannerClickedList.add(id);
+    }
+  }
+
+  public boolean isBannerScreenDelivered(String id) {
+    if (bannerDeliveredList == null) {
+      return false;
+    }
+
+    return bannerDeliveredList.contains(id);
+  }
+
+  void setIsBannerScreenDelivered(String id) {
+    if (bannerDeliveredList != null) {
+      bannerDeliveredList.add(id);
+    }
+  }
+
+  public void clearBannerTrackList() {
+    bannerClickedList.clear();
+    bannerDeliveredList.clear();
   }
 }

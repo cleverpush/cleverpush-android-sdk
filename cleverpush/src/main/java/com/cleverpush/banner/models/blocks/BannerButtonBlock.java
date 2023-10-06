@@ -22,6 +22,7 @@ public class BannerButtonBlock extends BannerBlock {
   private BannerAction action;
   private List<BannerBlockScreen> blockScreens;
   private String family = null;
+  private String id;
 
   private BannerButtonBlock() {
   }
@@ -70,10 +71,18 @@ public class BannerButtonBlock extends BannerBlock {
     return family;
   }
 
+  public String getId() {
+    return id;
+  }
+
   public static BannerButtonBlock createButtonBlock(JSONObject json) throws JSONException {
     BannerButtonBlock buttonBlock = new BannerButtonBlock();
 
     buttonBlock.type = BannerBlockType.Button;
+
+    if (json.has("id")) {
+      buttonBlock.id = json.optString("id");
+    }
 
     buttonBlock.text = json.optString("text");
 
