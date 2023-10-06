@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -35,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
-import com.cleverpush.banner.AspectRatioImageView;
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
