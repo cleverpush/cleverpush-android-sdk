@@ -73,6 +73,7 @@ public class AppBannerPopup {
   private boolean isNotchColorChange = false;
 
   private AppBannerOpenedListener openedListener;
+  int currentDisplayedPagePosition;
 
   private boolean isInitialized = false;
 
@@ -139,6 +140,7 @@ public class AppBannerPopup {
         FrameLayout.LayoutParams.MATCH_PARENT,
         true
     );
+    currentDisplayedPagePosition = -1;
 
     if (isHTMLBanner()) {
       setNotchColor(false);
@@ -193,6 +195,7 @@ public class AppBannerPopup {
       }
       this.toggleShowing(false);
       CleverPush.getInstance(CleverPush.context).getAppBannerModule().onAppBannerDismiss();
+      CleverPush.getInstance(CleverPush.context).getAppBannerModule().clearBannerTrackList();
     }, 200);
 
   }
@@ -424,6 +427,27 @@ public class AppBannerPopup {
       new TabLayoutMediator(tabLayout, viewPager2, (tab, position) -> {
       }).attach();
     }
+
+    viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+      @Override
+      public void onPageSelected(int position) {
+        super.onPageSelected(position);
+        if (currentDisplayedPagePosition != position) {
+          currentDisplayedPagePosition = position;
+
+          if (data.getEnableMultipleScreens() && data.getScreens().size() > position) {
+            String screenId = data.getScreens().get(position).getId();
+            boolean isScreenAlreadyShown = CleverPush.getInstance(CleverPush.context).getAppBannerModule().isBannerScreenDelivered(screenId);
+            if (!isScreenAlreadyShown) {
+              CleverPush.getInstance(CleverPush.context).getAppBannerModule().setIsBannerScreenDelivered(screenId);
+            }
+            CleverPush.getInstance(CleverPush.context).getAppBannerModule().sendBannerEvent("delivered", data, null, screenId, false, isScreenAlreadyShown);
+          } else {
+            CleverPush.getInstance(CleverPush.context).getAppBannerModule().sendBannerEvent("delivered", data);
+          }
+        }
+      }
+    });
 
     viewPager2.setPageTransformer((page, position) -> {
       if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {

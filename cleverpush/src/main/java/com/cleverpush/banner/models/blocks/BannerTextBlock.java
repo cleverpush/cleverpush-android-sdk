@@ -14,6 +14,7 @@ public final class BannerTextBlock extends BannerBlock {
   private int size;
   private Alignment alignment;
   private String family = null;
+  private String id;
   private List<BannerBlockScreen> blockScreens;
 
   private BannerTextBlock() {
@@ -43,6 +44,10 @@ public final class BannerTextBlock extends BannerBlock {
     return family;
   }
 
+  public String getId() {
+    return id;
+  }
+
   public List<BannerBlockScreen> getBlocks() {
     return blockScreens;
   }
@@ -70,6 +75,10 @@ public final class BannerTextBlock extends BannerBlock {
       for (int i = 0; i < screens.length(); ++i) {
         textBlock.blockScreens.add(BannerBlockScreen.create(screens.getJSONObject(i)));
       }
+    }
+
+    if (json.has("id")) {
+      textBlock.id = json.optString("id");
     }
 
     return textBlock;
