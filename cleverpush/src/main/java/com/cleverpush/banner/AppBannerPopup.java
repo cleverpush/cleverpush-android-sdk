@@ -68,6 +68,7 @@ public class AppBannerPopup {
   private View popupRoot;
   private ViewPager2 viewPager2;
   private LinearLayout body;
+  private ImageView bannerBackGroundImage;
   private int currentStatusBarColor;
   private int currentNavigationBarColor;
   private boolean isNotchColorChange = false;
@@ -132,7 +133,7 @@ public class AppBannerPopup {
     }
 
     body = popupRoot.findViewById(R.id.bannerBody);
-    ImageView bannerBackGroundImage = popupRoot.findViewById(R.id.bannerBackgroundImage);
+    bannerBackGroundImage = popupRoot.findViewById(R.id.bannerBackgroundImage);
 
     popup = new PopupWindow(
         popupRoot,
@@ -153,7 +154,7 @@ public class AppBannerPopup {
       bannerBackGroundImage.setVisibility(View.GONE);
     } else {
       bannerBackGroundImage.setVisibility(View.VISIBLE);
-      composeBackground(bannerBackGroundImage, body);
+      composeBackground(bannerBackGroundImage, body, data.getBackground());
     }
     
     popup.setAnimationStyle(R.style.banner_animation);
@@ -243,8 +244,8 @@ public class AppBannerPopup {
     return null;
   }
 
-  private void composeBackground(ImageView bannerBackground, LinearLayout body) {
-    BannerBackground bg = data.getBackground();
+  private void composeBackground(ImageView bannerBackground, LinearLayout body, BannerBackground background) {
+    BannerBackground bg = background;
     final ViewTreeObserver observer = body.getViewTreeObserver();
     observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
       @Override
@@ -266,9 +267,9 @@ public class AppBannerPopup {
         drawableBG.setCornerRadius(10 * getPXScale());
       }
 
-      if (data.isDarkModeEnabled(activity) && bg.getDarkColor() != null) {
+      if (data.isDarkModeEnabled(activity) && bg.getDarkColor() != null && !bg.getDarkColor().isEmpty()) {
         drawableBG.setColor(ColorUtils.parseColor(bg.getDarkColor()));
-      } else if (bg.getColor() != null) {
+      } else if (bg.getColor() != null && !bg.getColor().isEmpty()) {
         drawableBG.setColor(ColorUtils.parseColor(bg.getColor()));
       } else {
         drawableBG.setColor(Color.WHITE);
@@ -276,6 +277,7 @@ public class AppBannerPopup {
       if (isHTMLBanner()) {
         drawableBG.setColor(Color.TRANSPARENT);
       }
+      bannerBackground.setImageBitmap(null);
       bannerBackground.setBackground(drawableBG);
     } else if (bg.getImageUrl() != null) {
       new Thread(() -> {
@@ -432,6 +434,11 @@ public class AppBannerPopup {
       @Override
       public void onPageSelected(int position) {
         super.onPageSelected(position);
+
+        if (data.getEnableMultipleScreens()) {
+          composeBackground(bannerBackGroundImage, body, data.getScreens().get(position).getBackground());
+        }
+
         if (currentDisplayedPagePosition != position) {
           currentDisplayedPagePosition = position;
 

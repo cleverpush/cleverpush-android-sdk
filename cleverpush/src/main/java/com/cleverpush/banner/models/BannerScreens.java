@@ -1,5 +1,6 @@
 package com.cleverpush.banner.models;
 
+import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.banner.models.blocks.BannerBlock;
 
 import org.json.JSONArray;
@@ -12,6 +13,7 @@ import java.util.List;
 public class BannerScreens {
   private String id;
   private List<BannerBlock> blocks;
+  private BannerBackground background;
 
   public String getId() {
     return id;
@@ -19,6 +21,10 @@ public class BannerScreens {
 
   public List<BannerBlock> getBlocks() {
     return blocks;
+  }
+
+  public BannerBackground getBackground() {
+    return background;
   }
 
   public void setId(String id) {
@@ -38,6 +44,10 @@ public class BannerScreens {
     JSONArray blockArray = json.getJSONArray("blocks");
     for (int i = 0; i < blockArray.length(); ++i) {
       bannerScreens.blocks.add(BannerBlock.create(blockArray.getJSONObject(i)));
+    }
+
+    if (json.has("background")) {
+      bannerScreens.background = BannerBackground.create(json.optJSONObject("background"));
     }
 
     return bannerScreens;
