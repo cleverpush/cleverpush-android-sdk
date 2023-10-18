@@ -347,6 +347,8 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     webView.setVerticalScrollBarEnabled(false);
     webView.setHorizontalScrollBarEnabled(false);
     webView.loadUrl(block.getUrl());
+    webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
         pxToDp(Integer.parseInt(block.getHeight()))
