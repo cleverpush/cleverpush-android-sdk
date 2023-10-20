@@ -129,19 +129,11 @@ public class NotificationService {
   private NotificationCompat.Builder createBasicNotification(Context context, String notificationStr,
                                                              String subscriptionStr, Notification notification,
                                                              int requestCode) {
-    String title = notification.getTitle();
-    String text = notification.getText();
     String voucherCode = notification.getVoucherCode();
     String iconUrl = notification.getIconUrl();
     String mediaUrl = notification.getMediaUrl();
-
-    if (voucherCode != null && title.contains("{voucherCode}")) {
-      title = title.replace("{voucherCode}", voucherCode);
-    }
-
-    if (voucherCode != null && text.contains("{voucherCode}")) {
-      text = text.replace("{voucherCode}", voucherCode);
-    }
+    String title = voucherCodeString(notification.getTitle(), voucherCode);
+    String text = voucherCodeString(notification.getText(), voucherCode);
 
     Intent targetIntent = this.getTargetIntent(context);
     targetIntent.putExtra("notification", notificationStr);
@@ -257,15 +249,10 @@ public class NotificationService {
 
   private RemoteViews getTextWithImageViews(Context context, Notification notification, boolean hasMedia) {
     RemoteViews expandedView = new RemoteViews(context.getPackageName(), R.layout.notification_text_image_layout);
-    String title = notification.getTitle();
-    String text = notification.getText();
     String voucherCode = notification.getVoucherCode();
-    if (voucherCode != null && title.contains("{voucherCode}")) {
-      title = title.replace("{voucherCode}", voucherCode);
-    }
-    if (voucherCode != null && text.contains("{voucherCode}")) {
-      text = text.replace("{voucherCode}", voucherCode);
-    }
+    String title = voucherCodeString(notification.getTitle(), voucherCode);
+    String text = voucherCodeString(notification.getText(), voucherCode);
+
     expandedView.setTextViewText(R.id.notification_title, title);
     expandedView.setTextViewText(R.id.notification_text, text);
     if (hasMedia) {
@@ -490,15 +477,9 @@ public class NotificationService {
 
   private void setBasicNotificationData(Notification notification, RemoteViews contentView) {
     if (notification != null && contentView != null) {
-      String title = notification.getTitle();
-      String text = notification.getText();
       String voucherCode = notification.getVoucherCode();
-      if (voucherCode != null && title.contains("{voucherCode}")) {
-        title = title.replace("{voucherCode}", voucherCode);
-      }
-      if (voucherCode != null && text.contains("{voucherCode}")) {
-        text = text.replace("{voucherCode}", voucherCode);
-      }
+      String title = voucherCodeString(notification.getTitle(), voucherCode);
+      String text = voucherCodeString(notification.getText(), voucherCode);
 
       contentView.setTextViewText(R.id.notification_title, title);
       contentView.setTextViewText(R.id.notification_text, text);
@@ -589,5 +570,17 @@ public class NotificationService {
     }
 
     return bitmap;
+  }
+
+  public String voucherCodeString(String text, String voucherCode) {
+    try {
+      if (voucherCode != null && !voucherCode.isEmpty() && text.contains("{voucherCode}")) {
+        text = text.replace("{voucherCode}", voucherCode);
+      }
+      return text;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return text;
+    }
   }
 }
