@@ -939,8 +939,19 @@ public class AppBannerModule {
         }
 
         if (action.getType().equals("copyToClipboard")) {
+          String copyText = action.getName();
+          if (copyText.contains("{voucherCode}")) {
+            String voucherCode = "";
+            HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
+            if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(banner.getId())) {
+              voucherCode = currentVoucherCodePlaceholder.get(banner.getId());
+            }
+            if (voucherCode != null && !voucherCode.isEmpty()) {
+              copyText = copyText.replace("{voucherCode}", voucherCode);
+            }
+          }
           ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
-          ClipData clip = ClipData.newPlainText("Voucher Code", action.getName());
+          ClipData clip = ClipData.newPlainText("Voucher Code", copyText);
           clipboard.setPrimaryClip(clip);
         }
       });
