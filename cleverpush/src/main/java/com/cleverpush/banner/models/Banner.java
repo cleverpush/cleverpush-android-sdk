@@ -69,6 +69,7 @@ public class Banner {
   private String title;
   private String description;
   private String mediaUrl;
+  private List<BannerTargetEvent> eventFilters;
 
   private Banner() {
   }
@@ -281,6 +282,10 @@ public class Banner {
     return mediaUrl;
   }
 
+  public List<BannerTargetEvent> getEventFilters() {
+    return eventFilters;
+  }
+
   public static Banner create(JSONObject json) throws JSONException {
     Banner banner = new Banner();
 
@@ -297,6 +302,7 @@ public class Banner {
     banner.status = BannerStatus.fromString(json.optString("status"));
     banner.blocks = new LinkedList<>();
     banner.screens = new LinkedList<>();
+    banner.eventFilters = new LinkedList<>();
     banner.content = json.optString("content");
     banner.contentType = json.optString("contentType");
 
@@ -487,6 +493,13 @@ public class Banner {
     banner.title = json.optString("title");
     banner.description = json.optString("description");
     banner.mediaUrl = json.optString("mediaUrl");
+
+    if (json.has("eventFilters")) {
+      JSONArray eventFilters = json.getJSONArray("eventFilters");
+      for (int i = 0; i < eventFilters.length(); ++i) {
+        banner.eventFilters.add(BannerTargetEvent.create(eventFilters.getJSONObject(i)));
+      }
+    }
 
     return banner;
   }

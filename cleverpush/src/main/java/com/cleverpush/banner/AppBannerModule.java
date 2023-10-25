@@ -23,6 +23,7 @@ import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
 import com.cleverpush.banner.models.BannerStopAtType;
 import com.cleverpush.banner.models.BannerSubscribedType;
+import com.cleverpush.banner.models.BannerTargetEvent;
 import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionEventProperty;
@@ -30,6 +31,8 @@ import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.banner.models.VersionComparison;
+import com.cleverpush.database.DatabaseClient;
+import com.cleverpush.database.TableBannerTrackEvent;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
@@ -41,6 +44,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -725,6 +729,81 @@ public class AppBannerModule {
     return false;
   }
 
+  private boolean checkTargetEventRelationFilter(CheckFilterRelation relation, String compareValue,
+                                                 String attributeValue, String fromValue, String toValue, String bannerId, String event) {
+    try {
+      if (events.isEmpty() || event == null || event.isEmpty()) {
+        return false;
+      }
+
+      for (TriggeredEvent triggeredEvent : events) {
+        if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(event) || compareValue == null || compareValue.isEmpty()) {
+          return false;
+        }
+
+        List<TableBannerTrackEvent> bannerTrackEvents = DatabaseClient.getInstance(CleverPush.context)
+                .getAppDatabase()
+                .trackEventDao()
+                .getBannerTrackEvent(bannerId, event, compareValue, attributeValue, String.valueOf(relation), fromValue, toValue);
+
+        if (bannerTrackEvents.isEmpty()) {
+          return false;
+        }
+
+        boolean targetEvents = false;
+        for (TableBannerTrackEvent bannerTrackEvent : bannerTrackEvents) {
+          boolean conditionTrue = true;
+          int count = bannerTrackEvent.getCount();
+          String property = bannerTrackEvent.getProperty();
+          String createdDate = bannerTrackEvent.getCreated_date_time();
+          int pastDays = getDaysDifference(createdDate);
+
+          if (pastDays > Integer.parseInt(property)) {
+            conditionTrue = false;
+          }
+
+          switch (relation) {
+            case Equals:
+              if (count != Integer.parseInt(attributeValue)) {
+                conditionTrue = false;
+              }
+              break;
+            case NotEqual:
+              if (count == Integer.parseInt(attributeValue)) {
+                conditionTrue = false;
+              }
+              break;
+            case GreaterThan:
+              if (count <= Integer.parseInt(attributeValue)) {
+                conditionTrue = false;
+              }
+              break;
+            case LessThan:
+              if (count >= Integer.parseInt(attributeValue)) {
+                conditionTrue = false;
+              }
+              break;
+            case Between:
+              int from = Integer.parseInt(fromValue);
+              int to = Integer.parseInt(toValue);
+              conditionTrue = count >= from && count <= to;
+              break;
+          }
+
+          if (conditionTrue) {
+            targetEvents = true;
+            break;
+          }
+        }
+        return targetEvents;
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "checkTargetEventRelationFilter: " + e.getLocalizedMessage());
+    }
+
+    return false;
+  }
+
   private void createBanners(Collection<Banner> banners) {
     for (Banner banner : banners) {
       if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
@@ -732,8 +811,9 @@ public class AppBannerModule {
         continue;
       }
 
+      boolean triggers = false, isTriggerCondition = false, isTargetEvent = false;
       if (banner.getTriggerType() == BannerTriggerType.Conditions) {
-        boolean triggers = false;
+        isTriggerCondition = true;
         for (BannerTrigger trigger : banner.getTriggers()) {
           boolean triggerTrue = true;
           for (BannerTriggerCondition condition : trigger.getConditions()) {
@@ -764,9 +844,77 @@ public class AppBannerModule {
             break;
           }
         }
+      }
 
+      boolean targetEvents = false;
+      if (banner.getEventFilters() != null && banner.getEventFilters().size() > 0) {
+        isTargetEvent = true;
+        for (BannerTargetEvent bannerTargetEvent : banner.getEventFilters()) {
+          boolean targetConditionTrue;
+          String event = bannerTargetEvent.getEvent();
+          String property = bannerTargetEvent.getProperty();
+          String relationString = bannerTargetEvent.getRelation();
+          String value = bannerTargetEvent.getValue();
+          String fromValue = bannerTargetEvent.getFromValue();
+          String toValue = bannerTargetEvent.getToValue();
+
+          if (event == null || event.isEmpty() ||
+                  property == null || property.isEmpty() || Double.parseDouble(property) < 0 || Double.parseDouble(property) % 1 != 0 ||
+                  relationString == null || relationString.isEmpty() ||
+                  (relationString.equalsIgnoreCase("between") &&
+                          (fromValue == null || fromValue.isEmpty() || Double.parseDouble(fromValue) < 0 || Double.parseDouble(fromValue) % 1 != 0 ||
+                                  toValue == null || toValue.isEmpty() || Double.parseDouble(toValue) < 0 || Double.parseDouble(toValue) % 1 != 0)) ||
+                  (!relationString.equalsIgnoreCase("between") && (value == null || value.isEmpty() || Double.parseDouble(value) < 0 || Double.parseDouble(value) % 1 != 0))) {
+            Logger.d(TAG, "Skipping Target in banner " + banner.getId() + "because: Target values are not valid");
+            continue;
+          }
+
+          ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context).
+                  getAppDatabase()
+                  .trackEventDao()
+                  .getBannerTrackEvent(banner.getId(), event, property, value != null ? value : "", String.valueOf(CheckFilterRelation.fromString(relationString)), fromValue != null ? fromValue : "", toValue != null ? toValue : "");
+
+          if (bannerTrackEvents.size() == 0) {
+            TableBannerTrackEvent task = new TableBannerTrackEvent();
+
+            task.setBanner_id(banner.getId());
+            task.setTrack_event_id(event);
+            task.setRelation(String.valueOf(CheckFilterRelation.fromString(relationString)));
+            task.setProperty(property);
+            task.setValue(value != null ? value : "");
+            task.setFrom_value(fromValue != null ? fromValue : "");
+            task.setTo_value(toValue != null ? toValue : "");
+            task.setCount(0);
+            task.setCreated_date_time(getCleverPushInstance().getCurrentDateTime());
+            task.setUpdated_date_time(getCleverPushInstance().getCurrentDateTime());
+
+            DatabaseClient.getInstance(CleverPush.context).getAppDatabase()
+                    .trackEventDao()
+                    .insert(task);
+          }
+          targetConditionTrue = this.checkTargetEventRelationFilter(CheckFilterRelation.fromString(relationString), property,
+                  value != null ? value : "", fromValue != null ? fromValue : "", toValue != null ? toValue : "", banner.getId(), event);
+
+          if (targetConditionTrue) {
+            targetEvents = true;
+            break;
+          }
+        }
+      }
+
+      if (isTriggerCondition && isTargetEvent) {
+        if (!targetEvents && !triggers) {
+          Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Trigger and Target Event not satisfied " + sessions);
+          continue;
+        }
+      } else if (isTriggerCondition) {
         if (!triggers) {
           Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Trigger not satisfied " + sessions);
+          continue;
+        }
+      } else if (isTargetEvent) {
+        if (!targetEvents) {
+          Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Target Event not satisfied " + sessions);
           continue;
         }
       }
@@ -1154,4 +1302,36 @@ public class AppBannerModule {
     bannerClickedList.clear();
     bannerDeliveredList.clear();
   }
+
+  public int getDaysDifference(String createdDate) {
+    try {
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+      Date dateCreated = sdf.parse(createdDate);
+      String currentDateTimeString = getCleverPushInstance().getCurrentDateTime();
+      Date currentDate = sdf.parse(currentDateTimeString);
+
+      Calendar createdCalendar = Calendar.getInstance();
+      createdCalendar.setTime(dateCreated);
+
+      Calendar currentCalendar = Calendar.getInstance();
+      currentCalendar.setTime(currentDate);
+
+      createdCalendar.set(Calendar.HOUR_OF_DAY, 0);
+      createdCalendar.set(Calendar.MINUTE, 0);
+      createdCalendar.set(Calendar.SECOND, 0);
+
+      currentCalendar.set(Calendar.HOUR_OF_DAY, 0);
+      currentCalendar.set(Calendar.MINUTE, 0);
+      currentCalendar.set(Calendar.SECOND, 0);
+
+      long timeDifference = currentCalendar.getTimeInMillis() - createdCalendar.getTimeInMillis();
+      int daysDifference = (int) (timeDifference / (1000 * 60 * 60 * 24));
+
+      return daysDifference;
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "getDaysDifference: " + e.getLocalizedMessage());
+      return -1;
+    }
+  }
+
 }
