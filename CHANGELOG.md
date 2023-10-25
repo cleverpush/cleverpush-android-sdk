@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.17
+* Fixed a bug in `AppBanner`, add JavaScriptInterface in HTML block
+* Fixed a bug in `AppBanner`, background color not applying when enable multiple screen 
+
 ## 1.31.16
 * Fixed a bug in `AppBanner`, image scale is not being applied.
 * Improved analytics for `AppBanner`: track unique-total click and unique-total delivered
