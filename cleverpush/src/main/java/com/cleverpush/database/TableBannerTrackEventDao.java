@@ -19,20 +19,20 @@ public interface TableBannerTrackEventDao {
   @Update
   void update(TableBannerTrackEvent bannerTrackEvent);
 
-  @Query("SELECT * FROM TableBannerTrackEvent WHERE banner_id = :bannerId AND track_event_id = :trackEventId "
-          + "AND property = :property AND value = :value AND relation = :relation AND from_value = :fromValue AND to_value = :toValue")
+  @Query("SELECT * FROM TableBannerTrackEvent WHERE bannerId = :bannerId AND trackEventId = :trackEventId "
+          + "AND property = :property AND value = :value AND relation = :relation AND fromValue = :fromValue AND toValue = :toValue")
   List<TableBannerTrackEvent> getBannerTrackEvent(String bannerId, String trackEventId, String property, String value, String relation, String fromValue, String toValue);
 
-  @Query("SELECT * FROM TableBannerTrackEvent WHERE track_event_id = :trackEventId ")
+  @Query("SELECT * FROM TableBannerTrackEvent WHERE trackEventId = :trackEventId ")
   List<TableBannerTrackEvent> getBannerTrackEvent(String trackEventId);
 
-  @Query("UPDATE TableBannerTrackEvent SET count = count + 1, updated_date_time = :updatedDate WHERE track_event_id = :eventId")
+  @Query("UPDATE TableBannerTrackEvent SET count = count + 1, updatedDateTime = :updatedDate WHERE trackEventId = :eventId")
   void updateCount(String eventId, String updatedDate);
 
   @Query("DELETE FROM TableBannerTrackEvent")
   void deleteAll();
 
-  @Query("DELETE FROM TableBannerTrackEvent WHERE created_date_time <= strftime('%Y-%m-%d %H:%M:%S', datetime('now', '-' || :retentionDays || ' days'))")
+  @Query("DELETE FROM TableBannerTrackEvent WHERE createdDateTime <= strftime('%Y-%m-%d %H:%M:%S', datetime('now', '-' || :retentionDays || ' days'))")
   void deleteDataBasedOnRetentionDays(int retentionDays);
 
 }

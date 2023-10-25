@@ -755,7 +755,7 @@ public class AppBannerModule {
           boolean conditionTrue = true;
           int count = bannerTrackEvent.getCount();
           String property = bannerTrackEvent.getProperty();
-          String createdDate = bannerTrackEvent.getCreated_date_time();
+          String createdDate = bannerTrackEvent.getCreatedDateTime();
           int pastDays = getDaysDifference(createdDate);
 
           if (pastDays > Integer.parseInt(property)) {
@@ -877,16 +877,16 @@ public class AppBannerModule {
           if (bannerTrackEvents.size() == 0) {
             TableBannerTrackEvent task = new TableBannerTrackEvent();
 
-            task.setBanner_id(banner.getId());
-            task.setTrack_event_id(event);
+            task.setBannerId(banner.getId());
+            task.setTrackEventId(event);
             task.setRelation(String.valueOf(CheckFilterRelation.fromString(relationString)));
             task.setProperty(property);
             task.setValue(value != null ? value : "");
-            task.setFrom_value(fromValue != null ? fromValue : "");
-            task.setTo_value(toValue != null ? toValue : "");
+            task.setFromValue(fromValue != null ? fromValue : "");
+            task.setToValue(toValue != null ? toValue : "");
             task.setCount(0);
-            task.setCreated_date_time(getCleverPushInstance().getCurrentDateTime());
-            task.setUpdated_date_time(getCleverPushInstance().getCurrentDateTime());
+            task.setCreatedDateTime(getCleverPushInstance().getCurrentDateTime());
+            task.setUpdatedDateTime(getCleverPushInstance().getCurrentDateTime());
 
             DatabaseClient.getInstance(CleverPush.context).getAppDatabase()
                     .trackEventDao()
