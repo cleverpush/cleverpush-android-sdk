@@ -750,52 +750,48 @@ public class AppBannerModule {
           return false;
         }
 
-        boolean targetEvents = false;
         for (TableBannerTrackEvent bannerTrackEvent : bannerTrackEvents) {
-          boolean conditionTrue = true;
           int count = bannerTrackEvent.getCount();
           String property = bannerTrackEvent.getProperty();
           String createdDate = bannerTrackEvent.getCreatedDateTime();
           int pastDays = getDaysDifference(createdDate);
 
           if (pastDays > Integer.parseInt(property)) {
-            conditionTrue = false;
+            continue;
           }
 
           switch (relation) {
             case Equals:
               if (count != Integer.parseInt(attributeValue)) {
-                conditionTrue = false;
+                continue;
               }
               break;
             case NotEqual:
               if (count == Integer.parseInt(attributeValue)) {
-                conditionTrue = false;
+                continue;
               }
               break;
             case GreaterThan:
               if (count <= Integer.parseInt(attributeValue)) {
-                conditionTrue = false;
+                continue;
               }
               break;
             case LessThan:
               if (count >= Integer.parseInt(attributeValue)) {
-                conditionTrue = false;
+                continue;
               }
               break;
             case Between:
               int from = Integer.parseInt(fromValue);
               int to = Integer.parseInt(toValue);
-              conditionTrue = count >= from && count <= to;
+              if (count < from || count > to) {
+                continue;
+              }
               break;
           }
-
-          if (conditionTrue) {
-            targetEvents = true;
-            break;
-          }
+          return true;
         }
-        return targetEvents;
+        return false;
       }
     } catch (Exception e) {
       Logger.e(TAG, "checkTargetEventRelationFilter: " + e.getLocalizedMessage());
@@ -858,42 +854,47 @@ public class AppBannerModule {
           String fromValue = bannerTargetEvent.getFromValue();
           String toValue = bannerTargetEvent.getToValue();
 
-          if (event == null || event.isEmpty() ||
-                  property == null || property.isEmpty() || Double.parseDouble(property) < 0 || Double.parseDouble(property) % 1 != 0 ||
-                  relationString == null || relationString.isEmpty() ||
-                  (relationString.equalsIgnoreCase("between") &&
-                          (fromValue == null || fromValue.isEmpty() || Double.parseDouble(fromValue) < 0 || Double.parseDouble(fromValue) % 1 != 0 ||
-                                  toValue == null || toValue.isEmpty() || Double.parseDouble(toValue) < 0 || Double.parseDouble(toValue) % 1 != 0)) ||
-                  (!relationString.equalsIgnoreCase("between") && (value == null || value.isEmpty() || Double.parseDouble(value) < 0 || Double.parseDouble(value) % 1 != 0))) {
-            Logger.d(TAG, "Skipping Target in banner " + banner.getId() + "because: Target values are not valid");
+          if (!isValidTargetValues(event, property, relationString, value, fromValue, toValue, banner.getId())) {
             continue;
           }
 
+          String relation = String.valueOf(CheckFilterRelation.fromString(relationString));
           ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context).
                   getAppDatabase()
                   .trackEventDao()
-                  .getBannerTrackEvent(banner.getId(), event, property, value != null ? value : "", String.valueOf(CheckFilterRelation.fromString(relationString)), fromValue != null ? fromValue : "", toValue != null ? toValue : "");
+                  .getBannerTrackEvent(banner.getId()
+                          , event
+                          , property
+                          , value != null ? value : ""
+                          , relation
+                          , fromValue != null ? fromValue : ""
+                          , toValue != null ? toValue : "");
 
           if (bannerTrackEvents.size() == 0) {
-            TableBannerTrackEvent task = new TableBannerTrackEvent();
+            TableBannerTrackEvent bannerTrackEvent = new TableBannerTrackEvent();
 
-            task.setBannerId(banner.getId());
-            task.setTrackEventId(event);
-            task.setRelation(String.valueOf(CheckFilterRelation.fromString(relationString)));
-            task.setProperty(property);
-            task.setValue(value != null ? value : "");
-            task.setFromValue(fromValue != null ? fromValue : "");
-            task.setToValue(toValue != null ? toValue : "");
-            task.setCount(0);
-            task.setCreatedDateTime(getCleverPushInstance().getCurrentDateTime());
-            task.setUpdatedDateTime(getCleverPushInstance().getCurrentDateTime());
+            bannerTrackEvent.setBannerId(banner.getId());
+            bannerTrackEvent.setTrackEventId(event);
+            bannerTrackEvent.setRelation(relation);
+            bannerTrackEvent.setProperty(property);
+            bannerTrackEvent.setValue(value != null ? value : "");
+            bannerTrackEvent.setFromValue(fromValue != null ? fromValue : "");
+            bannerTrackEvent.setToValue(toValue != null ? toValue : "");
+            bannerTrackEvent.setCount(0);
+            bannerTrackEvent.setCreatedDateTime(getCleverPushInstance().getCurrentDateTime());
+            bannerTrackEvent.setUpdatedDateTime(getCleverPushInstance().getCurrentDateTime());
 
             DatabaseClient.getInstance(CleverPush.context).getAppDatabase()
                     .trackEventDao()
-                    .insert(task);
+                    .insert(bannerTrackEvent);
           }
-          targetConditionTrue = this.checkTargetEventRelationFilter(CheckFilterRelation.fromString(relationString), property,
-                  value != null ? value : "", fromValue != null ? fromValue : "", toValue != null ? toValue : "", banner.getId(), event);
+          targetConditionTrue = this.checkTargetEventRelationFilter(CheckFilterRelation.fromString(relationString)
+                  , property
+                  , value != null ? value : ""
+                  , fromValue != null ? fromValue : ""
+                  , toValue != null ? toValue : ""
+                  , banner.getId()
+                  , event);
 
           if (targetConditionTrue) {
             targetEvents = true;
@@ -932,6 +933,47 @@ public class AppBannerModule {
             () -> filteredBanners.add(new AppBannerPopup(getCurrentActivity(), banner)));
       }
     }
+  }
+
+  private boolean isValidTargetValues(String event, String property, String relationString, String value, String fromValue, String toValue, String bannerId) {
+    if (event == null || event.isEmpty()) {
+      Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: track event is not valid");
+      return false;
+    }
+    if (!isValidIntegerValue(property)) {
+      Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: property value is not valid");
+      return false;
+    }
+    if (relationString == null || relationString.isEmpty()) {
+      Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: relation is not valid");
+      return false;
+    }
+    if (relationString.equalsIgnoreCase("between")) {
+      if (!isValidIntegerValue(fromValue)) {
+        Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: from value is not valid");
+        return false;
+      }
+      if (!isValidIntegerValue(toValue)) {
+        Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: to value is not valid");
+        return false;
+      }
+    } else {
+      if (!isValidIntegerValue(value)) {
+        Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: value is not valid");
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * currently we only accept whole numbers here since the amount of how often an event can be triggered can not be a floating number or negative number
+   */
+  private boolean isValidIntegerValue(String value) {
+    if (value == null || value.isEmpty() || Double.parseDouble(value) < 0 || Double.parseDouble(value) % 1 != 0) {
+      return false;
+    }
+    return true;
   }
 
   void scheduleFilteredBanners() {

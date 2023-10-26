@@ -2523,7 +2523,7 @@ public class CleverPush {
           DatabaseClient.getInstance(CleverPush.context)
                   .getAppDatabase()
                   .trackEventDao()
-                  .updateCount(eventId, getCurrentDateTime());
+                  .increaseCount(eventId, getCurrentDateTime());
         }
 
         TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
@@ -3590,7 +3590,6 @@ public class CleverPush {
   public void deleteDataBasedOnRetentionDays() {
     try {
       int retentionDays = getLocalTrackEventRetentionDays();
-      Logger.e("retentionDays", "retentionDays: "+ retentionDays);
       DatabaseClient.getInstance(CleverPush.context)
               .getAppDatabase()
               .trackEventDao()

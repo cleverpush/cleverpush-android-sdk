@@ -27,7 +27,7 @@ public interface TableBannerTrackEventDao {
   List<TableBannerTrackEvent> getBannerTrackEvent(String trackEventId);
 
   @Query("UPDATE TableBannerTrackEvent SET count = count + 1, updatedDateTime = :updatedDate WHERE trackEventId = :eventId")
-  void updateCount(String eventId, String updatedDate);
+  void increaseCount(String eventId, String updatedDate);
 
   @Query("DELETE FROM TableBannerTrackEvent")
   void deleteAll();
