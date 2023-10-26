@@ -40,6 +40,7 @@ import com.cleverpush.R;
 import com.cleverpush.Subscription;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.NotificationCategorySetUp;
+import com.cleverpush.util.VoucherCodeUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -132,8 +133,8 @@ public class NotificationService {
     String voucherCode = notification.getVoucherCode();
     String iconUrl = notification.getIconUrl();
     String mediaUrl = notification.getMediaUrl();
-    String title = voucherCodeString(notification.getTitle(), voucherCode);
-    String text = voucherCodeString(notification.getText(), voucherCode);
+    String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
+    String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
     Intent targetIntent = this.getTargetIntent(context);
     targetIntent.putExtra("notification", notificationStr);
@@ -250,8 +251,8 @@ public class NotificationService {
   private RemoteViews getTextWithImageViews(Context context, Notification notification, boolean hasMedia) {
     RemoteViews expandedView = new RemoteViews(context.getPackageName(), R.layout.notification_text_image_layout);
     String voucherCode = notification.getVoucherCode();
-    String title = voucherCodeString(notification.getTitle(), voucherCode);
-    String text = voucherCodeString(notification.getText(), voucherCode);
+    String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
+    String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
     expandedView.setTextViewText(R.id.notification_title, title);
     expandedView.setTextViewText(R.id.notification_text, text);
@@ -478,8 +479,8 @@ public class NotificationService {
   private void setBasicNotificationData(Notification notification, RemoteViews contentView) {
     if (notification != null && contentView != null) {
       String voucherCode = notification.getVoucherCode();
-      String title = voucherCodeString(notification.getTitle(), voucherCode);
-      String text = voucherCodeString(notification.getText(), voucherCode);
+      String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
+      String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
       contentView.setTextViewText(R.id.notification_title, title);
       contentView.setTextViewText(R.id.notification_text, text);
@@ -570,17 +571,5 @@ public class NotificationService {
     }
 
     return bitmap;
-  }
-
-  public String voucherCodeString(String text, String voucherCode) {
-    try {
-      if (voucherCode != null && !voucherCode.isEmpty() && text.contains("{voucherCode}")) {
-        text = text.replace("{voucherCode}", voucherCode);
-      }
-      return text;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return text;
-    }
   }
 }

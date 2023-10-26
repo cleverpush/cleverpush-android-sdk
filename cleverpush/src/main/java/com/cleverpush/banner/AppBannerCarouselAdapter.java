@@ -45,6 +45,7 @@ import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -144,7 +145,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
   private void onClickListener(BannerAction action) {
     if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
-      String URL = voucherCodeString(action.getUrl(), voucherCode);
+      String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
       WebViewActivity.launch(activity, URL);
     } else if (action.getScreen() != null && !action.getScreen().isEmpty()) {
       for (int i = 0; i < screens.size(); i++) {
@@ -160,7 +161,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     }
 
     if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
-      String URL = voucherCodeString(action.getUrl(), voucherCode);
+      String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
       activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(URL)));
     }
 
@@ -173,7 +174,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private void composeButtonBlock(LinearLayout body, BannerButtonBlock block, int position) {
     @SuppressLint("InflateParams") Button button =
         (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
-    String text = voucherCodeString(block.getText(), voucherCode);
+    String text = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
     button.setText(text);
     button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
@@ -249,7 +250,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
-    String text = voucherCodeString(block.getText(), voucherCode);
+    String text = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
     textView.setText(text);
     textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
@@ -381,7 +382,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private void composeHtmlBanner(LinearLayout body, String htmlContent) {
     try {
       activity.runOnUiThread(() -> {
-        String html = voucherCodeString(htmlContent, voucherCode);
+        String html = VoucherCodeUtils.replaceVoucherCodeString(htmlContent, voucherCode);
         String htmlWithJs = html.replace("</body>", "" +
                 "<script type=\"text/javascript\">\n" +
                 "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n"
@@ -525,18 +526,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     @JavascriptInterface
     public void showTopicsDialog() {
       CleverPush.getInstance(CleverPush.context).showTopicsDialog();
-    }
-  }
-
-  public String voucherCodeString(String text, String voucherCode) {
-    try {
-      if (voucherCode != null && !voucherCode.isEmpty() && text.contains("{voucherCode}")) {
-        text = text.replace("{voucherCode}", voucherCode);
-      }
-      return text;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return text;
     }
   }
 }

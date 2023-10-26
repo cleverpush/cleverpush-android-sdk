@@ -36,6 +36,7 @@ import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.PreferenceManagerUtils;
 import com.cleverpush.util.VersionComparator;
+import com.cleverpush.util.VoucherCodeUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -946,9 +947,7 @@ public class AppBannerModule {
             if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(banner.getId())) {
               voucherCode = currentVoucherCodePlaceholder.get(banner.getId());
             }
-            if (voucherCode != null && !voucherCode.isEmpty()) {
-              copyText = copyText.replace("{voucherCode}", voucherCode);
-            }
+            copyText = VoucherCodeUtils.replaceVoucherCodeString(copyText, voucherCode);
           }
           ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
           ClipData clip = ClipData.newPlainText("Voucher Code", copyText);
