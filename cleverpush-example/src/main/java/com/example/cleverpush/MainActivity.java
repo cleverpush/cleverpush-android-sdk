@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         CleverPush.getInstance(this).enableDevelopmentMode();
-//        CleverPush.getInstance(this).setLocalTrackEventRetentionDays(3);
+//        CleverPush.getInstance(this).setLocalTrackEventRetentionDays(20);
         CleverPush.getInstance(this).subscribe();
         CleverPush.getInstance(this).init(
                 getString(R.string.channel_id),
