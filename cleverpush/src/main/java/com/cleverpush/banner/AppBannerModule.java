@@ -84,6 +84,7 @@ public class AppBannerModule {
   private String pendingShowAppBannerNotificationId = null;
   private Set<String> bannerClickedList = new HashSet<>();
   private Set<String> bannerDeliveredList = new HashSet<>();
+  public String currentEventId = null;
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -375,6 +376,7 @@ public class AppBannerModule {
 
   public void triggerEvent(TriggeredEvent event) {
     events.add(event);
+    currentEventId = event.getId();
     this.startup();
   }
 
@@ -801,7 +803,31 @@ public class AppBannerModule {
         continue;
       }
 
-      banner.setScheduled();
+      String bannerEventId = null;
+      if (banner.getTriggerType() == BannerTriggerType.Conditions) {
+        for (BannerTrigger trigger : banner.getTriggers()) {
+          for (BannerTriggerCondition condition : trigger.getConditions()) {
+            if (condition.getType() != null) {
+              if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
+                bannerEventId = condition.getEvent();
+                if (currentEventId != null && currentEventId.equalsIgnoreCase(bannerEventId)) {
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      boolean isEveryTrigger = banner.getFrequency() == BannerFrequency.Every_Trigger && banner.getTriggerType() == BannerTriggerType.Conditions;
+
+      if (currentEventId != null && bannerEventId != null && isEveryTrigger && !bannerEventId.equalsIgnoreCase(currentEventId)) {
+        continue;
+      }
+
+      if (!isEveryTrigger) {
+        banner.setScheduled();
+      }
 
       if (banner.getStartAt().before(now)) {
         if (banner.getDelaySeconds() > 0) {

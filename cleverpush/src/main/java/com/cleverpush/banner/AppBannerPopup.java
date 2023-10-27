@@ -259,47 +259,58 @@ public class AppBannerPopup {
       }
     });
 
-    if (bg.getImageUrl() == null || bg.getImageUrl().equalsIgnoreCase("null") || bg.getImageUrl()
-        .equalsIgnoreCase("")) {
+    if (bg != null) {
+      if (bg.getImageUrl() == null || bg.getImageUrl().equalsIgnoreCase("null") || bg.getImageUrl()
+              .equalsIgnoreCase("")) {
+        GradientDrawable drawableBG = new GradientDrawable();
+        drawableBG.setShape(GradientDrawable.RECTANGLE);
+        if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+          drawableBG.setCornerRadius(10 * getPXScale());
+        }
+
+        if (data.isDarkModeEnabled(activity) && bg.getDarkColor() != null && !bg.getDarkColor().isEmpty()) {
+          drawableBG.setColor(ColorUtils.parseColor(bg.getDarkColor()));
+        } else if (bg.getColor() != null && !bg.getColor().isEmpty()) {
+          drawableBG.setColor(ColorUtils.parseColor(bg.getColor()));
+        } else {
+          drawableBG.setColor(Color.WHITE);
+        }
+        if (isHTMLBanner()) {
+          drawableBG.setColor(Color.TRANSPARENT);
+        }
+        bannerBackground.setImageBitmap(null);
+        bannerBackground.setBackground(drawableBG);
+      } else if (bg.getImageUrl() != null) {
+        new Thread(() -> {
+          try {
+            String imageUrl;
+            if (data.isDarkModeEnabled(activity) && bg.getDarkImageUrl() != null) {
+              imageUrl = bg.getDarkImageUrl();
+            } else {
+              imageUrl = bg.getImageUrl();
+            }
+
+            InputStream in = new URL(imageUrl).openStream();
+            Bitmap bitmap = BitmapFactory.decodeStream(in);
+            if (bitmap != null) {
+              bannerBackground.setImageBitmap(bitmap);
+            }
+          } catch (Exception ignored) {
+            Logger.e(TAG, ignored.getLocalizedMessage());
+          }
+        }).start();
+      } else {
+        bannerBackground.setVisibility(View.GONE);
+      }
+    } else {
       GradientDrawable drawableBG = new GradientDrawable();
       drawableBG.setShape(GradientDrawable.RECTANGLE);
       if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
         drawableBG.setCornerRadius(10 * getPXScale());
       }
-
-      if (data.isDarkModeEnabled(activity) && bg.getDarkColor() != null && !bg.getDarkColor().isEmpty()) {
-        drawableBG.setColor(ColorUtils.parseColor(bg.getDarkColor()));
-      } else if (bg.getColor() != null && !bg.getColor().isEmpty()) {
-        drawableBG.setColor(ColorUtils.parseColor(bg.getColor()));
-      } else {
-        drawableBG.setColor(Color.WHITE);
-      }
-      if (isHTMLBanner()) {
-        drawableBG.setColor(Color.TRANSPARENT);
-      }
+      drawableBG.setColor(Color.WHITE);
       bannerBackground.setImageBitmap(null);
       bannerBackground.setBackground(drawableBG);
-    } else if (bg.getImageUrl() != null) {
-      new Thread(() -> {
-        try {
-          String imageUrl;
-          if (data.isDarkModeEnabled(activity) && bg.getDarkImageUrl() != null) {
-            imageUrl = bg.getDarkImageUrl();
-          } else {
-            imageUrl = bg.getImageUrl();
-          }
-
-          InputStream in = new URL(imageUrl).openStream();
-          Bitmap bitmap = BitmapFactory.decodeStream(in);
-          if (bitmap != null) {
-            bannerBackground.setImageBitmap(bitmap);
-          }
-        } catch (Exception ignored) {
-          Logger.e(TAG, ignored.getLocalizedMessage());
-        }
-      }).start();
-    } else {
-      bannerBackground.setVisibility(View.GONE);
     }
   }
 
