@@ -803,25 +803,8 @@ public class AppBannerModule {
         continue;
       }
 
-      String bannerEventId = null;
-      if (banner.getTriggerType() == BannerTriggerType.Conditions) {
-        for (BannerTrigger trigger : banner.getTriggers()) {
-          for (BannerTriggerCondition condition : trigger.getConditions()) {
-            if (condition.getType() != null) {
-              if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
-                bannerEventId = condition.getEvent();
-                if (currentEventId != null && currentEventId.equalsIgnoreCase(bannerEventId)) {
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-
       boolean isEveryTrigger = banner.getFrequency() == BannerFrequency.Every_Trigger && banner.getTriggerType() == BannerTriggerType.Conditions;
-
-      if (currentEventId != null && bannerEventId != null && isEveryTrigger && !bannerEventId.equalsIgnoreCase(currentEventId)) {
+      if (!checkIsEveryTrigger(banner, isEveryTrigger)) {
         continue;
       }
 
@@ -840,6 +823,34 @@ public class AppBannerModule {
         getHandler().postDelayed(() -> showBanner(bannerPopup), delay + (1000L * banner.getDelaySeconds()));
       }
     }
+  }
+
+  private boolean checkIsEveryTrigger(Banner banner, boolean isEveryTrigger) {
+    String bannerEventId = null;
+    boolean isConditionTrue = false;
+    if (isEveryTrigger && banner.getTriggerType() == BannerTriggerType.Conditions) {
+      for (BannerTrigger trigger : banner.getTriggers()) {
+        for (BannerTriggerCondition condition : trigger.getConditions()) {
+          if (condition.getType() != null) {
+            if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
+              bannerEventId = condition.getEvent();
+              if (currentEventId != null && currentEventId.equalsIgnoreCase(bannerEventId)) {
+                isConditionTrue = true;
+                break;
+              }
+            }
+          }
+        }
+        if (isConditionTrue) {
+          break;
+        }
+      }
+    }
+
+    if (isEveryTrigger && currentEventId != null && bannerEventId != null && !bannerEventId.equalsIgnoreCase(currentEventId)) {
+      return false;
+    }
+    return true;
   }
 
   public void showBanner(String bannerId, String notificationId) {
