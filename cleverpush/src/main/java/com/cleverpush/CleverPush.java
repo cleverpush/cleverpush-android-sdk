@@ -2293,7 +2293,6 @@ public class CleverPush {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
         ArrayList<String> arrayList = new ArrayList<>();
@@ -2305,6 +2304,7 @@ public class CleverPush {
         } catch (Exception ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
         }
+        arrayList.remove(value);
 
         String[] arrayString = arrayList.toArray(new String[0]);
         if (arrayString == null) {
