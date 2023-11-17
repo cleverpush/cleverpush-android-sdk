@@ -1,5 +1,6 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.IABTCF_VendorConsents;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.Manifest;
@@ -3642,8 +3643,8 @@ public class CleverPush {
 
     SharedPreferences.OnSharedPreferenceChangeListener mListener;
     mListener = (preferences, key) -> {
-      if (key.equals("IABTCF_VendorConsents")) {
-        String vendorConsents = mPreferences.getString("IABTCF_VendorConsents", "0");
+      if (key.equals(IABTCF_VendorConsents)) {
+        String vendorConsents = mPreferences.getString(IABTCF_VendorConsents, "0");
         if (vendorConsents.length() > 1139 - 1) {
           char consentStatus = vendorConsents.charAt(1139 - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
           boolean hasConsent = (consentStatus == '1');
