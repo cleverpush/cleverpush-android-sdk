@@ -1328,7 +1328,7 @@ public class CleverPush {
   }
 
   private void subscribe(boolean newSubscription) {
-    if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
       this.waitForSubscribeConsent(() -> {
         subscribe(newSubscription, null, getCurrentActivity());
       });
@@ -1338,7 +1338,7 @@ public class CleverPush {
   }
 
   public void subscribe(SubscribedCallbackListener subscribedCallbackListener) {
-    if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
       this.waitForSubscribeConsent(() -> {
         subscribe(false, subscribedCallbackListener, getCurrentActivity());
       });
@@ -1348,7 +1348,7 @@ public class CleverPush {
   }
 
   public void subscribe(SubscribedCallbackListener subscribedCallbackListener, Activity dialogActivity) {
-    if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
       this.waitForSubscribeConsent(() -> {
         subscribe(false, subscribedCallbackListener, dialogActivity);
       });
@@ -1358,7 +1358,7 @@ public class CleverPush {
   }
 
   private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener) {
-    if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
       this.waitForSubscribeConsent(() -> {
         subscribe(newSubscription, subscribedCallbackListener, getCurrentActivity());
       });
