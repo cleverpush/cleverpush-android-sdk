@@ -1,5 +1,6 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.IABTCF_VendorConsent_POSITION;
 import static com.cleverpush.Constants.IABTCF_VendorConsents;
 import static com.cleverpush.Constants.LOG_TAG;
 
@@ -3645,8 +3646,8 @@ public class CleverPush {
     mListener = (preferences, key) -> {
       if (key.equals(IABTCF_VendorConsents)) {
         String vendorConsents = mPreferences.getString(IABTCF_VendorConsents, "0");
-        if (vendorConsents.length() > 1139 - 1) {
-          char consentStatus = vendorConsents.charAt(1139 - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
+        if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
+          char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
           boolean hasConsent = (consentStatus == '1');
 
           if (hasConsent) {
@@ -3660,7 +3661,7 @@ public class CleverPush {
             Logger.d(LOG_TAG, "Vendor does not have consent");
           }
         } else {
-          Logger.d(LOG_TAG, "Vendor consents string is too short to get character at index 1139.");
+          Logger.d(LOG_TAG, "Vendor consents string is too short to get character at index " + IABTCF_VendorConsent_POSITION + ".");
         }
       }
     };
