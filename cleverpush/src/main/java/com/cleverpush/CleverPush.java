@@ -3636,7 +3636,7 @@ public class CleverPush {
    * This method used for TCF2 CMP
    * If get consent 1 in IABTCF_VendorConsents at position 1139 then perform subscribe or tracking according to IabTcfMode
    */
-  public void setTCF() {
+  private void setTCF() {
     if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
       setTrackingConsentRequired(true);
     }
