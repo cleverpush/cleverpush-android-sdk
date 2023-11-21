@@ -186,7 +186,7 @@ public class AppBannerModule {
       bannersPath += "&notificationId=" + notificationId;
     }
     Logger.d(TAG, "Loading banners: " + bannersPath);
-    CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
+    CleverPushHttpClient.getWithRetry(bannersPath, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
         setLoading(false);

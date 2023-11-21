@@ -413,7 +413,7 @@ public class InboxDetailActivity extends AppCompatActivity {
     if (notificationId != null && !notificationId.isEmpty()) {
       bannersPath += "&notificationId=" + notificationId;
     }
-    CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
+    CleverPushHttpClient.getWithRetry(bannersPath, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
         setLoading(false);
