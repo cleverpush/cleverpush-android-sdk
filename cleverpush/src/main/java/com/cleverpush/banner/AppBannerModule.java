@@ -799,18 +799,18 @@ public class AppBannerModule {
     for (AppBannerPopup bannerPopup : getFilteredBanners()) {
       Banner banner = bannerPopup.getData();
 
-      if (banner.isScheduled()) {
+      boolean isEveryTrigger = banner.getFrequency() == BannerFrequency.Every_Trigger && banner.getTriggerType() == BannerTriggerType.Conditions;
+
+      // banner frequency is every trigger then we allow banner display multiple times
+      if (banner.isScheduled() && !isEveryTrigger) {
         continue;
       }
 
-      boolean isEveryTrigger = banner.getFrequency() == BannerFrequency.Every_Trigger && banner.getTriggerType() == BannerTriggerType.Conditions;
       if (!checkIsEveryTrigger(banner, isEveryTrigger)) {
         continue;
       }
 
-      if (!isEveryTrigger) {
-        banner.setScheduled();
-      }
+      banner.setScheduled();
 
       if (banner.getStartAt().before(now)) {
         if (banner.getDelaySeconds() > 0) {
@@ -827,27 +827,24 @@ public class AppBannerModule {
 
   private boolean checkIsEveryTrigger(Banner banner, boolean isEveryTrigger) {
     String bannerEventId = null;
-    boolean isConditionTrue = false;
-    if (isEveryTrigger && banner.getTriggerType() == BannerTriggerType.Conditions) {
-      for (BannerTrigger trigger : banner.getTriggers()) {
-        for (BannerTriggerCondition condition : trigger.getConditions()) {
-          if (condition.getType() != null) {
-            if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
-              bannerEventId = condition.getEvent();
-              if (currentEventId != null && currentEventId.equalsIgnoreCase(bannerEventId)) {
-                isConditionTrue = true;
-                break;
-              }
-            }
-          }
+    if (!isEveryTrigger || currentEventId == null || banner.getTriggerType() != BannerTriggerType.Conditions) {
+      return true;
+    }
+    for (BannerTrigger trigger : banner.getTriggers()) {
+      for (BannerTriggerCondition condition : trigger.getConditions()) {
+        if (condition.getType() == null
+                || !condition.getType().equals(BannerTriggerConditionType.Event)
+                || condition.getEvent() == null) {
+          continue;
         }
-        if (isConditionTrue) {
-          break;
+        bannerEventId = condition.getEvent();
+        if (currentEventId.equalsIgnoreCase(bannerEventId)) {
+          return true;
         }
       }
     }
 
-    if (isEveryTrigger && currentEventId != null && bannerEventId != null && !bannerEventId.equalsIgnoreCase(currentEventId)) {
+    if (bannerEventId != null && !bannerEventId.equalsIgnoreCase(currentEventId)) {
       return false;
     }
     return true;
