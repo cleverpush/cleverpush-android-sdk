@@ -1328,47 +1328,34 @@ public class CleverPush {
   }
 
   private void subscribe(boolean newSubscription) {
-    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-      this.waitForSubscribeConsent(() -> {
-        subscribe(newSubscription, null, getCurrentActivity());
-      });
-    } else {
-      subscribe(newSubscription, null, getCurrentActivity());
-    }
+    subscribe(newSubscription, null, getCurrentActivity());
   }
 
   public void subscribe(SubscribedCallbackListener subscribedCallbackListener) {
-    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-      this.waitForSubscribeConsent(() -> {
-        subscribe(false, subscribedCallbackListener, getCurrentActivity());
-      });
-    } else {
-      subscribe(false, subscribedCallbackListener, getCurrentActivity());
-    }
+    subscribe(false, subscribedCallbackListener, getCurrentActivity());
   }
 
   public void subscribe(SubscribedCallbackListener subscribedCallbackListener, Activity dialogActivity) {
-    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-      this.waitForSubscribeConsent(() -> {
-        subscribe(false, subscribedCallbackListener, dialogActivity);
-      });
-    } else {
-      subscribe(false, subscribedCallbackListener, dialogActivity);
-    }
+    subscribe(false, subscribedCallbackListener, dialogActivity);
   }
 
   private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener) {
-    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-      this.waitForSubscribeConsent(() -> {
-        subscribe(newSubscription, subscribedCallbackListener, getCurrentActivity());
-      });
-    } else {
-      subscribe(newSubscription, subscribedCallbackListener, getCurrentActivity());
-    }
+    subscribe(newSubscription, subscribedCallbackListener, getCurrentActivity());
   }
 
   private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener,
                          Activity dialogActivity) {
+    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+      this.waitForSubscribeConsent(() -> {
+        handleSubscribe(newSubscription, subscribedCallbackListener, dialogActivity);
+      });
+    } else {
+      handleSubscribe(newSubscription, subscribedCallbackListener, dialogActivity);
+    }
+  }
+
+  private void handleSubscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener,
+                               Activity dialogActivity) {
     try {
       if (isSubscriptionInProgress()) {
         if (subscribedCallbackListener != null) {
