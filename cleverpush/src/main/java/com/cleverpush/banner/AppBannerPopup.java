@@ -267,6 +267,9 @@ public class AppBannerPopup {
       if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
         drawableBG.setCornerRadius(10 * getPXScale());
       }
+      if (isHTMLBanner()) {
+        drawableBG.setColor(Color.TRANSPARENT);
+      }
       drawableBG.setColor(Color.WHITE);
       bannerBackground.setImageBitmap(null);
       bannerBackground.setBackground(drawableBG);
