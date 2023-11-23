@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.19
+* Fixed a potential crash when subscribe or notification object is null in HMS push `onMessageReceived`
+* Optimized HTTP calls with retry functionality
+
 ## 1.31.18
 * Fixed `pullSubscriptionAttributeValue` behaviour
 * Optimized app banner voucher codes
