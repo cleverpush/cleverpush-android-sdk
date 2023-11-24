@@ -85,6 +85,7 @@ public class AppBannerModule {
   private String pendingShowAppBannerNotificationId = null;
   private Set<String> bannerClickedList = new HashSet<>();
   private Set<String> bannerDeliveredList = new HashSet<>();
+  public String currentEventId = null;
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -376,6 +377,7 @@ public class AppBannerModule {
 
   public void triggerEvent(TriggeredEvent event) {
     events.add(event);
+    currentEventId = event.getId();
     this.startup();
   }
 
@@ -798,7 +800,14 @@ public class AppBannerModule {
     for (AppBannerPopup bannerPopup : getFilteredBanners()) {
       Banner banner = bannerPopup.getData();
 
-      if (banner.isScheduled()) {
+      boolean isEveryTrigger = banner.getFrequency() == BannerFrequency.Every_Trigger && banner.getTriggerType() == BannerTriggerType.Conditions;
+
+      // banner frequency is every trigger then we allow banner display multiple times
+      if (banner.isScheduled() && !isEveryTrigger) {
+        continue;
+      }
+
+      if (!checkIsEveryTrigger(banner, isEveryTrigger)) {
         continue;
       }
 
@@ -815,6 +824,31 @@ public class AppBannerModule {
         getHandler().postDelayed(() -> showBanner(bannerPopup), delay + (1000L * banner.getDelaySeconds()));
       }
     }
+  }
+
+  private boolean checkIsEveryTrigger(Banner banner, boolean isEveryTrigger) {
+    String bannerEventId = null;
+    if (!isEveryTrigger || currentEventId == null || banner.getTriggerType() != BannerTriggerType.Conditions) {
+      return true;
+    }
+    for (BannerTrigger trigger : banner.getTriggers()) {
+      for (BannerTriggerCondition condition : trigger.getConditions()) {
+        if (condition.getType() == null
+                || !condition.getType().equals(BannerTriggerConditionType.Event)
+                || condition.getEvent() == null) {
+          continue;
+        }
+        bannerEventId = condition.getEvent();
+        if (currentEventId.equalsIgnoreCase(bannerEventId)) {
+          return true;
+        }
+      }
+    }
+
+    if (bannerEventId != null && !bannerEventId.equalsIgnoreCase(currentEventId)) {
+      return false;
+    }
+    return true;
   }
 
   public void showBanner(String bannerId, String notificationId) {
