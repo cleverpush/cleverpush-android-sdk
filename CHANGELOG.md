@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.32.1 (26.11.2023)
+* Fixed version in gradle.properties
+
 ## 1.32.0 (26.11.2023)
 * IAB TCF compatibility added
 * Support `every time on trigger` app banner trigger type
