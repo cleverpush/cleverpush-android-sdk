@@ -217,6 +217,7 @@ public class CleverPush {
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
+  private boolean autoRequestNotificationPermission = true;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -647,7 +648,7 @@ public class CleverPush {
         }
       });
     } else if (subscriptionId != null && !this.areNotificationsEnabled()
-        && !this.ignoreDisabledNotificationPermission) {
+        && !this.ignoreDisabledNotificationPermission && isAutoRequestNotificationPermission()) {
       Logger.d(LOG_TAG, "notification authorization revoked, unsubscribing");
       this.unsubscribe(new UnsubscribedListener() {
         @Override
@@ -1364,7 +1365,7 @@ public class CleverPush {
         return;
       }
 
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission()) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission() && isAutoRequestNotificationPermission()) {
         if (!this.ignoreDisabledNotificationPermission) {
           this.pendingSubscribeCallbackListener = subscribedCallbackListener;
         }
@@ -1376,7 +1377,7 @@ public class CleverPush {
         }
       }
 
-      if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
+      if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission && isAutoRequestNotificationPermission()) {
         String error =
                 "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
         Logger.d(LOG_TAG, error);
@@ -3666,5 +3667,13 @@ public class CleverPush {
 
   public IabTcfMode getIabTcfMode() {
     return iabTcfMode;
+  }
+
+  private boolean isAutoRequestNotificationPermission() {
+    return autoRequestNotificationPermission;
+  }
+
+  public void setAutoRequestNotificationPermission(boolean autoRequestNotificationPermission) {
+    this.autoRequestNotificationPermission = autoRequestNotificationPermission;
   }
 }
