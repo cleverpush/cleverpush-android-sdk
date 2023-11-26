@@ -904,7 +904,7 @@ public class AppBannerModule {
       }
 
       if (isTriggerCondition && isTargetEvent) {
-        if (!targetEvents && !triggers) {
+        if (!targetEvents || !triggers) {
           Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Trigger and Target Event not satisfied " + sessions);
           continue;
         }
