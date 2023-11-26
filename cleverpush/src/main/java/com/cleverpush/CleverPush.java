@@ -1,5 +1,7 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.IABTCF_VendorConsent_POSITION;
+import static com.cleverpush.Constants.IABTCF_VendorConsents;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.Manifest;
@@ -55,6 +57,7 @@ import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
 import com.cleverpush.listener.NotificationsCallbackListener;
 import com.cleverpush.listener.SessionListener;
+import com.cleverpush.listener.SubscribeConsentListener;
 import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.listener.SubscribedListener;
 import com.cleverpush.listener.TopicsChangedListener;
@@ -100,7 +103,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -173,6 +175,11 @@ public class CleverPush {
   private boolean hasTrackingConsentCalled = false;
   private Collection<TrackingConsentListener> trackingConsentListeners = new ArrayList<>();
 
+  private boolean subscribeConsentRequired = false;
+  private boolean hasSubscribeConsent = false;
+  private boolean hasSubscribeConsentCalled = false;
+  private Collection<SubscribeConsentListener> subscribeConsentListeners = new ArrayList<>();
+
   private boolean incrementBadge = false;
   private boolean autoClearBadge = false;
   public boolean isShowDraft = false;
@@ -209,6 +216,7 @@ public class CleverPush {
   private long lastClickedNotificationTime;
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
+  private IabTcfMode iabTcfMode = null;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -446,6 +454,10 @@ public class CleverPush {
     // try to get cached Channel ID from Shared Preferences
     if (this.channelId == null) {
       this.channelId = getChannelId(getContext());
+    }
+
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
+      setTCF();
     }
 
     if (this.channelId != null) {
@@ -1333,6 +1345,17 @@ public class CleverPush {
 
   private void subscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener,
                          Activity dialogActivity) {
+    if (getIabTcfMode() != null && getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+      this.waitForSubscribeConsent(() -> {
+        handleSubscribe(newSubscription, subscribedCallbackListener, dialogActivity);
+      });
+    } else {
+      handleSubscribe(newSubscription, subscribedCallbackListener, dialogActivity);
+    }
+  }
+
+  private void handleSubscribe(boolean newSubscription, SubscribedCallbackListener subscribedCallbackListener,
+                               Activity dialogActivity) {
     try {
       if (isSubscriptionInProgress()) {
         if (subscribedCallbackListener != null) {
@@ -1507,6 +1530,34 @@ public class CleverPush {
       }
     }
     trackingConsentListeners = new ArrayList<>();
+  }
+
+  public void setSubscribeConsentRequired(Boolean required) {
+    subscribeConsentRequired = required;
+  }
+
+  public void waitForSubscribeConsent(SubscribeConsentListener listener) {
+    if (listener != null) {
+      if (isSubscribeConsentRequired() && !hasSubscribeConsentCalled()) {
+        if (!hasSubscribeConsentCalled()) {
+          getSubscribeConsentListeners().add(listener);
+        }
+      } else {
+        listener.ready();
+      }
+    }
+  }
+
+  public void setSubscribeConsent(Boolean consent) {
+    hasSubscribeConsentCalled = true;
+    hasSubscribeConsent = consent;
+
+    if (hasSubscribeConsent) {
+      for (SubscribeConsentListener listener : subscribeConsentListeners) {
+        listener.ready();
+      }
+    }
+    subscribeConsentListeners = new ArrayList<>();
   }
 
   /**
@@ -3423,6 +3474,22 @@ public class CleverPush {
     return trackingConsentListeners;
   }
 
+  public boolean isSubscribeConsentRequired() {
+    return subscribeConsentRequired;
+  }
+
+  public boolean isHasSubscribeConsent() {
+    return hasSubscribeConsent;
+  }
+
+  public boolean hasSubscribeConsentCalled() {
+    return hasSubscribeConsentCalled;
+  }
+
+  public Collection<SubscribeConsentListener> getSubscribeConsentListeners() {
+    return subscribeConsentListeners;
+  }
+
   public List<TriggeredEvent> getPendingAppBannerEvents() {
     return pendingAppBannerEvents;
   }
@@ -3550,5 +3617,54 @@ public class CleverPush {
 
   public void setSubscriptionChanged(boolean subscriptionChanged) {
     isSubscriptionChanged = subscriptionChanged;
+  }
+
+  /**
+   * This method used for TCF2 CMP
+   * If get consent 1 in IABTCF_VendorConsents at position 1139 then perform subscribe or tracking according to IabTcfMode
+   */
+  private void setTCF() {
+    if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+      setTrackingConsentRequired(true);
+    }
+    if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+      setSubscribeConsentRequired(true);
+    }
+    Context mContext = context.getApplicationContext();
+    SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+
+    SharedPreferences.OnSharedPreferenceChangeListener mListener;
+    mListener = (preferences, key) -> {
+      if (key.equals(IABTCF_VendorConsents)) {
+        String vendorConsents = mPreferences.getString(IABTCF_VendorConsents, "0");
+        if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
+          char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
+          boolean hasConsent = (consentStatus == '1');
+
+          if (hasConsent) {
+            if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+              setTrackingConsent(true);
+            }
+            if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+              setSubscribeConsent(true);
+            }
+          } else {
+            Logger.d(LOG_TAG, "Vendor does not have consent");
+          }
+        } else {
+          Logger.d(LOG_TAG, "Vendor consents string is too short to get character at index " + IABTCF_VendorConsent_POSITION + ".");
+        }
+      }
+    };
+
+    mPreferences.registerOnSharedPreferenceChangeListener(mListener);
+  }
+
+  public void setIabTcfMode(IabTcfMode mode) {
+    this.iabTcfMode = mode;
+  }
+
+  public IabTcfMode getIabTcfMode() {
+    return iabTcfMode;
   }
 }
