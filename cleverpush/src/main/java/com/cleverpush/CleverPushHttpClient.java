@@ -2,6 +2,9 @@ package com.cleverpush;
 
 import static com.cleverpush.Constants.LOG_TAG;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.cleverpush.util.Logger;
 
 import java.io.InputStream;
@@ -23,6 +26,63 @@ public class CleverPushHttpClient {
 
   public static String BASE_URL = "https://api.cleverpush.com";
   private static final int TIMEOUT = 120_000;
+  private static final int MAX_RETRIES = 3;
+  private static final int INITIAL_RETRY_DELAY = 1000;
+  private static final int MULTIPLY_FACTOR = 2;
+
+  public static void postWithRetry(final String url, final JSONObject jsonBody, final ResponseHandler responseHandler) {
+    postWithRetry(url, jsonBody, responseHandler, 0, INITIAL_RETRY_DELAY);
+  }
+
+  private static void postWithRetry(final String url, final JSONObject jsonBody, final ResponseHandler responseHandler, final int retryCount, final int retryDelay) {
+    post(url, jsonBody, new ResponseHandler() {
+      @Override
+      public void onSuccess(String response) {
+        if (responseHandler != null) {
+          responseHandler.onSuccess(response);
+        }
+      }
+
+      @Override
+      public void onFailure(int statusCode, String response, Throwable throwable) {
+        if (retryCount < MAX_RETRIES) {
+          int nextRetryDelay = retryDelay * MULTIPLY_FACTOR;
+          new Handler(Looper.getMainLooper()).postDelayed(() -> postWithRetry(url, jsonBody, responseHandler, retryCount + 1, nextRetryDelay), retryDelay);
+        } else {
+          if (responseHandler != null) {
+            responseHandler.onFailure(statusCode, response, throwable);
+          }
+        }
+      }
+    });
+  }
+
+  public static void getWithRetry(final String url, final ResponseHandler responseHandler) {
+    getWithRetry(url, responseHandler, 0, INITIAL_RETRY_DELAY);
+  }
+
+  private static void getWithRetry(final String url, final ResponseHandler responseHandler, final int retryCount, final int retryDelay) {
+    get(url, new ResponseHandler() {
+      @Override
+      public void onSuccess(String response) {
+        if (responseHandler != null) {
+          responseHandler.onSuccess(response);
+        }
+      }
+
+      @Override
+      public void onFailure(int statusCode, String response, Throwable throwable) {
+        if (retryCount < MAX_RETRIES) {
+          int nextRetryDelay = retryDelay * MULTIPLY_FACTOR;
+          new Handler(Looper.getMainLooper()).postDelayed(() -> getWithRetry(url, responseHandler, retryCount + 1, nextRetryDelay), retryDelay);
+        } else {
+          if (responseHandler != null) {
+            responseHandler.onFailure(statusCode, response, throwable);
+          }
+        }
+      }
+    });
+  }
 
   public static void post(final String url, final JSONObject jsonBody, final ResponseHandler responseHandler) {
     try {

@@ -92,7 +92,7 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
 
       tags = this.getSubscriptionTags();
 
-      CleverPushHttpClient.post("/subscription/untag", jsonBody,
+      CleverPushHttpClient.postWithRetry("/subscription/untag", jsonBody,
           new RemoveSubscriptionTagResponseHandler().getResponseHandler(tagIds[currentPositionOfTagToRemove],
               onRemoveTagCompleted, currentPositionOfTagToRemove, tags));
     } else {

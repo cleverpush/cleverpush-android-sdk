@@ -123,7 +123,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       Logger.e(LOG_TAG, "Error", e);
     }
 
-    CleverPushHttpClient.post("/subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
+    CleverPushHttpClient.postWithRetry("/subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
         try {
