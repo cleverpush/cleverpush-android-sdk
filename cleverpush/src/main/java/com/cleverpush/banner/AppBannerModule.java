@@ -824,6 +824,10 @@ public class AppBannerModule {
         getHandler().postDelayed(() -> showBanner(bannerPopup), delay + (1000L * banner.getDelaySeconds()));
       }
     }
+
+    if (currentEventId != null) {
+      currentEventId = null;
+    }
   }
 
   private boolean checkIsEveryTrigger(Banner banner, boolean isEveryTrigger) {
