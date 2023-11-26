@@ -86,7 +86,7 @@ public class StoryView extends LinearLayout {
     Logger.d(TAG, "Loading stories: " + storyPath);
 
     CleverPush.getInstance(this.context).getActivityLifecycleListener().setActivityInitializedListener(() -> {
-      CleverPushHttpClient.getWithRetry(storyPath, getResponseHandler());
+      CleverPushHttpClient.get(storyPath, getResponseHandler());
     });
   }
 

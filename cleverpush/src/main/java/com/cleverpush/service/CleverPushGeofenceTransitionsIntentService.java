@@ -56,7 +56,7 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
           jsonBody.put("subscriptionId", subscriptionId);
           jsonBody.put("state", transitionState);
 
-          CleverPushHttpClient.postWithRetry("/subscription/geo-fence", jsonBody, null);
+          CleverPushHttpClient.post("/subscription/geo-fence", jsonBody, null);
         } catch (JSONException e) {
           Logger.e(LOG_TAG, "Error generating geo-fence json", e);
         }

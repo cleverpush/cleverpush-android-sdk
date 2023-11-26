@@ -95,7 +95,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                 Logger.e(LOG_TAG, "Error generating geo-fence json", e);
               }
               geoFenceTimeoutCompleted = true;
-              CleverPushHttpClient.postWithRetry("/subscription/geo-fence", jsonBody,
+              CleverPushHttpClient.post("/subscription/geo-fence", jsonBody,
                   new CleverPushHttpClient.ResponseHandler() {
                     @Override
                     public void onSuccess(String response) {

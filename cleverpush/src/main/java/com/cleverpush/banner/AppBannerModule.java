@@ -39,7 +39,6 @@ import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.PreferenceManagerUtils;
 import com.cleverpush.util.VersionComparator;
-import com.cleverpush.util.VoucherCodeUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -190,7 +189,7 @@ public class AppBannerModule {
       bannersPath += "&notificationId=" + notificationId;
     }
     Logger.d(TAG, "Loading banners: " + bannersPath);
-    CleverPushHttpClient.getWithRetry(bannersPath, new CleverPushHttpClient.ResponseHandler() {
+    CleverPushHttpClient.get(bannersPath, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
         setLoading(false);
@@ -1130,17 +1129,8 @@ public class AppBannerModule {
         }
 
         if (action.getType().equals("copyToClipboard")) {
-          String copyText = action.getName();
-          if (copyText.contains("{voucherCode}")) {
-            String voucherCode = "";
-            HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
-            if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(banner.getId())) {
-              voucherCode = currentVoucherCodePlaceholder.get(banner.getId());
-            }
-            copyText = VoucherCodeUtils.replaceVoucherCodeString(copyText, voucherCode);
-          }
           ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
-          ClipData clip = ClipData.newPlainText("Voucher Code", copyText);
+          ClipData clip = ClipData.newPlainText("Voucher Code", action.getName());
           clipboard.setPrimaryClip(clip);
         }
       });

@@ -1,9 +1,5 @@
 # Changelog
 
-## 1.31.18
-* Fixed `pullSubscriptionAttributeValue` behaviour
-* Optimized app banner voucher codes
-
 ## 1.31.17
 * Fixed a bug in `AppBanner`, add JavaScriptInterface in HTML block
 * Fixed a bug in `AppBanner`, background color not applying when enable multiple screen 

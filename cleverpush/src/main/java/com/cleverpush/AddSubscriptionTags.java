@@ -99,7 +99,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         Logger.e(LOG_TAG, ex.getMessage(), ex);
       }
 
-      CleverPushHttpClient.postWithRetry("/subscription/tag", jsonBody,
+      CleverPushHttpClient.post("/subscription/tag", jsonBody,
           new AddSubscriptionTagResponseHandler().getResponseHandler(tagIds[currentPositionOfTagToAdd],
               addTagCompletedListener, currentPositionOfTagToAdd, tags));
     } else {

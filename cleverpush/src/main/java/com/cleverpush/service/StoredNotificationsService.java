@@ -79,7 +79,7 @@ public class StoredNotificationsService {
       url.append("&topics[]=").append(subscriptionTopics.get(i));
     }
 
-    CleverPushHttpClient.getWithRetry(url.toString(), new CleverPushHttpClient.ResponseHandler() {
+    CleverPushHttpClient.get(url.toString(), new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
         if (response != null) {

@@ -123,7 +123,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.31.18";
+  public static final String SDK_VERSION = "1.31.17";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -588,14 +588,14 @@ public class CleverPush {
     if (developmentMode) {
       configPath += "?t=" + System.currentTimeMillis();
     }
-    CleverPushHttpClient.getWithRetry(configPath,
+    CleverPushHttpClient.get(configPath,
         new ChannelConfigFromChannelIdResponseHandler(instance).getResponseHandler(autoRegister, storedChannelId,
             storedSubscriptionId));
   }
 
   public void getChannelConfigFromBundleId(String url, boolean autoRegister) {
     CleverPush instance = this;
-    CleverPushHttpClient.getWithRetry(url,
+    CleverPushHttpClient.get(url,
         new ChannelConfigFromBundleIdResponseHandler(instance, initializeListener).getResponseHandler(autoRegister));
   }
 
@@ -1244,7 +1244,7 @@ public class CleverPush {
       Logger.e(LOG_TAG, ex.getMessage(), ex);
     }
 
-    CleverPushHttpClient.postWithRetry("/subscription/session/start", jsonBody,
+    CleverPushHttpClient.post("/subscription/session/start", jsonBody,
         new TrackSessionStartResponseHandler().getResponseHandler());
   }
 
@@ -1287,7 +1287,7 @@ public class CleverPush {
       Logger.e(LOG_TAG, ex.getMessage(), ex);
     }
 
-    CleverPushHttpClient.postWithRetry("/subscription/session/end", jsonBody, new CleverPushHttpClient.ResponseHandler() {
+    CleverPushHttpClient.post("/subscription/session/end", jsonBody, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
         Logger.d(LOG_TAG, "Session ended");
@@ -1464,7 +1464,7 @@ public class CleverPush {
         Logger.e(LOG_TAG, "Error", e);
       }
 
-      CleverPushHttpClient.postWithRetry("/subscription/unsubscribe", jsonBody,
+      CleverPushHttpClient.post("/subscription/unsubscribe", jsonBody,
               new UnsubscribeResponseHandler(this, listener).getResponseHandler());
     } else {
       Logger.d(LOG_TAG, "unsubscribe: There is no subscription for CleverPush SDK.");
@@ -2001,7 +2001,7 @@ public class CleverPush {
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
           new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
-      CleverPushHttpClient.postWithRetry(
+      CleverPushHttpClient.post(
           "/subscription/topic/add",
           jsonBody,
           responseHandler);
@@ -2056,7 +2056,7 @@ public class CleverPush {
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
           new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
-      CleverPushHttpClient.postWithRetry("/subscription/topic/remove",
+      CleverPushHttpClient.post("/subscription/topic/remove",
           jsonBody,
           responseHandler);
     });
@@ -2172,7 +2172,7 @@ public class CleverPush {
 
           Logger.d(LOG_TAG, "setSubscriptionTopics: " + Arrays.toString(topicIds));
 
-          CleverPushHttpClient.postWithRetry("/subscription/sync/" + getChannelId(getContext()), jsonBody,
+          CleverPushHttpClient.post("/subscription/sync/" + getChannelId(getContext()), jsonBody,
               new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicIds, completionListener));
         } else {
           Logger.d(LOG_TAG, "setSubscriptionTopics: There is no subscription for CleverPush SDK.");
@@ -2200,7 +2200,7 @@ public class CleverPush {
 
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
         subscriptionAttributes.put(attributeId, value);
-        CleverPushHttpClient.postWithRetry("/subscription/attribute", jsonBody, responseHandler.getResponseHandler(subscriptionAttributes));
+        CleverPushHttpClient.post("/subscription/attribute", jsonBody, responseHandler.getResponseHandler(subscriptionAttributes));
       } else {
         Logger.d(LOG_TAG, "setSubscriptionAttribute: There is no subscription for CleverPush SDK.");
       }
@@ -2238,7 +2238,7 @@ public class CleverPush {
         }
         subscriptionAttributes.put(attributeId, arrayString);
 
-        CleverPushHttpClient.postWithRetry("/subscription/attribute/push-value", jsonBody,
+        CleverPushHttpClient.post("/subscription/attribute/push-value", jsonBody,
             pushSubscriptionAttributeValueResponseHandler(subscriptionAttributes));
       } else {
         Logger.d(LOG_TAG, "pushSubscriptionAttributeValue: There is no subscription for CleverPush SDK.");
@@ -2297,6 +2297,7 @@ public class CleverPush {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
         }
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
 
         ArrayList<String> arrayList = new ArrayList<>();
@@ -2308,7 +2309,6 @@ public class CleverPush {
         } catch (Exception ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
         }
-        arrayList.remove(value);
 
         String[] arrayString = arrayList.toArray(new String[0]);
         if (arrayString == null) {
@@ -2316,7 +2316,7 @@ public class CleverPush {
         }
         subscriptionAttributes.put(attributeId, arrayString);
 
-        CleverPushHttpClient.postWithRetry("/subscription/attribute/pull-value", jsonBody,
+        CleverPushHttpClient.post("/subscription/attribute/pull-value", jsonBody,
             pullSubscriptionAttributeValueResponseHandler(subscriptionAttributes));
       } else {
         Logger.d(LOG_TAG, "pullSubscriptionAttributeValue: There is no subscription for CleverPush SDK.");
@@ -2507,7 +2507,7 @@ public class CleverPush {
               Logger.e(LOG_TAG, ex.getMessage(), ex);
             }
 
-            CleverPushHttpClient.postWithRetry("/subscription/conversion", jsonBody,
+            CleverPushHttpClient.post("/subscription/conversion", jsonBody,
                 new TrackEventResponseHandler().getResponseHandler(eventName));
           } else {
             Logger.d(LOG_TAG, "trackEvent: There is no subscription for CleverPush SDK.");
@@ -2575,7 +2575,7 @@ public class CleverPush {
               Logger.e(LOG_TAG, ex.getMessage(), ex);
             }
 
-            CleverPushHttpClient.postWithRetry("/subscription/event", jsonBody,
+            CleverPushHttpClient.post("/subscription/event", jsonBody,
                 new TriggerFollowUpEventResponseHandler().getResponseHandler(eventName));
           } else {
             Logger.d(LOG_TAG, "triggerFollowUpEvent: There is no subscription for CleverPush SDK.");
@@ -2653,7 +2653,7 @@ public class CleverPush {
       Logger.e(LOG_TAG, "Error setting confirm alert shown", e);
     }
 
-    CleverPushHttpClient.postWithRetry("/channel/confirm-alert", jsonBody, null);
+    CleverPushHttpClient.post("/channel/confirm-alert", jsonBody, null);
   }
 
   void showPendingTopicsDialog() {
