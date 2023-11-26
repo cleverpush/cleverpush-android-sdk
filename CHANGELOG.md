@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.32.0 (26.11.2023)
+* IAB TCF compatibility added
+* Support `every time on trigger` app banner trigger type
+
 ## 1.31.19
 * Fixed a potential crash when subscribe or notification object is null in HMS push `onMessageReceived`
 * Optimized HTTP calls with retry functionality
