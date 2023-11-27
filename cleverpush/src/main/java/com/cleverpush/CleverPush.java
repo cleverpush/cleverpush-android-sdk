@@ -1377,7 +1377,7 @@ public class CleverPush {
         }
       }
 
-      if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission && shouldAutoRequestNotificationPermission()) {
+      if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
         String error =
                 "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
         Logger.d(LOG_TAG, error);
