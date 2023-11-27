@@ -218,6 +218,7 @@ public class CleverPush {
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
   private boolean autoResubscribe = false;
+  private boolean autoRequestNotificationPermission = true;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -1370,7 +1371,7 @@ public class CleverPush {
         return;
       }
 
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission()) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission() && shouldAutoRequestNotificationPermission()) {
         if (!this.ignoreDisabledNotificationPermission) {
           this.pendingSubscribeCallbackListener = subscribedCallbackListener;
         }
@@ -3680,5 +3681,13 @@ public class CleverPush {
 
   public void setAutoResubscribe(boolean autoResubscribe) {
     this.autoResubscribe = autoResubscribe;
+  }
+
+  private boolean shouldAutoRequestNotificationPermission() {
+    return autoRequestNotificationPermission;
+  }
+
+  public void setAutoRequestNotificationPermission(boolean autoRequestNotificationPermission) {
+    this.autoRequestNotificationPermission = autoRequestNotificationPermission;
   }
 }
