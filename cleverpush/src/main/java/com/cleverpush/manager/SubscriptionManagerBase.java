@@ -119,6 +119,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         jsonBody.put("topics", new JSONArray(topics));
         jsonBody.put("topicsVersion", topicsVersion);
       }
+      jsonBody.put("hasNotificationPermission", CleverPush.getInstance(CleverPush.context).areNotificationsEnabled());
     } catch (JSONException e) {
       Logger.e(LOG_TAG, "Error", e);
     }
