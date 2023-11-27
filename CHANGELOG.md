@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.32.2 (27.11.2023)
+* Added feature to disable notification permission dialog `setAutoRequestNotificationPermission`
+* Added feature to auto resubscribe `setAutoResubscribe`
+
 ## 1.32.1 (26.11.2023)
 * Fixed version in gradle.properties
 
