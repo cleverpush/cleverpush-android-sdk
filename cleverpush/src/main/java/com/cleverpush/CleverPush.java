@@ -217,6 +217,7 @@ public class CleverPush {
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
+  private boolean autoResubscribe = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -552,6 +553,11 @@ public class CleverPush {
               this.trackPageView(pageView.getUrl(), pageView.getParams());
             }
             this.pendingPageViews = new ArrayList<>();
+          }
+
+          if (isAutoResubscribe() && getSubscriptionId(CleverPush.context) == null && areNotificationsEnabled()) {
+            Logger.d(LOG_TAG, "autoResubscribe");
+            subscribe();
           }
         } else {
           this.trackSessionEnd();
@@ -3666,5 +3672,13 @@ public class CleverPush {
 
   public IabTcfMode getIabTcfMode() {
     return iabTcfMode;
+  }
+
+  public boolean isAutoResubscribe() {
+    return autoResubscribe;
+  }
+
+  public void setAutoResubscribe(boolean autoResubscribe) {
+    this.autoResubscribe = autoResubscribe;
   }
 }
