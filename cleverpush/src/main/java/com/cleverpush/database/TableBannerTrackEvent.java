@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "TableBannerTrackEvent")
+@Entity(tableName = "cleverpush_table_banner_track_event")
 public class TableBannerTrackEvent {
 
   @PrimaryKey(autoGenerate = true)
