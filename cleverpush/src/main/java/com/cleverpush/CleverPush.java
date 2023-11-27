@@ -2233,6 +2233,18 @@ public class CleverPush {
   }
 
   public void setSubscriptionAttribute(String attributeId, String value, SetSubscriptionAttributeResponseHandler responseHandler) {
+    this.setSubscriptionAttributeObject(attributeId, value, responseHandler);
+  }
+
+  public void setSubscriptionAttribute(String attributeId, String[] values) {
+    setSubscriptionAttribute(attributeId, values, new SetSubscriptionAttributeResponseHandler());
+  }
+
+  public void setSubscriptionAttribute(String attributeId, String[] values, SetSubscriptionAttributeResponseHandler responseHandler) {
+    this.setSubscriptionAttributeObject(attributeId, values, responseHandler);
+  }
+
+  private void setSubscriptionAttributeObject(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId != null) {
         JSONObject jsonBody = getJsonObject();
