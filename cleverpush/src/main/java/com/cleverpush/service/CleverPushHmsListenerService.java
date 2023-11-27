@@ -26,28 +26,22 @@ public class CleverPushHmsListenerService extends HmsMessageService {
 
   @Override
   public void onMessageReceived(RemoteMessage message) {
-    try {
-      String dataStr = message.getData();
-      if (dataStr != null) {
-        Gson gson = new Gson();
-        RemoteMessageData messageData = gson.fromJson(dataStr, RemoteMessageData.class);
+    String dataStr = message.getData();
 
-        Notification notification = messageData.getNotification();
-        Subscription subscription = messageData.getSubscription();
+    if (dataStr != null) {
+      Gson gson = new Gson();
+      RemoteMessageData messageData = gson.fromJson(dataStr, RemoteMessageData.class);
 
-        if (notification != null && subscription != null) {
-          String notificationStr = gson.toJson(notification);
-          String subscriptionStr = gson.toJson(subscription);
+      Notification notification = messageData.getNotification();
+      String notificationStr = gson.toJson(notification);
 
-          notification.setRawPayload(notificationStr);
-          subscription.setRawPayload(subscriptionStr);
-          NotificationDataProcessor.process(this, notification, subscription);
-        }
-      } else {
-        Logger.e(LOG_TAG, "HMS Notification data is null");
-      }
-    } catch (Exception exception) {
-      Logger.e(LOG_TAG, "Error in HMS onMessageReceived handler", exception);
+      Subscription subscription = messageData.getSubscription();
+      String subscriptionStr = gson.toJson(subscription);
+
+      notification.setRawPayload(notificationStr);
+      subscription.setRawPayload(subscriptionStr);
+
+      NotificationDataProcessor.process(this, notification, subscription);
     }
   }
 }

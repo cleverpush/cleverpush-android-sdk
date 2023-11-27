@@ -16,6 +16,4 @@ public interface Constants {
   String GEOFENCE_ENTER_STATE = "enter";
   String GEOFENCE_EXIT_STATE = "exit";
   String CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT = "CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT";
-  String IABTCF_VendorConsents = "IABTCF_VendorConsents";
-  Integer IABTCF_VendorConsent_POSITION = 1139;
 }

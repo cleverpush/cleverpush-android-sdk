@@ -259,36 +259,18 @@ public class AppBannerPopup {
       }
     });
 
-    if (bg != null) {
-      processBackground(bannerBackground, body, bg);
-    } else {
-      GradientDrawable drawableBG = new GradientDrawable();
-      drawableBG.setShape(GradientDrawable.RECTANGLE);
-      if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
-        drawableBG.setCornerRadius(10 * getPXScale());
-      }
-      if (isHTMLBanner()) {
-        drawableBG.setColor(Color.TRANSPARENT);
-      }
-      drawableBG.setColor(Color.WHITE);
-      bannerBackground.setImageBitmap(null);
-      bannerBackground.setBackground(drawableBG);
-    }
-  }
-
-  private void processBackground(ImageView bannerBackground, LinearLayout body, BannerBackground background) {
-    if (background.getImageUrl() == null || background.getImageUrl().equalsIgnoreCase("null") || background.getImageUrl()
-            .equalsIgnoreCase("")) {
+    if (bg.getImageUrl() == null || bg.getImageUrl().equalsIgnoreCase("null") || bg.getImageUrl()
+        .equalsIgnoreCase("")) {
       GradientDrawable drawableBG = new GradientDrawable();
       drawableBG.setShape(GradientDrawable.RECTANGLE);
       if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
         drawableBG.setCornerRadius(10 * getPXScale());
       }
 
-      if (data.isDarkModeEnabled(activity) && background.getDarkColor() != null && !background.getDarkColor().isEmpty()) {
-        drawableBG.setColor(ColorUtils.parseColor(background.getDarkColor()));
-      } else if (background.getColor() != null && !background.getColor().isEmpty()) {
-        drawableBG.setColor(ColorUtils.parseColor(background.getColor()));
+      if (data.isDarkModeEnabled(activity) && bg.getDarkColor() != null && !bg.getDarkColor().isEmpty()) {
+        drawableBG.setColor(ColorUtils.parseColor(bg.getDarkColor()));
+      } else if (bg.getColor() != null && !bg.getColor().isEmpty()) {
+        drawableBG.setColor(ColorUtils.parseColor(bg.getColor()));
       } else {
         drawableBG.setColor(Color.WHITE);
       }
@@ -297,14 +279,14 @@ public class AppBannerPopup {
       }
       bannerBackground.setImageBitmap(null);
       bannerBackground.setBackground(drawableBG);
-    } else if (background.getImageUrl() != null) {
+    } else if (bg.getImageUrl() != null) {
       new Thread(() -> {
         try {
           String imageUrl;
-          if (data.isDarkModeEnabled(activity) && background.getDarkImageUrl() != null) {
-            imageUrl = background.getDarkImageUrl();
+          if (data.isDarkModeEnabled(activity) && bg.getDarkImageUrl() != null) {
+            imageUrl = bg.getDarkImageUrl();
           } else {
-            imageUrl = background.getImageUrl();
+            imageUrl = bg.getImageUrl();
           }
 
           InputStream in = new URL(imageUrl).openStream();

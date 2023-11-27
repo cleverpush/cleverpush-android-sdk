@@ -5,15 +5,13 @@ import java.util.Map;
 
 public enum BannerFrequency {
   Once,
-  Once_Per_Session,
-  Every_Trigger;
+  Once_Per_Session;
 
   private static Map<String, BannerFrequency> mapFrequency = new HashMap<>();
 
   static {
     mapFrequency.put("once", BannerFrequency.Once);
     mapFrequency.put("once_per_session", BannerFrequency.Once_Per_Session);
-    mapFrequency.put("every_trigger", BannerFrequency.Every_Trigger);
   }
 
   public static BannerFrequency fromString(String raw) {
