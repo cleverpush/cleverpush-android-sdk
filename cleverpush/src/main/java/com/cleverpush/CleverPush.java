@@ -648,7 +648,7 @@ public class CleverPush {
         }
       });
     } else if (subscriptionId != null && !this.areNotificationsEnabled()
-        && !this.ignoreDisabledNotificationPermission && isAutoRequestNotificationPermission()) {
+        && !this.ignoreDisabledNotificationPermission) {
       Logger.d(LOG_TAG, "notification authorization revoked, unsubscribing");
       this.unsubscribe(new UnsubscribedListener() {
         @Override
@@ -1365,7 +1365,7 @@ public class CleverPush {
         return;
       }
 
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission() && isAutoRequestNotificationPermission()) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission() && shouldAutoRequestNotificationPermission()) {
         if (!this.ignoreDisabledNotificationPermission) {
           this.pendingSubscribeCallbackListener = subscribedCallbackListener;
         }
@@ -1377,7 +1377,7 @@ public class CleverPush {
         }
       }
 
-      if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission && isAutoRequestNotificationPermission()) {
+      if (!this.areNotificationsEnabled() && !this.ignoreDisabledNotificationPermission) {
         String error =
                 "Can not subscribe because notifications have been disabled by the user. You can call CleverPush.setIgnoreDisabledNotificationPermission(true) to still allow subscriptions, e.g. for silent pushes.";
         Logger.d(LOG_TAG, error);
@@ -3669,7 +3669,7 @@ public class CleverPush {
     return iabTcfMode;
   }
 
-  private boolean isAutoRequestNotificationPermission() {
+  private boolean shouldAutoRequestNotificationPermission() {
     return autoRequestNotificationPermission;
   }
 
