@@ -2240,13 +2240,33 @@ public class CleverPush {
   }
 
   public void setSubscriptionAttribute(String attributeId, String value, SetSubscriptionAttributeResponseHandler responseHandler) {
+    this.setSubscriptionAttributeObject(attributeId, value, responseHandler);
+  }
+
+  public void setSubscriptionAttribute(String attributeId, String[] values) {
+    setSubscriptionAttribute(attributeId, values, new SetSubscriptionAttributeResponseHandler());
+  }
+
+  public void setSubscriptionAttribute(String attributeId, String[] values, SetSubscriptionAttributeResponseHandler responseHandler) {
+    this.setSubscriptionAttributeObject(attributeId, values, responseHandler);
+  }
+
+  private void setSubscriptionAttributeObject(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId != null) {
         JSONObject jsonBody = getJsonObject();
         try {
           jsonBody.put("channelId", getChannelId(getContext()));
           jsonBody.put("attributeId", attributeId);
-          jsonBody.put("value", value);
+          if (value instanceof String) {
+            jsonBody.put("value", value);
+          } else if (value instanceof String[]) {
+            JSONArray jsonArray = new JSONArray();
+            for (String attributeValue : (String[]) value) {
+              jsonArray.put(attributeValue);
+            }
+            jsonBody.put("value", jsonArray);
+          }
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
