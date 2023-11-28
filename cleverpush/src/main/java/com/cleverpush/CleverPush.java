@@ -2251,7 +2251,15 @@ public class CleverPush {
         try {
           jsonBody.put("channelId", getChannelId(getContext()));
           jsonBody.put("attributeId", attributeId);
-          jsonBody.put("value", value);
+          if (value instanceof String) {
+            jsonBody.put("value", value);
+          } else if (value instanceof String[]) {
+            JSONArray jsonArray = new JSONArray();
+            for (String val : (String[]) value) {
+              jsonArray.put(val);
+            }
+            jsonBody.put("value", jsonArray);
+          }
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
