@@ -869,7 +869,7 @@ public class AppBannerModule {
             TableBannerTrackEvent bannerTrackEvent = new TableBannerTrackEvent();
 
             bannerTrackEvent.setBannerId(banner.getId());
-            bannerTrackEvent.setTrackEventId(event);
+            bannerTrackEvent.setEventId(event);
             bannerTrackEvent.setRelation(relation);
             bannerTrackEvent.setProperty(property);
             bannerTrackEvent.setValue(value != null ? value : "");

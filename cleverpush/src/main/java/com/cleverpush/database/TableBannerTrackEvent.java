@@ -4,15 +4,15 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "cleverpush_table_banner_track_event")
+@Entity(tableName = "cleverpush_tracked_events")
 public class TableBannerTrackEvent {
 
   @PrimaryKey(autoGenerate = true)
   private int id;
   @ColumnInfo(name = "bannerId")
   private String bannerId;
-  @ColumnInfo(name = "trackEventId")
-  private String trackEventId;
+  @ColumnInfo(name = "eventId")
+  private String eventId;
   @ColumnInfo(name = "relation")
   private String relation;
   @ColumnInfo(name = "property")
@@ -46,12 +46,12 @@ public class TableBannerTrackEvent {
     this.bannerId = bannerId;
   }
 
-  public String getTrackEventId() {
-    return trackEventId;
+  public String getEventId() {
+    return eventId;
   }
 
-  public void setTrackEventId(String trackEventId) {
-    this.trackEventId = trackEventId;
+  public void setEventId(String eventId) {
+    this.eventId = eventId;
   }
 
   public String getRelation() {
