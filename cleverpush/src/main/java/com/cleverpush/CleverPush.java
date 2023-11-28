@@ -2255,8 +2255,8 @@ public class CleverPush {
             jsonBody.put("value", value);
           } else if (value instanceof String[]) {
             JSONArray jsonArray = new JSONArray();
-            for (String val : (String[]) value) {
-              jsonArray.put(val);
+            for (String attributeValue : (String[]) value) {
+              jsonArray.put(attributeValue);
             }
             jsonBody.put("value", jsonArray);
           }
