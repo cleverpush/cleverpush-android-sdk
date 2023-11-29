@@ -126,7 +126,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.32.1";
+  public static final String SDK_VERSION = "1.32.3";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -220,6 +220,8 @@ public class CleverPush {
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
   private int trackEventRetentionDays = 90;
+  private boolean autoResubscribe = false;
+  private boolean autoRequestNotificationPermission = true;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -557,6 +559,11 @@ public class CleverPush {
               this.trackPageView(pageView.getUrl(), pageView.getParams());
             }
             this.pendingPageViews = new ArrayList<>();
+          }
+
+          if (isAutoResubscribe() && getSubscriptionId(CleverPush.context) == null && areNotificationsEnabled()) {
+            Logger.d(LOG_TAG, "autoResubscribe");
+            subscribe();
           }
         } else {
           this.trackSessionEnd();
@@ -1369,7 +1376,7 @@ public class CleverPush {
         return;
       }
 
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission()) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !this.hasNotificationPermission() && shouldAutoRequestNotificationPermission()) {
         if (!this.ignoreDisabledNotificationPermission) {
           this.pendingSubscribeCallbackListener = subscribedCallbackListener;
         }
@@ -2238,13 +2245,33 @@ public class CleverPush {
   }
 
   public void setSubscriptionAttribute(String attributeId, String value, SetSubscriptionAttributeResponseHandler responseHandler) {
+    this.setSubscriptionAttributeObject(attributeId, value, responseHandler);
+  }
+
+  public void setSubscriptionAttribute(String attributeId, String[] values) {
+    setSubscriptionAttribute(attributeId, values, new SetSubscriptionAttributeResponseHandler());
+  }
+
+  public void setSubscriptionAttribute(String attributeId, String[] values, SetSubscriptionAttributeResponseHandler responseHandler) {
+    this.setSubscriptionAttributeObject(attributeId, values, responseHandler);
+  }
+
+  private void setSubscriptionAttributeObject(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId != null) {
         JSONObject jsonBody = getJsonObject();
         try {
           jsonBody.put("channelId", getChannelId(getContext()));
           jsonBody.put("attributeId", attributeId);
-          jsonBody.put("value", value);
+          if (value instanceof String) {
+            jsonBody.put("value", value);
+          } else if (value instanceof String[]) {
+            JSONArray jsonArray = new JSONArray();
+            for (String attributeValue : (String[]) value) {
+              jsonArray.put(attributeValue);
+            }
+            jsonBody.put("value", jsonArray);
+          }
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
@@ -3687,9 +3714,11 @@ public class CleverPush {
   public int getLocalTrackEventRetentionDays() {
     return trackEventRetentionDays;
   }
+
   public void setLocalTrackEventRetentionDays(int trackEventRetentionDays) {
     this.trackEventRetentionDays = trackEventRetentionDays;
   }
+
   public String getCurrentDateTime() {
     try {
       Date time = Calendar.getInstance().getTime();
@@ -3700,6 +3729,7 @@ public class CleverPush {
       return "";
     }
   }
+
   public void deleteDataBasedOnRetentionDays() {
     try {
       int retentionDays = getLocalTrackEventRetentionDays();
@@ -3711,5 +3741,21 @@ public class CleverPush {
     } catch (Exception e) {
       Logger.e(LOG_TAG, "deleteDataBasedOnRetentionDays: " + e.getLocalizedMessage());
     }
+  }
+
+  public boolean isAutoResubscribe() {
+    return autoResubscribe;
+  }
+
+  public void setAutoResubscribe(boolean autoResubscribe) {
+    this.autoResubscribe = autoResubscribe;
+  }
+
+  private boolean shouldAutoRequestNotificationPermission() {
+    return autoRequestNotificationPermission;
+  }
+
+  public void setAutoRequestNotificationPermission(boolean autoRequestNotificationPermission) {
+    this.autoRequestNotificationPermission = autoRequestNotificationPermission;
   }
 }
