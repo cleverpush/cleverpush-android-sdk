@@ -1548,6 +1548,7 @@ public class CleverPush {
   private void removeSubscriptionTagsAndAttributes() {
     try {
       if (getSubscriptionId(CleverPush.context) == null) {
+        Logger.d(LOG_TAG, "removeSubscriptionTagsAndAttributes: There is no subscription for CleverPush SDK.");
         return;
       }
       Set<String> subscribedTagIds = this.getSubscriptionTags();
