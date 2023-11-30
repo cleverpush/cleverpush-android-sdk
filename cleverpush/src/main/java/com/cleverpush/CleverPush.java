@@ -1535,8 +1535,39 @@ public class CleverPush {
       for (TrackingConsentListener listener : trackingConsentListeners) {
         listener.ready();
       }
+    } else {
+      removeSubscriptionTagsAndAttributes();
     }
     trackingConsentListeners = new ArrayList<>();
+  }
+
+  private void removeSubscriptionTagsAndAttributes() {
+    try {
+      if (getSubscriptionId(CleverPush.context) != null) {
+        Set<String> subscribedTagIds = this.getSubscriptionTags();
+        Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
+
+        if (subscribedTagIds != null && subscribedTagIds.size() > 0) {
+          String[] tagIdsArray = subscribedTagIds.toArray(new String[0]);
+          removeSubscriptionTags(tagIdsArray);
+        }
+
+        if (subscriptionAttributes != null && subscriptionAttributes.size() > 0) {
+          for (Map.Entry<String, Object> entry : subscriptionAttributes.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (value instanceof String) {
+              this.setSubscriptionAttribute(key, "");
+            } else {
+              this.setSubscriptionAttribute(key, new String[0]);
+            }
+          }
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error at removeSubscriptionTagsAndAttributes: " + e.getMessage());
+    }
   }
 
   public void setSubscribeConsentRequired(Boolean required) {
