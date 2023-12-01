@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.32.4 (01.12.2023)
+* Automatically remove targeting data (tags, attributes) when tracking consent has been revoked
+
 ## 1.32.3 (28.11.2023)
 * Added new method `setSubscriptionAttribute` to support multiple attribute value as array
 
