@@ -1528,8 +1528,14 @@ public class CleverPush {
   }
 
   public void setTrackingConsent(Boolean consent) {
+    boolean previousTrackingConsent = hasTrackingConsent;
     hasTrackingConsentCalled = true;
     hasTrackingConsent = consent;
+
+    if (!hasTrackingConsent && previousTrackingConsent) {
+      // hasTrackingConsent was true before, so call the removal method
+      removeSubscriptionTagsAndAttributes();
+    }
 
     if (hasTrackingConsent) {
       for (TrackingConsentListener listener : trackingConsentListeners) {
@@ -1537,6 +1543,37 @@ public class CleverPush {
       }
     }
     trackingConsentListeners = new ArrayList<>();
+  }
+
+  private void removeSubscriptionTagsAndAttributes() {
+    try {
+      if (getSubscriptionId(CleverPush.context) == null) {
+        Logger.d(LOG_TAG, "removeSubscriptionTagsAndAttributes: There is no subscription for CleverPush SDK.");
+        return;
+      }
+      Set<String> subscribedTagIds = this.getSubscriptionTags();
+      Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
+
+      if (subscribedTagIds != null && subscribedTagIds.size() > 0) {
+        String[] tagIdsArray = subscribedTagIds.toArray(new String[0]);
+        removeSubscriptionTags(tagIdsArray);
+      }
+
+      if (subscriptionAttributes != null && subscriptionAttributes.size() > 0) {
+        for (Map.Entry<String, Object> entry : subscriptionAttributes.entrySet()) {
+          String key = entry.getKey();
+          Object value = entry.getValue();
+
+          if (value instanceof String) {
+            this.setSubscriptionAttribute(key, "");
+          } else {
+            this.setSubscriptionAttribute(key, new String[0]);
+          }
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error at removeSubscriptionTagsAndAttributes: " + e.getMessage());
+    }
   }
 
   public void setSubscribeConsentRequired(Boolean required) {
