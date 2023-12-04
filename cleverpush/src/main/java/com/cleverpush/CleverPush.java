@@ -57,6 +57,7 @@ import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
 import com.cleverpush.listener.NotificationsCallbackListener;
 import com.cleverpush.listener.SessionListener;
+import com.cleverpush.listener.StopCampaignListener;
 import com.cleverpush.listener.SubscribeConsentListener;
 import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.listener.SubscribedListener;
@@ -75,6 +76,7 @@ import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
 import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
+import com.cleverpush.responsehandlers.StopCampaignResponseHandler;
 import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
@@ -1535,6 +1537,7 @@ public class CleverPush {
     if (!hasTrackingConsent && previousTrackingConsent) {
       // hasTrackingConsent was true before, so call the removal method
       removeSubscriptionTagsAndAttributes();
+      stopCampaigns(null);
     }
 
     if (hasTrackingConsent) {
@@ -1543,6 +1546,24 @@ public class CleverPush {
       }
     }
     trackingConsentListeners = new ArrayList<>();
+  }
+
+  public void stopCampaigns(StopCampaignListener listener) {
+    String subscriptionId = getSubscriptionId(getContext());
+    if (subscriptionId != null) {
+      JSONObject jsonBody = getJsonObject();
+      try {
+        jsonBody.put("channelId", getChannelId(getContext()));
+        jsonBody.put("subscriptionId", subscriptionId);
+      } catch (JSONException e) {
+        Logger.e(LOG_TAG, "Error", e);
+      }
+
+      CleverPushHttpClient.postWithRetry("/subscription/stop-campaigns", jsonBody,
+              new StopCampaignResponseHandler(this, listener).getResponseHandler());
+    } else {
+      Logger.d(LOG_TAG, "stopCampaigns: There is no subscription for CleverPush SDK.");
+    }
   }
 
   private void removeSubscriptionTagsAndAttributes() {
@@ -2571,76 +2592,78 @@ public class CleverPush {
   }
 
   public void trackEvent(String eventName, Map<String, Object> properties) {
-    this.getChannelConfig(channelConfig -> {
-      if (channelConfig == null) {
-        return;
-      }
-
-      try {
-        JSONArray channelEvents = channelConfig.getJSONArray("channelEvents");
-        JSONObject event = null;
-        for (int i = 0; i < channelEvents.length(); i++) {
-          JSONObject tryEvent = channelEvents.getJSONObject(i);
-          if (tryEvent != null && tryEvent.getString("name").equals(eventName)) {
-            event = tryEvent;
-            break;
-          }
-        }
-
-        if (event == null) {
-          Logger.e(LOG_TAG, "Event not found");
+    this.waitForTrackingConsent(() -> {
+      this.getChannelConfig(channelConfig -> {
+        if (channelConfig == null) {
           return;
         }
 
-        String eventId = event.optString("_id");
-
-        this.getSubscriptionId(subscriptionId -> {
-          if (subscriptionId != null) {
-            JSONObject jsonBody = new JSONObject();
-
-            try {
-              JSONObject propertiesObject = new JSONObject();
-              if (properties != null) {
-                for (Map.Entry<String, Object> entry : properties.entrySet()) {
-                  propertiesObject.put(entry.getKey(), entry.getValue());
-                }
-              }
-
-              jsonBody.put("channelId", this.channelId);
-              jsonBody.put("eventId", eventId);
-              jsonBody.put("properties", propertiesObject);
-              jsonBody.put("subscriptionId", subscriptionId);
-
-              if (this.lastClickedNotificationId != null) {
-                jsonBody.put("notificationId", this.lastClickedNotificationId);
-              }
-            } catch (JSONException ex) {
-              Logger.e(LOG_TAG, ex.getMessage(), ex);
+        try {
+          JSONArray channelEvents = channelConfig.getJSONArray("channelEvents");
+          JSONObject event = null;
+          for (int i = 0; i < channelEvents.length(); i++) {
+            JSONObject tryEvent = channelEvents.getJSONObject(i);
+            if (tryEvent != null && tryEvent.getString("name").equals(eventName)) {
+              event = tryEvent;
+              break;
             }
-
-            CleverPushHttpClient.postWithRetry("/subscription/conversion", jsonBody,
-                new TrackEventResponseHandler().getResponseHandler(eventName));
-          } else {
-            Logger.d(LOG_TAG, "trackEvent: There is no subscription for CleverPush SDK.");
           }
-        });
 
-        TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
-        if (getAppBannerModule() == null) {
-          pendingAppBannerEvents.add(triggeredEvent);
-          return;
-        }
-        getAppBannerModule().triggerEvent(triggeredEvent);
-      } catch (Exception ex) {
-        String message = "Track event failed because of error";
-        if (ex != null) {
-          message = ex.getMessage();
-          if (message == null) {
-            message = ex.toString();
+          if (event == null) {
+            Logger.e(LOG_TAG, "Event not found");
+            return;
           }
+
+          String eventId = event.optString("_id");
+
+          this.getSubscriptionId(subscriptionId -> {
+            if (subscriptionId != null) {
+              JSONObject jsonBody = new JSONObject();
+
+              try {
+                JSONObject propertiesObject = new JSONObject();
+                if (properties != null) {
+                  for (Map.Entry<String, Object> entry : properties.entrySet()) {
+                    propertiesObject.put(entry.getKey(), entry.getValue());
+                  }
+                }
+
+                jsonBody.put("channelId", this.channelId);
+                jsonBody.put("eventId", eventId);
+                jsonBody.put("properties", propertiesObject);
+                jsonBody.put("subscriptionId", subscriptionId);
+
+                if (this.lastClickedNotificationId != null) {
+                  jsonBody.put("notificationId", this.lastClickedNotificationId);
+                }
+              } catch (JSONException ex) {
+                Logger.e(LOG_TAG, ex.getMessage(), ex);
+              }
+
+              CleverPushHttpClient.postWithRetry("/subscription/conversion", jsonBody,
+                      new TrackEventResponseHandler().getResponseHandler(eventName));
+            } else {
+              Logger.d(LOG_TAG, "trackEvent: There is no subscription for CleverPush SDK.");
+            }
+          });
+
+          TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
+          if (getAppBannerModule() == null) {
+            pendingAppBannerEvents.add(triggeredEvent);
+            return;
+          }
+          getAppBannerModule().triggerEvent(triggeredEvent);
+        } catch (Exception ex) {
+          String message = "Track event failed because of error";
+          if (ex != null) {
+            message = ex.getMessage();
+            if (message == null) {
+              message = ex.toString();
+            }
+          }
+          Logger.e(LOG_TAG, message);
         }
-        Logger.e(LOG_TAG, message);
-      }
+      });
     });
   }
 
