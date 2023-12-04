@@ -634,7 +634,7 @@ public class CleverPush {
    *
    * @param autoRegister boolean for auto register
    */
-  public void subscribeOrSync(boolean autoRegister) {
+  public void subscribeOrSync(boolean autoRegister, boolean isChannelIdChanged) {
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, getChannelId(getContext())).apply();
 
@@ -678,7 +678,7 @@ public class CleverPush {
       }
       this.fireSubscribedListener(subscriptionId);
       this.setSubscriptionId(subscriptionId);
-      initFeatures();
+      initFeatures(isChannelIdChanged);
     }
   }
 
@@ -703,6 +703,10 @@ public class CleverPush {
    * initialize the features
    */
   public void initFeatures() {
+    initFeatures(false);
+  }
+
+  public void initFeatures(boolean isChannelIdChanged) {
     try {
       if (getCurrentActivity() == null) {
         this.pendingInitFeaturesCall = true;
@@ -739,7 +743,7 @@ public class CleverPush {
         pendingShowAppBannerNotificationId = null;
       }
 
-      appBannerModule.initSession(channelId);
+      appBannerModule.initSession(channelId, isChannelIdChanged);
 
       BroadcastReceiverUtils.registerReceiver(this);
     } catch (Exception e) {
