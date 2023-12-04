@@ -334,7 +334,11 @@ public class AppBannerModule {
   }
 
   public void initSession(String channel) {
-    if (isInitSessionCalled) {
+    initSession(channel, false);
+  }
+
+  public void initSession(String channel, boolean isChannelIdChanged) {
+    if (isInitSessionCalled && !isChannelIdChanged) {
       return;
     }
     isInitSessionCalled = true;
@@ -343,8 +347,9 @@ public class AppBannerModule {
 
     this.channel = channel;
     if (!getCleverPushInstance().isDevelopmentModeEnabled()
-        && lastSessionTimestamp > 0
-        && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH) {
+            && lastSessionTimestamp > 0
+            && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH
+            && !isChannelIdChanged) {
       return;
     }
 

@@ -32,8 +32,9 @@ public class ChannelConfigFromChannelIdResponseHandler {
           JSONObject responseJson = new JSONObject(response);
           cleverPush.setChannelConfig(responseJson);
 
+          boolean isChannelIdChanged = cleverPush.isChannelIdChanged(storedChannelId, storedSubscriptionId);
           cleverPush.subscribeOrSync(
-              autoRegister || cleverPush.isChannelIdChanged(storedChannelId, storedSubscriptionId));
+              autoRegister || isChannelIdChanged, isChannelIdChanged);
 
         } catch (Throwable ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
