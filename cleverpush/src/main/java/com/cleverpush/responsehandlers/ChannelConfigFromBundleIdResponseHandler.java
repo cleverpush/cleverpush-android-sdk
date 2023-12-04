@@ -33,7 +33,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
           JSONObject responseJson = new JSONObject(response);
           cleverPush.setChannelConfig(responseJson);
           cleverPush.setChannelId(responseJson.getString("channelId"));
-          cleverPush.subscribeOrSync(autoRegister, false);
+          cleverPush.subscribeOrSync(autoRegister);
           Logger.d(LOG_TAG,
               "Got Channel ID via Package Name: " + cleverPush.getChannelId(cleverPush.getContext()) + " (SDK "
                   + CleverPush.SDK_VERSION + ")");

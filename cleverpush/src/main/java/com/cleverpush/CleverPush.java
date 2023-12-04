@@ -634,6 +634,10 @@ public class CleverPush {
    *
    * @param autoRegister boolean for auto register
    */
+  public void subscribeOrSync(boolean autoRegister) {
+    subscribeOrSync(autoRegister, false);
+  }
+
   public void subscribeOrSync(boolean autoRegister, boolean isChannelIdChanged) {
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, getChannelId(getContext())).apply();
