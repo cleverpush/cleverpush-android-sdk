@@ -2592,30 +2592,30 @@ public class CleverPush {
   }
 
   public void trackEvent(String eventName, Map<String, Object> properties) {
-    this.waitForTrackingConsent(() -> {
-      this.getChannelConfig(channelConfig -> {
-        if (channelConfig == null) {
+    this.getChannelConfig(channelConfig -> {
+      if (channelConfig == null) {
+        return;
+      }
+
+      try {
+        JSONArray channelEvents = channelConfig.getJSONArray("channelEvents");
+        JSONObject event = null;
+        for (int i = 0; i < channelEvents.length(); i++) {
+          JSONObject tryEvent = channelEvents.getJSONObject(i);
+          if (tryEvent != null && tryEvent.getString("name").equals(eventName)) {
+            event = tryEvent;
+            break;
+          }
+        }
+
+        if (event == null) {
+          Logger.e(LOG_TAG, "Event not found");
           return;
         }
 
-        try {
-          JSONArray channelEvents = channelConfig.getJSONArray("channelEvents");
-          JSONObject event = null;
-          for (int i = 0; i < channelEvents.length(); i++) {
-            JSONObject tryEvent = channelEvents.getJSONObject(i);
-            if (tryEvent != null && tryEvent.getString("name").equals(eventName)) {
-              event = tryEvent;
-              break;
-            }
-          }
+        String eventId = event.optString("_id");
 
-          if (event == null) {
-            Logger.e(LOG_TAG, "Event not found");
-            return;
-          }
-
-          String eventId = event.optString("_id");
-
+        this.waitForTrackingConsent(() -> {
           this.getSubscriptionId(subscriptionId -> {
             if (subscriptionId != null) {
               JSONObject jsonBody = new JSONObject();
@@ -2646,24 +2646,24 @@ public class CleverPush {
               Logger.d(LOG_TAG, "trackEvent: There is no subscription for CleverPush SDK.");
             }
           });
+        });
 
-          TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
-          if (getAppBannerModule() == null) {
-            pendingAppBannerEvents.add(triggeredEvent);
-            return;
-          }
-          getAppBannerModule().triggerEvent(triggeredEvent);
-        } catch (Exception ex) {
-          String message = "Track event failed because of error";
-          if (ex != null) {
-            message = ex.getMessage();
-            if (message == null) {
-              message = ex.toString();
-            }
-          }
-          Logger.e(LOG_TAG, message);
+        TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
+        if (getAppBannerModule() == null) {
+          pendingAppBannerEvents.add(triggeredEvent);
+          return;
         }
-      });
+        getAppBannerModule().triggerEvent(triggeredEvent);
+      } catch (Exception ex) {
+        String message = "Track event failed because of error";
+        if (ex != null) {
+          message = ex.getMessage();
+          if (message == null) {
+            message = ex.toString();
+          }
+        }
+        Logger.e(LOG_TAG, message);
+      }
     });
   }
 
