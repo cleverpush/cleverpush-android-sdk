@@ -36,6 +36,8 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.database.DatabaseClient;
+import com.cleverpush.database.TableBannerTrackEvent;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannerShownListener;
@@ -219,6 +221,7 @@ public class CleverPush {
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
+  private int trackEventRetentionDays = 90;
   private boolean autoResubscribe = false;
   private boolean autoRequestNotificationPermission = true;
 
@@ -524,6 +527,8 @@ public class CleverPush {
     incrementAppOpens();
 
     setUpNotificationCategoryGroups();
+
+    deleteDataBasedOnRetentionDays();
   }
 
   public SessionListener initSessionListener() {
@@ -2656,6 +2661,17 @@ public class CleverPush {
           });
         });
 
+        ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context).
+                getAppDatabase()
+                .trackEventDao()
+                .getBannerTrackEvent(eventId);
+        if (bannerTrackEvents.size() > 0) {
+          DatabaseClient.getInstance(CleverPush.context)
+                  .getAppDatabase()
+                  .trackEventDao()
+                  .increaseCount(eventId, getCurrentDateTime());
+        }
+
         TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
         if (getAppBannerModule() == null) {
           pendingAppBannerEvents.add(triggeredEvent);
@@ -3761,6 +3777,38 @@ public class CleverPush {
 
   public IabTcfMode getIabTcfMode() {
     return iabTcfMode;
+  }
+
+  public int getLocalTrackEventRetentionDays() {
+    return trackEventRetentionDays;
+  }
+
+  public void setLocalTrackEventRetentionDays(int trackEventRetentionDays) {
+    this.trackEventRetentionDays = trackEventRetentionDays;
+  }
+
+  public String getCurrentDateTime() {
+    try {
+      Date time = Calendar.getInstance().getTime();
+      SimpleDateFormat outputFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      return outputFmt.format(time);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "getCurrentDateTime: " + e.getLocalizedMessage());
+      return "";
+    }
+  }
+
+  public void deleteDataBasedOnRetentionDays() {
+    try {
+      int retentionDays = getLocalTrackEventRetentionDays();
+      Logger.e("retentionDays", "retentionDays: "+ retentionDays);
+      DatabaseClient.getInstance(CleverPush.context)
+              .getAppDatabase()
+              .trackEventDao()
+              .deleteDataBasedOnRetentionDays(retentionDays);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "deleteDataBasedOnRetentionDays: " + e.getLocalizedMessage());
+    }
   }
 
   public boolean isAutoResubscribe() {
