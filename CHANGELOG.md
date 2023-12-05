@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.0 (05.12.2023)
+* Support app banner targeting from previously tracked events
+
 ## 1.32.4 (01.12.2023)
 * Automatically remove targeting data (tags, attributes) when tracking consent has been revoked
 
