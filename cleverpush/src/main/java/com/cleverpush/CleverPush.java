@@ -128,7 +128,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.33.0";
+  public static final String SDK_VERSION = "1.33.1";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;

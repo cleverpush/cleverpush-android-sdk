@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.1 (06.12.2023)
+* Fixed a bug in `AppBanner`, remove space between text and image.
+
 ## 1.33.0 (05.12.2023)
 * Support app banner targeting from previously tracked events
 * Stop follow-up campaigns on revoked tracking consents
