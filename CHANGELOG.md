@@ -103,6 +103,7 @@
 
 ## 1.30.13
 * Added loading spinner
+* Fixed a bug in `AppBanner`, displayed duplicate elements in banner
 
 ## 1.30.12
 * Added feature to set the app banner close button position 
