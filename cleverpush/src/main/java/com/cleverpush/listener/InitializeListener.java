@@ -1,5 +1,9 @@
 package com.cleverpush.listener;
 
-public interface InitializeListener {
-  void onInitialized();
+public abstract class InitializeListener {
+  public abstract void onInitialized();
+
+  public void onFailure(Throwable throwable) {
+    // Default implementation for onFailure
+  }
 }

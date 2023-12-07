@@ -487,7 +487,7 @@ public class CleverPush {
               @Override
               public void onFailure(Throwable throwable) {
                 if (initializeListener != null) {
-                  initializeListener.onInitialized();
+                  initializeListener.onFailure(throwable);
                 }
                 fireInitializeListener();
               }
@@ -508,7 +508,7 @@ public class CleverPush {
         fireInitializeListener();
       }
       // get channel config
-      getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId);
+      getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId, initializeListener);
     } else {
       Logger.d(LOG_TAG,
           "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: "
@@ -597,14 +597,14 @@ public class CleverPush {
     this.subscribedListener = subscribedListener;
   }
 
-  public void getChannelConfigFromChannelId(boolean autoRegister, String storedChannelId, String storedSubscriptionId) {
+  public void getChannelConfigFromChannelId(boolean autoRegister, String storedChannelId, String storedSubscriptionId, InitializeListener listener) {
     CleverPush instance = this;
     String configPath = "/channel/" + this.channelId + "/config";
     if (developmentMode) {
       configPath += "?t=" + System.currentTimeMillis();
     }
     CleverPushHttpClient.getWithRetry(configPath,
-        new ChannelConfigFromChannelIdResponseHandler(instance).getResponseHandler(autoRegister, storedChannelId,
+        new ChannelConfigFromChannelIdResponseHandler(instance, listener).getResponseHandler(autoRegister, storedChannelId,
             storedSubscriptionId));
   }
 

@@ -9,6 +9,7 @@ import android.preference.PreferenceManager;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.util.Logger;
 
 import org.json.JSONObject;
@@ -16,9 +17,11 @@ import org.json.JSONObject;
 public class ChannelConfigFromChannelIdResponseHandler {
 
   private final CleverPush cleverPush;
+  private final InitializeListener listener;
 
-  public ChannelConfigFromChannelIdResponseHandler(CleverPush instance) {
+  public ChannelConfigFromChannelIdResponseHandler(CleverPush instance, InitializeListener listener) {
     this.cleverPush = instance;
+    this.listener = listener;
   }
 
   public CleverPushHttpClient.ResponseHandler getResponseHandler(boolean autoRegister, String storedChannelId,
@@ -36,6 +39,9 @@ public class ChannelConfigFromChannelIdResponseHandler {
           cleverPush.subscribeOrSync(
               autoRegister || isChannelIdChanged, isChannelIdChanged);
 
+          if (listener != null) {
+            listener.onInitialized();
+          }
         } catch (Throwable ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
         }
@@ -51,11 +57,20 @@ public class ChannelConfigFromChannelIdResponseHandler {
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
           );
+          if (listener != null) {
+            listener.onFailure(throwable);
+          }
         } else {
           Logger.e("CleverPush", "Failed to fetch Channel Config." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response
           );
+          if (listener != null) {
+            Exception genericException = new Exception("Failed to fetch Channel Config." +
+                    "\nStatus code: " + statusCode +
+                    "\nResponse: " + response);
+            listener.onFailure(genericException);
+          }
         }
 
         // trigger listeners
