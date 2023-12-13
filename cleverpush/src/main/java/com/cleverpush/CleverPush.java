@@ -2754,10 +2754,18 @@ public class CleverPush {
   }
 
   public void trackNotificationClicked(String notificationId, String subscriptionId) {
+    trackNotificationClicked(notificationId, subscriptionId, null, null);
+  }
+
+  public void trackNotificationClicked(String notificationId, String subscriptionId, String channelId, String actionIndex) {
     JSONObject jsonBody = new JSONObject();
     try {
       jsonBody.put("notificationId", notificationId);
       jsonBody.put("subscriptionId", subscriptionId);
+      jsonBody.put("channelId", channelId);
+      if (actionIndex != null && !actionIndex.isEmpty()) {
+        jsonBody.put("action", actionIndex);
+      }
     } catch (JSONException e) {
       Logger.e(LOG_TAG, "Error generating clicked json", e);
     }

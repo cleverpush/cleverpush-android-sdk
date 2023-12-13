@@ -84,6 +84,10 @@ public class Notification implements Serializable {
     return url;
   }
 
+  public void setUrl(String url) {
+    this.url = url;
+  }
+
   public String getIconUrl() {
     return iconUrl;
   }

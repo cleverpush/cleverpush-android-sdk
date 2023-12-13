@@ -20,6 +20,7 @@ public class NotificationOpenedProcessor {
     Gson gson = new Gson();
     Notification notification = gson.fromJson(intent.getStringExtra("notification"), Notification.class);
     Subscription subscription = gson.fromJson(intent.getStringExtra("subscription"), Subscription.class);
+    String actionIndex = intent.getStringExtra("actionIndex");
 
     if (notification == null || subscription == null) {
       return;
@@ -38,8 +39,9 @@ public class NotificationOpenedProcessor {
     result.setNotificationOpenedActivity((Activity) context);
 
     CleverPush cleverPush = CleverPush.getInstance(context);
+    String channelId = cleverPush.getChannelId(context);
 
-    cleverPush.trackNotificationClicked(notificationId, subscriptionId);
+    cleverPush.trackNotificationClicked(notificationId, subscriptionId, channelId, actionIndex);
 
     cleverPush.fireNotificationOpenedListener(result);
 
