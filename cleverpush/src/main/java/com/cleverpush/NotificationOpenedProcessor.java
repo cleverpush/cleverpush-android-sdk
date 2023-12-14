@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
+import androidx.core.app.NotificationManagerCompat;
+
 import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
@@ -21,10 +23,14 @@ public class NotificationOpenedProcessor {
     Notification notification = gson.fromJson(intent.getStringExtra("notification"), Notification.class);
     Subscription subscription = gson.fromJson(intent.getStringExtra("subscription"), Subscription.class);
     String actionIndex = intent.getStringExtra("actionIndex");
+    int notification_Id = intent.getIntExtra("notificationId", 0);
 
     if (notification == null || subscription == null) {
       return;
     }
+
+    // Close the notification using NotificationManager
+    NotificationManagerCompat.from(context).cancel(notification.getTag(), notification_Id);
 
     String notificationId = notification.getId();
     String subscriptionId = subscription.getId();

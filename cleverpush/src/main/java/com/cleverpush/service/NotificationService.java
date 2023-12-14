@@ -132,7 +132,7 @@ public class NotificationService {
 
   private NotificationCompat.Builder createBasicNotification(Context context, String notificationStr,
                                                              String subscriptionStr, Notification notification,
-                                                             int requestCode) {
+                                                             int requestId) {
     String voucherCode = notification.getVoucherCode();
     String iconUrl = notification.getIconUrl();
     String mediaUrl = notification.getMediaUrl();
@@ -144,7 +144,7 @@ public class NotificationService {
     targetIntent.putExtra("subscription", subscriptionStr);
 
     PendingIntent contentIntent =
-        PendingIntent.getActivity(context, requestCode, targetIntent, this.getPendingIntentFlags());
+        PendingIntent.getActivity(context, requestId, targetIntent, this.getPendingIntentFlags());
 
     NotificationStyle notificationStyle = getNotificationStyle(context);
 
@@ -216,7 +216,11 @@ public class NotificationService {
         NotificationAction action = notification.getActions()[i];
 
         // Create a PendingIntent for the button click
-        NotificationCompat.Action notificationAction = createActionPendingIntent(context, action, notification, subscriptionStr, i);
+        PendingIntent actionPendingIntent = createActionPendingIntent(context, action, notification, subscriptionStr, i, requestId);
+
+        NotificationCompat.Action notificationAction = new NotificationCompat.Action.Builder(
+                getDrawableId(context, action.getIcon()), action.getTitle(), actionPendingIntent)
+                .build();
         actions.add(notificationAction);
       }
       for (NotificationCompat.Action action : actions) {
@@ -595,26 +599,20 @@ public class NotificationService {
     return bitmap;
   }
 
-  private  NotificationCompat.Action createActionPendingIntent(Context context, NotificationAction action, Notification notification, String subscriptionStr, int actionIndex) {
+  private PendingIntent createActionPendingIntent(Context context, NotificationAction action, Notification notification, String subscriptionStr, int actionIndex, int requestId) {
     Intent actionIntent = getTargetIntent(context);
-    PendingIntent actionPendingIntent;
     Notification actionNotification = notification;
     if (action.getUrl() != null && !action.getUrl().isEmpty()) {
       actionNotification.setUrl(action.getUrl());
     }
     String notificationStr = new Gson().toJson(actionNotification);
     actionIntent.putExtra("actionIndex", String.valueOf(actionIndex));
+    actionIntent.putExtra("notificationId", requestId);
     actionIntent.putExtra("notification", notificationStr);
     actionIntent.putExtra("subscription", subscriptionStr);
 
     int requestCode = generateRequestCode();
 
-    actionPendingIntent = PendingIntent.getActivity(context, requestCode, actionIntent, this.getPendingIntentFlags());
-
-    NotificationCompat.Action notificationAction = new NotificationCompat.Action.Builder(
-            getDrawableId(context, action.getIcon()), action.getTitle(), actionPendingIntent)
-            .build();
-
-    return notificationAction;
+    return PendingIntent.getActivity(context, requestCode, actionIntent, this.getPendingIntentFlags());
   }
 }
