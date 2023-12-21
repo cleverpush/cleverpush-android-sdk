@@ -599,7 +599,7 @@ public class NotificationService {
 
   private PendingIntent createActionPendingIntent(Context context, NotificationAction action, Notification notification, String subscriptionStr, int actionIndex, int requestId) {
     Intent actionIntent = getTargetIntent(context);
-    Notification actionNotification = notification;
+    Notification actionNotification = notification.copy();
     if (action.getUrl() != null && !action.getUrl().isEmpty()) {
       actionNotification.setUrl(action.getUrl());
     }
