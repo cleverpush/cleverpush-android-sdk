@@ -23,14 +23,14 @@ public class NotificationOpenedProcessor {
     Notification notification = gson.fromJson(intent.getStringExtra("notification"), Notification.class);
     Subscription subscription = gson.fromJson(intent.getStringExtra("subscription"), Subscription.class);
     String actionIndex = intent.getStringExtra("actionIndex");
-    int notification_Id = intent.getIntExtra("notificationId", 0);
+    int activeNotificationId = intent.getIntExtra("notificationId", 0);
 
     if (notification == null || subscription == null) {
       return;
     }
 
     // Close the notification using NotificationManager
-    NotificationManagerCompat.from(context).cancel(notification.getTag(), notification_Id);
+    NotificationManagerCompat.from(context).cancel(notification.getTag(), activeNotificationId);
 
     String notificationId = notification.getId();
     String subscriptionId = subscription.getId();

@@ -208,9 +208,7 @@ public class NotificationService {
     if (notification.getActions() != null && notification.getActions().length > 0) {
       List<NotificationCompat.Action> actions = new ArrayList<>();
 
-      Logger.d(LOG_TAG, "notification.getActions: " + new Gson().toJson(notification.getActions()));
       int maxActions = Math.min(notification.getActions().length, 2); // Limit to 2 buttons
-      Logger.d(LOG_TAG, "maxActions: " + maxActions);
 
       for (int i = 0; i < maxActions; i++) {
         NotificationAction action = notification.getActions()[i];
