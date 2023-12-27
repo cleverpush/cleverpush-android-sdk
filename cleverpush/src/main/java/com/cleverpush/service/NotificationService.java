@@ -32,6 +32,7 @@ import com.cleverpush.BadgeHelper;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
+import com.cleverpush.NotificationAction;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
 import com.cleverpush.NotificationOpenedActivity;
@@ -41,6 +42,7 @@ import com.cleverpush.Subscription;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.NotificationCategorySetUp;
 import com.cleverpush.util.VoucherCodeUtils;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,6 +54,7 @@ import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 public class NotificationService {
@@ -129,7 +132,7 @@ public class NotificationService {
 
   private NotificationCompat.Builder createBasicNotification(Context context, String notificationStr,
                                                              String subscriptionStr, Notification notification,
-                                                             int requestCode) {
+                                                             int requestId) {
     String voucherCode = notification.getVoucherCode();
     String iconUrl = notification.getIconUrl();
     String mediaUrl = notification.getMediaUrl();
@@ -141,7 +144,7 @@ public class NotificationService {
     targetIntent.putExtra("subscription", subscriptionStr);
 
     PendingIntent contentIntent =
-        PendingIntent.getActivity(context, requestCode, targetIntent, this.getPendingIntentFlags());
+        PendingIntent.getActivity(context, requestId, targetIntent, this.getPendingIntentFlags());
 
     NotificationStyle notificationStyle = getNotificationStyle(context);
 
@@ -201,6 +204,27 @@ public class NotificationService {
         .setSmallIcon(getSmallIcon(context))
         .setAutoCancel(true)
         .setSound(soundUri);
+
+    if (notification.getActions() != null && notification.getActions().length > 0) {
+      List<NotificationCompat.Action> actions = new ArrayList<>();
+
+      int maxActions = Math.min(notification.getActions().length, 2); // Limit to 2 buttons
+
+      for (int i = 0; i < maxActions; i++) {
+        NotificationAction action = notification.getActions()[i];
+
+        // Create a PendingIntent for the button click
+        PendingIntent actionPendingIntent = createActionPendingIntent(context, action, notification, subscriptionStr, i, requestId);
+
+        NotificationCompat.Action notificationAction = new NotificationCompat.Action.Builder(
+                getDrawableId(context, action.getIcon()), action.getTitle(), actionPendingIntent)
+                .build();
+        actions.add(notificationAction);
+      }
+      for (NotificationCompat.Action action : actions) {
+        notificationBuilder.addAction(action);
+      }
+    }
 
     if (iconUrl != null && !iconUrl.isEmpty()) {
       try {
@@ -571,5 +595,22 @@ public class NotificationService {
     }
 
     return bitmap;
+  }
+
+  private PendingIntent createActionPendingIntent(Context context, NotificationAction action, Notification notification, String subscriptionStr, int actionIndex, int requestId) {
+    Intent actionIntent = getTargetIntent(context);
+    Notification actionNotification = notification.copy();
+    if (action.getUrl() != null && !action.getUrl().isEmpty()) {
+      actionNotification.setUrl(action.getUrl());
+    }
+    String notificationStr = new Gson().toJson(actionNotification);
+    actionIntent.putExtra("actionIndex", String.valueOf(actionIndex));
+    actionIntent.putExtra("notificationId", requestId);
+    actionIntent.putExtra("notification", notificationStr);
+    actionIntent.putExtra("subscription", subscriptionStr);
+
+    int requestCode = generateRequestCode();
+
+    return PendingIntent.getActivity(context, requestCode, actionIntent, this.getPendingIntentFlags());
   }
 }

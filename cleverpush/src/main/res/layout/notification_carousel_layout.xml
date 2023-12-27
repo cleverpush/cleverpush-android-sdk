@@ -1,40 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <RelativeLayout
-        android:id="@+id/notification_main"
+    <FrameLayout
+        android:id="@+id/basic_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/notification_title"
+        <RelativeLayout
+            android:id="@+id/notification_main"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:lineSpacingMultiplier="1.2"
-            android:textAppearance="@style/TextAppearance.Compat.Notification.Title" />
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/notification_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/notification_title"
-            android:layout_alignStart="@+id/notification_title"
-            android:layout_alignEnd="@+id/notification_title"
-            android:lineSpacingMultiplier="1.2"
-            android:textAppearance="@style/TextAppearance.Compat.Notification.Info" />
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/notification_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingMultiplier="1.2"
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Title" />
 
-    <include
-        layout="@layout/notification_text_image_layout"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/cp_notification_min_height" />
+            <TextView
+                android:id="@+id/notification_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/notification_title"
+                android:layout_alignStart="@+id/notification_title"
+                android:layout_alignEnd="@+id/notification_title"
+                android:lineSpacingMultiplier="1.2"
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Info" />
+        </RelativeLayout>
+
+        <include
+            layout="@layout/notification_text_image_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </FrameLayout>
 
     <RelativeLayout
+        android:id="@+id/carousel_layout"
         android:layout_width="match_parent"
         android:layout_height="@dimen/cp_notification_big_pic_height"
-        android:layout_marginTop="@dimen/cp_notification_min_height">
+        android:layout_below="@+id/basic_layout"
+        android:layout_marginTop="10dp">
 
         <ImageView
             android:id="@+id/big_picture"
@@ -51,10 +60,10 @@
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:background="@color/cp_notification_btn_bg"
-            android:contentDescription="@string/carousel_prev_button"
-            android:src="@drawable/cp_carousel_previous"
-            android:focusable="true"
             android:clickable="true"
+            android:contentDescription="@string/carousel_prev_button"
+            android:focusable="true"
+            android:src="@drawable/cp_carousel_previous"
             android:visibility="gone" />
 
         <ImageButton
@@ -64,12 +73,12 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:background="@color/cp_notification_btn_bg"
-            android:contentDescription="@string/carousel_next_button"
-            android:src="@drawable/cp_carousel_next"
-            android:focusable="true"
             android:clickable="true"
+            android:contentDescription="@string/carousel_next_button"
+            android:focusable="true"
+            android:src="@drawable/cp_carousel_next"
             android:visibility="gone" />
 
     </RelativeLayout>
 
-</FrameLayout>
+</RelativeLayout>
