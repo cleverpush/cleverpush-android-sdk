@@ -50,6 +50,8 @@ import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -303,6 +305,8 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     imgConstraints.applyTo(imageLayout);
 
     new Thread(() -> {
+      HttpURLConnection connection = null;
+      InputStream in = null;
       try {
         String imageUrl;
         if (appBannerPopup.getData().isDarkModeEnabled(activity)
@@ -312,10 +316,19 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           imageUrl = block.getImageUrl();
         }
 
-        boolean isGif = isGif(imageUrl);
+        URL url = new URL(imageUrl);
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setDoInput(true);
 
-        InputStream in = new URL(imageUrl).openStream();
-        Bitmap bitmap = BitmapFactory.decodeStream(in);
+        // Get the content type from the response headers
+        String contentType = connection.getHeaderField("Content-Type");
+
+        // Checks whether the content at the specified URL is a GIF image.
+        boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
+
+        in = connection.getInputStream();
+        final Bitmap bitmap = BitmapFactory.decodeStream(in);
+
         activity.runOnUiThread(() -> {
           if (isGif) {
             Glide.with(CleverPush.context)
@@ -338,6 +351,17 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             progressBar.setVisibility(View.GONE);
           });
         }
+      } finally {
+        if (connection != null) {
+          connection.disconnect();
+        }
+        if (in != null) {
+          try {
+            in.close();
+          } catch (IOException e) {
+            Logger.e(TAG, "Error closing InputStream: " + e.getLocalizedMessage());
+          }
+        }
       }
     }).start();
 
@@ -348,34 +372,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       action.setBlockId(block.getId());
       img.setOnClickListener(view -> this.onClickListener(action));
     }
-  }
-
-  /**
-   * Checks whether the content at the specified URL is a GIF image.
-   *
-   * @param imageUrl The URL of the image to be checked.
-   * @return True if the content is a GIF image, false otherwise.
-   */
-  private boolean isGif(String imageUrl) {
-    HttpURLConnection connection = null;
-    try {
-      URL url = new URL(imageUrl);
-      connection = (HttpURLConnection) url.openConnection();
-      connection.setDoInput(true);
-
-      // Get the content type from the response headers
-      String contentType = connection.getHeaderField("Content-Type");
-
-      // Check if it's a GIF (case-insensitive comparison)
-      return contentType != null && contentType.toLowerCase().startsWith("image/gif");
-    } catch (Exception e) {
-      Logger.e(TAG, "isGif Exception: " + e.getLocalizedMessage());
-    } finally {
-      if (connection != null) {
-        connection.disconnect();
-      }
-    }
-    return false;
   }
 
   @SuppressLint("SetJavaScriptEnabled")
