@@ -30,6 +30,9 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
@@ -47,8 +50,11 @@ import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -299,19 +305,41 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     imgConstraints.applyTo(imageLayout);
 
     new Thread(() -> {
+      HttpURLConnection connection = null;
+      InputStream in = null;
       try {
         String imageUrl;
-        if (appBannerPopup.getData().isDarkModeEnabled(activity) && block.getDarkImageUrl() != null) {
+        if (appBannerPopup.getData().isDarkModeEnabled(activity)
+                && block.getDarkImageUrl() != null && !block.getDarkImageUrl().isEmpty()) {
           imageUrl = block.getDarkImageUrl();
         } else {
           imageUrl = block.getImageUrl();
         }
 
-        InputStream in = new URL(imageUrl).openStream();
-        Bitmap bitmap = BitmapFactory.decodeStream(in);
+        URL url = new URL(imageUrl);
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setDoInput(true);
+
+        // Get the content type from the response headers
+        String contentType = connection.getHeaderField("Content-Type");
+
+        // Checks whether the content at the specified URL is a GIF image.
+        boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
+
+        in = connection.getInputStream();
+        final Bitmap bitmap = BitmapFactory.decodeStream(in);
+
         activity.runOnUiThread(() -> {
-          if (bitmap != null) {
-            img.setImageBitmap(bitmap);
+          if (isGif) {
+            Glide.with(CleverPush.context)
+                    .asGif()
+                    .load(imageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(img);
+          } else {
+            if (bitmap != null) {
+              img.setImageBitmap(bitmap);
+            }
           }
           progressBar.setVisibility(View.GONE);
         });
@@ -322,6 +350,17 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           activity.runOnUiThread(() -> {
             progressBar.setVisibility(View.GONE);
           });
+        }
+      } finally {
+        if (connection != null) {
+          connection.disconnect();
+        }
+        if (in != null) {
+          try {
+            in.close();
+          } catch (IOException e) {
+            Logger.e(TAG, "Error closing InputStream: " + e.getLocalizedMessage());
+          }
         }
       }
     }).start();
