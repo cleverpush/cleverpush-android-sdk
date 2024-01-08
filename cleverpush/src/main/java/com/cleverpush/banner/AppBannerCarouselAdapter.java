@@ -65,6 +65,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
   private static final String TAG = "CleverPush/AppBanner";
   private static final String CONTENT_TYPE_HTML = "html";
+  private static final String POSITION_TYPE_FULL = "full";
   private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
   private static final Map<Alignment, Integer> gravityMap = new HashMap<>();
   private final Activity activity;
@@ -286,12 +287,21 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.addView(textView);
   }
 
-  private void composeImageBlock(LinearLayout body, BannerImageBlock block, int position) {
+  private void composeImageBlock(LinearLayout body, BannerImageBlock block, int blockPosition) {
     @SuppressLint("InflateParams") ConstraintLayout imageLayout =
             (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
     ImageView img = imageLayout.findViewById(R.id.imageView);
     ProgressBar progressBar = imageLayout.findViewById(R.id.progressBar);
     progressBar.setVisibility(View.VISIBLE);
+
+    ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) img.getLayoutParams();
+
+    if (!isBannerPositionFull()) {
+      layoutParams.height = 0;
+      layoutParams.dimensionRatio = "1";
+    }
+
+    img.setLayoutParams(layoutParams);
 
     ConstraintSet imgConstraints = new ConstraintSet();
     imgConstraints.clone(imageLayout);
@@ -316,36 +326,63 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           imageUrl = block.getImageUrl();
         }
 
-        URL url = new URL(imageUrl);
-        connection = (HttpURLConnection) url.openConnection();
-        connection.setDoInput(true);
+        if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equalsIgnoreCase("null")) {
 
-        // Get the content type from the response headers
-        String contentType = connection.getHeaderField("Content-Type");
+          URL url = new URL(imageUrl);
+          connection = (HttpURLConnection) url.openConnection();
+          connection.setDoInput(true);
 
-        // Checks whether the content at the specified URL is a GIF image.
-        boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
+          // Get the content type from the response headers
+          String contentType = connection.getHeaderField("Content-Type");
 
-        in = connection.getInputStream();
-        final Bitmap bitmap = BitmapFactory.decodeStream(in);
+          // Checks whether the content at the specified URL is a GIF image.
+          boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
 
-        activity.runOnUiThread(() -> {
-          if (isGif) {
-            Glide.with(CleverPush.context)
-                    .asGif()
-                    .load(imageUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(img);
-          } else {
-            if (bitmap != null) {
-              img.setImageBitmap(bitmap);
+          in = connection.getInputStream();
+          final Bitmap bitmap = BitmapFactory.decodeStream(in);
+
+          activity.runOnUiThread(() -> {
+            if (!isBannerPositionFull()) {
+              if (bitmap != null) {
+                // Calculate aspect ratio and adjust ImageView size
+                float imageAspectRatio = (float) bitmap.getWidth() / bitmap.getHeight();
+                int imageWidth = img.getWidth();  // Get the current width of ImageView
+                int imageHeight = (int) (imageWidth / imageAspectRatio);  // Calculate height based on aspect ratio
+                ViewGroup.LayoutParams imgLayoutParams = img.getLayoutParams();
+                imgLayoutParams.width = imageWidth;
+                imgLayoutParams.height = imageHeight;
+                img.setLayoutParams(imgLayoutParams);
+              }
+
+              appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
+                appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+              });
             }
-          }
-          progressBar.setVisibility(View.GONE);
-        });
 
-      } catch (Exception ignored) {
-        Logger.d(TAG, ignored.getLocalizedMessage());
+            if (isGif) {
+              Glide.with(CleverPush.context)
+                      .asGif()
+                      .load(imageUrl)
+                      .diskCacheStrategy(DiskCacheStrategy.ALL)
+                      .into(img);
+            } else {
+              if (bitmap != null) {
+                img.setImageBitmap(bitmap);
+              }
+            }
+          });
+        } else {
+          img.setImageResource(R.drawable.app_banner_default_image);
+
+          appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
+            if (!isBannerPositionFull()) {
+              appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+            }
+          });
+        }
+        progressBar.setVisibility(View.GONE);
+      } catch (Exception e) {
+        Logger.d(TAG, "composeImageBlock Exception: " + e.getLocalizedMessage());
         if (activity != null) {
           activity.runOnUiThread(() -> {
             progressBar.setVisibility(View.GONE);
@@ -566,5 +603,17 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     public void showTopicsDialog() {
       CleverPush.getInstance(CleverPush.context).showTopicsDialog();
     }
+  }
+
+  /**
+   * Checks if the banner position type is set to "full."
+   *
+   * @return True if the banner position type is "full," false otherwise.
+   */
+  private boolean isBannerPositionFull() {
+    if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+      return true;
+    }
+    return false;
   }
 }

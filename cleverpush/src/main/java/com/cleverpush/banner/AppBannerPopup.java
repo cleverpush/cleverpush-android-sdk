@@ -482,7 +482,7 @@ public class AppBannerPopup {
 
   }
 
-  private void updatePagerHeightForChild(View view, ViewPager2 viewPager2) {
+  public void updatePagerHeightForChild(View view, ViewPager2 viewPager2) {
     view.post(() -> {
       int wMeasureSpec = View.MeasureSpec.makeMeasureSpec(view.getWidth(), View.MeasureSpec.EXACTLY);
       int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
