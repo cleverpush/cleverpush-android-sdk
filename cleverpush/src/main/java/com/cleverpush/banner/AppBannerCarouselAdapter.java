@@ -368,8 +368,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
               img.setImageBitmap(bitmap);
             }
           }
+          progressBar.setVisibility(View.GONE);
         });
-        progressBar.setVisibility(View.GONE);
+
       } catch (Exception e) {
         Logger.d(TAG, "composeImageBlock Exception: " + e.getLocalizedMessage());
         if (activity != null) {
