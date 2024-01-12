@@ -326,60 +326,49 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           imageUrl = block.getImageUrl();
         }
 
-        if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equalsIgnoreCase("null")) {
+        URL url = new URL(imageUrl);
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setDoInput(true);
 
-          URL url = new URL(imageUrl);
-          connection = (HttpURLConnection) url.openConnection();
-          connection.setDoInput(true);
+        // Get the content type from the response headers
+        String contentType = connection.getHeaderField("Content-Type");
 
-          // Get the content type from the response headers
-          String contentType = connection.getHeaderField("Content-Type");
+        // Checks whether the content at the specified URL is a GIF image.
+        boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
 
-          // Checks whether the content at the specified URL is a GIF image.
-          boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
+        in = connection.getInputStream();
+        final Bitmap bitmap = BitmapFactory.decodeStream(in);
 
-          in = connection.getInputStream();
-          final Bitmap bitmap = BitmapFactory.decodeStream(in);
-
-          activity.runOnUiThread(() -> {
-            if (!isBannerPositionFull()) {
-              if (bitmap != null) {
-                // Calculate aspect ratio and adjust ImageView size
-                float imageAspectRatio = (float) bitmap.getWidth() / bitmap.getHeight();
-                int imageWidth = img.getWidth();  // Get the current width of ImageView
-                int imageHeight = (int) (imageWidth / imageAspectRatio);  // Calculate height based on aspect ratio
-                ViewGroup.LayoutParams imgLayoutParams = img.getLayoutParams();
-                imgLayoutParams.width = imageWidth;
-                imgLayoutParams.height = imageHeight;
-                img.setLayoutParams(imgLayoutParams);
-              }
-
-              appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
-                appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
-              });
+        activity.runOnUiThread(() -> {
+          if (!isBannerPositionFull()) {
+            if (bitmap != null) {
+              // Calculate aspect ratio and adjust ImageView size
+              float imageAspectRatio = (float) bitmap.getWidth() / bitmap.getHeight();
+              int imageWidth = img.getWidth();  // Get the current width of ImageView
+              int imageHeight = (int) (imageWidth / imageAspectRatio);  // Calculate height based on aspect ratio
+              ViewGroup.LayoutParams imgLayoutParams = img.getLayoutParams();
+              imgLayoutParams.width = imageWidth;
+              imgLayoutParams.height = imageHeight;
+              img.setLayoutParams(imgLayoutParams);
             }
 
-            if (isGif) {
-              Glide.with(CleverPush.context)
-                      .asGif()
-                      .load(imageUrl)
-                      .diskCacheStrategy(DiskCacheStrategy.ALL)
-                      .into(img);
-            } else {
-              if (bitmap != null) {
-                img.setImageBitmap(bitmap);
-              }
-            }
-          });
-        } else {
-          img.setImageResource(R.drawable.app_banner_default_image);
-
-          appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
-            if (!isBannerPositionFull()) {
+            appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
               appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+            });
+          }
+
+          if (isGif) {
+            Glide.with(CleverPush.context)
+                    .asGif()
+                    .load(imageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(img);
+          } else {
+            if (bitmap != null) {
+              img.setImageBitmap(bitmap);
             }
-          });
-        }
+          }
+        });
         progressBar.setVisibility(View.GONE);
       } catch (Exception e) {
         Logger.d(TAG, "composeImageBlock Exception: " + e.getLocalizedMessage());
