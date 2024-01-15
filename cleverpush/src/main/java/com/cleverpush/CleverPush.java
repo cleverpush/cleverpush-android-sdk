@@ -3783,11 +3783,11 @@ public class CleverPush {
     this.iabTcfMode = mode;
   }
 
-  public IabTcfMode getIabTcfMode() {
+  private IabTcfMode getIabTcfMode() {
     return iabTcfMode;
   }
 
-  public int getLocalTrackEventRetentionDays() {
+  private int getLocalTrackEventRetentionDays() {
     return trackEventRetentionDays;
   }
 
@@ -3806,10 +3806,10 @@ public class CleverPush {
     }
   }
 
-  public void deleteDataBasedOnRetentionDays() {
+  private void deleteDataBasedOnRetentionDays() {
     try {
       int retentionDays = getLocalTrackEventRetentionDays();
-      Logger.e("retentionDays", "retentionDays: "+ retentionDays);
+      Logger.d(LOG_TAG, "retentionDays: "+ retentionDays);
       DatabaseClient.getInstance(CleverPush.context)
               .getAppDatabase()
               .trackEventDao()
@@ -3819,7 +3819,7 @@ public class CleverPush {
     }
   }
 
-  public boolean isAutoResubscribe() {
+  private boolean isAutoResubscribe() {
     return autoResubscribe;
   }
 
