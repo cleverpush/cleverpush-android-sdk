@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.3 (16.01.2024)
+* Added feature in `InboxView` to support GIF image.
+* Fixed a bug in `AppBanner`, remove space between text and image.
+
 ## 1.33.2 (05.01.2024)
 * Added feature in `AppBanner` to support GIF image.
 * Added feature to display Action Buttons in notification.
