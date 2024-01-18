@@ -9,7 +9,7 @@ public class VoucherCodeUtils {
       }
       return text;
     } catch (Exception e) {
-      Logger.e("CleverPush", "replaceVoucherCodeString: " + e.getLocalizedMessage());
+      Logger.e("CleverPush", "Error replacing voucher code.", e);
       return text;
     }
   }

@@ -19,6 +19,7 @@ public class TriggerFollowUpEventResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
         } else {
           Logger.e("CleverPush", "Error tracking follow-up event." +

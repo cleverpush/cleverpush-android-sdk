@@ -1,7 +1,5 @@
 package com.cleverpush.inbox;
 
-import static com.cleverpush.Constants.LOG_TAG;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -48,11 +46,13 @@ import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
+import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -130,7 +130,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         }
       }
     } catch (Exception e) {
-      Logger.e(TAG, "onBindViewHolder Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error in InboxView onBindViewHolder.", e);
     }
   }
 
@@ -169,6 +169,15 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     @SuppressLint("InflateParams") Button button = (Button) activity.getLayoutInflater().inflate(R.layout.app_banner_button, null);
     button.setText(block.getText());
     button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
+
+    if (block.getFamily() != null) {
+      try {
+        Typeface font = FontUtils.findFont(activity, block.getFamily());
+        button.setTypeface(font);
+      } catch (Exception ex) {
+        Logger.e(TAG, "Error in InboxView composeButtonBlock setTypeface.", ex);
+      }
+    }
 
     String textColor;
     if (appBannerPopup.getData().isDarkModeEnabled(activity) && block.getDarkColor() != null) {
@@ -240,12 +249,11 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
 
     if (block.getFamily() != null) {
       try {
-        Typeface font = Typeface.createFromAsset(activity.getAssets(), block.getFamily() + ".ttf");
+        Typeface font = FontUtils.findFont(activity, block.getFamily());
         textView.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, ex.getMessage(), ex);
+        Logger.e(TAG, "Error in InboxView composeTextBlock setTypeface.", ex);
       }
-
     }
 
     Integer alignment = alignmentMap.get(block.getAlignment());
@@ -315,8 +323,8 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
           progressBar.setVisibility(View.GONE);
         });
 
-      } catch (Exception ignored) {
-        Logger.d(TAG, ignored.getLocalizedMessage());
+      } catch (Exception e) {
+        Logger.e(TAG, "Error in InboxView composeImageBlock.", e);
         if (activity != null) {
           activity.runOnUiThread(() -> {
             progressBar.setVisibility(View.GONE);
@@ -330,7 +338,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
           try {
             in.close();
           } catch (IOException e) {
-            Logger.e(TAG, "Error closing InputStream: " + e.getLocalizedMessage());
+            Logger.e(TAG, "Error in closing InputStream in InboxView composeImageBlock.", e);
           }
         }
       }
@@ -345,13 +353,19 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
 
   @SuppressLint("SetJavaScriptEnabled")
   private void composeHtmlBLock(LinearLayout body, BannerHTMLBlock block) {
-    @SuppressLint("InflateParams") LinearLayout webLayout = (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
+    @SuppressLint("InflateParams") LinearLayout webLayout =
+            (LinearLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html_block, null);
     WebView webView = webLayout.findViewById(R.id.webView);
     webView.getSettings().setJavaScriptEnabled(true);
     webView.setVerticalScrollBarEnabled(false);
     webView.setHorizontalScrollBarEnabled(false);
     webView.loadUrl(block.getUrl());
-    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, pxToDp(Integer.parseInt(block.getHeight())));
+    webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+
+    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            pxToDp(Integer.parseInt(block.getHeight()))
+    );
     params.setMargins(0, 0, 0, 20);
     webView.setLayoutParams(params);
     webView.setBackgroundColor(Color.TRANSPARENT);
@@ -384,7 +398,30 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   private void composeHtmlBanner(LinearLayout body, String htmlContent) {
     try {
       activity.runOnUiThread(() -> {
-        String htmlWithJs = htmlContent.replace("</body>", "" + "<script type=\"text/javascript\">\n" + "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n" + "var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n" + "function onCloseClick() {\n" + "  try {\n" + "    CleverPush.closeBanner();\n" + "  } catch (error) {\n" + "    console.log('Caught error on closeBtn click', error);\n" + "  }\n" + "}\n" + "for (var i = 0; i < closeBtns.length; i++) {\n" + "  closeBtns[i].addEventListener('click', onCloseClick);\n" + "}\n" + "</script>\n" + "</body>");
+        String htmlWithJs = htmlContent.replace("</body>", "" +
+                "<script type=\"text/javascript\">\n" +
+                "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n"
+                +
+                "var closeBtns = document.querySelectorAll('[id^=\"close\"], [id$=\"close\"], [class^=\"close\"], [class$=\"close\"]');\n"
+                +
+                "function onCloseClick() {\n" +
+                "  try {\n" +
+                "    CleverPush.closeBanner();\n" +
+                "  } catch (error) {\n" +
+                "    console.log('Caught error on closeBtn click', error);\n" +
+                "  }\n" +
+                "}\n" +
+                "for (var i = 0; i < closeBtns.length; i++) {\n" +
+                "  closeBtns[i].addEventListener('click', onCloseClick);\n" +
+                "}\n" +
+                "CleverPush.trackEvent = function(eventId, properties) {\n" +
+                "  CleverPush.trackEventStringified(eventId, properties ? JSON.stringify(properties) : null);\n" +
+                "};\n" +
+                "CleverPush.trackClick = function(buttonId, customData) {\n" +
+                "  CleverPush.trackClickStringified(buttonId, customData ? JSON.stringify(customData) : null);\n" +
+                "};\n" +
+                "</script>\n" +
+                "</body>");
         ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
         WebView webView = webLayout.findViewById(R.id.webView);
         webView.getSettings().setJavaScriptEnabled(true);
@@ -394,13 +431,17 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
         String encodedHtml = null;
-        encodedHtml = Base64.encodeToString(htmlWithJs.getBytes(StandardCharsets.UTF_8), Base64.NO_PADDING);
+        try {
+          encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
+        } catch (UnsupportedEncodingException e) {
+          Logger.e(TAG, "composeHtmlBanner AppBanner UnsupportedEncodingException.", e);
+        }
         webView.loadData(encodedHtml, "text/html; charset=utf-8", "base64");
 
         body.addView(webLayout);
       });
     } catch (Exception e) {
-      Logger.e(TAG, "composeHtmlBanner Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error in InboxView composeHtmlBanner.", e);
     }
   }
 
@@ -432,8 +473,13 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         Map<String, Object> properties = new Gson().fromJson(propertiesJSON, Map.class);
         CleverPush.getInstance(CleverPush.context).trackEvent(eventID, properties);
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, "trackEvent error " + ex.getMessage());
+        Logger.e(TAG, "Error in InboxView's HTML trackEvent error.", ex);
       }
+    }
+
+    @JavascriptInterface
+    public void openWebView(String url) {
+      WebViewActivity.launch(activity, url);
     }
 
     @JavascriptInterface
@@ -464,6 +510,11 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     @JavascriptInterface
     public void removeSubscriptionTopic(String topicId) {
       CleverPush.getInstance(CleverPush.context).removeSubscriptionTopic(topicId);
+    }
+
+    @JavascriptInterface
+    public void showTopicsDialog() {
+      CleverPush.getInstance(CleverPush.context).showTopicsDialog();
     }
   }
 }

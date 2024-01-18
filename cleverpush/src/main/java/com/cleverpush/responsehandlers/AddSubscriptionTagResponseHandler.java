@@ -35,15 +35,22 @@ public class AddSubscriptionTagResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
+          if (addTagCompletedListener != null) {
+            addTagCompletedListener.onFailure(new Exception("Error adding tag. - HTTP " + statusCode + ": " + response + "\nError: " + throwable.getMessage()));
+          }
         } else {
           Logger.e("CleverPush", "Error adding tag." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response
           );
-        }
-        if (addTagCompletedListener != null) {
-          addTagCompletedListener.onFailure(new Exception("Error adding tag - HTTP " + statusCode));
+          if (addTagCompletedListener != null) {
+            Exception genericException = new Exception("Error adding tag." +
+                    "\nStatus code: " + statusCode +
+                    "\nResponse: " + response);
+            addTagCompletedListener.onFailure(genericException);
+          }
         }
       }
     };

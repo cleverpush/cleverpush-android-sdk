@@ -232,8 +232,8 @@ public class NotificationService {
         if (icon != null) {
           notificationBuilder = notificationBuilder.setLargeIcon(icon);
         }
-      } catch (Exception ignored) {
-        Logger.e(LOG_TAG, "Error getting icon", ignored);
+      } catch (Exception exception) {
+        Logger.e(LOG_TAG, "NotificationService: Error getting icon", exception);
       }
     }
 
@@ -249,8 +249,8 @@ public class NotificationService {
               new NotificationCompat.BigPictureStyle().bigPicture(media)
           );
         }
-      } catch (Exception ignored) {
-        Logger.e(LOG_TAG, "Error getting media", ignored);
+      } catch (Exception exception) {
+        Logger.e(LOG_TAG, "NotificationService: Error getting media", exception);
       }
     } else if (notificationStyle == NotificationStyle.BIG_TEXT || (
         notificationStyle == NotificationStyle.AUTO && hasText
@@ -286,8 +286,8 @@ public class NotificationService {
         if (media != null) {
           expandedView.setImageViewBitmap(R.id.notification_image, media);
         }
-      } catch (Exception ignored) {
-        Logger.e(LOG_TAG, "Error getting media", ignored);
+      } catch (Exception exception) {
+        Logger.e(LOG_TAG, "NotificationService getTextWithImageViews: Error getting media", exception);
       }
     }
     return expandedView;
@@ -305,8 +305,8 @@ public class NotificationService {
           }
         }
       }
-    } catch (Exception ignored) {
-
+    } catch (Exception exception) {
+      Logger.d(LOG_TAG, "NotificationService: Exception while getting requestId", exception);
     }
 
     // We'll generate a random int and use it as the notification's request code.
@@ -321,8 +321,8 @@ public class NotificationService {
       if (notificationStyleCode != null) {
         return NotificationStyle.lookupByCode(notificationStyleCode);
       }
-    } catch (Exception ignored) {
-      Logger.e(LOG_TAG, "Error getting notificationStyleCode", ignored);
+    } catch (Exception exception) {
+      Logger.e(LOG_TAG, "NotificationService getNotificationStyle: Error getting notificationStyleCode", exception);
     }
 
     return NotificationStyle.AUTO;
@@ -391,7 +391,7 @@ public class NotificationService {
     try {
       delIntent.putExtra("notification", notification);
     } catch (Exception exception) {
-      Logger.e(LOG_TAG, "Error with delete intent", exception);
+      Logger.e(LOG_TAG, "NotificationService: Error with delete intent", exception);
     }
 
     return PendingIntent.getService(context, this.generateRequestCode(), delIntent, this.getDeleteIntentFlags());
@@ -554,13 +554,13 @@ public class NotificationService {
               }
             }
           } catch (IOException e) {
-            Logger.e(LOG_TAG, e.getMessage());
+            Logger.e(LOG_TAG, "NotificationService: Error while downloading carousel images", e);
           } finally {
             if (fileOutputStream != null) {
               try {
                 fileOutputStream.close();
               } catch (IOException e) {
-                Logger.e(LOG_TAG, e.getMessage());
+                Logger.e(LOG_TAG, "NotificationService: Error while closing fileOutputStream", e);
               }
             }
           }
@@ -580,15 +580,15 @@ public class NotificationService {
         bitmap = BitmapFactory.decodeStream(inputStream);
         inputStream.close();
       } catch (FileNotFoundException e) {
-        Logger.e(LOG_TAG, e.getMessage());
+        Logger.e(LOG_TAG, "NotificationService: loadImageFromDisc FileNotFoundException", e);
       } catch (IOException e) {
-        Logger.e(LOG_TAG, e.getMessage());
+        Logger.e(LOG_TAG, "NotificationService: loadImageFromDisc IOException", e);
       } finally {
         if (inputStream != null) {
           try {
             inputStream.close();
           } catch (IOException e) {
-            Logger.e(LOG_TAG, e.getMessage());
+            Logger.e(LOG_TAG, "NotificationService: Error while closing inputStream", e);
           }
         }
       }

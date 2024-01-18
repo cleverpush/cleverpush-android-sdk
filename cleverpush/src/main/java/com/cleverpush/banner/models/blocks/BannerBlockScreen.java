@@ -7,7 +7,6 @@ public class BannerBlockScreen {
   String label;
   String value;
 
-
   private BannerBlockScreen() {
   }
 

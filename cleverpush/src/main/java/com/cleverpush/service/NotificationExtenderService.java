@@ -48,7 +48,7 @@ public abstract class NotificationExtenderService extends JobIntentService {
       try {
         developerProcessed = onNotificationProcessing(notification);
       } catch (Throwable throwable) {
-        Logger.e(LOG_TAG, "Exception in NotificationExtenderService: onNotificationProcessing", throwable);
+        Logger.e(LOG_TAG, "Exception in NotificationExtenderService onHandleWork: onNotificationProcessing", throwable);
       }
 
       if (!developerProcessed && !notification.isSilent()) {
@@ -56,7 +56,7 @@ public abstract class NotificationExtenderService extends JobIntentService {
       }
 
     } catch (Exception ex) {
-      Logger.e(LOG_TAG, "Exception in NotificationExtenderService", ex);
+      Logger.e(LOG_TAG, "Exception in NotificationExtenderService onHandleWork", ex);
     }
   }
 

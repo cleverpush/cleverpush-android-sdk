@@ -1,7 +1,5 @@
 package com.cleverpush.banner;
 
-import static com.cleverpush.Constants.LOG_TAG;
-
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -243,7 +241,7 @@ public class AppBannerModule {
 
           bannersListeners = new ArrayList<>();
         } catch (Exception ex) {
-          Logger.e(TAG, ex.getMessage(), ex);
+          Logger.e(TAG, "Error in sorting AppBanners." + ex.getMessage());
         }
 
         try {
@@ -258,7 +256,7 @@ public class AppBannerModule {
             }
           }
         } catch (Exception e) {
-          Logger.e(TAG, e.getLocalizedMessage());
+          Logger.e(TAG, "loadBanners error at showing pending banners", e);
         }
       }
 
@@ -304,7 +302,7 @@ public class AppBannerModule {
         jsonBody.put("isScreenAlreadyShown", isScreenAlreadyShown);
       }
     } catch (JSONException ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(TAG, "Error creating sendBannerEventWithSubscriptionId(/app-banner/event) request parameter.", ex);
     }
 
     CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody,
@@ -332,7 +330,7 @@ public class AppBannerModule {
         this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId, blockId, screenId, isElementAlreadyClicked, isScreenAlreadyShown);
       });
     } else {
-      Logger.d(LOG_TAG, "sendBannerEvent: There is no subscription for CleverPush SDK.");
+      Logger.d(TAG, "sendBannerEvent: There is no subscription for CleverPush SDK.");
       this.sendBannerEventWithSubscriptionId(event, banner, null, blockId, screenId, isElementAlreadyClicked, isScreenAlreadyShown);
     }
   }
@@ -581,7 +579,7 @@ public class AppBannerModule {
       return this.checkAppVersionRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName,
           banner.getAppVersionFilterValue(), banner.getFromVersion(), banner.getToVersion());
     } catch (Exception e) {
-      Logger.e(TAG, "Error checking app version filter", e);
+      Logger.e(TAG, "Error in AppBanner checking app version filter", e);
     }
 
     return allowed;
@@ -629,7 +627,7 @@ public class AppBannerModule {
         }
       }
     } catch (Exception e) {
-      Logger.e(TAG, "Error checking relation filter", e);
+      Logger.e(TAG, "Error in AppBanner checking relation filter", e);
     }
 
     return allowed;
@@ -694,7 +692,7 @@ public class AppBannerModule {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      Logger.e(TAG, "Error checking app version filter", e);
+      Logger.e(TAG, "Error in AppBanner checking app version filter", e);
     }
 
     return allowed;
@@ -797,7 +795,7 @@ public class AppBannerModule {
         return false;
       }
     } catch (Exception e) {
-      Logger.e(TAG, "checkTargetEventRelationFilter: " + e.getLocalizedMessage());
+      Logger.e(TAG, "checkTargetEventRelationFilter: Error in AppBanner checking target event relation filter.", e);
     }
     return false;
   }
@@ -1185,7 +1183,7 @@ public class AppBannerModule {
         getCleverPushInstance().getAppBannerShownListener().shown(banner);
       }
     } catch (Exception ex) {
-      Logger.e(TAG, ex.getMessage(), ex);
+      Logger.e(TAG, "Error in showBanner. " + ex.getMessage());
     }
   }
 
@@ -1409,7 +1407,7 @@ public class AppBannerModule {
       int daysDifference = (int) (timeDifference / (1000 * 60 * 60 * 24));
       return daysDifference;
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "getDaysDifference: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error in getting days difference for target event relation filter.", e);
       return -1;
     }
   }

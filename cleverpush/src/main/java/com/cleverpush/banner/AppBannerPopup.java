@@ -236,10 +236,10 @@ public class AppBannerPopup {
         layout.setOnClickListener(view -> dismiss());
         return layout;
       } catch (Exception exception) {
-        Logger.e(TAG, "InflateException: " + exception.getLocalizedMessage());
+        Logger.e(TAG, "Error in App banner createLayout with theme cleverpush_app_banner_theme.", exception);
       }
     } catch (Exception exception) {
-      Logger.e(TAG, exception.getLocalizedMessage());
+      Logger.e(TAG, "Error in App banner createLayout.", exception);
     }
     return null;
   }
@@ -312,8 +312,8 @@ public class AppBannerPopup {
           if (bitmap != null) {
             bannerBackground.setImageBitmap(bitmap);
           }
-        } catch (Exception ignored) {
-          Logger.e(TAG, ignored.getLocalizedMessage());
+        } catch (Exception ex) {
+          Logger.e(TAG, "Error at setting background image in app banner.", ex);
         }
       }).start();
     } else {
@@ -524,7 +524,7 @@ public class AppBannerPopup {
           displayBanner(body);
           animateBody(getRoot().getHeight(), 0f);
         } catch (Exception e) {
-          Logger.e(TAG, e.getLocalizedMessage());
+          Logger.e(TAG, "Error in displaying banner.", e);
         }
       }
     }
@@ -564,7 +564,7 @@ public class AppBannerPopup {
         }
       }
     } catch (Exception e) {
-      Logger.e(TAG, "Notch Color Exception: " + e.getMessage());
+      Logger.e(TAG, "Error in setting notch color for HTML banner", e);
     }
   }
 }

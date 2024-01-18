@@ -117,7 +117,7 @@ public class StoryView extends LinearLayout {
             }
           });
         } catch (Exception e) {
-          Logger.e(TAG, "getResponseHandler onSuccess Exception: " + e.getLocalizedMessage());
+          Logger.e(TAG, "Error in onSuccess of loading stories request.", e);
         }
       }
 
@@ -162,7 +162,7 @@ public class StoryView extends LinearLayout {
       recyclerView.setLayoutManager(linearLayoutManager);
       recyclerView.setAdapter(storyViewListAdapter);
     } catch (Exception e) {
-      Logger.e(TAG, "displayStoryHead Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error while displaying story head.", e);
     }
   }
 
@@ -190,7 +190,7 @@ public class StoryView extends LinearLayout {
           }
         });
       } catch (Exception e) {
-        Logger.e(TAG, "getOnItemClickListener Exception: " + e.getLocalizedMessage());
+        Logger.e(TAG, "Error getOnItemClickListener of StoryView.", e);
       }
     };
   }

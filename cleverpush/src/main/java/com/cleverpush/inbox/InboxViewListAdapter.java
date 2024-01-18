@@ -161,7 +161,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
     try {
       date = sdf.parse(dateToFormat);
     } catch (Exception e) {
-      Logger.e(TAG, e.getLocalizedMessage());
+      Logger.e(TAG, "Error in InboxView date format", e);
     }
     java.text.DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
 
@@ -176,10 +176,12 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
     new Thread(() -> {
       try {
         final InputStream[] inputStream = {null};
-        if (notificationArrayList.get(position).getMediaUrl() != null) {
+        if (notificationArrayList.get(position).getMediaUrl() != null
+                && !notificationArrayList.get(position).getMediaUrl().isEmpty()) {
           inputStream[0] = new URL(notificationArrayList.get(position).getMediaUrl()).openStream();
           Logger.e("image", notificationArrayList.get(position).getMediaUrl());
-        } else if (notificationArrayList.get(position).getIconUrl() != null) {
+        } else if (notificationArrayList.get(position).getIconUrl() != null
+                && !notificationArrayList.get(position).getIconUrl().isEmpty()) {
           inputStream[0] = new URL(notificationArrayList.get(position).getIconUrl()).openStream();
           Logger.e("image", notificationArrayList.get(position).getIconUrl());
         } else {
@@ -188,10 +190,8 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
             public void ready(JSONObject channelConfig) {
               try {
                 inputStream[0] = new URL(channelConfig.optString("channelIcon")).openStream();
-              } catch (MalformedURLException e) {
-                e.printStackTrace();
-              } catch (IOException e) {
-                e.printStackTrace();
+              } catch (Exception e) {
+                Logger.e(TAG, "Error in InboxView List's image load from channelIcon.", e);
               }
             }
           });
@@ -207,7 +207,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
           });
         }
       } catch (Exception exception) {
-        Logger.e(TAG, "loadImage Exception: " + exception.getLocalizedMessage());
+        Logger.e(TAG, "Error in InboxView List's image load.", exception);
       }
     }).start();
   }

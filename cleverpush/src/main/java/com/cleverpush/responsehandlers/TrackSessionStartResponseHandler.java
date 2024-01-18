@@ -22,6 +22,7 @@ public class TrackSessionStartResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
         } else {
           Logger.e(LOG_TAG, "Failed to track session start." +

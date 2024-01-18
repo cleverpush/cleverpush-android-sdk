@@ -440,6 +440,17 @@ public class CleverPush {
     init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, autoRegister, null);
   }
 
+
+  /**
+   * initialize CleverPush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
+   *
+   * @param channelId                    channelID of the channel
+   * @param notificationReceivedListener callback for the notification received
+   * @param notificationOpenedListener   callback for the notification opened
+   * @param subscribedListener           callback for subscription
+   * @param autoRegister                 boolean for auto register
+   * @param initializeListener           callback for the init
+   */
   public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener,
                    @Nullable final NotificationOpenedListenerBase notificationOpenedListener,
                    @Nullable final SubscribedListener subscribedListener, boolean autoRegister,
@@ -478,7 +489,7 @@ public class CleverPush {
       boolean isUnsubscribing = false;
       if (isChannelIdChanged(storedChannelId, storedSubscriptionId)) {
         try {
-          if (subscriptionId != null) {
+          if (subscriptionId != null && !subscriptionId.isEmpty()) {
             isUnsubscribing = true;
             this.unsubscribe(new UnsubscribedListener() {
               @Override
@@ -502,7 +513,7 @@ public class CleverPush {
             this.clearSubscriptionData();
           }
         } catch (Throwable throwable) {
-          Logger.e(LOG_TAG, "Error", throwable);
+          Logger.e(LOG_TAG, "Error during unsubscribing in init.", throwable);
         }
       }
       addOrUpdateChannelId(getContext(), this.channelId);
@@ -563,7 +574,9 @@ public class CleverPush {
             this.pendingPageViews = new ArrayList<>();
           }
 
-          if (isAutoResubscribe() && getSubscriptionId(CleverPush.context) == null && areNotificationsEnabled()) {
+          if (isAutoResubscribe()
+                  && (getSubscriptionId(CleverPush.context) == null || getSubscriptionId(CleverPush.context).isEmpty())
+                  && areNotificationsEnabled()) {
             Logger.d(LOG_TAG, "autoResubscribe");
             subscribe();
           }
@@ -571,7 +584,7 @@ public class CleverPush {
           this.trackSessionEnd();
         }
       } catch (Exception e) {
-        Logger.e(LOG_TAG, "initSessionListener Exception: " + e.getLocalizedMessage());
+        Logger.e(LOG_TAG, "Error in initSessionListener.", e);
       }
     };
   }
@@ -758,7 +771,7 @@ public class CleverPush {
 
       BroadcastReceiverUtils.registerReceiver(this);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "initFeatures Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in initFeatures.", e);
     }
   }
 
@@ -798,7 +811,7 @@ public class CleverPush {
             }
           }
         } catch (Exception ex) {
-          Logger.d(LOG_TAG, "initAppReview Exception: " + ex.getMessage());
+          Logger.d(LOG_TAG, "Error in initAppReview.", ex);
         }
       }
     });
@@ -818,7 +831,7 @@ public class CleverPush {
               .setForceMode(false)
               .show();
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "showFiveStarsDialog Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in displaying FiveStarsDialog.", e);
     }
   }
 
@@ -839,7 +852,7 @@ public class CleverPush {
       intent.putExtra(PermissionActivity.INTENT_EXTRA_PERMISSION_TYPE, permissionType);
       dialogActivity.startActivity(intent);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "requestPermission Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Exception during permission request.", e);
     }
   }
 
@@ -949,7 +962,7 @@ public class CleverPush {
         outputMap.put(key, value);
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      Logger.e(LOG_TAG, "Error while parsing JSON in loadPreferencesMap.", e);
     }
     Logger.d(LOG_TAG, "loadPreferencesMap: " + mapKey + " - " + outputMap.toString());
     return outputMap;
@@ -1111,7 +1124,7 @@ public class CleverPush {
         }
       });
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "checkTags Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in checkTags.", e);
     }
   }
 
@@ -1142,7 +1155,7 @@ public class CleverPush {
               }
             }
           } catch (Exception ex) {
-            Logger.d(LOG_TAG, ex.getMessage());
+            Logger.d(LOG_TAG, "Error in initGeoFences.", ex);
           }
         }
       });
@@ -1208,7 +1221,7 @@ public class CleverPush {
             Logger.e(LOG_TAG, "getConnectionCallbacks onConnected getCurrentActivity() is null");
           }
         } catch (Exception e) {
-          Logger.e(LOG_TAG, "getConnectionCallbacks onConnected Exception: " + e.getLocalizedMessage());
+          Logger.e(LOG_TAG, "Error in getConnectionCallbacks onConnected", e);
         }
       }
 
@@ -1234,7 +1247,7 @@ public class CleverPush {
 
       this.checkTags(url, params);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "trackPageView Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in trackPageView.", e);
     }
   }
 
@@ -1271,7 +1284,7 @@ public class CleverPush {
       jsonBody.put("fcmToken", fcmToken);
       jsonBody.put("lastNotificationId", lastNotificationId);
     } catch (JSONException ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(LOG_TAG, "Error creating updateServerSessionStart request parameter", ex);
     }
 
     CleverPushHttpClient.postWithRetry("/subscription/session/start", jsonBody,
@@ -1314,7 +1327,7 @@ public class CleverPush {
       jsonBody.put("visits", getSessionVisits());
       jsonBody.put("duration", sessionDuration);
     } catch (JSONException ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(LOG_TAG, "Error creating updateServerSessionEnd request parameter", ex);
     }
 
     CleverPushHttpClient.postWithRetry("/subscription/session/end", jsonBody, new CleverPushHttpClient.ResponseHandler() {
@@ -1464,7 +1477,7 @@ public class CleverPush {
         });
       });
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "subscribe Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in handleSubscribe.", e);
     }
   }
 
@@ -1496,13 +1509,13 @@ public class CleverPush {
 
   public void unsubscribe(UnsubscribedListener listener) {
     String subscriptionId = getSubscriptionId(getContext());
-    if (subscriptionId != null) {
+    if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {
         jsonBody.put("channelId", getChannelId(getContext()));
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException e) {
-        Logger.e(LOG_TAG, "Error", e);
+        Logger.e(LOG_TAG, "Error creating unsubscribe request parameter", e);
       }
 
       CleverPushHttpClient.postWithRetry("/subscription/unsubscribe", jsonBody,
@@ -1521,7 +1534,7 @@ public class CleverPush {
     try {
       return new JSONObject(jsonString);
     } catch (JSONException exception) {
-      exception.printStackTrace();
+      Logger.d(LOG_TAG, "Error while creating JSONObject from string", exception);
     }
     return null;
   }
@@ -1563,13 +1576,13 @@ public class CleverPush {
 
   public void stopCampaigns(StopCampaignListener listener) {
     String subscriptionId = getSubscriptionId(getContext());
-    if (subscriptionId != null) {
+    if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {
         jsonBody.put("channelId", getChannelId(getContext()));
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException e) {
-        Logger.e(LOG_TAG, "Error", e);
+        Logger.e(LOG_TAG, "Error creating stopCampaigns request parameter", e);
       }
 
       CleverPushHttpClient.postWithRetry("/subscription/stop-campaigns", jsonBody,
@@ -1581,7 +1594,7 @@ public class CleverPush {
 
   private void removeSubscriptionTagsAndAttributes() {
     try {
-      if (getSubscriptionId(CleverPush.context) == null) {
+      if (getSubscriptionId(CleverPush.context) == null || getSubscriptionId(CleverPush.context).isEmpty()) {
         Logger.d(LOG_TAG, "removeSubscriptionTagsAndAttributes: There is no subscription for CleverPush SDK.");
         return;
       }
@@ -1606,7 +1619,7 @@ public class CleverPush {
         }
       }
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error at removeSubscriptionTagsAndAttributes: " + e.getMessage());
+      Logger.e(LOG_TAG, "Error at removeSubscriptionTagsAndAttributes.", e);
     }
   }
 
@@ -1692,7 +1705,7 @@ public class CleverPush {
 
   public synchronized void getSubscriptionId(SubscribedListener listener) {
     if (listener != null) {
-      if (subscriptionId == null) {
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "getSubscriptionId: There is no subscription for CleverPush SDK.");
         getSubscriptionIdListeners.add(listener);
       } else {
@@ -1947,7 +1960,7 @@ public class CleverPush {
         }
       }
     } catch (Exception ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(LOG_TAG, "Error while getting subscription attribute.", ex);
     }
     return outputMap;
   }
@@ -1976,7 +1989,7 @@ public class CleverPush {
           }
         }
       } catch (JSONException ex) {
-        Logger.d(LOG_TAG, ex.getMessage(), ex);
+        Logger.d(LOG_TAG, "Error while getting available tags from channel config.", ex);
       }
     }
     return tags;
@@ -2010,7 +2023,7 @@ public class CleverPush {
           }
         }
       } catch (JSONException ex) {
-        Logger.d(LOG_TAG, ex.getMessage(), ex);
+        Logger.d(LOG_TAG,  "Error while getting available attributes from channel config.", ex);
       }
     }
     return attributes;
@@ -2052,7 +2065,8 @@ public class CleverPush {
                 if (customDataObject != null) {
                   customData = new Gson().fromJson(customDataObject.toString(), HashMap.class);
                 }
-              } catch (Exception ignored) {
+              } catch (Exception e) {
+                Logger.e(LOG_TAG, "Error parsing customData for topic.", e);
               }
 
               ChannelTopic topic = new ChannelTopic(
@@ -2068,7 +2082,7 @@ public class CleverPush {
           }
         }
       } catch (JSONException ex) {
-        Logger.d(LOG_TAG, ex.getMessage(), ex);
+        Logger.e(LOG_TAG, "Error while getting available topics from channel config.", ex);
       }
     }
     return topics;
@@ -2100,7 +2114,7 @@ public class CleverPush {
 
   public void addSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
     this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId == null) {
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "addSubscriptionTopic: There is no subscription for CleverPush SDK.");
         return;
       }
@@ -2122,7 +2136,7 @@ public class CleverPush {
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-        Logger.e(LOG_TAG, ex.getMessage(), ex);
+        Logger.e(LOG_TAG, "Error creating addSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
           new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
@@ -2155,7 +2169,7 @@ public class CleverPush {
 
   public void removeSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
     this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId == null) {
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "removeSubscriptionTopic: There is no subscription for CleverPush SDK.");
         return;
       }
@@ -2177,7 +2191,8 @@ public class CleverPush {
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-        Logger.e(LOG_TAG, ex.getMessage(), ex);
+
+        Logger.e(LOG_TAG, "Error creating removeSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
           new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
@@ -2279,7 +2294,7 @@ public class CleverPush {
       editor.apply();
 
       this.getSubscriptionId(subscriptionId -> {
-        if (subscriptionId != null) {
+        if (subscriptionId != null && !subscriptionId.isEmpty()) {
           JSONObject jsonBody = new JSONObject();
           try {
             JSONArray topicsArray = new JSONArray();
@@ -2292,7 +2307,7 @@ public class CleverPush {
             jsonBody.put("topicsVersion", topicsVersion);
             jsonBody.put("subscriptionId", subscriptionId);
           } catch (JSONException ex) {
-            Logger.e(LOG_TAG, ex.getMessage(), ex);
+            Logger.e(LOG_TAG, "Error creating setSubscriptionTopics request parameter", ex);
           }
 
           Logger.d(LOG_TAG, "setSubscriptionTopics: " + Arrays.toString(topicIds));
@@ -2324,7 +2339,7 @@ public class CleverPush {
 
   private void setSubscriptionAttributeObject(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId != null) {
+      if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = getJsonObject();
         try {
           jsonBody.put("channelId", getChannelId(getContext()));
@@ -2340,7 +2355,7 @@ public class CleverPush {
           }
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "Error creating setSubscriptionAttributeObject request parameter", ex);
         }
 
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
@@ -2354,7 +2369,7 @@ public class CleverPush {
 
   public void pushSubscriptionAttributeValue(String attributeId, String value) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId != null) {
+      if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = new JSONObject();
         try {
           jsonBody.put("channelId", this.channelId);
@@ -2362,7 +2377,7 @@ public class CleverPush {
           jsonBody.put("value", value);
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG,  "Error creating pushSubscriptionAttributeValue request parameter", ex);
         }
 
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
@@ -2373,7 +2388,7 @@ public class CleverPush {
           Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
           arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "pushSubscriptionAttributeValue: Error processing attribute values", ex);
         }
 
         arrayList.add(value);
@@ -2407,7 +2422,7 @@ public class CleverPush {
             editor.apply();
           }
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG,  "pushSubscriptionAttributeValueResponseHandler onSuccess: Error updating subscription attributes in SharedPreferences", ex);
         }
       }
 
@@ -2431,7 +2446,7 @@ public class CleverPush {
 
   public void pullSubscriptionAttributeValue(String attributeId, String value) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId != null) {
+      if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = new JSONObject();
         try {
           jsonBody.put("channelId", this.channelId);
@@ -2439,7 +2454,7 @@ public class CleverPush {
           jsonBody.put("value", value);
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "Error creating pullSubscriptionAttributeValue request parameter", ex);
         }
 
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
@@ -2451,7 +2466,7 @@ public class CleverPush {
           Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
           arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "pullSubscriptionAttributeValue: Error processing attribute values", ex);
         }
         arrayList.remove(value);
 
@@ -2485,7 +2500,7 @@ public class CleverPush {
             editor.apply();
           }
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "pullSubscriptionAttributeValueResponseHandler onSuccess: Error updating subscription attributes in SharedPreferences", ex);
         }
       }
 
@@ -2516,7 +2531,7 @@ public class CleverPush {
       Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
       arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
     } catch (Exception ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(LOG_TAG, "hasSubscriptionAttributeValue: Error checking subscription attribute value", ex);
     }
 
     return arrayList.contains(value);
@@ -2630,7 +2645,7 @@ public class CleverPush {
 
         this.waitForTrackingConsent(() -> {
           this.getSubscriptionId(subscriptionId -> {
-            if (subscriptionId != null) {
+            if (subscriptionId != null && !subscriptionId.isEmpty()) {
               JSONObject jsonBody = new JSONObject();
 
               try {
@@ -2650,7 +2665,7 @@ public class CleverPush {
                   jsonBody.put("notificationId", this.lastClickedNotificationId);
                 }
               } catch (JSONException ex) {
-                Logger.e(LOG_TAG, ex.getMessage(), ex);
+                Logger.e(LOG_TAG, "Error creating trackEvent request parameter", ex);
               }
 
               CleverPushHttpClient.postWithRetry("/subscription/conversion", jsonBody,
@@ -2680,13 +2695,7 @@ public class CleverPush {
         getAppBannerModule().triggerEvent(triggeredEvent);
       } catch (Exception ex) {
         String message = "Track event failed because of error";
-        if (ex != null) {
-          message = ex.getMessage();
-          if (message == null) {
-            message = ex.toString();
-          }
-        }
-        Logger.e(LOG_TAG, message);
+        Logger.e(LOG_TAG, message, ex);
       }
     });
   }
@@ -2699,7 +2708,7 @@ public class CleverPush {
     this.waitForTrackingConsent(() -> {
       try {
         this.getSubscriptionId(subscriptionId -> {
-          if (subscriptionId != null) {
+          if (subscriptionId != null && !subscriptionId.isEmpty()) {
             JSONObject jsonParameters = new JSONObject();
             if (parameters != null) {
               for (Map.Entry<String, String> entry : parameters.entrySet()) {
@@ -2718,7 +2727,7 @@ public class CleverPush {
               jsonBody.put("parameters", jsonParameters);
               jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException ex) {
-              Logger.e(LOG_TAG, ex.getMessage(), ex);
+              Logger.e(LOG_TAG, "Error creating triggerFollowUpEvent request parameter", ex);
             }
 
             CleverPushHttpClient.postWithRetry("/subscription/event", jsonBody,
@@ -2728,7 +2737,7 @@ public class CleverPush {
           }
         });
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, ex.getMessage());
+        Logger.e(LOG_TAG, "Error in triggerFollowUpEvent", ex);
       }
     });
   }
@@ -2743,7 +2752,7 @@ public class CleverPush {
       jsonBody.put("notificationId", notificationId);
       jsonBody.put("subscriptionId", subscriptionId);
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error generating delivered json", e);
+      Logger.e(LOG_TAG, "Error creating trackNotificationDelivered request parameter", e);
     }
 
     CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
@@ -2767,7 +2776,7 @@ public class CleverPush {
         jsonBody.put("action", actionIndex);
       }
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error generating clicked json", e);
+      Logger.e(LOG_TAG, "Error creating trackNotificationClicked request parameter", e);
     }
 
     CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
@@ -2804,7 +2813,7 @@ public class CleverPush {
       jsonBody.put("platformName", "Android");
       jsonBody.put("browserType", "SDK");
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error setting confirm alert shown", e);
+      Logger.e(LOG_TAG, "Error creating channel confirm-alert request parameter.", e);
     }
 
     CleverPushHttpClient.postWithRetry("/channel/confirm-alert", jsonBody, null);
@@ -2840,7 +2849,7 @@ public class CleverPush {
           }
         }
       } catch (Exception ex) {
-        Logger.d(LOG_TAG, "showPendingTopicsDialog Exception: " + ex.getMessage());
+        Logger.d(LOG_TAG, "Error in showPendingTopicsDialog.", ex);
       }
     });
   }
@@ -2939,7 +2948,7 @@ public class CleverPush {
               topicDialogAlert.show();
             }
           } catch (Exception e) {
-            Logger.d(LOG_TAG, e.getLocalizedMessage());
+            Logger.d(LOG_TAG, "Error creating topic dialog alert", e);
             if (!isRecursiveCall) {
               showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme, true);
             }
@@ -2948,7 +2957,7 @@ public class CleverPush {
 
       });
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "showTopicsDialog Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in showTopicsDialog", e);
     }
   }
 
@@ -2966,7 +2975,8 @@ public class CleverPush {
     if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
       try {
         headerTitle = channelConfig.getString("confirmAlertSelectTopicsLaterTitle");
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        Logger.e(LOG_TAG, "Error while getting header title from channel config.", e);
       }
     }
     if (headerTitle == null || headerTitle.isEmpty()) {
@@ -2999,7 +3009,7 @@ public class CleverPush {
             JSONObject channelTopic = (JSONObject) channelTopics.get(j);
             channelTopic.put("defaultUnchecked", true);
           } catch (JSONException e) {
-            Logger.e(LOG_TAG, e.getLocalizedMessage());
+            Logger.e(LOG_TAG, "getTopicAlertBuilder: Error while updating channelTopics.", e);
           }
         }
       } else {
@@ -3115,11 +3125,11 @@ public class CleverPush {
           setupTopicChildCheckboxes(parentLayout, unsubscribeCheckbox, channelTopics, deselectAll, nightModeFlags,
               selectedTopics, id, checkbox);
         } else {
-          Logger.e(LOG_TAG, "topic is null");
+          Logger.e(LOG_TAG, "Topic is null at index " + i);
         }
       }
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error getting channel topics " + e.getMessage());
+      Logger.e(LOG_TAG, "Error while setting up parent topics checkboxes.", e);
     }
   }
 
@@ -3189,7 +3199,7 @@ public class CleverPush {
         parentLayout.addView(childLayout);
       }
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error getting channel topics " + e.getMessage());
+      Logger.e(LOG_TAG, "Error while setting up child topics checkboxes.", e);
     }
   }
 
@@ -3246,7 +3256,7 @@ public class CleverPush {
       try {
         topic = channelTopics.getJSONObject(i);
       } catch (JSONException exception) {
-        exception.printStackTrace();
+        Logger.e(LOG_TAG, "Error while getting topic at index " + i, exception);
       }
       if (topic != null) {
         int oneHour = 60 * 60;
@@ -3267,7 +3277,7 @@ public class CleverPush {
           }
         }
       } else {
-        Logger.e(LOG_TAG, "topic is null");
+        Logger.e(LOG_TAG, "isNewTopicAdded: Topic is null at index " + i);
       }
     }
     return false;
@@ -3472,7 +3482,7 @@ public class CleverPush {
     try {
       return getSharedPreferences(context).getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error while retrieving subscription ID", e);
       return null;
     }
   }
@@ -3726,6 +3736,11 @@ public class CleverPush {
     return authorizerToken;
   }
 
+  /**
+   * Sets an authorization token for API calls.
+   *
+   * @param authorizerToken The authorization token to be set.
+   */
   public void setAuthorizerToken(String authorizerToken) {
     this.authorizerToken = authorizerToken;
   }
@@ -3779,6 +3794,12 @@ public class CleverPush {
     mPreferences.registerOnSharedPreferenceChangeListener(mListener);
   }
 
+  /**
+   * Sets the IAB TCF mode for handling tracking or subscription based on consent status.
+   * Possible modes: SUBSCRIBE_WAIT_FOR_CONSENT, TRACKING_WAIT_FOR_CONSENT, DISABLED.
+   *
+   * @param mode The IAB TCF mode to be set.
+   */
   public void setIabTcfMode(IabTcfMode mode) {
     this.iabTcfMode = mode;
   }
@@ -3791,31 +3812,46 @@ public class CleverPush {
     return trackEventRetentionDays;
   }
 
+  /**
+   * Sets the retention period (in days) for local tracking event data.
+   * Default is 90 days; data older than this period is deleted from the database.
+   *
+   * @param trackEventRetentionDays Number of days to retain local tracking event data.
+   */
   public void setLocalTrackEventRetentionDays(int trackEventRetentionDays) {
     this.trackEventRetentionDays = trackEventRetentionDays;
   }
 
+  /**
+   * Retrieves the current date and time in the format "yyyy-MM-dd HH:mm:ss".
+   *
+   * @return The current date and time as a formatted string.
+   */
   public String getCurrentDateTime() {
     try {
       Date time = Calendar.getInstance().getTime();
       SimpleDateFormat outputFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       return outputFmt.format(time);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "getCurrentDateTime: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error while getting current date and time", e);
       return "";
     }
   }
 
+  /**
+   * Deletes data from the database based on the configured retention days.
+   * Retention days are obtained from the result of getLocalTrackEventRetentionDays().
+   */
   private void deleteDataBasedOnRetentionDays() {
     try {
       int retentionDays = getLocalTrackEventRetentionDays();
-      Logger.d(LOG_TAG, "retentionDays: "+ retentionDays);
+      Logger.d(LOG_TAG, "Retention days: "+ retentionDays);
       DatabaseClient.getInstance(CleverPush.context)
               .getAppDatabase()
               .trackEventDao()
               .deleteDataBasedOnRetentionDays(retentionDays);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "deleteDataBasedOnRetentionDays: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error while deleting data based on retention days", e);
     }
   }
 
@@ -3823,6 +3859,12 @@ public class CleverPush {
     return autoResubscribe;
   }
 
+  /**
+   * Sets the auto-resubscribe flag, indicating whether the application should automatically attempt
+   * to resubscribe when notification permission is granted, and the subscriptionId is null.
+   *
+   * @param autoResubscribe True to enable auto-resubscribe, False to disable it.
+   */
   public void setAutoResubscribe(boolean autoResubscribe) {
     this.autoResubscribe = autoResubscribe;
   }
@@ -3831,6 +3873,14 @@ public class CleverPush {
     return autoRequestNotificationPermission;
   }
 
+  /**
+   * Sets the autoRequestNotificationPermission flag, determining whether the application should automatically
+   * request notification permission when subscribing. If set to false, the notification permission dialog
+   * will not be displayed if permission is not given during the subscription process.
+   *
+   * @param autoRequestNotificationPermission True to automatically request notification permission during subscribe,
+   *                                           False to disable automatic notification permission requests.
+   */
   public void setAutoRequestNotificationPermission(boolean autoRequestNotificationPermission) {
     this.autoRequestNotificationPermission = autoRequestNotificationPermission;
   }

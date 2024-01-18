@@ -1,6 +1,9 @@
 package com.cleverpush.banner.models;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import com.cleverpush.Constants;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -68,7 +71,7 @@ public class BannerTriggerCondition {
                 BannerTriggerConditionEventProperty.create(eventPropertiesArray.getJSONObject(i));
             condition.eventProperties.add(property);
           } catch (JSONException e) {
-            e.printStackTrace();
+            Logger.e(LOG_TAG, "Error creating BannerTriggerConditionEventProperty", e);
           }
         }
       }

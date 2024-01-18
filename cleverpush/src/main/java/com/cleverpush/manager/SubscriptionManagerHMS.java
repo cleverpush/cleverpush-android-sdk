@@ -41,7 +41,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
       try {
         getHMSTokenTask(context, subscribedListener);
       } catch (ApiException e) {
-        Logger.e(LOG_TAG, "HMS ApiException getting Huawei token", e);
+        Logger.e(LOG_TAG, "HMS ApiException getting Huawei token in SubscriptionManagerHMS", e);
         this.tokenCallback(null, subscribedListener);
       }
     }, THREAD_NAME).start();
@@ -99,7 +99,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
           Logger.d(LOG_TAG, "HMS token has not changed: " + newToken);
         }
       } catch (Throwable throwable) {
-        Logger.e(LOG_TAG, "Unknown error getting HMS Token", throwable);
+        Logger.e(LOG_TAG, "Unknown error getting HMS Token in checkChangedPushToken", throwable);
       }
     }, THREAD_NAME).start();
   }

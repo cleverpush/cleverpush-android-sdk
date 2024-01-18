@@ -22,6 +22,7 @@ public class SendBannerEventResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
         } else {
           Logger.e(TAG, "App Banner Event failed." +

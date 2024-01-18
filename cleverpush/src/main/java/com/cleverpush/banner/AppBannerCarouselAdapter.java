@@ -1,7 +1,5 @@
 package com.cleverpush.banner;
 
-import static com.cleverpush.Constants.LOG_TAG;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -135,7 +133,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
       }
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "onBindViewHolder Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error in AppBanner onBindViewHolder.", e);
     }
   }
 
@@ -190,7 +188,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         Typeface font = FontUtils.findFont(activity, block.getFamily());
         button.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, ex.getMessage(), ex);
+        Logger.e(TAG, "Error in AppBanner composeButtonBlock setTypeface.", ex);
       }
     }
 
@@ -274,7 +272,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         Typeface font = FontUtils.findFont(activity, block.getFamily());
         textView.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, ex.getMessage(), ex);
+        Logger.e(TAG, "Error in AppBanner composeTextBlock setTypeface.", ex);
       }
     }
 
@@ -372,7 +370,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         });
 
       } catch (Exception e) {
-        Logger.d(TAG, "composeImageBlock Exception: " + e.getLocalizedMessage());
+        Logger.e(TAG, "Error in AppBanner composeImageBlock.", e);
         if (activity != null) {
           activity.runOnUiThread(() -> {
             progressBar.setVisibility(View.GONE);
@@ -386,7 +384,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           try {
             in.close();
           } catch (IOException e) {
-            Logger.e(TAG, "Error closing InputStream: " + e.getLocalizedMessage());
+            Logger.e(TAG, "Error in closing InputStream in AppBanner composeImageBlock.", e);
           }
         }
       }
@@ -487,8 +485,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         try {
           encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
         } catch (UnsupportedEncodingException e) {
-          Logger.d(LOG_TAG, "AppBanner UnsupportedEncodingException");
-          e.printStackTrace();
+          Logger.e(TAG, "composeHtmlBanner AppBanner UnsupportedEncodingException.", e);
         }
         webView.setBackgroundColor(Color.TRANSPARENT);
         webView.loadData(encodedHtml, "text/html; charset=utf-8", "base64");
@@ -496,7 +493,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         body.addView(webLayout);
       });
     } catch (Exception e) {
-      Logger.e(TAG, "composeHtmlBanner Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error in AppBanner composeHtmlBanner.", e);
     }
   }
 
@@ -529,7 +526,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
         CleverPush.getInstance(CleverPush.context).trackEvent(eventID, properties);
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, "trackEvent error " + ex.getMessage());
+        Logger.e(TAG, "Error in AppBanner's HTML trackEvent error.", ex);
       }
     }
 
@@ -547,7 +544,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           cleverPush.getAppBannerOpenedListener().opened(bannerAction);
         }
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, "trackClick error " + ex.getMessage());
+        Logger.e(TAG, "Error in AppBanner's HTML trackClick error.", ex);
       }
 
       cleverPush.getAppBannerModule()
