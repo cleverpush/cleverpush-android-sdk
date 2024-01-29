@@ -208,41 +208,45 @@ public class InboxDetailActivity extends AppCompatActivity {
     show();
 
     setOpenedListener(action -> {
+      try {
 //            sendBannerEvent("clicked", bannerPopup.getData());
 
-      if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
-        getCleverPushInstance().getAppBannerOpenedListener().opened(action);
-      }
+        if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
+          getCleverPushInstance().getAppBannerOpenedListener().opened(action);
+        }
 
-      if (action.getType().equals("subscribe")) {
-        getCleverPushInstance().subscribe();
-      }
+        if (action.getType().equals("subscribe")) {
+          getCleverPushInstance().subscribe();
+        }
 
-      if (action.getType().equals("addTags")) {
-        getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
-      }
+        if (action.getType().equals("addTags")) {
+          getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
+        }
 
-      if (action.getType().equals("removeTags")) {
-        getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
-      }
+        if (action.getType().equals("removeTags")) {
+          getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
+        }
 
-      if (action.getType().equals("addTopics")) {
-        Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-        topics.addAll(action.getTopics());
-        getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-      }
+        if (action.getType().equals("addTopics")) {
+          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+          topics.addAll(action.getTopics());
+          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+        }
 
-      if (action.getType().equals("removeTopics")) {
-        Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-        topics.removeAll(action.getTopics());
-        getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-      }
+        if (action.getType().equals("removeTopics")) {
+          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+          topics.removeAll(action.getTopics());
+          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+        }
 
-      if (action.getType().equals("setAttribute")) {
-        getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
-      }
+        if (action.getType().equals("setAttribute")) {
+          getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
+        }
 
-      if (action.getType().equals("switchScreen")) {
+        if (action.getType().equals("switchScreen")) {
+        }
+      } catch (Exception e) {
+        Logger.e(TAG, "Error in setOpenedListener of InboxView", e);
       }
     });
   }

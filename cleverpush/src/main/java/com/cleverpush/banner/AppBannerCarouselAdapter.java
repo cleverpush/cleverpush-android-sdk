@@ -149,29 +149,33 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   }
 
   private void onClickListener(BannerAction action) {
-    if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
-      String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
-      WebViewActivity.launch(activity, URL);
-    } else if (action.getScreen() != null && !action.getScreen().isEmpty()) {
-      for (int i = 0; i < screens.size(); i++) {
-        if (screens.get(i).getId() != null && screens.get(i).getId().equals(action.getScreen())) {
-          appBannerPopup.moveToNextScreen(i);
-          break;
+    try {
+      if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
+        String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
+        WebViewActivity.launch(activity, URL);
+      } else if (action.getScreen() != null && !action.getScreen().isEmpty()) {
+        for (int i = 0; i < screens.size(); i++) {
+          if (screens.get(i).getId() != null && screens.get(i).getId().equals(action.getScreen())) {
+            appBannerPopup.moveToNextScreen(i);
+            break;
+          }
         }
+      } else if (action.getDismiss()) {
+        appBannerPopup.dismiss();
+      } else {
+        appBannerPopup.moveToNextScreen();
       }
-    } else if (action.getDismiss()) {
-      appBannerPopup.dismiss();
-    } else {
-      appBannerPopup.moveToNextScreen();
-    }
 
-    if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
-      String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
-      activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(URL)));
-    }
+      if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
+        String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
+        activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(URL)));
+      }
 
-    if (appBannerPopup.getOpenedListener() != null) {
-      appBannerPopup.getOpenedListener().opened(action);
+      if (appBannerPopup.getOpenedListener() != null) {
+        appBannerPopup.getOpenedListener().opened(action);
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in AppBanner onClickListener", e);
     }
   }
 

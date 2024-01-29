@@ -140,27 +140,31 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   }
 
   private void onClickListener(BannerAction action) {
-    if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
-      WebViewActivity.launch(activity, action.getUrl());
-    } else if (action.getScreen() != null && !action.getScreen().isEmpty()) {
-      for (int i = 0; i < screens.size(); i++) {
-        if (screens.get(i).getId() != null && screens.get(i).getId().equals(action.getScreen())) {
-          appBannerPopup.moveToNextScreen(i);
-          break;
+    try {
+      if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
+        WebViewActivity.launch(activity, action.getUrl());
+      } else if (action.getScreen() != null && !action.getScreen().isEmpty()) {
+        for (int i = 0; i < screens.size(); i++) {
+          if (screens.get(i).getId() != null && screens.get(i).getId().equals(action.getScreen())) {
+            appBannerPopup.moveToNextScreen(i);
+            break;
+          }
         }
+      } else if (action.getDismiss()) {
+        appBannerPopup.dismiss();
+      } else {
+        appBannerPopup.moveToNextScreen();
       }
-    } else if (action.getDismiss()) {
-      appBannerPopup.dismiss();
-    } else {
-      appBannerPopup.moveToNextScreen();
-    }
 
-    if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
-      activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(action.getUrl())));
-    }
+      if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
+        activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(action.getUrl())));
+      }
 
-    if (appBannerPopup.getOpenedListener() != null) {
-      appBannerPopup.getOpenedListener().opened(action);
+      if (appBannerPopup.getOpenedListener() != null) {
+        appBannerPopup.getOpenedListener().opened(action);
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in onClickListener of InboxView." , e);
     }
   }
 
