@@ -1,5 +1,7 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
@@ -10,6 +12,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.cleverpush.shortcutbadger.ShortcutBadgeException;
 import com.cleverpush.shortcutbadger.ShortcutBadger;
+import com.cleverpush.util.Logger;
 
 public class BadgeHelper {
   public static void update(Context context, boolean incrementBadge) {
@@ -39,6 +42,7 @@ public class BadgeHelper {
     try {
       statusBarNotifications = getNotificationManager(context).getActiveNotifications();
     } catch (Throwable e) {
+      Logger.e(LOG_TAG, "Error getting active notifications", e);
     }
     return statusBarNotifications;
   }
@@ -66,7 +70,7 @@ public class BadgeHelper {
     try {
       ShortcutBadger.applyCountOrThrow(context, count);
     } catch (ShortcutBadgeException e) {
-
+      Logger.e(LOG_TAG, "Error updating badge count", e);
     }
   }
 }

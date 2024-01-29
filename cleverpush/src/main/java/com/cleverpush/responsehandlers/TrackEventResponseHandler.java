@@ -19,6 +19,7 @@ public class TrackEventResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
         } else {
           Logger.e("CleverPush", "Error tracking event." +

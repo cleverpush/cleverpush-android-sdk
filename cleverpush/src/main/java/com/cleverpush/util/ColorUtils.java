@@ -1,5 +1,7 @@
 package com.cleverpush.util;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.graphics.Color;
 
 public class ColorUtils {
@@ -13,7 +15,7 @@ public class ColorUtils {
     try {
       color = Color.parseColor(colorStr);
     } catch (Exception ex) {
-
+      Logger.e(LOG_TAG, "Error parsing color: " + colorStr, ex);
     }
     return color;
   }

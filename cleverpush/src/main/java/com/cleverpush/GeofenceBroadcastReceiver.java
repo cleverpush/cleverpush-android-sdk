@@ -65,7 +65,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
             }
           }
         } catch (Exception ex) {
-          Logger.e("Exception", ex.getMessage());
+          Logger.e(LOG_TAG, "Error parsing JSON in onReceive GeofenceBroadcastReceiver.", ex);
         }
       }
     });
@@ -92,7 +92,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                 jsonBody.put("subscriptionId", subscriptionId);
                 jsonBody.put("state", transitionState);
               } catch (JSONException e) {
-                Logger.e(LOG_TAG, "Error generating geo-fence json", e);
+                Logger.e(LOG_TAG, "Error generating geo-fence request json parameter", e);
               }
               geoFenceTimeoutCompleted = true;
               CleverPushHttpClient.postWithRetry("/subscription/geo-fence", jsonBody,

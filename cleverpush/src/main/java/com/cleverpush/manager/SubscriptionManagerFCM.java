@@ -43,7 +43,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     try {
       return getTokenWithClassFirebaseMessaging();
     } catch (Exception e) {
-      Logger.d(LOG_TAG, "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken");
+      Logger.e(LOG_TAG, "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken");
     }
     return getTokenWithClassFirebaseInstanceId(senderId);
   }
@@ -176,7 +176,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
           Logger.d(LOG_TAG, "FCM token has not changed: " + newToken);
         }
       } catch (Throwable throwable) {
-        Logger.e(LOG_TAG, "Unknown error getting FCM Token", throwable);
+        Logger.e(LOG_TAG, "Unknown error getting FCM Token in checkChangedPushToken.", throwable);
       }
     }, THREAD_NAME).start();
   }
@@ -206,11 +206,11 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
           try {
             Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
           } catch (InterruptedException e) {
-            Logger.e(LOG_TAG, "Caught InterruptedException", e);
+            Logger.e(LOG_TAG, "Caught InterruptedException in subscribeInBackground.", e);
           }
         }
       } catch (Throwable throwable) {
-        Logger.e(LOG_TAG, "Unknown error getting FCM Token", throwable);
+        Logger.e(LOG_TAG, "Unknown error getting FCM Token in subscribeInBackground.", throwable);
         subscribedListener.onFailure(throwable);
       }
     }, THREAD_NAME);
@@ -228,7 +228,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
       return token;
     } catch (IOException exception) {
       if (!ERROR_SERVICE_NOT_AVAILABLE.equals(exception.getMessage())) {
-        Logger.e(LOG_TAG, "Error Getting FCM Token ", exception);
+        Logger.e(LOG_TAG, "Error Getting FCM Token in getTokenAttempt", exception);
         throw exception;
       }
 

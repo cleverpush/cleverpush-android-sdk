@@ -95,7 +95,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
       storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener));
       storyDetailViewHolder.webView.loadData(htmlContent, "text/html; charset=utf-8", "UTF-8");
     } catch (Exception e) {
-      Logger.e(TAG, e.getLocalizedMessage());
+      Logger.e(TAG, "Error in StoryDetail onBindViewHolder.", e);
     }
   }
 

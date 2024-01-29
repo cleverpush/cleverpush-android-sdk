@@ -33,15 +33,22 @@ public class StopCampaignResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
+          if (listener != null) {
+            listener.onFailure(new Exception("Failed while stopCampaign request. - HTTP " + statusCode + ": " + response, throwable));
+          }
         } else {
           Logger.e("CleverPush", "Failed while stopCampaign request." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response
           );
-        }
-        if (listener != null) {
-          listener.onFailure(throwable);
+          if (listener != null) {
+            Exception genericException = new Exception("Failed while stopCampaign request." +
+                    "\nStatus code: " + statusCode +
+                    "\nResponse: " + response);
+            listener.onFailure(genericException);
+          }
         }
       }
     };

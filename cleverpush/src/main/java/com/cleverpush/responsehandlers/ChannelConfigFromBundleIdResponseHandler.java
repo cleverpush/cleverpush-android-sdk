@@ -38,7 +38,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
               "Got Channel ID via Package Name: " + cleverPush.getChannelId(cleverPush.getContext()) + " (SDK "
                   + CleverPush.SDK_VERSION + ")");
         } catch (Throwable ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "Error in onSuccess of fetch Channel Config via Package Name.", ex);
         }
       }
 
@@ -51,6 +51,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
         } else {
           Logger.e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?." +

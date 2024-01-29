@@ -80,7 +80,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
   }
 
   public void addSubscriptionTag(AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd) {
-    if (subscriptionId != null) {
+    if (subscriptionId != null && !subscriptionId.isEmpty()) {
       tags = this.getSubscriptionTags();
       if (tags.contains(tagIds[currentPositionOfTagToAdd])) {
         if (addTagCompletedListener != null) {
@@ -96,7 +96,7 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
         jsonBody.put("tagId", tagIds[currentPositionOfTagToAdd]);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-        Logger.e(LOG_TAG, ex.getMessage(), ex);
+        Logger.e(LOG_TAG, "Error creating addSubscriptionTag(/subscription/tag) request parameter", ex);
       }
 
       CleverPushHttpClient.postWithRetry("/subscription/tag", jsonBody,

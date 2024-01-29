@@ -80,14 +80,14 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
   }
 
   public void removeSubscriptionTag(RemoveTagCompletedListener onRemoveTagCompleted, int currentPositionOfTagToRemove) {
-    if (subscriptionId != null) {
+    if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {
         jsonBody.put("channelId", this.channelId);
         jsonBody.put("tagId", tagIds[currentPositionOfTagToRemove]);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-        Logger.e(LOG_TAG, ex.getMessage(), ex);
+        Logger.e(LOG_TAG, "Error in removeSubscriptionTag(/subscription/untag/) request parameter", ex);
       }
 
       tags = this.getSubscriptionTags();

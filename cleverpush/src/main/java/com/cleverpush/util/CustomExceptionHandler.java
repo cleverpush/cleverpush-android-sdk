@@ -17,7 +17,7 @@ public class CustomExceptionHandler extends Handler {
     try {
       super.dispatchMessage(msg);
     } catch (Exception e) {
-      Logger.d(TAG, "Exception inside of Handler runnable " + e.getLocalizedMessage());
+      Logger.e(TAG, "Exception inside of Handler runnable.", e);
     }
   }
 }

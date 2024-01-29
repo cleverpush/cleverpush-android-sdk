@@ -70,7 +70,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
       try {
         CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
       } catch (IllegalStateException illegalStateException) {
-        Logger.e(LOG_TAG, illegalStateException.getMessage());
+        Logger.e(LOG_TAG, "Error starting CleanUpService.", illegalStateException);
       }
     }
 
@@ -86,8 +86,8 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         activityInitializedListeners.clear();
       }
     } catch (Exception error) {
-      Logger.e(LOG_TAG,
-          "activityInitializedListeners != null " + (activityInitializedListeners != null) + " " + error.getMessage());
+      Logger.e(LOG_TAG, "Error handling activityInitializedListeners - "
+              + "activityInitializedListeners != null " + (activityInitializedListeners != null), error);
     }
 
     counter++;

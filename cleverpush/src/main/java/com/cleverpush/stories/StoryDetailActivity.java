@@ -44,7 +44,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
       });
     } catch (Exception e) {
-      Logger.e(TAG, "launch Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error while launching StoryDetailActivity", e);
     }
   }
 
@@ -89,7 +89,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
       }
     } catch (Exception e) {
-      Logger.e(TAG, e.getLocalizedMessage());
+      Logger.e(TAG, "Error handling bundle data in StoryDetailActivity", e);
     }
   }
 
@@ -109,23 +109,31 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       recyclerView.setAdapter(storyDetailListAdapter);
       recyclerView.smoothScrollToPosition(selectedPosition);
     } catch (Exception e) {
-      Logger.e(TAG, e.getLocalizedMessage());
+      Logger.e(TAG, "Error loading story details in StoryDetailActivity", e);
     }
   }
 
   @Override
   public void onNext(int position) {
-    if (position != stories.size() - 1) {
-      selectedPosition = position + 1;
-      recyclerView.smoothScrollToPosition(position + 1);
+    try {
+      if (position != stories.size() - 1) {
+        selectedPosition = position + 1;
+        recyclerView.smoothScrollToPosition(position + 1);
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error handling onNext in StoryDetailActivity", e);
     }
   }
 
   @Override
   public void onPrevious(int position) {
-    if (position != 0) {
-      selectedPosition = position - 1;
-      recyclerView.smoothScrollToPosition(position - 1);
+    try {
+      if (position != 0) {
+        selectedPosition = position - 1;
+        recyclerView.smoothScrollToPosition(position - 1);
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error handling onPrevious in StoryDetailActivity", e);
     }
   }
 }

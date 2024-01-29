@@ -83,7 +83,7 @@ public class InboxView extends LinearLayout {
         }
       });
     } catch (Exception e) {
-      Logger.e(TAG, "getNotifications Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error in InboxView getNotifications.", e);
     }
   }
 
@@ -136,7 +136,7 @@ public class InboxView extends LinearLayout {
         inboxViewListAdapter.notifyItemChanged(position, notificationArrayList.get(position));
         recyclerView.smoothScrollToPosition(position);
       } catch (Exception e) {
-        Logger.e(TAG, "getOnItemClickListener Exception: " + e.getLocalizedMessage());
+        Logger.e(TAG, "Error in InboxView's OnItemClickListener.", e);
       }
     };
   }

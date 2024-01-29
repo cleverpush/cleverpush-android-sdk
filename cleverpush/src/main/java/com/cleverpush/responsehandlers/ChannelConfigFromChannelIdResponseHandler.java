@@ -37,7 +37,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
               autoRegister || isChannelIdChanged, isChannelIdChanged);
 
         } catch (Throwable ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "Error in onSuccess of fetch Channel Config.", ex);
         }
       }
 
@@ -50,6 +50,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
         } else {
           Logger.e("CleverPush", "Failed to fetch Channel Config." +

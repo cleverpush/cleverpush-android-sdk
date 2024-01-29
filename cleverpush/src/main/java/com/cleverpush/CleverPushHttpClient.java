@@ -92,7 +92,7 @@ public class CleverPushHttpClient {
       }
       new Thread(() -> makeRequest(url, "POST", jsonBody, responseHandler)).start();
     } catch (Exception e) {
-      Logger.e("CleverPushHttpClient", e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "CleverPushHttpClient: Error in post request", e);
     }
   }
 
@@ -188,6 +188,7 @@ public class CleverPushHttpClient {
         }
       }
     } catch (Throwable throwable) {
+      Logger.e(LOG_TAG, "CleverPushHttpClient: Error during HTTP request", throwable);
       if (responseHandler != null) {
         responseHandler.onFailure(httpResponse, null, throwable);
       }

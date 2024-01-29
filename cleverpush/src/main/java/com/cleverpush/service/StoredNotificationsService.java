@@ -47,7 +47,7 @@ public class StoredNotificationsService {
         List<Notification> notifications = gson.fromJson(notificationsJson, NotificationList.class);
         return new HashSet<>(notifications);
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, "error while getting stored notifications", ex);
+        Logger.e(LOG_TAG, "StoredNotificationsService: error while getting stored notifications from local", ex);
       }
     }
 
@@ -92,7 +92,7 @@ public class StoredNotificationsService {
             );
             notificationFromApiCallbackListener.ready(notifications);
           } catch (Exception ex) {
-            Logger.e(LOG_TAG, "error while getting stored notifications", ex);
+            Logger.e(LOG_TAG, "StoredNotificationsService: error while getting stored notifications", ex);
           }
         }
       }
@@ -104,6 +104,7 @@ public class StoredNotificationsService {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
         } else {
           Logger.e(LOG_TAG, "Failed while received-notifications request." +
