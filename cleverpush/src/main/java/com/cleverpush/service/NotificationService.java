@@ -75,7 +75,16 @@ public class NotificationService {
   }
 
   private int getDrawableId(Context context, String name) {
-    return context.getResources().getIdentifier(name, "drawable", context.getPackageName());
+    try {
+      if (name != null && !name.isEmpty()) {
+        return context.getResources().getIdentifier(name, "drawable", context.getPackageName());
+      } else {
+        return 0;
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error in NotificationService getDrawableId: " + e.getLocalizedMessage());
+      return 0;
+    }
   }
 
   private int getSmallIcon(Context context) {
