@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.4 (01.02.2024)
+* Optimize customer listener(Added log for the specific error.)
+* Fixed a bug in notification action button.
+
 ## 1.33.3 (16.01.2024)
 * Added feature in `InboxView` to support GIF image.
 * Fixed a bug in `AppBanner`, remove space between text and image.
