@@ -34,6 +34,7 @@ import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
 
 import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.database.DatabaseClient;
@@ -3758,40 +3759,48 @@ public class CleverPush {
    * If get consent 1 in IABTCF_VendorConsents at position 1139 then perform subscribe or tracking according to IabTcfMode
    */
   private void setTCF() {
-    if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
-      setTrackingConsentRequired(true);
-    }
-    if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-      setSubscribeConsentRequired(true);
-    }
-    Context mContext = context.getApplicationContext();
-    SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-
-    SharedPreferences.OnSharedPreferenceChangeListener mListener;
-    mListener = (preferences, key) -> {
-      if (key.equals(IABTCF_VendorConsents)) {
-        String vendorConsents = mPreferences.getString(IABTCF_VendorConsents, "0");
-        if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
-          char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
-          boolean hasConsent = (consentStatus == '1');
-
-          if (hasConsent) {
-            if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
-              setTrackingConsent(true);
-            }
-            if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-              setSubscribeConsent(true);
-            }
-          } else {
-            Logger.d(LOG_TAG, "Vendor does not have consent");
-          }
-        } else {
-          Logger.d(LOG_TAG, "Vendor consents string is too short to get character at index " + IABTCF_VendorConsent_POSITION + ".");
-        }
+    try {
+      if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+        setTrackingConsentRequired(true);
       }
-    };
+      if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+        setSubscribeConsentRequired(true);
+      }
+      Context mContext = context.getApplicationContext();
+      SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
-    mPreferences.registerOnSharedPreferenceChangeListener(mListener);
+      SharedPreferencesLiveData mSharedPreferencesLiveData = new SharedPreferencesLiveData(mPreferences, IABTCF_VendorConsents);
+
+      mSharedPreferencesLiveData.observeForever(new Observer<String>() {
+        @Override
+        public void onChanged(String vendorConsents) {
+          try {
+            if (vendorConsents != null && !vendorConsents.isEmpty()) {
+              if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
+                char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
+                boolean hasConsent = (consentStatus == '1');
+                if (hasConsent) {
+                  if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+                    setTrackingConsent(true);
+                  }
+                  if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+                    setSubscribeConsent(true);
+                  }
+                } else {
+                  Logger.d(LOG_TAG, "setTCF Vendor does not have consent");
+                }
+              } else {
+                Logger.d(LOG_TAG, "setTCF Vendor consents string is too short to get character at index " + IABTCF_VendorConsent_POSITION + ".");
+              }
+            }
+          } catch (Exception e) {
+            Logger.e(LOG_TAG, "Error processing VendorConsents for IABTCF", e);
+          }
+        }
+      });
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error in setTCF", e);
+    }
   }
 
   /**
