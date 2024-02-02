@@ -3760,12 +3760,10 @@ public class CleverPush {
    */
   private void setTCF() {
     try {
-      if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
-        setTrackingConsentRequired(true);
-      }
-      if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-        setSubscribeConsentRequired(true);
-      }
+      IabTcfMode mode = getIabTcfMode();
+      setTrackingConsentRequired(mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT);
+      setSubscribeConsentRequired(mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT);
+
       Context mContext = context.getApplicationContext();
       SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
@@ -3780,10 +3778,10 @@ public class CleverPush {
                 char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
                 boolean hasConsent = (consentStatus == '1');
                 if (hasConsent) {
-                  if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+                  if (mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
                     setTrackingConsent(true);
                   }
-                  if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+                  if (mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
                     setSubscribeConsent(true);
                   }
                 } else {
