@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.5 (02.02.2024)
+* Fixed a bug for TCF.
+
 ## 1.33.4 (01.02.2024)
 * Optimize customer listener(Added log for the specific error.)
 * Fixed a bug in notification action button.
