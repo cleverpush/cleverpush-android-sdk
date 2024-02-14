@@ -1546,7 +1546,7 @@ public class CleverPush {
 
   public void waitForTrackingConsent(TrackingConsentListener listener) {
     if (listener != null) {
-      if (isTrackingConsentRequired() && !hasTrackingConsentCalled()) {
+      if (isTrackingConsentRequired() && !hasTrackingConsent()) {
         if (!hasTrackingConsentCalled()) {
           getTrackingConsentListeners().add(listener);
         }
@@ -3777,14 +3777,14 @@ public class CleverPush {
               if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
                 char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
                 boolean hasConsent = (consentStatus == '1');
-                if (hasConsent) {
-                  if (mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
-                    setTrackingConsent(true);
-                  }
-                  if (mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-                    setSubscribeConsent(true);
-                  }
-                } else {
+                if (mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+                  setTrackingConsent(hasConsent);
+                }
+                if (mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+                  setSubscribeConsent(hasConsent);
+                }
+
+                if (!hasConsent) {
                   Logger.d(LOG_TAG, "setTCF Vendor does not have consent");
                 }
               } else {
