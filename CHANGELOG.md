@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.6 (14.02.2024)
+* Optimize TCF code when revoke the consent. 
+
 ## 1.33.5 (02.02.2024)
 * Fixed a bug for TCF.
 
