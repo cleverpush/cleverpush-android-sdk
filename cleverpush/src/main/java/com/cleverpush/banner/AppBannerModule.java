@@ -1103,14 +1103,12 @@ public class AppBannerModule {
       bannerPopup.init();
       bannerPopup.show();
 
-      if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
-        getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
-          @Override
-          public void initialized() {
-            setBannerIsShown(bannerPopup.getData());
-          }
-        });
-      }
+      getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
+        @Override
+        public void initialized() {
+          setBannerIsShown(bannerPopup.getData());
+        }
+      });
 
       if (bannerPopup.getData().getDismissType() == BannerDismissType.Timeout) {
         long timeout = Math.max(0, bannerPopup.getData().getDismissTimeout());
