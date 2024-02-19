@@ -17,6 +17,10 @@ import com.cleverpush.Subscription;
 
 import java.util.List;
 
+/**
+ * Use NotificationServiceExtension instead.
+ */
+@Deprecated
 public abstract class NotificationExtenderService extends JobIntentService {
 
   static final int EXTENDER_SERVICE_JOB_ID = 209538983;

@@ -27,6 +27,14 @@ public class MetaDataUtils {
     return false;
   }
 
+  public static String getNotificationServiceExtensionClass(Context context) {
+    Bundle bundle = getManifestMetaBundle(context);
+    if (bundle != null) {
+      return bundle.getString("com.cleverpush.NotificationServiceExtension");
+    }
+    return null;
+  }
+
   public static String getChannelId(Context paramContext) {
     ApplicationInfo localApplicationInfo;
     try {

@@ -6,7 +6,7 @@ android {
     compileSdkVersion 33
 
     defaultConfig {
-        applicationId "com.example.cleverpush"
+        applicationId "com.cleverpush.cleverpush_example_android"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1

@@ -9,7 +9,7 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        tools:context=".MainActivity">
+        tools:context="com.cleverpush.cleverpush_example_android.MainActivity">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSubscribe"
