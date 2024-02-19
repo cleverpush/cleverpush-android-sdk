@@ -1667,7 +1667,7 @@ public class CleverPush {
     return channelConfig;
   }
 
-  public static void getChannelConfig(ChannelConfigListener listener) {
+  public synchronized static void getChannelConfig(ChannelConfigListener listener) {
     if (listener != null) {
       if (channelConfig == null && !initialized) {
         getChannelConfigListeners.add(listener);
