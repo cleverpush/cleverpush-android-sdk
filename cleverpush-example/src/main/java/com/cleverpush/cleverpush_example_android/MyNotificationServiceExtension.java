@@ -11,7 +11,7 @@ public class MyNotificationServiceExtension implements NotificationServiceExtens
     public void onNotificationReceived(NotificationReceivedEvent event) {
         // call `event.preventDefault()` to not display notification
         // event.preventDefault();
-        Log.e("CleverPush", "CleverPush MyNotificationServiceExtension onNotificationReceived");
+        Log.i("CleverPush", "CleverPush MyNotificationServiceExtension onNotificationReceived");
 
         // modify notification
         event.getNotification().setExtender(new NotificationCompat.Extender() {

@@ -158,7 +158,9 @@ public class NotificationDataProcessor {
       return false;
     }
 
-    Logger.w(LOG_TAG, "NotificationExtenderService is Deprecated. Please migrate to NotificationServiceExtension");
+    Logger.w(LOG_TAG, "NotificationExtenderService is deprecated. Please migrate to NotificationServiceExtension. " +
+            "\nRefer to the documentation for more information: " +
+            "https://developers.cleverpush.com/docs/sdks/android/extension");
 
     intent.putExtra("notification", notification);
     intent.putExtra("subscription", subscription);
