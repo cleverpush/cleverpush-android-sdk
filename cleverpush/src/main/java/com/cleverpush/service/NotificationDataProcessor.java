@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
 
-import android.util.Log;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
@@ -159,6 +158,8 @@ public class NotificationDataProcessor {
       return false;
     }
 
+    Logger.w(LOG_TAG, "NotificationExtenderService is Deprecated. Please migrate to NotificationServiceExtension");
+
     intent.putExtra("notification", notification);
     intent.putExtra("subscription", subscription);
 
@@ -191,14 +192,14 @@ public class NotificationDataProcessor {
         extension = (NotificationServiceExtension) clazzInstance;
       }
     } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-      Log.e(LOG_TAG, "Error while setting up NotificationServiceExtension: " + e.getMessage(), e);
+      Logger.e(LOG_TAG, "Error while setting up NotificationServiceExtension: " + e.getMessage(), e);
     }
   }
 
   private static boolean startServiceExtension(Context context, Notification notification, Subscription subscription) {
     NotificationDataProcessor.setupNotificationServiceExtension(context);
     if (extension == null) {
-      Log.e(LOG_TAG, "Extension is NULL. returning");
+      Logger.e(LOG_TAG, "startServiceExtension: Extension is NULL. returning");
       return false;
     }
 
