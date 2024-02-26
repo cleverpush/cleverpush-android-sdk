@@ -1118,7 +1118,7 @@ public class AppBannerModule {
       bannerPopup.setOpenedListener(action -> {
         String blockId, screenId;
         blockId = action.getBlockId();
-        screenId = action.getScreen();
+        screenId = action.getMultipleScreenId();
 
         boolean isElementAlreadyClicked = isBannerElementClicked(blockId);
         if (!isElementAlreadyClicked) {
