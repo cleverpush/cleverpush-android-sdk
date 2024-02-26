@@ -23,6 +23,7 @@ public class BannerAction {
   private String screen;
   private Map<String, Object> customData;
   private String blockId;
+  private String multipleScreenId;
 
   private BannerAction() {
   }
@@ -85,6 +86,14 @@ public class BannerAction {
 
   public void setBlockId(String blockId) {
     this.blockId = blockId;
+  }
+
+  public String getMultipleScreenId() {
+    return multipleScreenId;
+  }
+
+  public void setMultipleScreenId(String multipleScreenId) {
+    this.multipleScreenId = multipleScreenId;
   }
 
   public static BannerAction create(JSONObject json) throws JSONException {
