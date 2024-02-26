@@ -180,13 +180,17 @@ public class NotificationService {
         }
 
       } else {
+        String channelName = CleverPush.getInstance(context).getNotificationChannelName();
+        if (channelName == null || channelName.isEmpty()) {
+          channelName = "default";
+        }
         int importance = NotificationManager.IMPORTANCE_DEFAULT;
-        NotificationChannel channel = new NotificationChannel("default", "Default", importance);
-        channel.setDescription("default");
+        NotificationChannel channel = new NotificationChannel(channelName, channelName, importance);
+        channel.setDescription(channelName);
         NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
 
-        notificationBuilder = new NotificationCompat.Builder(context, "default");
+        notificationBuilder = new NotificationCompat.Builder(context, channelName);
       }
 
     } else {

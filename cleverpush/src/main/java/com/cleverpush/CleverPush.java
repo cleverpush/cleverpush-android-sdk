@@ -7,6 +7,8 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -225,6 +227,7 @@ public class CleverPush {
   private int trackEventRetentionDays = 90;
   private boolean autoResubscribe = false;
   private boolean autoRequestNotificationPermission = true;
+  private String notificationChannelName = null;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -3890,5 +3893,60 @@ public class CleverPush {
    */
   public void setAutoRequestNotificationPermission(boolean autoRequestNotificationPermission) {
     this.autoRequestNotificationPermission = autoRequestNotificationPermission;
+  }
+
+  /**
+   * Deletes the default notification channel specified by the given channelId,
+   * if it exists and the device's Android version is Oreo (API level 26) or higher.
+   *
+   * @param context The context of the application.
+   */
+  public void deleteDefaultNotificationChannel(Context context) {
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (isNotificationChannelExists(context, "default")) {
+          NotificationManager notificationManager =
+                  (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+          String id = "default";
+          notificationManager.deleteNotificationChannel(id);
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while deleting the default notification channel. " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Checks whether a notification channel with the specified channelId exists on the device.
+   *
+   * @param context The context of the application.
+   * @param channelId The unique identifier of the notification channel to check for existence.
+   * @return True if the notification channel exists, false otherwise or if an exception occurs.
+   */
+  private boolean isNotificationChannelExists(Context context, String channelId) {
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+        NotificationChannel channel = notificationManager.getNotificationChannel(channelId);
+        return channel != null;
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while checking notification channel is exist or not.", e);
+    }
+    return false;
+  }
+
+  public String getNotificationChannelName() {
+    return notificationChannelName;
+  }
+
+  /**
+   * Sets the name for the notification channel. This name will be used when creating or updating
+   * the notification channel associated with the application.
+   *
+   * @param notificationChannelName The desired name for the notification channel.
+   */
+  public void setNotificationChannelName(String notificationChannelName) {
+    this.notificationChannelName = notificationChannelName;
   }
 }
