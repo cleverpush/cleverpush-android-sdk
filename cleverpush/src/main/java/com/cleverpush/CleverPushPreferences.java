@@ -31,5 +31,6 @@ public class CleverPushPreferences {
   public static final String LAST_TIME_AUTO_SHOWED = "lastTimeAutoShowed";
   public static final String NOTIFICATION_STYLE = "notificationStyle";
   public static final String DEVICE_ID = "deviceId";
+  public static final String SILENT_PUSH_APP_BANNER = "silentPushBanners";
 
 }
