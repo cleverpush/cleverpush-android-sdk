@@ -23,8 +23,10 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class NotificationDataProcessor {
   public static int maximumNotifications = 100;
@@ -46,6 +48,8 @@ public class NotificationDataProcessor {
     cleverPush.trackNotificationDelivered(notificationId, subscriptionId);
 
     boolean dontShowNotification = false;
+    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences.Editor editor = sharedPreferences.edit();
 
     // default behaviour: do not show notification if application is in the foreground
     // ways to bypass this:
@@ -75,6 +79,8 @@ public class NotificationDataProcessor {
     // do not show silent notifications
     if (notification.isSilent()) {
       dontShowNotification = true;
+
+      handleSilentNotificationBanner(notification, sharedPreferences, editor);
     }
 
     boolean hasExtenderService = startExtenderService(context, notification, subscription);
@@ -90,9 +96,6 @@ public class NotificationDataProcessor {
       if (maximumNotifications <= 0) {
         return;
       }
-
-      SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
-      SharedPreferences.Editor editor = sharedPreferences.edit();
 
       Gson gson = new Gson();
       String notificationsJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATIONS_JSON, null);
@@ -156,5 +159,26 @@ public class NotificationDataProcessor {
     }
 
     return true;
+  }
+
+  private static void handleSilentNotificationBanner(Notification notification, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
+    if (notification.getAppBanner() != null && !notification.getAppBanner().isEmpty()) {
+      String silentPushBanners = sharedPreferences.getString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, null);
+      Map<String, String> silentPushBannersMap;
+
+      if (silentPushBanners != null) {
+        Type type = new TypeToken<Map<String, String>>() {
+        }.getType();
+        silentPushBannersMap = new Gson().fromJson(silentPushBanners, type);
+      } else {
+        silentPushBannersMap = new HashMap<>();
+      }
+
+      if (!silentPushBannersMap.containsKey(notification.getId())) {
+        silentPushBannersMap.put(notification.getId(), notification.getAppBanner());
+        editor.putString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, new Gson().toJson(silentPushBannersMap));
+        editor.apply();
+      }
+    }
   }
 }
