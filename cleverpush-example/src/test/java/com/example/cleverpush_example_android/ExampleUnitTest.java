@@ -1,4 +1,4 @@
-package com.example.cleverpush;
+package com.example.cleverpush_example_android;
 
 import static org.junit.Assert.assertEquals;
 
