@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.8 (28.02.2024)
+* For displaying notifications, use `NotificationServiceExtension` instead of `NotificationExtenderService`, which is now deprecated. Refer to the documentation for more information: https://developers.cleverpush.com/docs/sdks/android/extension
+
 ## 1.33.7 (28.02.2024)
 * Optimised the showBanner method for always saving banner IDs in preferences.
 * Fixed race condition in `getChannelConfig`
