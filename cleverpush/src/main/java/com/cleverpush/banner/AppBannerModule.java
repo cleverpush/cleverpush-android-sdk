@@ -285,6 +285,11 @@ public class AppBannerModule {
     });
   }
 
+  /**
+   * Displays silent notification banners based on stored preferences.
+   * Retrieves silent push banner info from preferences, iterates through entries,
+   * and shows corresponding banners using showBanner. Updates preferences after each display.
+   */
   private void showSilentNotificationBanners() {
     try {
       String silentPushBanners = sharedPreferences.getString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, null);
@@ -296,9 +301,6 @@ public class AppBannerModule {
         for (Map.Entry<String, String> entry : silentPushBannersMap.entrySet()) {
           String silentNotificationId = entry.getKey();
           String silentBannerId = entry.getValue();
-
-          Logger.d(TAG, "silentNotification Id: " + silentNotificationId);
-          Logger.d(TAG, "silentNotification silentBannerId Id: " + silentBannerId);
 
           showBanner(silentBannerId, silentNotificationId);
 
