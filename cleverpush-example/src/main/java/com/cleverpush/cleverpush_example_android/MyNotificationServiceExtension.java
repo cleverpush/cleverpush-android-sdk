@@ -1,9 +1,10 @@
 package com.cleverpush.cleverpush_example_android;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
-import com.cleverpush.CleverPush;
 import com.cleverpush.NotificationReceivedEvent;
 import com.cleverpush.NotificationServiceExtension;
 import java.math.BigInteger;
@@ -15,11 +16,15 @@ public class MyNotificationServiceExtension implements NotificationServiceExtens
         // event.preventDefault();
         Log.i("CleverPush", "CleverPush MyNotificationServiceExtension onNotificationReceived");
 
-        // For delete the default notification.
-        // CleverPush.getInstance(CleverPush.context).deleteDefaultNotificationChannel(CleverPush.context);
-
-        // Sets the name for the notification channel.
-        // CleverPush.getInstance(CleverPush.context).setNotificationChannelName("CHANNEL_NAME");
+        // to prevent the `default` notification channel creation, use `event.getNotification().setNotificationChannel()`
+        /*if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel;
+            String channelId = "channel_id"; // replace with your desired channel id
+            CharSequence channelName = "Channel_Name"; // replace with your desired channel name
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            channel = new NotificationChannel(channelId, channelName, importance);
+            event.getNotification().setNotificationChannel(channel);
+        }*/
 
         // modify notification
         event.getNotification().setExtender(new NotificationCompat.Extender() {

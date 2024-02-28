@@ -180,17 +180,19 @@ public class NotificationService {
         }
 
       } else {
-        String channelName = CleverPush.getInstance(context).getNotificationChannelName();
-        if (channelName == null || channelName.isEmpty()) {
-          channelName = "default";
+        NotificationChannel channel;
+        if (notification.getNotificationChannel() != null) {
+          channel = notification.getNotificationChannel();
+        } else {
+          int importance = NotificationManager.IMPORTANCE_DEFAULT;
+          channel = new NotificationChannel("default", "Default", importance);
         }
-        int importance = NotificationManager.IMPORTANCE_DEFAULT;
-        NotificationChannel channel = new NotificationChannel(channelName, channelName, importance);
-        channel.setDescription(channelName);
+
+        channel.setDescription(channel.getName().toString());
         NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
 
-        notificationBuilder = new NotificationCompat.Builder(context, channelName);
+        notificationBuilder = new NotificationCompat.Builder(context, channel.getId());
       }
 
     } else {
@@ -399,15 +401,20 @@ public class NotificationService {
   }
 
   private PendingIntent getNotificationDeleteIntent(Context context, Notification notification) {
-    Intent delIntent = new Intent(context, NotificationDismissIntentService.class);
-
     try {
-      delIntent.putExtra("notification", notification);
-    } catch (Exception exception) {
-      Logger.e(LOG_TAG, "NotificationService: Error with delete intent", exception);
-    }
+      Intent delIntent = new Intent(context, NotificationDismissIntentService.class);
 
-    return PendingIntent.getService(context, this.generateRequestCode(), delIntent, this.getDeleteIntentFlags());
+      try {
+        delIntent.putExtra("notification", notification);
+      } catch (Exception exception) {
+        Logger.e(LOG_TAG, "NotificationService: Error with delete intent", exception);
+      }
+
+      return PendingIntent.getService(context, this.generateRequestCode(), delIntent, this.getDeleteIntentFlags());
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "getNotificationDeleteIntent: Error with delete intent", e);
+      return null;
+    }
   }
 
   private PendingIntent getCarouselNotificationDeleteIntent(Context context, Notification message,
