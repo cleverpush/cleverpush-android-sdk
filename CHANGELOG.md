@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.33.7 (28.02.2024)
+* Optimised the showBanner method for always saving banner IDs in preferences.
+* Fixed race condition in `getChannelConfig`
+* Resolved the issue of the wrong screen ID passing in the app banner.
+* Added feature to display silent push app banner.
+
 ## 1.33.6 (14.02.2024)
 * Optimize TCF code when revoke the consent. 
 

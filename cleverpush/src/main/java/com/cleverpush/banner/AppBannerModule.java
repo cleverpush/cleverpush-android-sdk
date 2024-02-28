@@ -38,11 +38,14 @@ import com.cleverpush.util.Logger;
 import com.cleverpush.util.PreferenceManagerUtils;
 import com.cleverpush.util.VersionComparator;
 import com.cleverpush.util.VoucherCodeUtils;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -55,6 +58,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class AppBannerModule {
@@ -258,6 +262,8 @@ public class AppBannerModule {
         } catch (Exception e) {
           Logger.e(TAG, "loadBanners error at showing pending banners", e);
         }
+
+        showSilentNotificationBanners();
       }
 
       @Override
@@ -277,6 +283,37 @@ public class AppBannerModule {
         }
       }
     });
+  }
+
+  /**
+   * Displays silent notification banners based on stored preferences.
+   * Retrieves silent push banner info from preferences, iterates through entries,
+   * and shows corresponding banners using showBanner. Updates preferences after each display.
+   */
+  private void showSilentNotificationBanners() {
+    try {
+      String silentPushBanners = sharedPreferences.getString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, null);
+
+      if (silentPushBanners != null) {
+        Type type = new TypeToken<Map<String, String>>() {}.getType();
+        Map<String, String> silentPushBannersMap = new Gson().fromJson(silentPushBanners, type);
+
+        for (Map.Entry<String, String> entry : silentPushBannersMap.entrySet()) {
+          String silentNotificationId = entry.getKey();
+          String silentBannerId = entry.getValue();
+
+          showBanner(silentBannerId, silentNotificationId);
+
+          // Remove the key from silentPushBannersMap
+          silentPushBannersMap.remove(silentNotificationId);
+
+          // Update preferences with the modified map
+          editor.putString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, new Gson().toJson(silentPushBannersMap));
+          editor.apply();
+        }
+      }
+    } catch (Exception ignored) {
+    }
   }
 
   void sendBannerEventWithSubscriptionId(String event, Banner banner, String subscriptionId,
@@ -1103,14 +1140,12 @@ public class AppBannerModule {
       bannerPopup.init();
       bannerPopup.show();
 
-      if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
-        getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
-          @Override
-          public void initialized() {
-            setBannerIsShown(bannerPopup.getData());
-          }
-        });
-      }
+      getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
+        @Override
+        public void initialized() {
+          setBannerIsShown(bannerPopup.getData());
+        }
+      });
 
       if (bannerPopup.getData().getDismissType() == BannerDismissType.Timeout) {
         long timeout = Math.max(0, bannerPopup.getData().getDismissTimeout());
@@ -1120,7 +1155,7 @@ public class AppBannerModule {
       bannerPopup.setOpenedListener(action -> {
         String blockId, screenId;
         blockId = action.getBlockId();
-        screenId = action.getScreen();
+        screenId = action.getMultipleScreenId();
 
         boolean isElementAlreadyClicked = isBannerElementClicked(blockId);
         if (!isElementAlreadyClicked) {

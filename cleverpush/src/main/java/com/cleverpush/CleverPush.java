@@ -129,7 +129,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.33.6";
+  public static final String SDK_VERSION = "1.33.7";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -1667,7 +1667,7 @@ public class CleverPush {
     return channelConfig;
   }
 
-  public static void getChannelConfig(ChannelConfigListener listener) {
+  public synchronized static void getChannelConfig(ChannelConfigListener listener) {
     if (listener != null) {
       if (channelConfig == null && !initialized) {
         getChannelConfigListeners.add(listener);
