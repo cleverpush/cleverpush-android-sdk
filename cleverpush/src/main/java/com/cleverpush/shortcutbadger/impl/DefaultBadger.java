@@ -12,6 +12,7 @@ import java.util.List;
 import com.cleverpush.shortcutbadger.Badger;
 import com.cleverpush.shortcutbadger.ShortcutBadgeException;
 import com.cleverpush.shortcutbadger.util.BroadcastHelper;
+import com.cleverpush.util.Logger;
 
 /**
  * @author leolin
@@ -31,7 +32,7 @@ public class DefaultBadger implements Badger {
     if (BroadcastHelper.canResolveBroadcast(context, intent)) {
       context.sendBroadcast(intent);
     } else {
-      throw new ShortcutBadgeException("unable to resolve intent: " + intent.toString());
+      Logger.i("CleverPush", "unable to resolve intent: " + intent.toString());
     }
   }
 
