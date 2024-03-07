@@ -75,10 +75,14 @@ public class NotificationOpenedProcessor {
       }
     }
 
-    boolean autoHandleDeepLink = notification.isAutoHandleDeepLink();
-    if (autoHandleDeepLink) {
-      Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(result.getNotification().getUrl()));
-      context.startActivity(browserIntent);
+    try {
+      boolean autoHandleDeepLink = notification.isAutoHandleDeepLink();
+      if (autoHandleDeepLink && result.getNotification().getUrl() != null && !result.getNotification().getUrl().isEmpty()) {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(result.getNotification().getUrl()));
+        context.startActivity(browserIntent);
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while handling auto handle deep link for notification id: " + notificationId, e);
     }
 
     boolean badgeEnabled = notification.getCategory() == null || !notification.getCategory().getBadgeDisabled();
