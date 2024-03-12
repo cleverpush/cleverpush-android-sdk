@@ -1547,7 +1547,7 @@ public class CleverPush {
   public void waitForTrackingConsent(TrackingConsentListener listener) {
     if (listener != null) {
       if (isTrackingConsentRequired() && !hasTrackingConsent()) {
-        if (!hasTrackingConsentCalled()) {
+        if (!hasTrackingConsentCalled() || (hasTrackingConsentCalled() && !hasTrackingConsent())) {
           getTrackingConsentListeners().add(listener);
         }
       } else {
@@ -1572,6 +1572,11 @@ public class CleverPush {
         listener.ready();
       }
     }
+
+    if (isTrackingConsentRequired() && !hasTrackingConsent && trackingConsentListeners.size() > 0) {
+      return;
+    }
+
     trackingConsentListeners = new ArrayList<>();
   }
 
@@ -1630,8 +1635,8 @@ public class CleverPush {
 
   public void waitForSubscribeConsent(SubscribeConsentListener listener) {
     if (listener != null) {
-      if (isSubscribeConsentRequired() && !hasSubscribeConsentCalled()) {
-        if (!hasSubscribeConsentCalled()) {
+      if (isSubscribeConsentRequired() && !hasSubscribeConsent()) {
+        if (!hasSubscribeConsentCalled() || (hasSubscribeConsentCalled() && !hasSubscribeConsent())) {
           getSubscribeConsentListeners().add(listener);
         }
       } else {
@@ -1649,6 +1654,11 @@ public class CleverPush {
         listener.ready();
       }
     }
+
+    if (isSubscribeConsentRequired() && !hasSubscribeConsent && subscribeConsentListeners.size() > 0) {
+      return;
+    }
+
     subscribeConsentListeners = new ArrayList<>();
   }
 
@@ -3608,7 +3618,7 @@ public class CleverPush {
     return subscribeConsentRequired;
   }
 
-  public boolean isHasSubscribeConsent() {
+  public boolean hasSubscribeConsent() {
     return hasSubscribeConsent;
   }
 
@@ -3758,7 +3768,7 @@ public class CleverPush {
    * This method used for TCF2 CMP
    * If get consent 1 in IABTCF_VendorConsents at position 1139 then perform subscribe or tracking according to IabTcfMode
    */
-  private void setTCF() {
+  public void setTCF() {
     try {
       IabTcfMode mode = getIabTcfMode();
       setTrackingConsentRequired(mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT);
@@ -3811,7 +3821,7 @@ public class CleverPush {
     this.iabTcfMode = mode;
   }
 
-  private IabTcfMode getIabTcfMode() {
+  public IabTcfMode getIabTcfMode() {
     return iabTcfMode;
   }
 
