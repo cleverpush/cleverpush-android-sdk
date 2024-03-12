@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.33.9 (12.03.2024)
+* Fixed a bug in TCF, When update the consent update the status immediate. 
+* Fixed a bug in update badge count.
+* Fixed a potential crash when push URL is null in deeplink.
+
 ## 1.33.8 (28.02.2024)
 * For displaying notifications, use `NotificationServiceExtension` instead of `NotificationExtenderService`, which is now deprecated. Refer to the documentation for more information: https://developers.cleverpush.com/docs/sdks/android/extension
 
