@@ -1,7 +1,11 @@
 # Changelog
 
+## 1.33.10 (13.03.2024)
+* Optimized removing of tags and attributes after revoking tracking consent
+* Optimized TCF2 API, do not replay queued events after consent is given
+
 ## 1.33.9 (12.03.2024)
-* Fixed a bug in TCF, When update the consent update the status immediate. 
+* Fixed a bug in TCF, When update the consent update the status immediate.
 * Fixed a bug in update badge count.
 * Fixed a potential crash when push URL is null in deeplink.
 
@@ -15,7 +19,7 @@
 * Added feature to display silent push app banner.
 
 ## 1.33.6 (14.02.2024)
-* Optimize TCF code when revoke the consent. 
+* Optimize TCF code when revoke the consent.
 
 ## 1.33.5 (02.02.2024)
 * Fixed a bug for TCF.
