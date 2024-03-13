@@ -98,11 +98,15 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
     counter++;
 
-    // Register SharedPreferences.OnSharedPreferenceChangeListener
-    new Thread(() -> {
-      SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(currentActivity);
-      prefs.registerOnSharedPreferenceChangeListener(this);
-    }).start();
+    try {
+      // Register SharedPreferences.OnSharedPreferenceChangeListener
+      new Thread(() -> {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        prefs.registerOnSharedPreferenceChangeListener(this);
+      }).start();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while registering OnSharedPreferenceChangeListener. " + e.getMessage(), e);
+    }
   }
 
   @Override
@@ -128,11 +132,15 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
     CleverPush.getInstance(CleverPush.context).resetInitSessionCalled();
 
-    // Unregister SharedPreferences.OnSharedPreferenceChangeListener
-    new Thread(() -> {
-      SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-      prefs.unregisterOnSharedPreferenceChangeListener(this);
-    }).start();
+    try {
+      // Unregister SharedPreferences.OnSharedPreferenceChangeListener
+      new Thread(() -> {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        prefs.unregisterOnSharedPreferenceChangeListener(this);
+      }).start();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while unregistering OnSharedPreferenceChangeListener. " + e.getMessage(), e);
+    }
   }
 
   @Override

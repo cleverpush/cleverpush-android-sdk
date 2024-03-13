@@ -1567,6 +1567,11 @@ public class CleverPush {
       stopCampaigns(null);
     }
 
+    // hasTrackingConsent is false then event should not be stored in the queue for TCF
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !hasTrackingConsent) {
+      trackingConsentListeners = new ArrayList<>();
+    }
+
     if (hasTrackingConsent) {
       for (TrackingConsentListener listener : trackingConsentListeners) {
         listener.ready();
@@ -1609,7 +1614,11 @@ public class CleverPush {
 
       if (subscribedTagIds != null && subscribedTagIds.size() > 0) {
         String[] tagIdsArray = subscribedTagIds.toArray(new String[0]);
-        removeSubscriptionTags(tagIdsArray);
+        if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
+          removeSubscriptionTagTrackingImplementation(null, tagIdsArray);
+        } else {
+          removeSubscriptionTags(tagIdsArray);
+        }
       }
 
       if (subscriptionAttributes != null && subscriptionAttributes.size() > 0) {
@@ -1618,9 +1627,17 @@ public class CleverPush {
           Object value = entry.getValue();
 
           if (value instanceof String) {
-            this.setSubscriptionAttribute(key, "");
+            if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
+              this.setSubscriptionAttributeObjectImplementation(key, "", new SetSubscriptionAttributeResponseHandler());
+            } else {
+              this.setSubscriptionAttribute(key, "");
+            }
           } else {
-            this.setSubscriptionAttribute(key, new String[0]);
+            if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
+              this.setSubscriptionAttributeObjectImplementation(key, new String[0], new SetSubscriptionAttributeResponseHandler());
+            } else {
+              this.setSubscriptionAttribute(key, new String[0]);
+            }
           }
         }
       }
@@ -1648,6 +1665,11 @@ public class CleverPush {
   public void setSubscribeConsent(Boolean consent) {
     hasSubscribeConsentCalled = true;
     hasSubscribeConsent = consent;
+
+    // hasSubscribeConsent is false then event should not be stored in the queue for TCF
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !hasSubscribeConsent) {
+      subscribeConsentListeners = new ArrayList<>();
+    }
 
     if (hasSubscribeConsent) {
       for (SubscribeConsentListener listener : subscribeConsentListeners) {
@@ -2273,6 +2295,24 @@ public class CleverPush {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscribedListener)).start());
   }
 
+  private void removeSubscriptionTagTrackingImplementation(CompletionFailureListener listener,
+                                                           String... tagIds) {
+    this.getSubscriptionId(subscriptionId -> {
+      if (subscriptionId != null && !subscriptionId.isEmpty()) {
+        if (removeSubscriptionTagsHelper != null && !removeSubscriptionTagsHelper.isFinished()) {
+          removeSubscriptionTagsHelper.addTagIds(tagIds);
+          return;
+        }
+        removeSubscriptionTagsHelper =
+                new RemoveSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), listener,
+                        tagIds);
+        removeSubscriptionTagsHelper.removeSubscriptionTags();
+      } else {
+        Logger.d(LOG_TAG, "removeSubscriptionTagTrackingImplementation: There is no subscription for CleverPush SDK.");
+      }
+    });
+  }
+
   public void setSubscriptionTopics(String[] topicIds) {
     setSubscriptionTopics(topicIds, (CompletionListener) null);
   }
@@ -2349,7 +2389,11 @@ public class CleverPush {
   }
 
   private void setSubscriptionAttributeObject(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
-    this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
+    this.waitForTrackingConsent(() -> new Thread(() -> this.setSubscriptionAttributeObjectImplementation(attributeId, value, responseHandler)).start());
+  }
+
+  private void setSubscriptionAttributeObjectImplementation(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
+    this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = getJsonObject();
         try {
@@ -2375,7 +2419,7 @@ public class CleverPush {
       } else {
         Logger.d(LOG_TAG, "setSubscriptionAttribute: There is no subscription for CleverPush SDK.");
       }
-    })).start());
+    });
   }
 
   public void pushSubscriptionAttributeValue(String attributeId, String value) {
@@ -3768,7 +3812,7 @@ public class CleverPush {
    * This method used for TCF2 CMP
    * If get consent 1 in IABTCF_VendorConsents at position 1139 then perform subscribe or tracking according to IabTcfMode
    */
-  public void setTCF() {
+  protected void setTCF() {
     try {
       IabTcfMode mode = getIabTcfMode();
       setTrackingConsentRequired(mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT);
@@ -3821,7 +3865,7 @@ public class CleverPush {
     this.iabTcfMode = mode;
   }
 
-  public IabTcfMode getIabTcfMode() {
+  protected IabTcfMode getIabTcfMode() {
     return iabTcfMode;
   }
 
