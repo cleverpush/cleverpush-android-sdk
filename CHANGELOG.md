@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.11 (14.03.2024)
+* Optimized TCF2 API, do not replay queued events after consent is given
+
 ## 1.33.10 (13.03.2024)
 * Optimized removing of tags and attributes after revoking tracking consent
 * Optimized TCF2 API, do not replay queued events after consent is given
