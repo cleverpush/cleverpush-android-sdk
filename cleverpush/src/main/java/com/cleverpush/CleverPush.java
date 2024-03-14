@@ -1568,7 +1568,7 @@ public class CleverPush {
     }
 
     // hasTrackingConsent is false then event should not be stored in the queue for TCF
-    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !hasTrackingConsent) {
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !previousTrackingConsent && hasTrackingConsent) {
       trackingConsentListeners = new ArrayList<>();
     }
 
@@ -1663,11 +1663,12 @@ public class CleverPush {
   }
 
   public void setSubscribeConsent(Boolean consent) {
+    boolean previousSubscribeConsent = hasSubscribeConsent;
     hasSubscribeConsentCalled = true;
     hasSubscribeConsent = consent;
 
     // hasSubscribeConsent is false then event should not be stored in the queue for TCF
-    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !hasSubscribeConsent) {
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !previousSubscribeConsent && hasSubscribeConsent) {
       subscribeConsentListeners = new ArrayList<>();
     }
 
