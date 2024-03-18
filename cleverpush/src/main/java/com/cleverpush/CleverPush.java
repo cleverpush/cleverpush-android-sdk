@@ -3946,4 +3946,19 @@ public class CleverPush {
   public void setAutoRequestNotificationPermission(boolean autoRequestNotificationPermission) {
     this.autoRequestNotificationPermission = autoRequestNotificationPermission;
   }
+
+  public int getBadgeCount() {
+    try {
+      SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+      int badgeCount = sharedPreferences.getInt(CleverPushPreferences.NOTIFICATION_BADGE_COUNT, 0);
+      return badgeCount;
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while getting badge count.", e);
+      return 0;
+    }
+  }
+
+  public void setBadgeCount(int badgeCount) {
+    BadgeHelper.updateCount(badgeCount, context);
+  }
 }
