@@ -60,11 +60,6 @@ public class BadgeHelper {
       runningCount++;
     }
 
-    SharedPreferences sharedPreferences = CleverPush.getInstance(context).getSharedPreferences(context);
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.putInt(CleverPushPreferences.NOTIFICATION_BADGE_COUNT, runningCount);
-    editor.apply();
-
     if (!incrementBadge && runningCount > 0) {
       runningCount = 1;
     }

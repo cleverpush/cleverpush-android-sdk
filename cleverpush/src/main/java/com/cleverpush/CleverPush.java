@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.service.notification.StatusBarNotification;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
@@ -3949,8 +3950,17 @@ public class CleverPush {
 
   public int getBadgeCount() {
     try {
-      SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-      int badgeCount = sharedPreferences.getInt(CleverPushPreferences.NOTIFICATION_BADGE_COUNT, 0);
+      int badgeCount = 0;
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        StatusBarNotification[] activeNotifications = BadgeHelper.getActiveNotifications(context);
+
+        for (StatusBarNotification activeNotification : activeNotifications) {
+          if (BadgeHelper.isGroupSummary(activeNotification)) {
+            continue;
+          }
+          badgeCount++;
+        }
+      }
       return badgeCount;
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error while getting badge count.", e);

@@ -32,6 +32,5 @@ public class CleverPushPreferences {
   public static final String NOTIFICATION_STYLE = "notificationStyle";
   public static final String DEVICE_ID = "deviceId";
   public static final String SILENT_PUSH_APP_BANNER = "silentPushBanners";
-  public static final String NOTIFICATION_BADGE_COUNT = "notificationBadgeCount";
 
 }
