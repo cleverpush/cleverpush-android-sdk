@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.12 (22.03.2024)
+*  Fixed a potential crash in HMS and FCM after getting a push notification for Android version less than 26.
+
 ## 1.33.11 (14.03.2024)
 * Optimized TCF2 API, do not replay queued events after consent is given
 
