@@ -181,8 +181,8 @@ public class NotificationService {
 
       } else {
         NotificationChannel channel;
-        if (notification.getNotificationChannel() != null) {
-          channel = notification.getNotificationChannel();
+        if (notification.notificationChannel != null) {
+          channel = (NotificationChannel) notification.notificationChannel;
         } else {
           int importance = NotificationManager.IMPORTANCE_DEFAULT;
           channel = new NotificationChannel("default", "Default", importance);
