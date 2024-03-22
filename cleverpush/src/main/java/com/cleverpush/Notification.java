@@ -1,8 +1,8 @@
 package com.cleverpush;
 
-import android.app.NotificationChannel;
 import android.os.Build;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import com.google.gson.annotations.SerializedName;
@@ -60,7 +60,14 @@ public class Notification implements Serializable {
 
   transient NotificationCompat.Extender extender;
   String rawPayload;
-  transient NotificationChannel notificationChannel = null;
+
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  transient public Object notificationChannel;
+
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  public void setNotificationChannel(Object channel) {
+    this.notificationChannel = channel;
+  }
 
   public String getId() {
     return id;
@@ -266,14 +273,6 @@ public class Notification implements Serializable {
     return autoHandleDeepLink != null && autoHandleDeepLink;
   }
 
-  public NotificationChannel getNotificationChannel() {
-    return notificationChannel;
-  }
-
-  public void setNotificationChannel(NotificationChannel notificationChannel) {
-    this.notificationChannel = notificationChannel;
-  }
-
   public String getCurrentDate() {
     try {
       SimpleDateFormat dateFormat;
@@ -316,7 +315,9 @@ public class Notification implements Serializable {
     copiedNotification.fromApi = this.fromApi;
     copiedNotification.extender = this.extender;
     copiedNotification.rawPayload = this.rawPayload;
-    copiedNotification.notificationChannel = this.notificationChannel;
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      copiedNotification.notificationChannel = this.notificationChannel;
+    }
 
     return copiedNotification;
   }
