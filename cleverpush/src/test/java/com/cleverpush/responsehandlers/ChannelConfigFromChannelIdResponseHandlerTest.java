@@ -63,7 +63,7 @@ class ChannelConfigFromChannelIdResponseHandlerTest {
         MockitoAnnotations.openMocks(this);
         mockWebServer = new MockWebServer();
         cleverPush = Mockito.spy(new CleverPush(context));
-        channelConfigFromChannelIdResponseHandler = Mockito.spy(new ChannelConfigFromChannelIdResponseHandler(cleverPush));
+        channelConfigFromChannelIdResponseHandler = Mockito.spy(new ChannelConfigFromChannelIdResponseHandler(cleverPush, null));
         try {
             mockWebServer.start();
         } catch (IOException e) {
