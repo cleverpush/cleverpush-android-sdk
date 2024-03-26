@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.13 (26.03.2024)
+*  Fixed a potential crash in push notification for deeplink
+
 ## 1.33.12 (22.03.2024)
 *  Fixed a potential crash in HMS and FCM after getting a push notification for Android version less than 26.
 
