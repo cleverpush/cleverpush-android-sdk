@@ -3949,23 +3949,7 @@ public class CleverPush {
   }
 
   public int getBadgeCount() {
-    try {
-      int badgeCount = 0;
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-        StatusBarNotification[] activeNotifications = BadgeHelper.getActiveNotifications(context);
-
-        for (StatusBarNotification activeNotification : activeNotifications) {
-          if (BadgeHelper.isGroupSummary(activeNotification)) {
-            continue;
-          }
-          badgeCount++;
-        }
-      }
-      return badgeCount;
-    } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error while getting badge count.", e);
-      return 0;
-    }
+    return BadgeHelper.getBadgeCount(CleverPush.context);
   }
 
   public void setBadgeCount(int badgeCount) {
