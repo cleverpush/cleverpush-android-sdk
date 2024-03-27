@@ -225,6 +225,7 @@ public class CleverPush {
   private int trackEventRetentionDays = 90;
   private boolean autoResubscribe = false;
   private boolean autoRequestNotificationPermission = true;
+  private boolean isSessionStartCalled = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -1274,6 +1275,7 @@ public class CleverPush {
   }
 
   public void updateServerSessionStart() {
+    isSessionStartCalled = true;
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
     String lastNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null);
@@ -1436,6 +1438,10 @@ public class CleverPush {
           public void onSuccess(String newSubscriptionId) {
             self.subscriptionInProgress = false;
             Logger.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
+
+            if (!isSessionStartCalled) {
+              self.trackSessionStart();
+            }
 
             self.fireSubscribedListener(newSubscriptionId);
             self.setSubscriptionId(newSubscriptionId);
