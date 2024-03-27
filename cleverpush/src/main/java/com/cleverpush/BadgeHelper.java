@@ -73,4 +73,24 @@ public class BadgeHelper {
       Logger.e(LOG_TAG, "Error updating badge count", e);
     }
   }
+
+  protected static int getBadgeCount(Context context) {
+    int badgeCount = 0;
+    try {
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        StatusBarNotification[] activeNotifications = BadgeHelper.getActiveNotifications(context);
+        for (StatusBarNotification activeNotification : activeNotifications) {
+          if (!BadgeHelper.isGroupSummary(activeNotification)) {
+            badgeCount++;
+          }
+        }
+      } else {
+        Logger.i(LOG_TAG, "Device SDK version is below Marshmallow. Badge count retrieval not supported on this device.");
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while getting badge count.", e);
+    }
+    return badgeCount;
+  }
+
 }

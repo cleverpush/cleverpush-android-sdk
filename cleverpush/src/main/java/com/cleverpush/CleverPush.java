@@ -3957,4 +3957,12 @@ public class CleverPush {
   public void setAutoRequestNotificationPermission(boolean autoRequestNotificationPermission) {
     this.autoRequestNotificationPermission = autoRequestNotificationPermission;
   }
+
+  public int getBadgeCount() {
+    return BadgeHelper.getBadgeCount(CleverPush.context);
+  }
+
+  public void setBadgeCount(int badgeCount) {
+    BadgeHelper.updateCount(badgeCount, context);
+  }
 }
