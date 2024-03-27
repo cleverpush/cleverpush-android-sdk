@@ -3475,21 +3475,26 @@ public class CleverPush {
   }
 
   public void clearSubscriptionData() {
-    subscriptionId = null;
-    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
-    if (!this.keepTargetingDataOnUnsubscribe) {
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+    try {
+      subscriptionId = null;
+      isSessionStartCalled = false;
+      SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
+      if (!this.keepTargetingDataOnUnsubscribe) {
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+      }
+      editor.apply();
+      TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
+      CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while clearing subscription data. " + e.getMessage(), e);
     }
-    editor.apply();
-    TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
-    CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
   }
 
   public boolean isAppBannersDisabled() {
