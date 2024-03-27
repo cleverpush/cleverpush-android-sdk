@@ -225,6 +225,7 @@ public class CleverPush {
   private int trackEventRetentionDays = 90;
   private boolean autoResubscribe = false;
   private boolean autoRequestNotificationPermission = true;
+  private boolean isSessionStartCalled = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -1274,6 +1275,7 @@ public class CleverPush {
   }
 
   public void updateServerSessionStart() {
+    isSessionStartCalled = true;
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
     String lastNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null);
@@ -1436,6 +1438,10 @@ public class CleverPush {
           public void onSuccess(String newSubscriptionId) {
             self.subscriptionInProgress = false;
             Logger.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
+
+            if (!isSessionStartCalled) {
+              self.trackSessionStart();
+            }
 
             self.fireSubscribedListener(newSubscriptionId);
             self.setSubscriptionId(newSubscriptionId);
@@ -3469,21 +3475,26 @@ public class CleverPush {
   }
 
   public void clearSubscriptionData() {
-    subscriptionId = null;
-    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
-    if (!this.keepTargetingDataOnUnsubscribe) {
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+    try {
+      subscriptionId = null;
+      isSessionStartCalled = false;
+      SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
+      if (!this.keepTargetingDataOnUnsubscribe) {
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+      }
+      editor.apply();
+      TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
+      CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while clearing subscription data. " + e.getMessage(), e);
     }
-    editor.apply();
-    TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
-    CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
   }
 
   public boolean isAppBannersDisabled() {
