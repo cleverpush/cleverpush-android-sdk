@@ -7,7 +7,8 @@ public enum BannerTriggerConditionType {
   Event,
   Sessions,
   Duration,
-  Unsubscribe;
+  Unsubscribe,
+  Deeplink;
 
   private static Map<String, BannerTriggerConditionType> mapTriggerType = new HashMap<>();
 
@@ -16,6 +17,7 @@ public enum BannerTriggerConditionType {
     mapTriggerType.put("sessions", BannerTriggerConditionType.Sessions);
     mapTriggerType.put("duration", BannerTriggerConditionType.Duration);
     mapTriggerType.put("unsubscribe", BannerTriggerConditionType.Unsubscribe);
+    mapTriggerType.put("deepLink", BannerTriggerConditionType.Deeplink);
   }
 
   public static BannerTriggerConditionType fromString(String raw) {

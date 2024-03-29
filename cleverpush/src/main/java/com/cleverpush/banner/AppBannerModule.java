@@ -92,6 +92,7 @@ public class AppBannerModule {
   private Set<String> bannerClickedList = new HashSet<>();
   private Set<String> bannerDeliveredList = new HashSet<>();
   public String currentEventId = null;
+  Set<String> currentNotificationDeeplink = new HashSet<>();
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -245,7 +246,7 @@ public class AppBannerModule {
 
           bannersListeners = new ArrayList<>();
         } catch (Exception ex) {
-          Logger.e(TAG, "Error in sorting AppBanners." + ex.getMessage());
+          Logger.e(TAG, "Error in sorting AppBanners." + ex.getMessage(), ex);
         }
 
         try {
@@ -273,7 +274,8 @@ public class AppBannerModule {
           Logger.e("CleverPush", "Something went wrong when loading banners." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
-                  "\nError: " + throwable.getMessage()
+                  "\nError: " + throwable.getMessage(),
+                  throwable
           );
         } else {
           Logger.e("CleverPush", "Something went wrong when loading banners." +
@@ -837,6 +839,21 @@ public class AppBannerModule {
     return false;
   }
 
+  private boolean checkDeeplinkTriggerCondition(BannerTriggerCondition condition) {
+    Set<String> deepLinks = getCurrentNotificationDeeplink();
+    Logger.e(TAG, "deepLinks: " + new Gson().toJson(deepLinks));
+    if (deepLinks.size() == 0) {
+      return false;
+    }
+
+    for (String deepLink : deepLinks) {
+      if (deepLink.equalsIgnoreCase(condition.getDeepLinkUrl())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void createBanners(Collection<Banner> banners) {
     for (Banner banner : banners) {
       if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
@@ -863,6 +880,8 @@ public class AppBannerModule {
                 }
               } else if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
                 conditionTrue = this.checkEventTriggerCondition(condition);
+              } else if (condition.getType().equals(BannerTriggerConditionType.Deeplink)) {
+                conditionTrue = this.checkDeeplinkTriggerCondition(condition);
               } else {
                 conditionTrue = false;
               }
@@ -1445,5 +1464,13 @@ public class AppBannerModule {
       Logger.e(TAG, "Error in getting days difference for target event relation filter.", e);
       return -1;
     }
+  }
+
+  public Set<String> getCurrentNotificationDeeplink() {
+    return currentNotificationDeeplink;
+  }
+
+  public void setCurrentNotificationDeeplink(Set<String> currentNotificationDeeplink) {
+    this.currentNotificationDeeplink = currentNotificationDeeplink;
   }
 }
