@@ -19,6 +19,8 @@ public class BannerTriggerCondition {
   private String relation;
   private int sessions;
   private int seconds;
+  private String value;
+  private String deepLinkUrl;
 
   private BannerTriggerCondition() {
   }
@@ -47,6 +49,14 @@ public class BannerTriggerCondition {
     return relation;
   }
 
+  public String getValue() {
+    return value;
+  }
+
+  public String getDeepLinkUrl() {
+    return deepLinkUrl;
+  }
+
   public static BannerTriggerCondition create(JSONObject json) {
     BannerTriggerCondition condition = new BannerTriggerCondition();
 
@@ -56,6 +66,8 @@ public class BannerTriggerCondition {
       condition.sessions = json.optInt("sessions");
       condition.seconds = json.optInt("seconds");
       condition.relation = json.optString("operator");
+      condition.value = json.optString("value");
+      condition.deepLinkUrl = json.optString("deepLinkUrl");
 
       if (condition.type.equals(BannerTriggerConditionType.Unsubscribe)) {
         condition.type = BannerTriggerConditionType.Event;
