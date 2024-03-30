@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.33.14 (29.03.2024)
+* Resolved the issue of trackSessionStart. Now, trackSessionStart is called whenever a user subscribes.
+* Implemented `setBadgeCount` and `getBadgeCount` methods for managing the notification badge count.
+* Added a feature in `AppBanner` for the Deeplink Trigger condition.
+
 ## 1.33.13 (26.03.2024)
 *  Fixed a potential crash in push notification for deeplink
 
