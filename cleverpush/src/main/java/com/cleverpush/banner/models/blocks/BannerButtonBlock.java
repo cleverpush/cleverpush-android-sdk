@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class BannerButtonBlock extends BannerBlock {
   private boolean dismiss;
   private int radius;
   private BannerAction action;
+  private List<BannerAction> actions;
   private List<BannerBlockScreen> blockScreens;
   private String family = null;
   private String id;
@@ -61,6 +63,10 @@ public class BannerButtonBlock extends BannerBlock {
 
   public BannerAction getAction() {
     return action;
+  }
+
+  public List<BannerAction> getActions() {
+    return actions;
   }
 
   public List<BannerBlockScreen> getBlocks() {
@@ -111,6 +117,17 @@ public class BannerButtonBlock extends BannerBlock {
 
     if (json.has("family") && !json.optString("family").isEmpty()) {
       buttonBlock.family = json.optString("family");
+    }
+
+    if (json.has("actions")) {
+      JSONArray actionsArray = json.getJSONArray("actions");
+      List<BannerAction> actionsList = new ArrayList<>();
+      for (int i = 0; i < actionsArray.length(); ++i) {
+        JSONObject actionObject = actionsArray.getJSONObject(i);
+        BannerAction action = BannerAction.create(actionObject);
+        actionsList.add(action);
+      }
+      buttonBlock.actions = actionsList;
     }
 
     return buttonBlock;

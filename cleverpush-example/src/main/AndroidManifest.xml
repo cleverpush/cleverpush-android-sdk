@@ -34,7 +34,8 @@
             </intent-filter>
         </service>
 
-        <meta-data android:name="com.cleverpush.NotificationServiceExtension"
+        <meta-data
+            android:name="com.cleverpush.NotificationServiceExtension"
             android:value="com.cleverpush.cleverpush_example_android.MyNotificationServiceExtension" />
 
     </application>
