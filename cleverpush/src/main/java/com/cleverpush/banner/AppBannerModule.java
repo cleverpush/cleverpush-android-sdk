@@ -1172,17 +1172,6 @@ public class AppBannerModule {
       }
 
       bannerPopup.setOpenedListener(action -> {
-        String blockId, screenId;
-        blockId = action.getBlockId();
-        screenId = action.getMultipleScreenId();
-
-        boolean isElementAlreadyClicked = isBannerElementClicked(blockId);
-        if (!isElementAlreadyClicked) {
-          setIsBannerElementClicked(blockId);
-        }
-
-        sendBannerEvent("clicked", bannerPopup.getData(), blockId, screenId, isElementAlreadyClicked, false);
-
         if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
           getCleverPushInstance().getAppBannerOpenedListener().opened(action);
         }
@@ -1192,23 +1181,35 @@ public class AppBannerModule {
         }
 
         if (action.getType().equals("addTags")) {
-          getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
+          List<String> tags = action.getTags();
+          if (tags != null) {
+            getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
+          }
         }
 
         if (action.getType().equals("removeTags")) {
-          getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
+          List<String> tags = action.getTags();
+          if (tags != null) {
+            getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
+          }
         }
 
         if (action.getType().equals("addTopics")) {
-          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-          topics.addAll(action.getTopics());
-          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+          List<String> topicsList = action.getTopics();
+          if (topicsList != null) {
+            Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+            topics.addAll(action.getTopics());
+            getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+          }
         }
 
         if (action.getType().equals("removeTopics")) {
-          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-          topics.removeAll(action.getTopics());
-          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+          List<String> topicsList = action.getTopics();
+          if (topicsList != null) {
+            Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+            topics.removeAll(action.getTopics());
+            getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+          }
         }
 
         if (action.getType().equals("setAttribute")) {
@@ -1408,7 +1409,7 @@ public class AppBannerModule {
     this.currentVoucherCodePlaceholder = currentVoucherCodePlaceholder;
   }
 
-  private boolean isBannerElementClicked(String id) {
+  protected boolean isBannerElementClicked(String id) {
     if (bannerClickedList == null) {
       return false;
     }

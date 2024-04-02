@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class BannerImageBlock extends BannerBlock {
   private int scale;
   private boolean dismiss;
   private BannerAction action;
+  private List<BannerAction> actions;
   private List<BannerBlockScreen> blockScreens;
   private String id;
   private int imageWidth;
@@ -41,6 +43,10 @@ public class BannerImageBlock extends BannerBlock {
 
   public BannerAction getAction() {
     return action;
+  }
+
+  public List<BannerAction> getActions() {
+    return actions;
   }
 
   public List<BannerBlockScreen> getBlocks() {
@@ -99,6 +105,17 @@ public class BannerImageBlock extends BannerBlock {
     imageBlock.imageHeight = 100;
     if (json.has("imageHeight") && json.optInt("imageHeight") > 0) {
       imageBlock.imageHeight = json.optInt("imageHeight");
+    }
+
+    if (json.has("actions")) {
+      JSONArray actionsArray = json.getJSONArray("actions");
+      List<BannerAction> actionsList = new ArrayList<>();
+      for (int i = 0; i < actionsArray.length(); ++i) {
+        JSONObject actionObject = actionsArray.getJSONObject(i);
+        BannerAction action = BannerAction.create(actionObject);
+        actionsList.add(action);
+      }
+      imageBlock.actions = actionsList;
     }
 
     return imageBlock;

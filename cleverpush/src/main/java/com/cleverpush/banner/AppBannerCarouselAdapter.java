@@ -148,7 +148,36 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     }
   }
 
-  private void onClickListener(BannerAction action) {
+  private void onClickListener(BannerAction action, List<BannerAction> actions) {
+    try {
+      if (actions != null && actions.size() > 0) {
+        for (int i = 0; i < actions.size(); i++) {
+          boolean isLastElement = (i == actions.size() - 1);
+          actions.get(i).setBlockId(action.getBlockId());
+          actions.get(i).setMultipleScreenId(action.getMultipleScreenId());
+          onClickListener(actions.get(i), isLastElement);
+        }
+      } else {
+        onClickListener(action, true);
+      }
+
+      String blockId, screenId;
+      blockId = action.getBlockId();
+      screenId = action.getMultipleScreenId();
+
+      boolean isElementAlreadyClicked = CleverPush.getInstance(CleverPush.context).getAppBannerModule().isBannerElementClicked(blockId);
+      if (!isElementAlreadyClicked) {
+        CleverPush.getInstance(CleverPush.context).getAppBannerModule().setIsBannerElementClicked(blockId);
+      }
+
+      CleverPush.getInstance(CleverPush.context).getAppBannerModule().sendBannerEvent("clicked", data, blockId, screenId, isElementAlreadyClicked, false);
+
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in AppBanner onClickListener", e);
+    }
+  }
+
+  private void onClickListener(BannerAction action,  boolean isLastActionElement) {
     try {
       if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
         String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
@@ -163,7 +192,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       } else if (action.getDismiss()) {
         appBannerPopup.dismiss();
       } else {
-        appBannerPopup.moveToNextScreen();
+        if (isLastActionElement) {
+          appBannerPopup.moveToNextScreen();
+        }
       }
 
       if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
@@ -232,9 +263,10 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     if (block.getAction() != null) {
       BannerAction action = block.getAction();
+      List<BannerAction> actions = block.getActions();
       action.setBlockId(block.getId());
       action.setMultipleScreenId(data.getScreens().get(position).getId());
-      button.setOnClickListener(view -> this.onClickListener(action));
+      button.setOnClickListener(view -> this.onClickListener(action, actions));
     }
 
     button.setOnTouchListener((view, motionEvent) -> {
@@ -399,9 +431,10 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     if (block.getAction() != null) {
       BannerAction action = block.getAction();
+      List<BannerAction> actions = block.getActions();
       action.setBlockId(block.getId());
       action.setMultipleScreenId(data.getScreens().get(blockPosition).getId());
-      img.setOnClickListener(view -> this.onClickListener(action));
+      img.setOnClickListener(view -> this.onClickListener(action, actions));
     }
   }
 
