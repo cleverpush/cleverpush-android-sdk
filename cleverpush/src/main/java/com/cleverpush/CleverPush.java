@@ -1439,12 +1439,12 @@ public class CleverPush {
             self.subscriptionInProgress = false;
             Logger.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
 
+            self.fireSubscribedListener(newSubscriptionId);
+            self.setSubscriptionId(newSubscriptionId);
+
             if (!isSessionStartCalled) {
               self.trackSessionStart();
             }
-
-            self.fireSubscribedListener(newSubscriptionId);
-            self.setSubscriptionId(newSubscriptionId);
 
             if (subscribedCallbackListener != null) {
               subscribedCallbackListener.onSuccess(newSubscriptionId);
