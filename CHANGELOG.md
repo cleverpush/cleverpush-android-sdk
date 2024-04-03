@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.15 (03.04.2024)
+* Resolved the issue of trackSessionStart. Now, trackSessionStart is called whenever a user subscribes.
+* Added a feature in `AppBanner` to support multiple actions on buttons and images.
+
 ## 1.33.14 (29.03.2024)
 * Resolved the issue of trackSessionStart. Now, trackSessionStart is called whenever a user subscribes.
 * Implemented `setBadgeCount` and `getBadgeCount` methods for managing the notification badge count.
