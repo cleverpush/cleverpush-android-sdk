@@ -1235,7 +1235,7 @@ public class AppBannerModule {
           if (getCleverPushInstance().hasLocationPermission()) {
             getCleverPushInstance().initGeoFences();
           } else {
-            Logger.i(TAG, "Location permission is required to initialize geo fences. Please grant the necessary permission to enable this feature.");
+            getCleverPushInstance().requestLocationPermission();
           }
         }
       });
