@@ -1230,6 +1230,14 @@ public class AppBannerModule {
           ClipData clip = ClipData.newPlainText("Voucher Code", copyText);
           clipboard.setPrimaryClip(clip);
         }
+
+        if (action.getType().equals("geoLocation")) {
+          if (getCleverPushInstance().hasLocationPermission()) {
+            getCleverPushInstance().initGeoFences();
+          } else {
+            Logger.i(TAG, "Location permission is required to initialize geo fences. Please grant the necessary permission to enable this feature.");
+          }
+        }
       });
 
       PreferenceManagerUtils.updateSharedPreferenceByKey(CleverPush.context, CleverPushPreferences.APP_BANNER_SHOWING, true);
