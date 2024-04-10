@@ -1232,11 +1232,7 @@ public class AppBannerModule {
         }
 
         if (action.getType().equals("geoLocation")) {
-          if (getCleverPushInstance().hasLocationPermission()) {
-            getCleverPushInstance().initGeoFences();
-          } else {
-            getCleverPushInstance().requestLocationPermission();
-          }
+          getCleverPushInstance().requestLocationPermission();
         }
       });
 
