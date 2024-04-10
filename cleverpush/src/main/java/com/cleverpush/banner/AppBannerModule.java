@@ -1230,6 +1230,10 @@ public class AppBannerModule {
           ClipData clip = ClipData.newPlainText("Voucher Code", copyText);
           clipboard.setPrimaryClip(clip);
         }
+
+        if (action.getType().equals("geoLocation")) {
+          getCleverPushInstance().requestLocationPermission();
+        }
       });
 
       PreferenceManagerUtils.updateSharedPreferenceByKey(CleverPush.context, CleverPushPreferences.APP_BANNER_SHOWING, true);
