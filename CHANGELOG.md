@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.16 (10.04.2024)
+* Added a feature in `AppBanner` to support geo fence in actions on buttons and images.
+
 ## 1.33.15 (03.04.2024)
 * Resolved the issue of trackSessionStart. Now, trackSessionStart is called whenever a user subscribes.
 * Added a feature in `AppBanner` to support multiple actions on buttons and images.
