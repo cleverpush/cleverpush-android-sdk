@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.17 (19.04.2024)
+* Optimised `setsubscriptionchanged` function for `ChatView`
+* Optimize close button position for HTML Banner.
+
 ## 1.33.16 (10.04.2024)
 * Added a feature in `AppBanner` to support geo fence in actions on buttons and images.
 
