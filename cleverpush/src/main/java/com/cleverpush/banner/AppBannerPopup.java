@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 
+import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.InflateException;
@@ -420,6 +421,12 @@ public class AppBannerPopup {
       ImageButton buttonClose;
       if (data.isCloseButtonPositionStaticEnabled()) {
         buttonClose = popupRoot.findViewById(R.id.buttonClose);
+        if (isHTMLBanner()) {
+          ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) buttonClose.getLayoutParams();
+          int marginInDp = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, activity.getResources().getDisplayMetrics());
+          params.setMargins(marginInDp, marginInDp, marginInDp, marginInDp);
+          buttonClose.setLayoutParams(params);
+        }
       } else {
         buttonClose = popupRoot.findViewById(R.id.buttonCloseOverlap);
       }
