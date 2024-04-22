@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.18 (22.04.2024)
+* Resolved the issue of `ConcurrentModificationException` in `setTrackingConsent`
+
 ## 1.33.17 (19.04.2024)
 * Optimised `setsubscriptionchanged` function for `ChatView`
 * Optimize close button position for HTML Banner.
