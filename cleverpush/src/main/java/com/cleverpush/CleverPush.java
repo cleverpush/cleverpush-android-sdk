@@ -89,6 +89,7 @@ import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
 import com.cleverpush.util.BroadcastReceiverUtils;
+import com.cleverpush.util.DarkModeHelper;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
@@ -2931,7 +2932,11 @@ public class CleverPush {
       if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
         showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
       } else {
-        showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme_overlay);
+        if (DarkModeHelper.isDarkModeEnabled(context)) {
+          showTopicsDialog(dialogActivity, topicsDialogListener, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+          showTopicsDialog(dialogActivity, topicsDialogListener, android.R.style.Theme_Material_Light_Dialog_Alert);
+        }
       }
     } catch (IllegalStateException ex) {
       showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
@@ -3014,7 +3019,11 @@ public class CleverPush {
           } catch (Exception e) {
             Logger.d(LOG_TAG, "Error creating topic dialog alert", e);
             if (!isRecursiveCall) {
-              showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme, true);
+              if (DarkModeHelper.isDarkModeEnabled(context)) {
+                showTopicsDialog(dialogActivity, topicsDialogListener, android.R.style.Theme_Material_Dialog_Alert, true);
+              } else {
+                showTopicsDialog(dialogActivity, topicsDialogListener, android.R.style.Theme_Material_Light_Dialog_Alert, true);
+              }
             }
           }
         });
