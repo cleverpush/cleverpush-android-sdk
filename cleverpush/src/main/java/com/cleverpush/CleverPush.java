@@ -216,9 +216,6 @@ public class CleverPush {
   public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
   private PendingIntent geofencePendingIntent;
   private GeofencingClient geofencingClient;
-
-  private String lastClickedNotificationId;
-  private long lastClickedNotificationTime;
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
@@ -1312,7 +1309,6 @@ public class CleverPush {
 
       this.sessionStartedTimestamp = 0;
       this.sessionVisits = 0;
-      this.lastClickedNotificationId = null;
     }));
   }
 
@@ -2725,8 +2721,12 @@ public class CleverPush {
                 jsonBody.put("properties", propertiesObject);
                 jsonBody.put("subscriptionId", subscriptionId);
 
-                if (this.lastClickedNotificationId != null) {
-                  jsonBody.put("notificationId", this.lastClickedNotificationId);
+                SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+                String lastClickedNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, null);
+                String lastClickedNotificationTime = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME, null);
+
+                if (lastClickedNotificationId != null && !lastClickedNotificationId.isEmpty() && isWithin60Minutes(lastClickedNotificationTime)) {
+                  jsonBody.put("notificationId", lastClickedNotificationId);
                 }
               } catch (JSONException ex) {
                 Logger.e(LOG_TAG, "Error creating trackEvent request parameter", ex);
@@ -2845,7 +2845,10 @@ public class CleverPush {
 
     CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
 
-    lastClickedNotificationId = notificationId;
+    SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
+    editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, notificationId);
+    editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME, getCurrentDateTime());
+    editor.apply();
   }
 
   public void showAppBanner(String bannerId) {
@@ -3966,5 +3969,25 @@ public class CleverPush {
 
   public void setBadgeCount(int badgeCount) {
     BadgeHelper.updateCount(badgeCount, context);
+  }
+
+  /**
+   * Method to check if the lastClickedNotificationTime is within 60 minutes of current date and time
+   * */
+  private boolean isWithin60Minutes(String lastClickedNotificationTime) {
+    if (lastClickedNotificationTime == null || lastClickedNotificationTime.isEmpty()) {
+      return false;
+    }
+    try {
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      Date lastClickedTime = sdf.parse(lastClickedNotificationTime);
+      Date currentTime = Calendar.getInstance().getTime();
+      long diffInMilliseconds = Math.abs(currentTime.getTime() - lastClickedTime.getTime());
+      long diffInMinutes = diffInMilliseconds / (60 * 1000);
+      return diffInMinutes <= 60;
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error parsing date", e);
+      return false;
+    }
   }
 }
