@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.19 (03.05.2024)
+* Resolved the issue of `ConcurrentModificationException` in `setTrackingConsent`
+* Optimised conversion tracking. Pass `lastClickedNotificationId` in `trackEvent` if it was within 60 minutes of the trackEvent call.
+
 ## 1.33.18 (22.04.2024)
 * Resolved the issue of `ConcurrentModificationException` in `setTrackingConsent`
 
