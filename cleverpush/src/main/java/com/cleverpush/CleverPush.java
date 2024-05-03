@@ -1575,9 +1575,8 @@ public class CleverPush {
     }
 
     if (hasTrackingConsent) {
-      Iterator<TrackingConsentListener> iterator = trackingConsentListeners.iterator();
-      while (iterator.hasNext()) {
-        TrackingConsentListener listener = iterator.next();
+      Collection<TrackingConsentListener> copyTrackingConsentListeners = new ArrayList<>(trackingConsentListeners);
+      for (TrackingConsentListener listener : copyTrackingConsentListeners) {
         listener.ready();
       }
     }
