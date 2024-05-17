@@ -12,6 +12,7 @@ import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.Subscription;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
@@ -54,7 +55,7 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
   public void onNewToken(@NonNull String token) {
     Logger.d(LOG_TAG, "FCM: onNewToken");
 
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(this);
     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
 
     if (subscriptionId == null) {

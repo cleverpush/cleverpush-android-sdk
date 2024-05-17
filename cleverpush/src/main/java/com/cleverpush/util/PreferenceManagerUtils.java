@@ -12,6 +12,7 @@ public final class PreferenceManagerUtils {
    * @return SharedPreferences
    * @function getSharedPreferences
    */
+  @Deprecated
   public static SharedPreferences getSharedPreferences(Context context) {
     return PreferenceManager.getDefaultSharedPreferences(context);
   }
@@ -25,7 +26,7 @@ public final class PreferenceManagerUtils {
    * @function getSharedPreferenceByKey
    */
   public static String getSharedPreferenceByKey(Context context, String key) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferencesManager sharedPreferences = new SharedPreferencesManager(context);
     return sharedPreferences.getString(key, null);
   }
 
@@ -38,8 +39,8 @@ public final class PreferenceManagerUtils {
    * @function updateSharedPreferenceByKey
    */
   public static void updateSharedPreferenceByKey(Context context, String key, String value) {
-    SharedPreferences sharedPreferences = getSharedPreferences(context);
-    sharedPreferences.edit().putString(key, value).apply();
+    SharedPreferencesManager sharedPreferences = new SharedPreferencesManager(context);
+    sharedPreferences.setString(key, value);
   }
 
   /**
@@ -51,7 +52,7 @@ public final class PreferenceManagerUtils {
    * @function updateSharedPreferenceByKey
    */
   public static void updateSharedPreferenceByKey(Context context, String key, boolean value) {
-    SharedPreferences sharedPreferences = getSharedPreferences(context);
-    sharedPreferences.edit().putBoolean(key, value).apply();
+    SharedPreferencesManager sharedPreferences = new SharedPreferencesManager(context);
+    sharedPreferences.setBoolean(key, value);
   }
 }

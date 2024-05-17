@@ -20,7 +20,6 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
@@ -92,6 +91,7 @@ import com.cleverpush.util.BroadcastReceiverUtils;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
@@ -455,6 +455,15 @@ public class CleverPush {
                    @Nullable final SubscribedListener subscribedListener, boolean autoRegister,
                    @Nullable final InitializeListener initializeListener) {
     this.channelId = channelId;
+
+    // Check if CleverPush SharedPreferences is created and contains the key channelId
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+    boolean containsChannelId = sharedPreferences.contains("channelId");
+
+    // If CleverPush SharedPreferences is not created or does not contain the key channelId, call migrateSharedPreferences
+    if (!containsChannelId) {
+      SharedPreferencesManager.migrateSharedPreferences(context);
+    }
 
     if (notificationReceivedListener != null) {
       this.setNotificationReceivedListener(notificationReceivedListener);
@@ -940,7 +949,7 @@ public class CleverPush {
 
   private void savePreferencesMap(String mapKey, Map<String, Integer> inputMap) {
     Logger.d(LOG_TAG, "savePreferencesMap: " + mapKey + " - " + inputMap.toString());
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     JSONObject jsonObject = new JSONObject(inputMap);
     String jsonString = jsonObject.toString();
     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -950,7 +959,7 @@ public class CleverPush {
 
   private Map<String, Integer> loadPreferencesMap(String mapKey) {
     Map<String, Integer> outputMap = new HashMap<>();
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     try {
       String jsonString = sharedPreferences.getString(mapKey, (new JSONObject()).toString());
       JSONObject jsonObject = new JSONObject(jsonString);
@@ -968,7 +977,7 @@ public class CleverPush {
   }
 
   void checkTags(String urlStr, Map<String, ?> params) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
 
     try {
       URL url = new URL(urlStr);
@@ -1965,17 +1974,17 @@ public class CleverPush {
   }
 
   public boolean hasSubscriptionTopics() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS);
   }
 
   public boolean hasDeSelectAll() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return sharedPreferences.getBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, false);
   }
 
   public void setDeSelectAll(Boolean deSelectAll) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, deSelectAll);
     editor.apply();
@@ -2467,7 +2476,7 @@ public class CleverPush {
 
   private CleverPushHttpClient.ResponseHandler pushSubscriptionAttributeValueResponseHandler(
       Map<String, Object> subscriptionAttributes) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
@@ -2545,7 +2554,7 @@ public class CleverPush {
 
   private CleverPushHttpClient.ResponseHandler pullSubscriptionAttributeValueResponseHandler(
       Map<String, Object> subscriptionAttributes) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
@@ -2608,7 +2617,7 @@ public class CleverPush {
   }
 
   public void setSubscriptionLanguage(String language) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     String currentLanguage = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
     if (currentLanguage == null || language != null && !currentLanguage.equals(language)) {
       SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -2621,7 +2630,7 @@ public class CleverPush {
   }
 
   public void setSubscriptionCountry(String country) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     String currentCountry = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
     if (currentCountry == null || country != null && !currentCountry.equals(country)) {
       SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -2887,7 +2896,7 @@ public class CleverPush {
 
   void showPendingTopicsDialog() {
     this.getChannelConfig(config -> {
-      SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+      SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
       try {
         if (config != null && sharedPreferences.getBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, false)) {
           final int topicsDialogSeconds = config.optInt("topicsDialogMinimumSeconds", 0);
@@ -3270,7 +3279,7 @@ public class CleverPush {
   }
 
   private void updateTopicLastCheckedTime() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     sharedPreferences.edit()
         .putInt(CleverPushPreferences.TOPIC_LAST_CHECKED, (int) (System.currentTimeMillis() / 1000L)).apply();
   }
@@ -3350,17 +3359,17 @@ public class CleverPush {
   }
 
   private int getTopicLastChecked() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return sharedPreferences.getInt(CleverPushPreferences.TOPIC_LAST_CHECKED, 0);
   }
 
   private int getLastAutoShowedTime() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return sharedPreferences.getInt(CleverPushPreferences.LAST_TIME_AUTO_SHOWED, 0);
   }
 
   private void updateLastAutoShowedTime() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     sharedPreferences.edit()
         .putInt(CleverPushPreferences.LAST_TIME_AUTO_SHOWED, (int) (System.currentTimeMillis() / 1000L)).apply();
   }
@@ -3508,7 +3517,7 @@ public class CleverPush {
   }
 
   private void saveAppBannersDisabled() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.remove(CleverPushPreferences.APP_BANNERS_DISABLED).apply();
     editor.putBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, appBannersDisabled);
@@ -3559,7 +3568,8 @@ public class CleverPush {
   }
 
   public SharedPreferences getSharedPreferences(Context context) {
-    return PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferences sharedPreferences = context.getSharedPreferences(SharedPreferencesManager.SDK_PREFERENCES_NAME, Context.MODE_PRIVATE);
+    return sharedPreferences;
   }
 
   public void addOrUpdateChannelId(Context context, String channelId) {
@@ -3835,7 +3845,7 @@ public class CleverPush {
       setSubscribeConsentRequired(mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT);
 
       Context mContext = context.getApplicationContext();
-      SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+      SharedPreferences mPreferences = getSharedPreferences(CleverPush.context);
 
       SharedPreferencesLiveData mSharedPreferencesLiveData = new SharedPreferencesLiveData(mPreferences, IABTCF_VendorConsents);
 

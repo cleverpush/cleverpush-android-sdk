@@ -1,13 +1,13 @@
 package com.cleverpush.responsehandlers;
 
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.UnsubscribedListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 
 public class UnsubscribeResponseHandler {
 
@@ -27,7 +27,7 @@ public class UnsubscribeResponseHandler {
           Logger.d("CleverPush", "unsubscribe success");
           cleverPush.clearSubscriptionData();
 
-          SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+          SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
           SharedPreferences.Editor editor = sharedPreferences.edit();
           editor.putBoolean(CleverPushPreferences.UNSUBSCRIBED, true);
           editor.apply();

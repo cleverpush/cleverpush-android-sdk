@@ -15,7 +15,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.preference.PreferenceManager;
 import android.view.ContextThemeWrapper;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -46,6 +45,7 @@ import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.util.ColorUtils;
 import com.cleverpush.util.CustomExceptionHandler;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -525,7 +525,7 @@ public class InboxDetailActivity extends AppCompatActivity {
   }
 
   private void toggleShowing(boolean isShowing) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, isShowing);
     editor.apply();

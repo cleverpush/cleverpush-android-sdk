@@ -3,8 +3,6 @@ package com.cleverpush.manager;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -12,6 +10,7 @@ import androidx.annotation.NonNull;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.common.ApiException;
@@ -68,8 +67,8 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
 
   @Override
   public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
-    String existingToken = sharedPreferences.getString(CleverPushPreferences.HMS_TOKEN, null);
+    SharedPreferencesManager prefManager = new SharedPreferencesManager(this.context);
+    String existingToken = prefManager.getString(CleverPushPreferences.HMS_TOKEN, null);
 
     if (existingToken == null) {
       return;

@@ -4,13 +4,13 @@ import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import androidx.annotation.WorkerThread;
 
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
@@ -145,7 +145,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
   @Override
   public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(this.context);
     String existingToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
 
     if (existingToken == null) {

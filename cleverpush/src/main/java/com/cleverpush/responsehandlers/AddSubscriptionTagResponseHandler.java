@@ -9,6 +9,7 @@ import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.AddTagCompletedListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -70,7 +71,7 @@ public class AddSubscriptionTagResponseHandler {
   }
 
   public SharedPreferences getSharedPreferences(Context context) {
-    return PreferenceManager.getDefaultSharedPreferences(context);
+    return SharedPreferencesManager.getSharedPreferences(context);
   }
 
   public Context getContext() {
