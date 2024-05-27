@@ -104,6 +104,13 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
     try {
       body.removeAllViews();
+      try {
+        if (isBannerPositionFull() && data.getContentType() != null && !data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+          body.setGravity(Gravity.CENTER);
+        }
+      } catch (Exception e) {
+        Logger.e(TAG, "Error in AppBanner displaying component to center when position is full.", e);
+      }
 
       HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
       if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(data.getId())) {
@@ -243,7 +250,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.MATCH_PARENT
+        LinearLayout.LayoutParams.WRAP_CONTENT
     );
     params.setMargins(0, 20, 0, 20);
     button.setLayoutParams(params);
