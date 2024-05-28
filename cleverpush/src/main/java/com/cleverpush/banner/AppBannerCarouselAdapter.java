@@ -3,6 +3,7 @@ package com.cleverpush.banner;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -252,7 +253,18 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         LinearLayout.LayoutParams.MATCH_PARENT,
         LinearLayout.LayoutParams.WRAP_CONTENT
     );
-    params.setMargins(0, 20, 0, 20);
+
+    // Determine if the device is a tablet
+    boolean isTablet = (activity.getResources().getConfiguration().screenLayout
+        & Configuration.SCREENLAYOUT_SIZE_MASK)
+        >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+
+    // Set margins based on device type
+    if (isTablet) {
+      params.setMargins(0, 10, 0, 10);
+    } else {
+      params.setMargins(0, 20, 0, 20);
+    }
     button.setLayoutParams(params);
 
     GradientDrawable bg = new GradientDrawable();
