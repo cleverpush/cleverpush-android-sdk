@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.20 (29.05.2024)
+* For NON-HTML `AppBanner` the Content needs to be centred vertically.
+* Optimised close button in `WebView` for `AppBanner`.
+
 ## 1.33.19 (03.05.2024)
 * Resolved the issue of `ConcurrentModificationException` in `setTrackingConsent`
 * Optimised conversion tracking. Pass `lastClickedNotificationId` in `trackEvent` if it was within 60 minutes of the trackEvent call.
