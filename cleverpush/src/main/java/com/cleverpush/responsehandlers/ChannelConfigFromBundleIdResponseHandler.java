@@ -37,6 +37,9 @@ public class ChannelConfigFromBundleIdResponseHandler {
           Logger.d(LOG_TAG,
               "Got Channel ID via Package Name: " + cleverPush.getChannelId(cleverPush.getContext()) + " (SDK "
                   + CleverPush.SDK_VERSION + ")");
+          if (initializeListener != null) {
+            initializeListener.onInitializationSuccess();
+          }
         } catch (Throwable ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
         }
@@ -52,11 +55,20 @@ public class ChannelConfigFromBundleIdResponseHandler {
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
           );
+          if (initializeListener != null) {
+            initializeListener.onInitializationFailure(throwable);
+          }
         } else {
           Logger.e("CleverPush", "Failed to fetch Channel Config via Package Name. Did you specify the package name in the CleverPush channel settings?." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response
           );
+          if (initializeListener != null) {
+            Exception genericException = new Exception("Failed to fetch Channel Config." +
+                "\nStatus code: " + statusCode +
+                "\nResponse: " + response);
+            initializeListener.onInitializationFailure(genericException);
+          }
         }
 
         // trigger listeners

@@ -487,7 +487,7 @@ public class CleverPush {
               @Override
               public void onFailure(Throwable throwable) {
                 if (initializeListener != null) {
-                  initializeListener.onFailure(throwable);
+                  initializeListener.onInitialized();
                 }
                 fireInitializeListener();
               }

@@ -17,11 +17,11 @@ import org.json.JSONObject;
 public class ChannelConfigFromChannelIdResponseHandler {
 
   private final CleverPush cleverPush;
-  private final InitializeListener listener;
+  private InitializeListener initializeListener;
 
-  public ChannelConfigFromChannelIdResponseHandler(CleverPush instance, InitializeListener listener) {
+  public ChannelConfigFromChannelIdResponseHandler(CleverPush instance, InitializeListener initializeListener) {
     this.cleverPush = instance;
-    this.listener = listener;
+    this.initializeListener = initializeListener;
   }
 
   public CleverPushHttpClient.ResponseHandler getResponseHandler(boolean autoRegister, String storedChannelId,
@@ -39,8 +39,8 @@ public class ChannelConfigFromChannelIdResponseHandler {
           cleverPush.subscribeOrSync(
               autoRegister || isChannelIdChanged, isChannelIdChanged);
 
-          if (listener != null) {
-            listener.onInitialized();
+          if (initializeListener != null) {
+            initializeListener.onInitializationSuccess();
           }
         } catch (Throwable ex) {
           Logger.e(LOG_TAG, ex.getMessage(), ex);
@@ -53,23 +53,23 @@ public class ChannelConfigFromChannelIdResponseHandler {
 
         if (throwable != null) {
           Logger.e("CleverPush", "Failed to fetch Channel Config." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response +
-                  "\nError: " + throwable.getMessage()
+              "\nStatus code: " + statusCode +
+              "\nResponse: " + response +
+              "\nError: " + throwable.getMessage()
           );
-          if (listener != null) {
-            listener.onFailure(throwable);
+          if (initializeListener != null) {
+            initializeListener.onInitializationFailure(throwable);
           }
         } else {
           Logger.e("CleverPush", "Failed to fetch Channel Config." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response
+              "\nStatus code: " + statusCode +
+              "\nResponse: " + response
           );
-          if (listener != null) {
+          if (initializeListener != null) {
             Exception genericException = new Exception("Failed to fetch Channel Config." +
-                    "\nStatus code: " + statusCode +
-                    "\nResponse: " + response);
-            listener.onFailure(genericException);
+                "\nStatus code: " + statusCode +
+                "\nResponse: " + response);
+            initializeListener.onInitializationFailure(genericException);
           }
         }
 
