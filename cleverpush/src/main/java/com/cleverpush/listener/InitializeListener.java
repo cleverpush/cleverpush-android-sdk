@@ -2,6 +2,7 @@ package com.cleverpush.listener;
 
 public interface InitializeListener {
   void onInitialized();
+
   default void onInitializationSuccess() { // optional method
     // Default implementation (do nothing)
   }
