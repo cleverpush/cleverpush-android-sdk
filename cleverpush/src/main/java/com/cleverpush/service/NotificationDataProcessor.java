@@ -206,7 +206,7 @@ public class NotificationDataProcessor {
   private static boolean startServiceExtension(Context context, Notification notification, Subscription subscription) {
     NotificationDataProcessor.setupNotificationServiceExtension(context);
     if (extension == null) {
-      Logger.e(LOG_TAG, "startServiceExtension: Extension is NULL. returning");
+      Logger.d(LOG_TAG, "startServiceExtension: Extension is NULL. returning");
       return false;
     }
 
