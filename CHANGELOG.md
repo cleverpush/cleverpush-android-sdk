@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.21 (03.06.2024)
+* Resolved an issue in `HTML AppBanner`. It was not scrollable.
+* Optimize the `InitializeListener` for `init`(Added `onInitializationSuccess` and `onInitializationFailure` methods).
+
 ## 1.33.20 (29.05.2024)
 * For NON-HTML `AppBanner` the Content needs to be centred vertically.
 * Optimised close button in `WebView` for `AppBanner`.
