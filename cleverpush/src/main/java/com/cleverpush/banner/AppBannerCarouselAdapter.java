@@ -537,6 +537,14 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
         webView.setWebViewClient(new AppBannerWebViewClient());
 
+        // Ensure WebView is scrollable
+        webView.setOnTouchListener((v, event) -> {
+          if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+          }
+          return false;
+        });
+
         fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
         String encodedHtml = null;
