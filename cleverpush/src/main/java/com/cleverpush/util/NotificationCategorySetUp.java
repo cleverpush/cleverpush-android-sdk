@@ -124,7 +124,7 @@ public class NotificationCategorySetUp {
       }
       setNotificationCategory(context, notificationCategories);
     } catch (JSONException e) {
-      e.printStackTrace();
+      Logger.e("NotificationUtils", "Error parsing channel configuration for notification category", e);
     }
   }
 

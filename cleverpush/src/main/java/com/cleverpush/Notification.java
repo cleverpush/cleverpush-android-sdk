@@ -2,12 +2,12 @@ package com.cleverpush;
 
 import android.os.Build;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -61,6 +61,14 @@ public class Notification implements Serializable {
   transient NotificationCompat.Extender extender;
   String rawPayload;
 
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  transient public Object notificationChannel;
+
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  public void setNotificationChannel(Object channel) {
+    this.notificationChannel = channel;
+  }
+
   public String getId() {
     return id;
   }
@@ -82,6 +90,10 @@ public class Notification implements Serializable {
 
   public String getUrl() {
     return url;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
   }
 
   public String getIconUrl() {
@@ -274,5 +286,39 @@ public class Notification implements Serializable {
 
     }
     return "";
+  }
+
+  // To avoid modifying the original data, create a copy of the notification object and use that copy to make changes
+  public Notification copy() {
+    Notification copiedNotification = new Notification();
+    copiedNotification.id = this.id;
+    copiedNotification.tag = this.tag;
+    copiedNotification.title = this.title;
+    copiedNotification.text = this.text;
+    copiedNotification.url = this.url;
+    copiedNotification.iconUrl = this.iconUrl;
+    copiedNotification.mediaUrl = this.mediaUrl;
+    copiedNotification.actions = this.actions;
+    copiedNotification.customData = this.customData;
+    copiedNotification.chatNotification = this.chatNotification;
+    copiedNotification.carouselEnabled = this.carouselEnabled;
+    copiedNotification.carouselItems = this.carouselItems;
+    copiedNotification.category = this.category;
+    copiedNotification.soundFilename = this.soundFilename;
+    copiedNotification.silent = this.silent;
+    copiedNotification.createdAt = this.createdAt;
+    copiedNotification.appBanner = this.appBanner;
+    copiedNotification.inboxAppBanner = this.inboxAppBanner;
+    copiedNotification.voucherCode = this.voucherCode;
+    copiedNotification.autoHandleDeepLink = this.autoHandleDeepLink;
+    copiedNotification.read = this.read;
+    copiedNotification.fromApi = this.fromApi;
+    copiedNotification.extender = this.extender;
+    copiedNotification.rawPayload = this.rawPayload;
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      copiedNotification.notificationChannel = this.notificationChannel;
+    }
+
+    return copiedNotification;
   }
 }

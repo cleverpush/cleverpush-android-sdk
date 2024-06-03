@@ -2,7 +2,11 @@
 
 package com.cleverpush.shortcutbadger.util;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.database.Cursor;
+
+import com.cleverpush.util.Logger;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -13,8 +17,12 @@ import java.io.IOException;
 public class CloseHelper {
 
   public static void close(Cursor cursor) {
-    if (cursor != null && !cursor.isClosed()) {
-      cursor.close();
+    try {
+      if (cursor != null && !cursor.isClosed()) {
+        cursor.close();
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "CloseHelper: Error while closing cursor", e);
     }
   }
 
@@ -24,8 +32,8 @@ public class CloseHelper {
       if (closeable != null) {
         closeable.close();
       }
-    } catch (IOException var2) {
-
+    } catch (IOException e) {
+      Logger.e(LOG_TAG, "CloseHelper: Error while closing closeable", e);
     }
   }
 }

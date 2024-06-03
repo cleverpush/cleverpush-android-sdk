@@ -2,6 +2,8 @@
 
 package com.cleverpush.shortcutbadger.impl;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.Context;
@@ -22,6 +24,7 @@ import com.cleverpush.shortcutbadger.Badger;
 import com.cleverpush.shortcutbadger.ShortcutBadgeException;
 import com.cleverpush.shortcutbadger.util.BroadcastHelper;
 import com.cleverpush.shortcutbadger.util.CloseHelper;
+import com.cleverpush.util.Logger;
 
 /**
  * Created by NingSo on 2016/10/14.上午10:09
@@ -97,8 +100,8 @@ public class OPPOHomeBader implements Badger {
         if (str.startsWith("V2.1")) {
           return 5;
         }
-      } catch (Exception ignored) {
-
+      } catch (Exception e) {
+        Logger.e(LOG_TAG, "OPPOHomeBader: Error getting ColorOS version from system property", e);
       }
     }
     ROMVERSION = i;
@@ -115,9 +118,9 @@ public class OPPOHomeBader implements Badger {
         try {
           obj = method.invoke(null, objArr);
         } catch (IllegalAccessException e) {
-          e.printStackTrace();
+          Logger.e(LOG_TAG, "OPPOHomeBader: Error executing class load IllegalAccessException", e);
         } catch (InvocationTargetException e) {
-          e.printStackTrace();
+          Logger.e(LOG_TAG, "OPPOHomeBader: Error executing class load InvocationTargetException", e);
         }
       }
     }
@@ -146,7 +149,8 @@ public class OPPOHomeBader implements Badger {
     Class cls = null;
     try {
       cls = Class.forName(str);
-    } catch (ClassNotFoundException ignored) {
+    } catch (ClassNotFoundException exception) {
+      Logger.e(LOG_TAG, "OPPOHomeBader: Class not found - " + str, exception);
     }
     return cls;
   }
@@ -166,6 +170,7 @@ public class OPPOHomeBader implements Badger {
       line = input.readLine();
       input.close();
     } catch (IOException ex) {
+      Logger.e(LOG_TAG, "OPPOHomeBader: Error getting system property - " + propName, ex);
       return null;
     } finally {
       CloseHelper.closeQuietly(input);

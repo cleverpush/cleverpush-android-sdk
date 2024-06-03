@@ -35,15 +35,22 @@ public class RemoveSubscriptionTagResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
+          if (removeTagCompletedListener != null) {
+            removeTagCompletedListener.onFailure(new Exception("Error removing tag - HTTP " + statusCode + ": " + response + "\nError: " + throwable.getMessage()));
+          }
         } else {
           Logger.e("CleverPush", "Error removing tag." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response
           );
-        }
-        if (removeTagCompletedListener != null) {
-          removeTagCompletedListener.onFailure(new Exception("Error removing tag - HTTP " + statusCode));
+          if (removeTagCompletedListener != null) {
+            Exception genericException = new Exception("Error removing tag." +
+                    "\nStatus code: " + statusCode +
+                    "\nResponse: " + response);
+            removeTagCompletedListener.onFailure(genericException);
+          }
         }
       }
     };

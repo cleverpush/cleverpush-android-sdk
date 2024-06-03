@@ -1,7 +1,5 @@
 package com.cleverpush.banner;
 
-import static com.cleverpush.Constants.LOG_TAG;
-
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -23,6 +21,7 @@ import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
 import com.cleverpush.banner.models.BannerStopAtType;
 import com.cleverpush.banner.models.BannerSubscribedType;
+import com.cleverpush.banner.models.BannerTargetEvent;
 import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
 import com.cleverpush.banner.models.BannerTriggerConditionEventProperty;
@@ -30,6 +29,8 @@ import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.banner.models.CheckFilterRelation;
 import com.cleverpush.banner.models.VersionComparison;
+import com.cleverpush.database.DatabaseClient;
+import com.cleverpush.database.TableBannerTrackEvent;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
@@ -37,11 +38,15 @@ import com.cleverpush.util.Logger;
 import com.cleverpush.util.PreferenceManagerUtils;
 import com.cleverpush.util.VersionComparator;
 import com.cleverpush.util.VoucherCodeUtils;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -53,6 +58,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class AppBannerModule {
@@ -86,6 +92,7 @@ public class AppBannerModule {
   private Set<String> bannerClickedList = new HashSet<>();
   private Set<String> bannerDeliveredList = new HashSet<>();
   public String currentEventId = null;
+  Set<String> currentNotificationDeeplink = new HashSet<>();
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -239,7 +246,7 @@ public class AppBannerModule {
 
           bannersListeners = new ArrayList<>();
         } catch (Exception ex) {
-          Logger.e(TAG, ex.getMessage(), ex);
+          Logger.e(TAG, "Error in sorting AppBanners." + ex.getMessage(), ex);
         }
 
         try {
@@ -254,8 +261,10 @@ public class AppBannerModule {
             }
           }
         } catch (Exception e) {
-          Logger.e(TAG, e.getLocalizedMessage());
+          Logger.e(TAG, "loadBanners error at showing pending banners", e);
         }
+
+        showSilentNotificationBanners();
       }
 
       @Override
@@ -265,7 +274,8 @@ public class AppBannerModule {
           Logger.e("CleverPush", "Something went wrong when loading banners." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
-                  "\nError: " + throwable.getMessage()
+                  "\nError: " + throwable.getMessage(),
+                  throwable
           );
         } else {
           Logger.e("CleverPush", "Something went wrong when loading banners." +
@@ -275,6 +285,37 @@ public class AppBannerModule {
         }
       }
     });
+  }
+
+  /**
+   * Displays silent notification banners based on stored preferences.
+   * Retrieves silent push banner info from preferences, iterates through entries,
+   * and shows corresponding banners using showBanner. Updates preferences after each display.
+   */
+  private void showSilentNotificationBanners() {
+    try {
+      String silentPushBanners = sharedPreferences.getString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, null);
+
+      if (silentPushBanners != null) {
+        Type type = new TypeToken<Map<String, String>>() {}.getType();
+        Map<String, String> silentPushBannersMap = new Gson().fromJson(silentPushBanners, type);
+
+        for (Map.Entry<String, String> entry : silentPushBannersMap.entrySet()) {
+          String silentNotificationId = entry.getKey();
+          String silentBannerId = entry.getValue();
+
+          showBanner(silentBannerId, silentNotificationId);
+
+          // Remove the key from silentPushBannersMap
+          silentPushBannersMap.remove(silentNotificationId);
+
+          // Update preferences with the modified map
+          editor.putString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, new Gson().toJson(silentPushBannersMap));
+          editor.apply();
+        }
+      }
+    } catch (Exception ignored) {
+    }
   }
 
   void sendBannerEventWithSubscriptionId(String event, Banner banner, String subscriptionId,
@@ -300,7 +341,7 @@ public class AppBannerModule {
         jsonBody.put("isScreenAlreadyShown", isScreenAlreadyShown);
       }
     } catch (JSONException ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(TAG, "Error creating sendBannerEventWithSubscriptionId(/app-banner/event) request parameter.", ex);
     }
 
     CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody,
@@ -328,7 +369,7 @@ public class AppBannerModule {
         this.sendBannerEventWithSubscriptionId(event, banner, subscriptionId, blockId, screenId, isElementAlreadyClicked, isScreenAlreadyShown);
       });
     } else {
-      Logger.d(LOG_TAG, "sendBannerEvent: There is no subscription for CleverPush SDK.");
+      Logger.d(TAG, "sendBannerEvent: There is no subscription for CleverPush SDK.");
       this.sendBannerEventWithSubscriptionId(event, banner, null, blockId, screenId, isElementAlreadyClicked, isScreenAlreadyShown);
     }
   }
@@ -577,7 +618,7 @@ public class AppBannerModule {
       return this.checkAppVersionRelationFilter(allowed, banner.getBannerAppVersionFilterRelation(), versionName,
           banner.getAppVersionFilterValue(), banner.getFromVersion(), banner.getToVersion());
     } catch (Exception e) {
-      Logger.e(TAG, "Error checking app version filter", e);
+      Logger.e(TAG, "Error in AppBanner checking app version filter", e);
     }
 
     return allowed;
@@ -625,7 +666,7 @@ public class AppBannerModule {
         }
       }
     } catch (Exception e) {
-      Logger.e(TAG, "Error checking relation filter", e);
+      Logger.e(TAG, "Error in AppBanner checking relation filter", e);
     }
 
     return allowed;
@@ -690,7 +731,7 @@ public class AppBannerModule {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      Logger.e(TAG, "Error checking app version filter", e);
+      Logger.e(TAG, "Error in AppBanner checking app version filter", e);
     }
 
     return allowed;
@@ -733,6 +774,86 @@ public class AppBannerModule {
     return false;
   }
 
+  private boolean checkTargetEventRelationFilter(CheckFilterRelation relation, String compareValue,
+                                                 String attributeValue, String fromValue, String toValue, String bannerId, String event) {
+    try {
+      if (events.isEmpty() || event == null || event.isEmpty()) {
+        return false;
+      }
+      for (TriggeredEvent triggeredEvent : events) {
+        if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(event) || compareValue == null || compareValue.isEmpty()) {
+          return false;
+        }
+        List<TableBannerTrackEvent> bannerTrackEvents = DatabaseClient.getInstance(CleverPush.context)
+                .getAppDatabase()
+                .trackEventDao()
+                .getBannerTrackEvent(bannerId, event, compareValue, attributeValue, String.valueOf(relation), fromValue, toValue);
+        if (bannerTrackEvents.isEmpty()) {
+          return false;
+        }
+
+        for (TableBannerTrackEvent bannerTrackEvent : bannerTrackEvents) {
+          int count = bannerTrackEvent.getCount();
+          String property = bannerTrackEvent.getProperty();
+          String createdDate = bannerTrackEvent.getCreatedDateTime();
+          int pastDays = getDaysDifference(createdDate);
+          if (pastDays > Integer.parseInt(property)) {
+            continue;
+          }
+          switch (relation) {
+            case Equals:
+              if (count != Integer.parseInt(attributeValue)) {
+                continue;
+              }
+              break;
+            case NotEqual:
+              if (count == Integer.parseInt(attributeValue)) {
+                continue;
+              }
+              break;
+            case GreaterThan:
+              if (count <= Integer.parseInt(attributeValue)) {
+                continue;
+              }
+              break;
+            case LessThan:
+              if (count >= Integer.parseInt(attributeValue)) {
+                continue;
+              }
+              break;
+            case Between:
+              int from = Integer.parseInt(fromValue);
+              int to = Integer.parseInt(toValue);
+              if (count < from || count > to) {
+                continue;
+              }
+              break;
+          }
+          return true;
+        }
+        return false;
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "checkTargetEventRelationFilter: Error in AppBanner checking target event relation filter.", e);
+    }
+    return false;
+  }
+
+  private boolean checkDeeplinkTriggerCondition(BannerTriggerCondition condition) {
+    Set<String> deepLinks = getCurrentNotificationDeeplink();
+    Logger.e(TAG, "deepLinks: " + new Gson().toJson(deepLinks));
+    if (deepLinks.size() == 0) {
+      return false;
+    }
+
+    for (String deepLink : deepLinks) {
+      if (deepLink.equalsIgnoreCase(condition.getDeepLinkUrl())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void createBanners(Collection<Banner> banners) {
     for (Banner banner : banners) {
       if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
@@ -740,8 +861,9 @@ public class AppBannerModule {
         continue;
       }
 
+      boolean triggers = false, isTriggerCondition = false, isTargetEvent = false;
       if (banner.getTriggerType() == BannerTriggerType.Conditions) {
-        boolean triggers = false;
+        isTriggerCondition = true;
         for (BannerTrigger trigger : banner.getTriggers()) {
           boolean triggerTrue = true;
           for (BannerTriggerCondition condition : trigger.getConditions()) {
@@ -758,6 +880,8 @@ public class AppBannerModule {
                 }
               } else if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
                 conditionTrue = this.checkEventTriggerCondition(condition);
+              } else if (condition.getType().equals(BannerTriggerConditionType.Deeplink)) {
+                conditionTrue = this.checkDeeplinkTriggerCondition(condition);
               } else {
                 conditionTrue = false;
               }
@@ -772,9 +896,80 @@ public class AppBannerModule {
             break;
           }
         }
+      }
 
+      boolean targetEvents = false;
+      if (banner.getEventFilters() != null && banner.getEventFilters().size() > 0) {
+        isTargetEvent = true;
+        for (BannerTargetEvent bannerTargetEvent : banner.getEventFilters()) {
+          boolean targetConditionTrue;
+          String event = bannerTargetEvent.getEvent();
+          String property = bannerTargetEvent.getProperty();
+          String relationString = bannerTargetEvent.getRelation();
+          String value = bannerTargetEvent.getValue();
+          String fromValue = bannerTargetEvent.getFromValue();
+          String toValue = bannerTargetEvent.getToValue();
+          if (!isValidTargetValues(event, property, relationString, value, fromValue, toValue, banner.getId())) {
+            continue;
+          }
+
+          String relation = String.valueOf(CheckFilterRelation.fromString(relationString));
+          ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context).
+                  getAppDatabase()
+                  .trackEventDao()
+                  .getBannerTrackEvent(banner.getId()
+                          , event
+                          , property
+                          , value != null ? value : ""
+                          , relation
+                          , fromValue != null ? fromValue : ""
+                          , toValue != null ? toValue : "");
+          if (bannerTrackEvents.size() == 0) {
+            TableBannerTrackEvent bannerTrackEvent = new TableBannerTrackEvent();
+
+            bannerTrackEvent.setBannerId(banner.getId());
+            bannerTrackEvent.setEventId(event);
+            bannerTrackEvent.setRelation(relation);
+            bannerTrackEvent.setProperty(property);
+            bannerTrackEvent.setValue(value != null ? value : "");
+            bannerTrackEvent.setFromValue(fromValue != null ? fromValue : "");
+            bannerTrackEvent.setToValue(toValue != null ? toValue : "");
+            bannerTrackEvent.setCount(0);
+            bannerTrackEvent.setCreatedDateTime(getCleverPushInstance().getCurrentDateTime());
+            bannerTrackEvent.setUpdatedDateTime(getCleverPushInstance().getCurrentDateTime());
+
+            DatabaseClient.getInstance(CleverPush.context).getAppDatabase()
+                    .trackEventDao()
+                    .insert(bannerTrackEvent);
+          }
+          targetConditionTrue = this.checkTargetEventRelationFilter(CheckFilterRelation.fromString(relationString)
+                  , property
+                  , value != null ? value : ""
+                  , fromValue != null ? fromValue : ""
+                  , toValue != null ? toValue : ""
+                  , banner.getId()
+                  , event);
+
+          if (targetConditionTrue) {
+            targetEvents = true;
+            break;
+          }
+        }
+      }
+
+      if (isTriggerCondition && isTargetEvent) {
+        if (!targetEvents || !triggers) {
+          Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Trigger and Target Event not satisfied " + sessions);
+          continue;
+        }
+      } else if (isTriggerCondition) {
         if (!triggers) {
           Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Trigger not satisfied " + sessions);
+          continue;
+        }
+      } else if (isTargetEvent) {
+        if (!targetEvents) {
+          Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Target Event not satisfied " + sessions);
           continue;
         }
       }
@@ -833,6 +1028,46 @@ public class AppBannerModule {
     if (currentEventId != null) {
       currentEventId = null;
     }
+  }
+
+  private boolean isValidTargetValues(String event, String property, String relationString, String value, String fromValue, String toValue, String bannerId) {
+    if (event == null || event.isEmpty()) {
+      Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: track event is not valid");
+      return false;
+    }
+    if (!isValidIntegerValue(property)) {
+      Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: property value is not valid");
+      return false;
+    }
+    if (relationString == null || relationString.isEmpty()) {
+      Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: relation is not valid");
+      return false;
+    }
+    if (relationString.equalsIgnoreCase("between")) {
+      if (!isValidIntegerValue(fromValue)) {
+        Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: from value is not valid");
+        return false;
+      }
+      if (!isValidIntegerValue(toValue)) {
+        Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: to value is not valid");
+        return false;
+      }
+    } else {
+      if (!isValidIntegerValue(value)) {
+        Logger.d(TAG, "Skipping Target in banner " + bannerId + "because: value is not valid");
+        return false;
+      }
+    }
+    return true;
+  }
+  /**
+   * currently we only accept whole numbers here since the amount of how often an event can be triggered can not be a floating number or negative number
+   */
+  private boolean isValidIntegerValue(String value) {
+    if (value == null || value.isEmpty() || Double.parseDouble(value) < 0 || Double.parseDouble(value) % 1 != 0) {
+      return false;
+    }
+    return true;
   }
 
   private boolean checkIsEveryTrigger(Banner banner, boolean isEveryTrigger) {
@@ -924,14 +1159,12 @@ public class AppBannerModule {
       bannerPopup.init();
       bannerPopup.show();
 
-      if (bannerPopup.getData().getFrequency() == BannerFrequency.Once) {
-        getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
-          @Override
-          public void initialized() {
-            setBannerIsShown(bannerPopup.getData());
-          }
-        });
-      }
+      getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
+        @Override
+        public void initialized() {
+          setBannerIsShown(bannerPopup.getData());
+        }
+      });
 
       if (bannerPopup.getData().getDismissType() == BannerDismissType.Timeout) {
         long timeout = Math.max(0, bannerPopup.getData().getDismissTimeout());
@@ -939,17 +1172,6 @@ public class AppBannerModule {
       }
 
       bannerPopup.setOpenedListener(action -> {
-        String blockId, screenId;
-        blockId = action.getBlockId();
-        screenId = action.getScreen();
-
-        boolean isElementAlreadyClicked = isBannerElementClicked(blockId);
-        if (!isElementAlreadyClicked) {
-          setIsBannerElementClicked(blockId);
-        }
-
-        sendBannerEvent("clicked", bannerPopup.getData(), blockId, screenId, isElementAlreadyClicked, false);
-
         if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
           getCleverPushInstance().getAppBannerOpenedListener().opened(action);
         }
@@ -959,23 +1181,35 @@ public class AppBannerModule {
         }
 
         if (action.getType().equals("addTags")) {
-          getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
+          List<String> tags = action.getTags();
+          if (tags != null) {
+            getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
+          }
         }
 
         if (action.getType().equals("removeTags")) {
-          getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
+          List<String> tags = action.getTags();
+          if (tags != null) {
+            getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
+          }
         }
 
         if (action.getType().equals("addTopics")) {
-          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-          topics.addAll(action.getTopics());
-          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+          List<String> topicsList = action.getTopics();
+          if (topicsList != null) {
+            Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+            topics.addAll(action.getTopics());
+            getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+          }
         }
 
         if (action.getType().equals("removeTopics")) {
-          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-          topics.removeAll(action.getTopics());
-          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+          List<String> topicsList = action.getTopics();
+          if (topicsList != null) {
+            Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+            topics.removeAll(action.getTopics());
+            getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+          }
         }
 
         if (action.getType().equals("setAttribute")) {
@@ -996,6 +1230,10 @@ public class AppBannerModule {
           ClipData clip = ClipData.newPlainText("Voucher Code", copyText);
           clipboard.setPrimaryClip(clip);
         }
+
+        if (action.getType().equals("geoLocation")) {
+          getCleverPushInstance().requestLocationPermission();
+        }
       });
 
       PreferenceManagerUtils.updateSharedPreferenceByKey(CleverPush.context, CleverPushPreferences.APP_BANNER_SHOWING, true);
@@ -1004,7 +1242,7 @@ public class AppBannerModule {
         getCleverPushInstance().getAppBannerShownListener().shown(banner);
       }
     } catch (Exception ex) {
-      Logger.e(TAG, ex.getMessage(), ex);
+      Logger.e(TAG, "Error in showBanner. " + ex.getMessage());
     }
   }
 
@@ -1175,7 +1413,7 @@ public class AppBannerModule {
     this.currentVoucherCodePlaceholder = currentVoucherCodePlaceholder;
   }
 
-  private boolean isBannerElementClicked(String id) {
+  protected boolean isBannerElementClicked(String id) {
     if (bannerClickedList == null) {
       return false;
     }
@@ -1206,5 +1444,38 @@ public class AppBannerModule {
   public void clearBannerTrackList() {
     bannerClickedList.clear();
     bannerDeliveredList.clear();
+  }
+
+  public int getDaysDifference(String createdDate) {
+    try {
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+      Date dateCreated = sdf.parse(createdDate);
+      String currentDateTimeString = getCleverPushInstance().getCurrentDateTime();
+      Date currentDate = sdf.parse(currentDateTimeString);
+      Calendar createdCalendar = Calendar.getInstance();
+      createdCalendar.setTime(dateCreated);
+      Calendar currentCalendar = Calendar.getInstance();
+      currentCalendar.setTime(currentDate);
+      createdCalendar.set(Calendar.HOUR_OF_DAY, 0);
+      createdCalendar.set(Calendar.MINUTE, 0);
+      createdCalendar.set(Calendar.SECOND, 0);
+      currentCalendar.set(Calendar.HOUR_OF_DAY, 0);
+      currentCalendar.set(Calendar.MINUTE, 0);
+      currentCalendar.set(Calendar.SECOND, 0);
+      long timeDifference = currentCalendar.getTimeInMillis() - createdCalendar.getTimeInMillis();
+      int daysDifference = (int) (timeDifference / (1000 * 60 * 60 * 24));
+      return daysDifference;
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in getting days difference for target event relation filter.", e);
+      return -1;
+    }
+  }
+
+  public Set<String> getCurrentNotificationDeeplink() {
+    return currentNotificationDeeplink;
+  }
+
+  public void setCurrentNotificationDeeplink(Set<String> currentNotificationDeeplink) {
+    this.currentNotificationDeeplink = currentNotificationDeeplink;
   }
 }

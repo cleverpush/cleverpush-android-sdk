@@ -1,10 +1,9 @@
 package com.cleverpush.banner;
 
-import static com.cleverpush.Constants.LOG_TAG;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,6 +29,9 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
@@ -47,8 +49,11 @@ import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -59,6 +64,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
   private static final String TAG = "CleverPush/AppBanner";
   private static final String CONTENT_TYPE_HTML = "html";
+  private static final String POSITION_TYPE_FULL = "full";
   private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
   private static final Map<Alignment, Integer> gravityMap = new HashMap<>();
   private final Activity activity;
@@ -99,6 +105,13 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
     try {
       body.removeAllViews();
+      try {
+        if (isBannerPositionFull() && data.getContentType() != null && !data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+          body.setGravity(Gravity.CENTER);
+        }
+      } catch (Exception e) {
+        Logger.e(TAG, "Error in AppBanner displaying component to center when position is full.", e);
+      }
 
       HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
       if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(data.getId())) {
@@ -128,7 +141,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
       }
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "onBindViewHolder Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error in AppBanner onBindViewHolder.", e);
     }
   }
 
@@ -143,30 +156,65 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     }
   }
 
-  private void onClickListener(BannerAction action) {
-    if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
-      String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
-      WebViewActivity.launch(activity, URL);
-    } else if (action.getScreen() != null && !action.getScreen().isEmpty()) {
-      for (int i = 0; i < screens.size(); i++) {
-        if (screens.get(i).getId() != null && screens.get(i).getId().equals(action.getScreen())) {
-          appBannerPopup.moveToNextScreen(i);
-          break;
+  private void onClickListener(BannerAction action, List<BannerAction> actions) {
+    try {
+      if (actions != null && actions.size() > 0) {
+        for (int i = 0; i < actions.size(); i++) {
+          boolean isLastElement = (i == actions.size() - 1);
+          actions.get(i).setBlockId(action.getBlockId());
+          actions.get(i).setMultipleScreenId(action.getMultipleScreenId());
+          onClickListener(actions.get(i), isLastElement);
+        }
+      } else {
+        onClickListener(action, true);
+      }
+
+      String blockId, screenId;
+      blockId = action.getBlockId();
+      screenId = action.getMultipleScreenId();
+
+      boolean isElementAlreadyClicked = CleverPush.getInstance(CleverPush.context).getAppBannerModule().isBannerElementClicked(blockId);
+      if (!isElementAlreadyClicked) {
+        CleverPush.getInstance(CleverPush.context).getAppBannerModule().setIsBannerElementClicked(blockId);
+      }
+
+      CleverPush.getInstance(CleverPush.context).getAppBannerModule().sendBannerEvent("clicked", data, blockId, screenId, isElementAlreadyClicked, false);
+
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in AppBanner onClickListener", e);
+    }
+  }
+
+  private void onClickListener(BannerAction action,  boolean isLastActionElement) {
+    try {
+      if (action.isOpenInWebView() && action.getUrl() != null && !action.getUrl().isEmpty()) {
+        String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
+        WebViewActivity.launch(activity, URL);
+      } else if (action.getScreen() != null && !action.getScreen().isEmpty()) {
+        for (int i = 0; i < screens.size(); i++) {
+          if (screens.get(i).getId() != null && screens.get(i).getId().equals(action.getScreen())) {
+            appBannerPopup.moveToNextScreen(i);
+            break;
+          }
+        }
+      } else if (action.getDismiss()) {
+        appBannerPopup.dismiss();
+      } else {
+        if (isLastActionElement) {
+          appBannerPopup.moveToNextScreen();
         }
       }
-    } else if (action.getDismiss()) {
-      appBannerPopup.dismiss();
-    } else {
-      appBannerPopup.moveToNextScreen();
-    }
 
-    if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
-      String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
-      activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(URL)));
-    }
+      if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
+        String URL = VoucherCodeUtils.replaceVoucherCodeString(action.getUrl(), voucherCode);
+        activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(URL)));
+      }
 
-    if (appBannerPopup.getOpenedListener() != null) {
-      appBannerPopup.getOpenedListener().opened(action);
+      if (appBannerPopup.getOpenedListener() != null) {
+        appBannerPopup.getOpenedListener().opened(action);
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in AppBanner onClickListener", e);
     }
   }
 
@@ -183,7 +231,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         Typeface font = FontUtils.findFont(activity, block.getFamily());
         button.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, ex.getMessage(), ex);
+        Logger.e(TAG, "Error in AppBanner composeButtonBlock setTypeface.", ex);
       }
     }
 
@@ -203,9 +251,20 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.MATCH_PARENT
+        LinearLayout.LayoutParams.WRAP_CONTENT
     );
-    params.setMargins(0, 20, 0, 20);
+
+    // Determine if the device is a tablet
+    boolean isTablet = (activity.getResources().getConfiguration().screenLayout
+        & Configuration.SCREENLAYOUT_SIZE_MASK)
+        >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+
+    // Set margins based on device type
+    if (isTablet) {
+      params.setMargins(0, 10, 0, 10);
+    } else {
+      params.setMargins(0, 20, 0, 20);
+    }
     button.setLayoutParams(params);
 
     GradientDrawable bg = new GradientDrawable();
@@ -223,8 +282,10 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     if (block.getAction() != null) {
       BannerAction action = block.getAction();
+      List<BannerAction> actions = block.getActions();
       action.setBlockId(block.getId());
-      button.setOnClickListener(view -> this.onClickListener(action));
+      action.setMultipleScreenId(data.getScreens().get(position).getId());
+      button.setOnClickListener(view -> this.onClickListener(action, actions));
     }
 
     button.setOnTouchListener((view, motionEvent) -> {
@@ -267,7 +328,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         Typeface font = FontUtils.findFont(activity, block.getFamily());
         textView.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, ex.getMessage(), ex);
+        Logger.e(TAG, "Error in AppBanner composeTextBlock setTypeface.", ex);
       }
     }
 
@@ -280,12 +341,21 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.addView(textView);
   }
 
-  private void composeImageBlock(LinearLayout body, BannerImageBlock block, int position) {
+  private void composeImageBlock(LinearLayout body, BannerImageBlock block, int blockPosition) {
     @SuppressLint("InflateParams") ConstraintLayout imageLayout =
             (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
     ImageView img = imageLayout.findViewById(R.id.imageView);
     ProgressBar progressBar = imageLayout.findViewById(R.id.progressBar);
     progressBar.setVisibility(View.VISIBLE);
+
+    ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) img.getLayoutParams();
+
+    if (!isBannerPositionFull()) {
+      layoutParams.height = 0;
+      layoutParams.dimensionRatio = "1";
+    }
+
+    img.setLayoutParams(layoutParams);
 
     ConstraintSet imgConstraints = new ConstraintSet();
     imgConstraints.clone(imageLayout);
@@ -299,29 +369,79 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     imgConstraints.applyTo(imageLayout);
 
     new Thread(() -> {
+      HttpURLConnection connection = null;
+      InputStream in = null;
       try {
         String imageUrl;
-        if (appBannerPopup.getData().isDarkModeEnabled(activity) && block.getDarkImageUrl() != null) {
+        if (appBannerPopup.getData().isDarkModeEnabled(activity)
+                && block.getDarkImageUrl() != null && !block.getDarkImageUrl().isEmpty()) {
           imageUrl = block.getDarkImageUrl();
         } else {
           imageUrl = block.getImageUrl();
         }
 
-        InputStream in = new URL(imageUrl).openStream();
-        Bitmap bitmap = BitmapFactory.decodeStream(in);
+        URL url = new URL(imageUrl);
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setDoInput(true);
+
+        // Get the content type from the response headers
+        String contentType = connection.getHeaderField("Content-Type");
+
+        // Checks whether the content at the specified URL is a GIF image.
+        boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
+
+        in = connection.getInputStream();
+        final Bitmap bitmap = BitmapFactory.decodeStream(in);
+
         activity.runOnUiThread(() -> {
-          if (bitmap != null) {
-            img.setImageBitmap(bitmap);
+          if (!isBannerPositionFull()) {
+            if (bitmap != null) {
+              // Calculate aspect ratio and adjust ImageView size
+              float imageAspectRatio = (float) bitmap.getWidth() / bitmap.getHeight();
+              int imageWidth = img.getWidth();  // Get the current width of ImageView
+              int imageHeight = (int) (imageWidth / imageAspectRatio);  // Calculate height based on aspect ratio
+              ViewGroup.LayoutParams imgLayoutParams = img.getLayoutParams();
+              imgLayoutParams.width = imageWidth;
+              imgLayoutParams.height = imageHeight;
+              img.setLayoutParams(imgLayoutParams);
+            }
+
+            appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
+              appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+            });
+          }
+
+          if (isGif) {
+            Glide.with(CleverPush.context)
+                    .asGif()
+                    .load(imageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(img);
+          } else {
+            if (bitmap != null) {
+              img.setImageBitmap(bitmap);
+            }
           }
           progressBar.setVisibility(View.GONE);
         });
 
-      } catch (Exception ignored) {
-        Logger.d(TAG, ignored.getLocalizedMessage());
+      } catch (Exception e) {
+        Logger.e(TAG, "Error in AppBanner composeImageBlock.", e);
         if (activity != null) {
           activity.runOnUiThread(() -> {
             progressBar.setVisibility(View.GONE);
           });
+        }
+      } finally {
+        if (connection != null) {
+          connection.disconnect();
+        }
+        if (in != null) {
+          try {
+            in.close();
+          } catch (IOException e) {
+            Logger.e(TAG, "Error in closing InputStream in AppBanner composeImageBlock.", e);
+          }
         }
       }
     }).start();
@@ -330,8 +450,10 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     if (block.getAction() != null) {
       BannerAction action = block.getAction();
+      List<BannerAction> actions = block.getActions();
       action.setBlockId(block.getId());
-      img.setOnClickListener(view -> this.onClickListener(action));
+      action.setMultipleScreenId(data.getScreens().get(blockPosition).getId());
+      img.setOnClickListener(view -> this.onClickListener(action, actions));
     }
   }
 
@@ -421,8 +543,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         try {
           encodedHtml = Base64.encodeToString(htmlWithJs.getBytes("UTF-8"), Base64.NO_PADDING);
         } catch (UnsupportedEncodingException e) {
-          Logger.d(LOG_TAG, "AppBanner UnsupportedEncodingException");
-          e.printStackTrace();
+          Logger.e(TAG, "composeHtmlBanner AppBanner UnsupportedEncodingException.", e);
         }
         webView.setBackgroundColor(Color.TRANSPARENT);
         webView.loadData(encodedHtml, "text/html; charset=utf-8", "base64");
@@ -430,7 +551,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         body.addView(webLayout);
       });
     } catch (Exception e) {
-      Logger.e(TAG, "composeHtmlBanner Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error in AppBanner composeHtmlBanner.", e);
     }
   }
 
@@ -463,7 +584,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         }
         CleverPush.getInstance(CleverPush.context).trackEvent(eventID, properties);
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, "trackEvent error " + ex.getMessage());
+        Logger.e(TAG, "Error in AppBanner's HTML trackEvent error.", ex);
       }
     }
 
@@ -481,7 +602,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           cleverPush.getAppBannerOpenedListener().opened(bannerAction);
         }
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, "trackClick error " + ex.getMessage());
+        Logger.e(TAG, "Error in AppBanner's HTML trackClick error.", ex);
       }
 
       cleverPush.getAppBannerModule()
@@ -527,5 +648,17 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     public void showTopicsDialog() {
       CleverPush.getInstance(CleverPush.context).showTopicsDialog();
     }
+  }
+
+  /**
+   * Checks if the banner position type is set to "full."
+   *
+   * @return True if the banner position type is "full," false otherwise.
+   */
+  private boolean isBannerPositionFull() {
+    if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+      return true;
+    }
+    return false;
   }
 }

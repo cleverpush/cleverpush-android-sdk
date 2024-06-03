@@ -18,6 +18,8 @@ public class CleverPushPreferences {
   public static final String NOTIFICATIONS = "notifications"; // deprecated, now using NOTIFICATIONS_JSON
   public static final String NOTIFICATIONS_JSON = "notificationsJson";
   public static final String LAST_NOTIFICATION_ID = "lastNotificationId";
+  public static final String LAST_CLICKED_NOTIFICATION_ID = "lastClickedNotificationId";
+  public static final String LAST_CLICKED_NOTIFICATION_TIME = "lastClickedNotificationTime";
   public static final String APP_OPENS = "appOpens";
   public static final String APP_REVIEW_SHOWN = "appReviewShownAt";
   public static final String PENDING_TOPICS_DIALOG = "pendingTopicsDialog";
@@ -31,5 +33,6 @@ public class CleverPushPreferences {
   public static final String LAST_TIME_AUTO_SHOWED = "lastTimeAutoShowed";
   public static final String NOTIFICATION_STYLE = "notificationStyle";
   public static final String DEVICE_ID = "deviceId";
+  public static final String SILENT_PUSH_APP_BANNER = "silentPushBanners";
 
 }

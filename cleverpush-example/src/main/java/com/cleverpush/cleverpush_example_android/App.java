@@ -1,4 +1,4 @@
-package com.example.cleverpush;
+package com.cleverpush.cleverpush_example_android;
 
 import android.app.Application;
 

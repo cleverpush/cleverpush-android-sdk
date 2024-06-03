@@ -78,7 +78,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         PackageInfo pInfo = this.context.getPackageManager().getPackageInfo(this.context.getPackageName(), 0);
         appVersion = pInfo.versionName;
       } catch (PackageManager.NameNotFoundException e) {
-        e.printStackTrace();
+        Logger.e(LOG_TAG, "Error in syncSubscription for fetching appVersion.", e);
       }
     }
 
@@ -121,7 +121,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       }
       jsonBody.put("hasNotificationPermission", CleverPush.getInstance(CleverPush.context).areNotificationsEnabled());
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error", e);
+      Logger.e(LOG_TAG, "Error creating syncSubscription(/subscription/sync/) request parameter", e);
     }
 
     CleverPushHttpClient.postWithRetry("/subscription/sync/" + channelId, jsonBody, new CleverPushHttpClient.ResponseHandler() {
@@ -133,7 +133,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
           if (responseJson.has("id")) {
             String newSubscriptionId = responseJson.getString("id");
             String oldSubscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
-            boolean isSubscriptionChanged = newSubscriptionId.equalsIgnoreCase(oldSubscriptionId);
+            boolean isSubscriptionChanged = !newSubscriptionId.equalsIgnoreCase(oldSubscriptionId);
             CleverPush.getInstance(CleverPush.context).setSubscriptionChanged(isSubscriptionChanged);
             sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, newSubscriptionId).apply();
             sharedPreferences.edit()
@@ -168,7 +168,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             }
           }
         } catch (Throwable throwable) {
-          Logger.e(LOG_TAG, "Error", throwable);
+          Logger.e(LOG_TAG, "Error in syncSubscription request's onSuccess.", throwable);
         }
       }
 

@@ -14,9 +14,13 @@ public class NotificationOpenedActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     Logger.d(LOG_TAG, "NotificationOpenedActivity onCreate");
-    processIntent(NotificationOpenedActivity.this, getIntent());
-    if (!CleverPush.getInstance(this).isUsingNotificationOpenedCallbackListener()) {
-      finish();
+    try {
+      processIntent(NotificationOpenedActivity.this, getIntent());
+      if (!CleverPush.getInstance(this).isUsingNotificationOpenedCallbackListener()) {
+        finish();
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "NotificationOpenedActivity: Error in onCreate: " + e.getMessage(), e);
     }
   }
 
@@ -24,15 +28,23 @@ public class NotificationOpenedActivity extends Activity {
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
     Logger.d(LOG_TAG, "NotificationOpenedActivity onNewIntent");
-    processIntent(NotificationOpenedActivity.this, getIntent());
-    if (!CleverPush.getInstance(this).isUsingNotificationOpenedCallbackListener()) {
-      finish();
+    try {
+      processIntent(NotificationOpenedActivity.this, getIntent());
+      if (!CleverPush.getInstance(this).isUsingNotificationOpenedCallbackListener()) {
+        finish();
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "NotificationOpenedActivity: Error in onCreate: " + e.getMessage(), e);
     }
   }
 
   @Override
   protected void onDestroy() {
-    CleverPush.getInstance(this).setNotificationOpenedActivityDestroyedAt(System.currentTimeMillis());
+    try {
+      CleverPush.getInstance(this).setNotificationOpenedActivityDestroyedAt(System.currentTimeMillis());
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "NotificationOpenedActivity: Error in onDestroy: " + e.getMessage(), e);
+    }
     super.onDestroy();
   }
 }

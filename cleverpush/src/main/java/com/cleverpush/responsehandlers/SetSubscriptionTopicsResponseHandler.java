@@ -38,15 +38,22 @@ public class SetSubscriptionTopicsResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
+          if (completionListener != null) {
+            completionListener.onFailure(new Exception("Error setting topics. - HTTP " + statusCode + ": " + response + "\nError: " + throwable.getMessage()));
+          }
         } else {
           Logger.e("CleverPush", "Error setting topics." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response
           );
-        }
-        if (completionListener != null) {
-          completionListener.onFailure(new Exception("Error setting topics - HTTP " + statusCode + ": " + response));
+          if (completionListener != null) {
+            Exception genericException = new Exception("Error setting topics." +
+                    "\nStatus code: " + statusCode +
+                    "\nResponse: " + response);
+            completionListener.onFailure(genericException);
+          }
         }
       }
     };

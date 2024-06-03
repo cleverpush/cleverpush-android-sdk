@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.cleverpush">
+    package="com.cleverpush.cleverpush_example_android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
-        android:name="com.example.cleverpush.App"
+        android:name=".App"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -17,7 +17,7 @@
         android:theme="@style/Theme.Cleverpushandroidsdkmaster">
 
         <activity
-            android:name="com.example.cleverpush.MainActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,14 +34,9 @@
             </intent-filter>
         </service>
 
-        <service
-            android:name=".MyNotificationExtenderService"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE">
-            <intent-filter>
-                <action android:name="com.cleverpush.service.NotificationExtender" />
-            </intent-filter>
-        </service>
+        <meta-data
+            android:name="com.cleverpush.NotificationServiceExtension"
+            android:value="com.cleverpush.cleverpush_example_android.MyNotificationServiceExtension" />
 
     </application>
 

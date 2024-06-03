@@ -7,10 +7,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fillViewport="true"
         android:elevation="4dp">
 
         <LinearLayout
@@ -25,5 +26,5 @@
             android:paddingRight="10dp"
             android:paddingBottom="15dp" />
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

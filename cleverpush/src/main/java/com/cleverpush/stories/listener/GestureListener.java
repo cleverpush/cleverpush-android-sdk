@@ -1,7 +1,11 @@
 package com.cleverpush.stories.listener;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+
+import com.cleverpush.util.Logger;
 
 public final class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
@@ -33,7 +37,7 @@ public final class GestureListener extends GestureDetector.SimpleOnGestureListen
         result = true;
       }
     } catch (Exception exception) {
-      exception.printStackTrace();
+      Logger.e(LOG_TAG, "GestureListener: Error while handling fling gesture", exception);
     }
     return result;
   }

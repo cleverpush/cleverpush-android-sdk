@@ -17,6 +17,10 @@ import com.cleverpush.Subscription;
 
 import java.util.List;
 
+/**
+ * Use NotificationServiceExtension instead.
+ */
+@Deprecated
 public abstract class NotificationExtenderService extends JobIntentService {
 
   static final int EXTENDER_SERVICE_JOB_ID = 209538983;
@@ -48,7 +52,7 @@ public abstract class NotificationExtenderService extends JobIntentService {
       try {
         developerProcessed = onNotificationProcessing(notification);
       } catch (Throwable throwable) {
-        Logger.e(LOG_TAG, "Exception in NotificationExtenderService: onNotificationProcessing", throwable);
+        Logger.e(LOG_TAG, "Exception in NotificationExtenderService onHandleWork: onNotificationProcessing", throwable);
       }
 
       if (!developerProcessed && !notification.isSilent()) {
@@ -56,7 +60,7 @@ public abstract class NotificationExtenderService extends JobIntentService {
       }
 
     } catch (Exception ex) {
-      Logger.e(LOG_TAG, "Exception in NotificationExtenderService", ex);
+      Logger.e(LOG_TAG, "Exception in NotificationExtenderService onHandleWork", ex);
     }
   }
 

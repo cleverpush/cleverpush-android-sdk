@@ -30,7 +30,8 @@ public class NotificationDismissIntentService extends IntentService {
       if (notification.getCategory() != null && notification.getCategory().getBadgeDisabled()) {
         badgeEnabled = false;
       }
-    } catch (Exception ignore) {
+    } catch (Exception exception) {
+      Logger.e(LOG_TAG, "Error in NotificationDismissIntentService disabling badge", exception);
     }
 
     if (badgeEnabled) {

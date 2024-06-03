@@ -1,5 +1,84 @@
 # Changelog
 
+## 1.33.20 (29.05.2024)
+* For NON-HTML `AppBanner` the Content needs to be centred vertically.
+* Optimised close button in `WebView` for `AppBanner`.
+
+## 1.33.19 (03.05.2024)
+* Resolved the issue of `ConcurrentModificationException` in `setTrackingConsent`
+* Optimised conversion tracking. Pass `lastClickedNotificationId` in `trackEvent` if it was within 60 minutes of the trackEvent call.
+
+## 1.33.18 (22.04.2024)
+* Resolved the issue of `ConcurrentModificationException` in `setTrackingConsent`
+
+## 1.33.17 (19.04.2024)
+* Optimised `setsubscriptionchanged` function for `ChatView`
+* Optimize close button position for HTML Banner.
+
+## 1.33.16 (10.04.2024)
+* Added a feature in `AppBanner` to support geo fence in actions on buttons and images.
+
+## 1.33.15 (03.04.2024)
+* Resolved the issue of trackSessionStart. Now, trackSessionStart is called whenever a user subscribes.
+* Added a feature in `AppBanner` to support multiple actions on buttons and images.
+
+## 1.33.14 (29.03.2024)
+* Resolved the issue of trackSessionStart. Now, trackSessionStart is called whenever a user subscribes.
+* Implemented `setBadgeCount` and `getBadgeCount` methods for managing the notification badge count.
+* Added a feature in `AppBanner` for the Deeplink Trigger condition.
+
+## 1.33.13 (26.03.2024)
+*  Fixed a potential crash in push notification for deeplink
+
+## 1.33.12 (22.03.2024)
+*  Fixed a potential crash in HMS and FCM after getting a push notification for Android version less than 26.
+
+## 1.33.11 (14.03.2024)
+* Optimized TCF2 API, do not replay queued events after consent is given
+
+## 1.33.10 (13.03.2024)
+* Optimized removing of tags and attributes after revoking tracking consent
+* Optimized TCF2 API, do not replay queued events after consent is given
+
+## 1.33.9 (12.03.2024)
+* Fixed a bug in TCF, When update the consent update the status immediate.
+* Fixed a bug in update badge count.
+* Fixed a potential crash when push URL is null in deeplink.
+
+## 1.33.8 (28.02.2024)
+* For displaying notifications, use `NotificationServiceExtension` instead of `NotificationExtenderService`, which is now deprecated. Refer to the documentation for more information: https://developers.cleverpush.com/docs/sdks/android/extension
+
+## 1.33.7 (28.02.2024)
+* Optimised the showBanner method for always saving banner IDs in preferences.
+* Fixed race condition in `getChannelConfig`
+* Resolved the issue of the wrong screen ID passing in the app banner.
+* Added feature to display silent push app banner.
+
+## 1.33.6 (14.02.2024)
+* Optimize TCF code when revoke the consent.
+
+## 1.33.5 (02.02.2024)
+* Fixed a bug for TCF.
+
+## 1.33.4 (01.02.2024)
+* Optimize customer listener(Added log for the specific error.)
+* Fixed a bug in notification action button.
+
+## 1.33.3 (16.01.2024)
+* Added feature in `InboxView` to support GIF image.
+* Fixed a bug in `AppBanner`, remove space between text and image.
+
+## 1.33.2 (05.01.2024)
+* Added feature in `AppBanner` to support GIF image.
+* Added feature to display Action Buttons in notification.
+
+## 1.33.1 (06.12.2023)
+* Fixed a bug in `AppBanner`, remove space between text and image.
+
+## 1.33.0 (05.12.2023)
+* Support app banner targeting from previously tracked events
+* Stop follow-up campaigns on revoked tracking consents
+
 ## 1.32.4 (01.12.2023)
 * Automatically remove targeting data (tags, attributes) when tracking consent has been revoked
 
@@ -99,6 +178,7 @@
 
 ## 1.30.13
 * Added loading spinner
+* Fixed a bug in `AppBanner`, displayed duplicate elements in banner
 
 ## 1.30.12
 * Added feature to set the app banner close button position 

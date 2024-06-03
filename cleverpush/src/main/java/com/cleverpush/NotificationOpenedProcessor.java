@@ -7,75 +7,116 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
+import androidx.core.app.NotificationManagerCompat;
+
 import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
+import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class NotificationOpenedProcessor {
 
   public static void processIntent(Context context, Intent intent) {
-    CleverPush.setAppContext(context);
+    try {
+      CleverPush.setAppContext(context);
 
-    Gson gson = new Gson();
-    Notification notification = gson.fromJson(intent.getStringExtra("notification"), Notification.class);
-    Subscription subscription = gson.fromJson(intent.getStringExtra("subscription"), Subscription.class);
+      Gson gson = new Gson();
+      Notification notification = gson.fromJson(intent.getStringExtra("notification"), Notification.class);
+      Subscription subscription = gson.fromJson(intent.getStringExtra("subscription"), Subscription.class);
+      String actionIndex = intent.getStringExtra("actionIndex");
+      int activeNotificationId = intent.getIntExtra("notificationId", 0);
 
-    if (notification == null || subscription == null) {
-      return;
-    }
-
-    String notificationId = notification.getId();
-    String subscriptionId = subscription.getId();
-
-    if (notificationId == null || subscriptionId == null) {
-      return;
-    }
-
-    NotificationOpenedResult result = new NotificationOpenedResult();
-    result.setNotification(notification);
-    result.setSubscription(subscription);
-    result.setNotificationOpenedActivity((Activity) context);
-
-    CleverPush cleverPush = CleverPush.getInstance(context);
-
-    cleverPush.trackNotificationClicked(notificationId, subscriptionId);
-
-    cleverPush.fireNotificationOpenedListener(result);
-
-    if (notification.getAppBanner() != null && notification.getAppBanner().length() > 0
-            && notification.getVoucherCode() != null && notification.getVoucherCode().length() > 0) {
-      HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
-
-      if (cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder() != null) {
-        currentVoucherCodePlaceholder = cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder();
+      if (notification == null || subscription == null) {
+        return;
       }
 
-      currentVoucherCodePlaceholder.put(notification.getAppBanner(), notification.getVoucherCode());
-      cleverPush.getAppBannerModule().setCurrentVoucherCodePlaceholder(currentVoucherCodePlaceholder);
-    }
+      // Close the notification using NotificationManager
+      NotificationManagerCompat.from(context).cancel(notification.getTag(), activeNotificationId);
 
-    // open launcher activity
-    boolean shouldStartActivity = cleverPush.notificationOpenShouldStartActivity();
-    Logger.d(LOG_TAG, "NotificationOpenedProcessor shouldStartActivity: " + shouldStartActivity);
+      String notificationId = notification.getId();
+      String subscriptionId = subscription.getId();
 
-    if (shouldStartActivity) {
-      Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-      if (launchIntent != null) {
-        launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        context.startActivity(launchIntent);
+      if (notificationId == null || subscriptionId == null) {
+        return;
       }
-    }
 
-    boolean autoHandleDeepLink = notification.isAutoHandleDeepLink();
-    if (autoHandleDeepLink) {
-      Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(result.getNotification().getUrl()));
-      context.startActivity(browserIntent);
-    }
+      NotificationOpenedResult result = new NotificationOpenedResult();
+      result.setNotification(notification);
+      result.setSubscription(subscription);
+      result.setNotificationOpenedActivity((Activity) context);
 
-    boolean badgeEnabled = notification.getCategory() == null || !notification.getCategory().getBadgeDisabled();
-    if (badgeEnabled) {
-      BadgeHelper.update(context, cleverPush.getIncrementBadge());
+      CleverPush cleverPush = CleverPush.getInstance(context);
+      String channelId = cleverPush.getChannelId(context);
+
+      cleverPush.trackNotificationClicked(notificationId, subscriptionId, channelId, actionIndex);
+
+      cleverPush.fireNotificationOpenedListener(result);
+
+      if (notification.getAppBanner() != null && notification.getAppBanner().length() > 0
+              && notification.getVoucherCode() != null && notification.getVoucherCode().length() > 0) {
+        HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
+
+        if (cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder() != null) {
+          currentVoucherCodePlaceholder = cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder();
+        }
+
+        currentVoucherCodePlaceholder.put(notification.getAppBanner(), notification.getVoucherCode());
+        cleverPush.getAppBannerModule().setCurrentVoucherCodePlaceholder(currentVoucherCodePlaceholder);
+      }
+
+      // open launcher activity
+      boolean shouldStartActivity = cleverPush.notificationOpenShouldStartActivity();
+      Logger.d(LOG_TAG, "NotificationOpenedProcessor shouldStartActivity: " + shouldStartActivity);
+
+      if (shouldStartActivity) {
+        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+        if (launchIntent != null) {
+          launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+          context.startActivity(launchIntent);
+        }
+      }
+
+      try {
+        boolean autoHandleDeepLink = notification.isAutoHandleDeepLink();
+        String deepLinkURL = result.getNotification().getUrl();
+        if (autoHandleDeepLink && deepLinkURL != null && !deepLinkURL.isEmpty()) {
+          setNotificationDeepLink(deepLinkURL, cleverPush);
+          Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkURL));
+          context.startActivity(browserIntent);
+        }
+      } catch (Exception e) {
+        Logger.e(LOG_TAG, "Error while handling auto handle deep link for notification id: " + notificationId, e);
+      }
+
+      boolean badgeEnabled = notification.getCategory() == null || !notification.getCategory().getBadgeDisabled();
+      if (badgeEnabled) {
+        BadgeHelper.update(context, cleverPush.getIncrementBadge());
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while processing intent for push: " + e.getMessage(), e);
+    }
+  }
+
+  public static void setNotificationDeepLink(String deepLink, CleverPush cleverPush) {
+    try {
+      URI uri = new URI(deepLink);
+
+      // Remove query parameters
+      uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), null, uri.getFragment());
+
+      Set<String> currentDeeplink = new HashSet<>();
+
+      if (cleverPush.getAppBannerModule().getCurrentNotificationDeeplink() != null) {
+        currentDeeplink = cleverPush.getAppBannerModule().getCurrentNotificationDeeplink();
+      }
+
+      currentDeeplink.add(uri.toString());
+      cleverPush.getAppBannerModule().setCurrentNotificationDeeplink(currentDeeplink);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while setting notification deep link: " + e.getMessage(), e);
     }
   }
 }

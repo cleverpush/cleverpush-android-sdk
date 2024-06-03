@@ -46,7 +46,7 @@ public class SetSubscriptionAttributeResponseHandler {
             successCallback.run();
           }
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "Error in onSuccess of setting subscription attribute", ex);
         }
       }
 
@@ -57,6 +57,7 @@ public class SetSubscriptionAttributeResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
         } else {
           Logger.e("CleverPush", "Error setting attribute." +

@@ -1,6 +1,9 @@
 package com.cleverpush.banner.models;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import com.cleverpush.Constants;
+import com.cleverpush.util.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,6 +19,8 @@ public class BannerTriggerCondition {
   private String relation;
   private int sessions;
   private int seconds;
+  private String value;
+  private String deepLinkUrl;
 
   private BannerTriggerCondition() {
   }
@@ -44,6 +49,14 @@ public class BannerTriggerCondition {
     return relation;
   }
 
+  public String getValue() {
+    return value;
+  }
+
+  public String getDeepLinkUrl() {
+    return deepLinkUrl;
+  }
+
   public static BannerTriggerCondition create(JSONObject json) {
     BannerTriggerCondition condition = new BannerTriggerCondition();
 
@@ -53,6 +66,8 @@ public class BannerTriggerCondition {
       condition.sessions = json.optInt("sessions");
       condition.seconds = json.optInt("seconds");
       condition.relation = json.optString("operator");
+      condition.value = json.optString("value");
+      condition.deepLinkUrl = json.optString("deepLinkUrl");
 
       if (condition.type.equals(BannerTriggerConditionType.Unsubscribe)) {
         condition.type = BannerTriggerConditionType.Event;
@@ -68,7 +83,7 @@ public class BannerTriggerCondition {
                 BannerTriggerConditionEventProperty.create(eventPropertiesArray.getJSONObject(i));
             condition.eventProperties.add(property);
           } catch (JSONException e) {
-            e.printStackTrace();
+            Logger.e(LOG_TAG, "Error creating BannerTriggerConditionEventProperty", e);
           }
         }
       }

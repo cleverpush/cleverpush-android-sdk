@@ -168,10 +168,10 @@ public class InboxDetailActivity extends AppCompatActivity {
         layout.setOnClickListener(view -> dismiss());
         return layout;
       } catch (Exception exception) {
-        Logger.e(TAG, "InflateException: " + exception.getLocalizedMessage());
+        Logger.e(TAG, "Error in InboxView createLayout with theme cleverpush_app_banner_theme.", exception);
       }
     } catch (Exception exception) {
-      Logger.e(TAG, exception.getLocalizedMessage());
+      Logger.e(TAG, "Error in InboxView createLayout.", exception);
     }
     return null;
   }
@@ -208,41 +208,45 @@ public class InboxDetailActivity extends AppCompatActivity {
     show();
 
     setOpenedListener(action -> {
+      try {
 //            sendBannerEvent("clicked", bannerPopup.getData());
 
-      if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
-        getCleverPushInstance().getAppBannerOpenedListener().opened(action);
-      }
+        if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
+          getCleverPushInstance().getAppBannerOpenedListener().opened(action);
+        }
 
-      if (action.getType().equals("subscribe")) {
-        getCleverPushInstance().subscribe();
-      }
+        if (action.getType().equals("subscribe")) {
+          getCleverPushInstance().subscribe();
+        }
 
-      if (action.getType().equals("addTags")) {
-        getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
-      }
+        if (action.getType().equals("addTags")) {
+          getCleverPushInstance().addSubscriptionTags(action.getTags().toArray(new String[0]));
+        }
 
-      if (action.getType().equals("removeTags")) {
-        getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
-      }
+        if (action.getType().equals("removeTags")) {
+          getCleverPushInstance().removeSubscriptionTags(action.getTags().toArray(new String[0]));
+        }
 
-      if (action.getType().equals("addTopics")) {
-        Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-        topics.addAll(action.getTopics());
-        getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-      }
+        if (action.getType().equals("addTopics")) {
+          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+          topics.addAll(action.getTopics());
+          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+        }
 
-      if (action.getType().equals("removeTopics")) {
-        Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
-        topics.removeAll(action.getTopics());
-        getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
-      }
+        if (action.getType().equals("removeTopics")) {
+          Set<String> topics = getCleverPushInstance().getSubscriptionTopics();
+          topics.removeAll(action.getTopics());
+          getCleverPushInstance().setSubscriptionTopics(topics.toArray(new String[0]));
+        }
 
-      if (action.getType().equals("setAttribute")) {
-        getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
-      }
+        if (action.getType().equals("setAttribute")) {
+          getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
+        }
 
-      if (action.getType().equals("switchScreen")) {
+        if (action.getType().equals("switchScreen")) {
+        }
+      } catch (Exception e) {
+        Logger.e(TAG, "Error in setOpenedListener of InboxView", e);
       }
     });
   }
@@ -434,7 +438,7 @@ public class InboxDetailActivity extends AppCompatActivity {
 
           bannersListeners = new ArrayList<>();
         } catch (Exception ex) {
-          Logger.e(TAG, ex.getMessage(), ex);
+          Logger.e(TAG, "Error at InboxView loadBanners onSuccess." + ex);
         }
       }
 
@@ -505,10 +509,9 @@ public class InboxDetailActivity extends AppCompatActivity {
           if (bitmap != null) {
             Drawable drawable = new BitmapDrawable(bitmap);
             bannerBackground.setBackgroundDrawable(drawable);
-//                        bannerBackground.set(bitmap);
           }
-        } catch (Exception ignored) {
-          Logger.e(TAG, ignored.getLocalizedMessage());
+        } catch (Exception ex) {
+          Logger.e(TAG, "Error at setting background image in InboxView: ", ex);
         }
       }).start();
     } else {
@@ -577,7 +580,7 @@ public class InboxDetailActivity extends AppCompatActivity {
         try {
           displayBanner(body);
         } catch (Exception e) {
-          Logger.e(TAG, e.getLocalizedMessage());
+          Logger.e(TAG, "Error in displaying banner in InboxView.", e);
         }
       }
     }

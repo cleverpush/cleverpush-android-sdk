@@ -27,12 +27,20 @@ public class MetaDataUtils {
     return false;
   }
 
+  public static String getNotificationServiceExtensionClass(Context context) {
+    Bundle bundle = getManifestMetaBundle(context);
+    if (bundle != null) {
+      return bundle.getString("com.cleverpush.NotificationServiceExtension");
+    }
+    return null;
+  }
+
   public static String getChannelId(Context paramContext) {
     ApplicationInfo localApplicationInfo;
     try {
       localApplicationInfo = paramContext.getPackageManager().getApplicationInfo(paramContext.getPackageName(), 128);
     } catch (PackageManager.NameNotFoundException e) {
-      e.printStackTrace();
+      Logger.e(LOG_TAG, "Error while getting channel ID from manifest", e);
       return null;
     }
     if ((localApplicationInfo == null) || (localApplicationInfo.metaData == null)) {

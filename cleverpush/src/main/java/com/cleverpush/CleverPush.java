@@ -34,8 +34,11 @@ import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.database.DatabaseClient;
+import com.cleverpush.database.TableBannerTrackEvent;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannerShownListener;
@@ -57,6 +60,7 @@ import com.cleverpush.listener.NotificationReceivedCallbackListener;
 import com.cleverpush.listener.NotificationReceivedListenerBase;
 import com.cleverpush.listener.NotificationsCallbackListener;
 import com.cleverpush.listener.SessionListener;
+import com.cleverpush.listener.StopCampaignListener;
 import com.cleverpush.listener.SubscribeConsentListener;
 import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.listener.SubscribedListener;
@@ -75,6 +79,7 @@ import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
 import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
+import com.cleverpush.responsehandlers.StopCampaignResponseHandler;
 import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
@@ -124,7 +129,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.32.4";
+  public static final String SDK_VERSION = "1.33.20";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -211,14 +216,13 @@ public class CleverPush {
   public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
   private PendingIntent geofencePendingIntent;
   private GeofencingClient geofencingClient;
-
-  private String lastClickedNotificationId;
-  private long lastClickedNotificationTime;
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
+  private int trackEventRetentionDays = 90;
   private boolean autoResubscribe = false;
   private boolean autoRequestNotificationPermission = true;
+  private boolean isSessionStartCalled = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -435,6 +439,17 @@ public class CleverPush {
     init(channelId, notificationReceivedListener, notificationOpenedListener, subscribedListener, autoRegister, null);
   }
 
+
+  /**
+   * initialize CleverPush SDK for channel with notification received callback, notification opened and subscribed callback and if there is autoRegister
+   *
+   * @param channelId                    channelID of the channel
+   * @param notificationReceivedListener callback for the notification received
+   * @param notificationOpenedListener   callback for the notification opened
+   * @param subscribedListener           callback for subscription
+   * @param autoRegister                 boolean for auto register
+   * @param initializeListener           callback for the init
+   */
   public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener,
                    @Nullable final NotificationOpenedListenerBase notificationOpenedListener,
                    @Nullable final SubscribedListener subscribedListener, boolean autoRegister,
@@ -473,7 +488,7 @@ public class CleverPush {
       boolean isUnsubscribing = false;
       if (isChannelIdChanged(storedChannelId, storedSubscriptionId)) {
         try {
-          if (subscriptionId != null) {
+          if (subscriptionId != null && !subscriptionId.isEmpty()) {
             isUnsubscribing = true;
             this.unsubscribe(new UnsubscribedListener() {
               @Override
@@ -497,7 +512,7 @@ public class CleverPush {
             this.clearSubscriptionData();
           }
         } catch (Throwable throwable) {
-          Logger.e(LOG_TAG, "Error", throwable);
+          Logger.e(LOG_TAG, "Error during unsubscribing in init.", throwable);
         }
       }
       addOrUpdateChannelId(getContext(), this.channelId);
@@ -522,6 +537,8 @@ public class CleverPush {
     incrementAppOpens();
 
     setUpNotificationCategoryGroups();
+
+    deleteDataBasedOnRetentionDays();
   }
 
   public SessionListener initSessionListener() {
@@ -556,7 +573,9 @@ public class CleverPush {
             this.pendingPageViews = new ArrayList<>();
           }
 
-          if (isAutoResubscribe() && getSubscriptionId(CleverPush.context) == null && areNotificationsEnabled()) {
+          if (isAutoResubscribe()
+                  && (getSubscriptionId(CleverPush.context) == null || getSubscriptionId(CleverPush.context).isEmpty())
+                  && areNotificationsEnabled()) {
             Logger.d(LOG_TAG, "autoResubscribe");
             subscribe();
           }
@@ -564,7 +583,7 @@ public class CleverPush {
           this.trackSessionEnd();
         }
       } catch (Exception e) {
-        Logger.e(LOG_TAG, "initSessionListener Exception: " + e.getLocalizedMessage());
+        Logger.e(LOG_TAG, "Error in initSessionListener.", e);
       }
     };
   }
@@ -751,7 +770,7 @@ public class CleverPush {
 
       BroadcastReceiverUtils.registerReceiver(this);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "initFeatures Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in initFeatures.", e);
     }
   }
 
@@ -791,7 +810,7 @@ public class CleverPush {
             }
           }
         } catch (Exception ex) {
-          Logger.d(LOG_TAG, "initAppReview Exception: " + ex.getMessage());
+          Logger.d(LOG_TAG, "Error in initAppReview.", ex);
         }
       }
     });
@@ -811,7 +830,7 @@ public class CleverPush {
               .setForceMode(false)
               .show();
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "showFiveStarsDialog Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in displaying FiveStarsDialog.", e);
     }
   }
 
@@ -832,7 +851,7 @@ public class CleverPush {
       intent.putExtra(PermissionActivity.INTENT_EXTRA_PERMISSION_TYPE, permissionType);
       dialogActivity.startActivity(intent);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "requestPermission Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Exception during permission request.", e);
     }
   }
 
@@ -942,7 +961,7 @@ public class CleverPush {
         outputMap.put(key, value);
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      Logger.e(LOG_TAG, "Error while parsing JSON in loadPreferencesMap.", e);
     }
     Logger.d(LOG_TAG, "loadPreferencesMap: " + mapKey + " - " + outputMap.toString());
     return outputMap;
@@ -1104,7 +1123,7 @@ public class CleverPush {
         }
       });
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "checkTags Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in checkTags.", e);
     }
   }
 
@@ -1135,7 +1154,7 @@ public class CleverPush {
               }
             }
           } catch (Exception ex) {
-            Logger.d(LOG_TAG, ex.getMessage());
+            Logger.d(LOG_TAG, "Error in initGeoFences.", ex);
           }
         }
       });
@@ -1201,7 +1220,7 @@ public class CleverPush {
             Logger.e(LOG_TAG, "getConnectionCallbacks onConnected getCurrentActivity() is null");
           }
         } catch (Exception e) {
-          Logger.e(LOG_TAG, "getConnectionCallbacks onConnected Exception: " + e.getLocalizedMessage());
+          Logger.e(LOG_TAG, "Error in getConnectionCallbacks onConnected", e);
         }
       }
 
@@ -1227,7 +1246,7 @@ public class CleverPush {
 
       this.checkTags(url, params);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "trackPageView Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in trackPageView.", e);
     }
   }
 
@@ -1253,6 +1272,7 @@ public class CleverPush {
   }
 
   public void updateServerSessionStart() {
+    isSessionStartCalled = true;
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
     String lastNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null);
@@ -1264,7 +1284,7 @@ public class CleverPush {
       jsonBody.put("fcmToken", fcmToken);
       jsonBody.put("lastNotificationId", lastNotificationId);
     } catch (JSONException ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(LOG_TAG, "Error creating updateServerSessionStart request parameter", ex);
     }
 
     CleverPushHttpClient.postWithRetry("/subscription/session/start", jsonBody,
@@ -1289,7 +1309,6 @@ public class CleverPush {
 
       this.sessionStartedTimestamp = 0;
       this.sessionVisits = 0;
-      this.lastClickedNotificationId = null;
     }));
   }
 
@@ -1307,7 +1326,7 @@ public class CleverPush {
       jsonBody.put("visits", getSessionVisits());
       jsonBody.put("duration", sessionDuration);
     } catch (JSONException ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(LOG_TAG, "Error creating updateServerSessionEnd request parameter", ex);
     }
 
     CleverPushHttpClient.postWithRetry("/subscription/session/end", jsonBody, new CleverPushHttpClient.ResponseHandler() {
@@ -1419,6 +1438,10 @@ public class CleverPush {
             self.fireSubscribedListener(newSubscriptionId);
             self.setSubscriptionId(newSubscriptionId);
 
+            if (!isSessionStartCalled) {
+              self.trackSessionStart();
+            }
+
             if (subscribedCallbackListener != null) {
               subscribedCallbackListener.onSuccess(newSubscriptionId);
             }
@@ -1457,7 +1480,7 @@ public class CleverPush {
         });
       });
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "subscribe Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in handleSubscribe.", e);
     }
   }
 
@@ -1489,13 +1512,13 @@ public class CleverPush {
 
   public void unsubscribe(UnsubscribedListener listener) {
     String subscriptionId = getSubscriptionId(getContext());
-    if (subscriptionId != null) {
+    if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {
         jsonBody.put("channelId", getChannelId(getContext()));
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException e) {
-        Logger.e(LOG_TAG, "Error", e);
+        Logger.e(LOG_TAG, "Error creating unsubscribe request parameter", e);
       }
 
       CleverPushHttpClient.postWithRetry("/subscription/unsubscribe", jsonBody,
@@ -1514,7 +1537,7 @@ public class CleverPush {
     try {
       return new JSONObject(jsonString);
     } catch (JSONException exception) {
-      exception.printStackTrace();
+      Logger.d(LOG_TAG, "Error while creating JSONObject from string", exception);
     }
     return null;
   }
@@ -1525,8 +1548,8 @@ public class CleverPush {
 
   public void waitForTrackingConsent(TrackingConsentListener listener) {
     if (listener != null) {
-      if (isTrackingConsentRequired() && !hasTrackingConsentCalled()) {
-        if (!hasTrackingConsentCalled()) {
+      if (isTrackingConsentRequired() && !hasTrackingConsent()) {
+        if (!hasTrackingConsentCalled() || (hasTrackingConsentCalled() && !hasTrackingConsent())) {
           getTrackingConsentListeners().add(listener);
         }
       } else {
@@ -1543,19 +1566,49 @@ public class CleverPush {
     if (!hasTrackingConsent && previousTrackingConsent) {
       // hasTrackingConsent was true before, so call the removal method
       removeSubscriptionTagsAndAttributes();
+      stopCampaigns(null);
+    }
+
+    // hasTrackingConsent is false then event should not be stored in the queue for TCF
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !previousTrackingConsent && hasTrackingConsent) {
+      trackingConsentListeners = new ArrayList<>();
     }
 
     if (hasTrackingConsent) {
-      for (TrackingConsentListener listener : trackingConsentListeners) {
+      Collection<TrackingConsentListener> copyTrackingConsentListeners = new ArrayList<>(trackingConsentListeners);
+      for (TrackingConsentListener listener : copyTrackingConsentListeners) {
         listener.ready();
       }
     }
+
+    if (isTrackingConsentRequired() && !hasTrackingConsent && trackingConsentListeners.size() > 0) {
+      return;
+    }
+
     trackingConsentListeners = new ArrayList<>();
+  }
+
+  public void stopCampaigns(StopCampaignListener listener) {
+    String subscriptionId = getSubscriptionId(getContext());
+    if (subscriptionId != null && !subscriptionId.isEmpty()) {
+      JSONObject jsonBody = getJsonObject();
+      try {
+        jsonBody.put("channelId", getChannelId(getContext()));
+        jsonBody.put("subscriptionId", subscriptionId);
+      } catch (JSONException e) {
+        Logger.e(LOG_TAG, "Error creating stopCampaigns request parameter", e);
+      }
+
+      CleverPushHttpClient.postWithRetry("/subscription/stop-campaigns", jsonBody,
+              new StopCampaignResponseHandler(this, listener).getResponseHandler());
+    } else {
+      Logger.d(LOG_TAG, "stopCampaigns: There is no subscription for CleverPush SDK.");
+    }
   }
 
   private void removeSubscriptionTagsAndAttributes() {
     try {
-      if (getSubscriptionId(CleverPush.context) == null) {
+      if (getSubscriptionId(CleverPush.context) == null || getSubscriptionId(CleverPush.context).isEmpty()) {
         Logger.d(LOG_TAG, "removeSubscriptionTagsAndAttributes: There is no subscription for CleverPush SDK.");
         return;
       }
@@ -1564,7 +1617,11 @@ public class CleverPush {
 
       if (subscribedTagIds != null && subscribedTagIds.size() > 0) {
         String[] tagIdsArray = subscribedTagIds.toArray(new String[0]);
-        removeSubscriptionTags(tagIdsArray);
+        if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
+          removeSubscriptionTagTrackingImplementation(null, tagIdsArray);
+        } else {
+          removeSubscriptionTags(tagIdsArray);
+        }
       }
 
       if (subscriptionAttributes != null && subscriptionAttributes.size() > 0) {
@@ -1573,14 +1630,22 @@ public class CleverPush {
           Object value = entry.getValue();
 
           if (value instanceof String) {
-            this.setSubscriptionAttribute(key, "");
+            if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
+              this.setSubscriptionAttributeObjectImplementation(key, "", new SetSubscriptionAttributeResponseHandler());
+            } else {
+              this.setSubscriptionAttribute(key, "");
+            }
           } else {
-            this.setSubscriptionAttribute(key, new String[0]);
+            if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
+              this.setSubscriptionAttributeObjectImplementation(key, new String[0], new SetSubscriptionAttributeResponseHandler());
+            } else {
+              this.setSubscriptionAttribute(key, new String[0]);
+            }
           }
         }
       }
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error at removeSubscriptionTagsAndAttributes: " + e.getMessage());
+      Logger.e(LOG_TAG, "Error at removeSubscriptionTagsAndAttributes.", e);
     }
   }
 
@@ -1590,8 +1655,8 @@ public class CleverPush {
 
   public void waitForSubscribeConsent(SubscribeConsentListener listener) {
     if (listener != null) {
-      if (isSubscribeConsentRequired() && !hasSubscribeConsentCalled()) {
-        if (!hasSubscribeConsentCalled()) {
+      if (isSubscribeConsentRequired() && !hasSubscribeConsent()) {
+        if (!hasSubscribeConsentCalled() || (hasSubscribeConsentCalled() && !hasSubscribeConsent())) {
           getSubscribeConsentListeners().add(listener);
         }
       } else {
@@ -1601,14 +1666,25 @@ public class CleverPush {
   }
 
   public void setSubscribeConsent(Boolean consent) {
+    boolean previousSubscribeConsent = hasSubscribeConsent;
     hasSubscribeConsentCalled = true;
     hasSubscribeConsent = consent;
+
+    // hasSubscribeConsent is false then event should not be stored in the queue for TCF
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !previousSubscribeConsent && hasSubscribeConsent) {
+      subscribeConsentListeners = new ArrayList<>();
+    }
 
     if (hasSubscribeConsent) {
       for (SubscribeConsentListener listener : subscribeConsentListeners) {
         listener.ready();
       }
     }
+
+    if (isSubscribeConsentRequired() && !hasSubscribeConsent && subscribeConsentListeners.size() > 0) {
+      return;
+    }
+
     subscribeConsentListeners = new ArrayList<>();
   }
 
@@ -1627,7 +1703,7 @@ public class CleverPush {
     return channelConfig;
   }
 
-  public static void getChannelConfig(ChannelConfigListener listener) {
+  public synchronized static void getChannelConfig(ChannelConfigListener listener) {
     if (listener != null) {
       if (channelConfig == null && !initialized) {
         getChannelConfigListeners.add(listener);
@@ -1666,7 +1742,7 @@ public class CleverPush {
 
   public synchronized void getSubscriptionId(SubscribedListener listener) {
     if (listener != null) {
-      if (subscriptionId == null) {
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "getSubscriptionId: There is no subscription for CleverPush SDK.");
         getSubscriptionIdListeners.add(listener);
       } else {
@@ -1921,7 +1997,7 @@ public class CleverPush {
         }
       }
     } catch (Exception ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(LOG_TAG, "Error while getting subscription attribute.", ex);
     }
     return outputMap;
   }
@@ -1950,7 +2026,7 @@ public class CleverPush {
           }
         }
       } catch (JSONException ex) {
-        Logger.d(LOG_TAG, ex.getMessage(), ex);
+        Logger.d(LOG_TAG, "Error while getting available tags from channel config.", ex);
       }
     }
     return tags;
@@ -1984,7 +2060,7 @@ public class CleverPush {
           }
         }
       } catch (JSONException ex) {
-        Logger.d(LOG_TAG, ex.getMessage(), ex);
+        Logger.d(LOG_TAG,  "Error while getting available attributes from channel config.", ex);
       }
     }
     return attributes;
@@ -2026,7 +2102,8 @@ public class CleverPush {
                 if (customDataObject != null) {
                   customData = new Gson().fromJson(customDataObject.toString(), HashMap.class);
                 }
-              } catch (Exception ignored) {
+              } catch (Exception e) {
+                Logger.e(LOG_TAG, "Error parsing customData for topic.", e);
               }
 
               ChannelTopic topic = new ChannelTopic(
@@ -2042,7 +2119,7 @@ public class CleverPush {
           }
         }
       } catch (JSONException ex) {
-        Logger.d(LOG_TAG, ex.getMessage(), ex);
+        Logger.e(LOG_TAG, "Error while getting available topics from channel config.", ex);
       }
     }
     return topics;
@@ -2074,7 +2151,7 @@ public class CleverPush {
 
   public void addSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
     this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId == null) {
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "addSubscriptionTopic: There is no subscription for CleverPush SDK.");
         return;
       }
@@ -2096,7 +2173,7 @@ public class CleverPush {
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-        Logger.e(LOG_TAG, ex.getMessage(), ex);
+        Logger.e(LOG_TAG, "Error creating addSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
           new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
@@ -2129,7 +2206,7 @@ public class CleverPush {
 
   public void removeSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
     this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId == null) {
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "removeSubscriptionTopic: There is no subscription for CleverPush SDK.");
         return;
       }
@@ -2151,7 +2228,8 @@ public class CleverPush {
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-        Logger.e(LOG_TAG, ex.getMessage(), ex);
+
+        Logger.e(LOG_TAG, "Error creating removeSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
           new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
@@ -2221,6 +2299,24 @@ public class CleverPush {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscribedListener)).start());
   }
 
+  private void removeSubscriptionTagTrackingImplementation(CompletionFailureListener listener,
+                                                           String... tagIds) {
+    this.getSubscriptionId(subscriptionId -> {
+      if (subscriptionId != null && !subscriptionId.isEmpty()) {
+        if (removeSubscriptionTagsHelper != null && !removeSubscriptionTagsHelper.isFinished()) {
+          removeSubscriptionTagsHelper.addTagIds(tagIds);
+          return;
+        }
+        removeSubscriptionTagsHelper =
+                new RemoveSubscriptionTags(subscriptionId, this.channelId, getSharedPreferences(getContext()), listener,
+                        tagIds);
+        removeSubscriptionTagsHelper.removeSubscriptionTags();
+      } else {
+        Logger.d(LOG_TAG, "removeSubscriptionTagTrackingImplementation: There is no subscription for CleverPush SDK.");
+      }
+    });
+  }
+
   public void setSubscriptionTopics(String[] topicIds) {
     setSubscriptionTopics(topicIds, (CompletionListener) null);
   }
@@ -2253,7 +2349,7 @@ public class CleverPush {
       editor.apply();
 
       this.getSubscriptionId(subscriptionId -> {
-        if (subscriptionId != null) {
+        if (subscriptionId != null && !subscriptionId.isEmpty()) {
           JSONObject jsonBody = new JSONObject();
           try {
             JSONArray topicsArray = new JSONArray();
@@ -2266,7 +2362,7 @@ public class CleverPush {
             jsonBody.put("topicsVersion", topicsVersion);
             jsonBody.put("subscriptionId", subscriptionId);
           } catch (JSONException ex) {
-            Logger.e(LOG_TAG, ex.getMessage(), ex);
+            Logger.e(LOG_TAG, "Error creating setSubscriptionTopics request parameter", ex);
           }
 
           Logger.d(LOG_TAG, "setSubscriptionTopics: " + Arrays.toString(topicIds));
@@ -2297,8 +2393,12 @@ public class CleverPush {
   }
 
   private void setSubscriptionAttributeObject(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
-    this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId != null) {
+    this.waitForTrackingConsent(() -> new Thread(() -> this.setSubscriptionAttributeObjectImplementation(attributeId, value, responseHandler)).start());
+  }
+
+  private void setSubscriptionAttributeObjectImplementation(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
+    this.getSubscriptionId(subscriptionId -> {
+      if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = getJsonObject();
         try {
           jsonBody.put("channelId", getChannelId(getContext()));
@@ -2314,7 +2414,7 @@ public class CleverPush {
           }
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "Error creating setSubscriptionAttributeObject request parameter", ex);
         }
 
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
@@ -2323,12 +2423,12 @@ public class CleverPush {
       } else {
         Logger.d(LOG_TAG, "setSubscriptionAttribute: There is no subscription for CleverPush SDK.");
       }
-    })).start());
+    });
   }
 
   public void pushSubscriptionAttributeValue(String attributeId, String value) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId != null) {
+      if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = new JSONObject();
         try {
           jsonBody.put("channelId", this.channelId);
@@ -2336,7 +2436,7 @@ public class CleverPush {
           jsonBody.put("value", value);
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG,  "Error creating pushSubscriptionAttributeValue request parameter", ex);
         }
 
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
@@ -2347,7 +2447,7 @@ public class CleverPush {
           Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
           arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "pushSubscriptionAttributeValue: Error processing attribute values", ex);
         }
 
         arrayList.add(value);
@@ -2381,7 +2481,7 @@ public class CleverPush {
             editor.apply();
           }
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG,  "pushSubscriptionAttributeValueResponseHandler onSuccess: Error updating subscription attributes in SharedPreferences", ex);
         }
       }
 
@@ -2405,7 +2505,7 @@ public class CleverPush {
 
   public void pullSubscriptionAttributeValue(String attributeId, String value) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
-      if (subscriptionId != null) {
+      if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = new JSONObject();
         try {
           jsonBody.put("channelId", this.channelId);
@@ -2413,7 +2513,7 @@ public class CleverPush {
           jsonBody.put("value", value);
           jsonBody.put("subscriptionId", subscriptionId);
         } catch (JSONException ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "Error creating pullSubscriptionAttributeValue request parameter", ex);
         }
 
         Map<String, Object> subscriptionAttributes = this.getSubscriptionAttributes();
@@ -2425,7 +2525,7 @@ public class CleverPush {
           Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
           arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "pullSubscriptionAttributeValue: Error processing attribute values", ex);
         }
         arrayList.remove(value);
 
@@ -2459,7 +2559,7 @@ public class CleverPush {
             editor.apply();
           }
         } catch (Exception ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "pullSubscriptionAttributeValueResponseHandler onSuccess: Error updating subscription attributes in SharedPreferences", ex);
         }
       }
 
@@ -2490,7 +2590,7 @@ public class CleverPush {
       Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
       arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
     } catch (Exception ex) {
-      Logger.e(LOG_TAG, ex.getMessage(), ex);
+      Logger.e(LOG_TAG, "hasSubscriptionAttributeValue: Error checking subscription attribute value", ex);
     }
 
     return arrayList.contains(value);
@@ -2602,36 +2702,53 @@ public class CleverPush {
 
         String eventId = event.optString("_id");
 
-        this.getSubscriptionId(subscriptionId -> {
-          if (subscriptionId != null) {
-            JSONObject jsonBody = new JSONObject();
+        this.waitForTrackingConsent(() -> {
+          this.getSubscriptionId(subscriptionId -> {
+            if (subscriptionId != null && !subscriptionId.isEmpty()) {
+              JSONObject jsonBody = new JSONObject();
 
-            try {
-              JSONObject propertiesObject = new JSONObject();
-              if (properties != null) {
-                for (Map.Entry<String, Object> entry : properties.entrySet()) {
-                  propertiesObject.put(entry.getKey(), entry.getValue());
+              try {
+                JSONObject propertiesObject = new JSONObject();
+                if (properties != null) {
+                  for (Map.Entry<String, Object> entry : properties.entrySet()) {
+                    propertiesObject.put(entry.getKey(), entry.getValue());
+                  }
                 }
+
+                jsonBody.put("channelId", this.channelId);
+                jsonBody.put("eventId", eventId);
+                jsonBody.put("properties", propertiesObject);
+                jsonBody.put("subscriptionId", subscriptionId);
+
+                SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+                String lastClickedNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, null);
+                String lastClickedNotificationTime = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME, null);
+
+                if (lastClickedNotificationId != null && !lastClickedNotificationId.isEmpty() && isWithin60Minutes(lastClickedNotificationTime)) {
+                  jsonBody.put("notificationId", lastClickedNotificationId);
+                }
+              } catch (JSONException ex) {
+                Logger.e(LOG_TAG, "Error creating trackEvent request parameter", ex);
               }
 
-              jsonBody.put("channelId", this.channelId);
-              jsonBody.put("eventId", eventId);
-              jsonBody.put("properties", propertiesObject);
-              jsonBody.put("subscriptionId", subscriptionId);
-
-              if (this.lastClickedNotificationId != null) {
-                jsonBody.put("notificationId", this.lastClickedNotificationId);
-              }
-            } catch (JSONException ex) {
-              Logger.e(LOG_TAG, ex.getMessage(), ex);
+              CleverPushHttpClient.postWithRetry("/subscription/conversion", jsonBody,
+                      new TrackEventResponseHandler().getResponseHandler(eventName));
+            } else {
+              Logger.d(LOG_TAG, "trackEvent: There is no subscription for CleverPush SDK.");
             }
-
-            CleverPushHttpClient.postWithRetry("/subscription/conversion", jsonBody,
-                new TrackEventResponseHandler().getResponseHandler(eventName));
-          } else {
-            Logger.d(LOG_TAG, "trackEvent: There is no subscription for CleverPush SDK.");
-          }
+          });
         });
+
+        ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context).
+                getAppDatabase()
+                .trackEventDao()
+                .getBannerTrackEvent(eventId);
+        if (bannerTrackEvents.size() > 0) {
+          DatabaseClient.getInstance(CleverPush.context)
+                  .getAppDatabase()
+                  .trackEventDao()
+                  .increaseCount(eventId, getCurrentDateTime());
+        }
 
         TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
         if (getAppBannerModule() == null) {
@@ -2641,13 +2758,7 @@ public class CleverPush {
         getAppBannerModule().triggerEvent(triggeredEvent);
       } catch (Exception ex) {
         String message = "Track event failed because of error";
-        if (ex != null) {
-          message = ex.getMessage();
-          if (message == null) {
-            message = ex.toString();
-          }
-        }
-        Logger.e(LOG_TAG, message);
+        Logger.e(LOG_TAG, message, ex);
       }
     });
   }
@@ -2660,7 +2771,7 @@ public class CleverPush {
     this.waitForTrackingConsent(() -> {
       try {
         this.getSubscriptionId(subscriptionId -> {
-          if (subscriptionId != null) {
+          if (subscriptionId != null && !subscriptionId.isEmpty()) {
             JSONObject jsonParameters = new JSONObject();
             if (parameters != null) {
               for (Map.Entry<String, String> entry : parameters.entrySet()) {
@@ -2679,7 +2790,7 @@ public class CleverPush {
               jsonBody.put("parameters", jsonParameters);
               jsonBody.put("subscriptionId", subscriptionId);
             } catch (JSONException ex) {
-              Logger.e(LOG_TAG, ex.getMessage(), ex);
+              Logger.e(LOG_TAG, "Error creating triggerFollowUpEvent request parameter", ex);
             }
 
             CleverPushHttpClient.postWithRetry("/subscription/event", jsonBody,
@@ -2689,7 +2800,7 @@ public class CleverPush {
           }
         });
       } catch (Exception ex) {
-        Logger.e(LOG_TAG, ex.getMessage());
+        Logger.e(LOG_TAG, "Error in triggerFollowUpEvent", ex);
       }
     });
   }
@@ -2704,7 +2815,7 @@ public class CleverPush {
       jsonBody.put("notificationId", notificationId);
       jsonBody.put("subscriptionId", subscriptionId);
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error generating delivered json", e);
+      Logger.e(LOG_TAG, "Error creating trackNotificationDelivered request parameter", e);
     }
 
     CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
@@ -2715,17 +2826,28 @@ public class CleverPush {
   }
 
   public void trackNotificationClicked(String notificationId, String subscriptionId) {
+    trackNotificationClicked(notificationId, subscriptionId, null, null);
+  }
+
+  public void trackNotificationClicked(String notificationId, String subscriptionId, String channelId, String actionIndex) {
     JSONObject jsonBody = new JSONObject();
     try {
       jsonBody.put("notificationId", notificationId);
       jsonBody.put("subscriptionId", subscriptionId);
+      jsonBody.put("channelId", channelId);
+      if (actionIndex != null && !actionIndex.isEmpty()) {
+        jsonBody.put("action", actionIndex);
+      }
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error generating clicked json", e);
+      Logger.e(LOG_TAG, "Error creating trackNotificationClicked request parameter", e);
     }
 
     CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
 
-    lastClickedNotificationId = notificationId;
+    SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
+    editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, notificationId);
+    editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME, getCurrentDateTime());
+    editor.apply();
   }
 
   public void showAppBanner(String bannerId) {
@@ -2757,7 +2879,7 @@ public class CleverPush {
       jsonBody.put("platformName", "Android");
       jsonBody.put("browserType", "SDK");
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error setting confirm alert shown", e);
+      Logger.e(LOG_TAG, "Error creating channel confirm-alert request parameter.", e);
     }
 
     CleverPushHttpClient.postWithRetry("/channel/confirm-alert", jsonBody, null);
@@ -2793,7 +2915,7 @@ public class CleverPush {
           }
         }
       } catch (Exception ex) {
-        Logger.d(LOG_TAG, "showPendingTopicsDialog Exception: " + ex.getMessage());
+        Logger.d(LOG_TAG, "Error in showPendingTopicsDialog.", ex);
       }
     });
   }
@@ -2892,7 +3014,7 @@ public class CleverPush {
               topicDialogAlert.show();
             }
           } catch (Exception e) {
-            Logger.d(LOG_TAG, e.getLocalizedMessage());
+            Logger.d(LOG_TAG, "Error creating topic dialog alert", e);
             if (!isRecursiveCall) {
               showTopicsDialog(dialogActivity, topicsDialogListener, R.style.cleverpush_topics_dialog_theme, true);
             }
@@ -2901,7 +3023,7 @@ public class CleverPush {
 
       });
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "showTopicsDialog Exception: " + e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error in showTopicsDialog", e);
     }
   }
 
@@ -2919,7 +3041,8 @@ public class CleverPush {
     if (channelConfig.has("confirmAlertSelectTopicsLaterTitle")) {
       try {
         headerTitle = channelConfig.getString("confirmAlertSelectTopicsLaterTitle");
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        Logger.e(LOG_TAG, "Error while getting header title from channel config.", e);
       }
     }
     if (headerTitle == null || headerTitle.isEmpty()) {
@@ -2952,7 +3075,7 @@ public class CleverPush {
             JSONObject channelTopic = (JSONObject) channelTopics.get(j);
             channelTopic.put("defaultUnchecked", true);
           } catch (JSONException e) {
-            Logger.e(LOG_TAG, e.getLocalizedMessage());
+            Logger.e(LOG_TAG, "getTopicAlertBuilder: Error while updating channelTopics.", e);
           }
         }
       } else {
@@ -3068,11 +3191,11 @@ public class CleverPush {
           setupTopicChildCheckboxes(parentLayout, unsubscribeCheckbox, channelTopics, deselectAll, nightModeFlags,
               selectedTopics, id, checkbox);
         } else {
-          Logger.e(LOG_TAG, "topic is null");
+          Logger.e(LOG_TAG, "Topic is null at index " + i);
         }
       }
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error getting channel topics " + e.getMessage());
+      Logger.e(LOG_TAG, "Error while setting up parent topics checkboxes.", e);
     }
   }
 
@@ -3142,7 +3265,7 @@ public class CleverPush {
         parentLayout.addView(childLayout);
       }
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error getting channel topics " + e.getMessage());
+      Logger.e(LOG_TAG, "Error while setting up child topics checkboxes.", e);
     }
   }
 
@@ -3199,7 +3322,7 @@ public class CleverPush {
       try {
         topic = channelTopics.getJSONObject(i);
       } catch (JSONException exception) {
-        exception.printStackTrace();
+        Logger.e(LOG_TAG, "Error while getting topic at index " + i, exception);
       }
       if (topic != null) {
         int oneHour = 60 * 60;
@@ -3220,7 +3343,7 @@ public class CleverPush {
           }
         }
       } else {
-        Logger.e(LOG_TAG, "topic is null");
+        Logger.e(LOG_TAG, "isNewTopicAdded: Topic is null at index " + i);
       }
     }
     return false;
@@ -3356,21 +3479,26 @@ public class CleverPush {
   }
 
   public void clearSubscriptionData() {
-    subscriptionId = null;
-    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
-    if (!this.keepTargetingDataOnUnsubscribe) {
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+    try {
+      subscriptionId = null;
+      isSessionStartCalled = false;
+      SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
+      if (!this.keepTargetingDataOnUnsubscribe) {
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+      }
+      editor.apply();
+      TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
+      CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while clearing subscription data. " + e.getMessage(), e);
     }
-    editor.apply();
-    TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
-    CleverPush.getInstance(CleverPush.context).getAppBannerModule().triggerEvent(triggeredEvent);
   }
 
   public boolean isAppBannersDisabled() {
@@ -3425,7 +3553,7 @@ public class CleverPush {
     try {
       return getSharedPreferences(context).getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, e.getLocalizedMessage());
+      Logger.e(LOG_TAG, "Error while retrieving subscription ID", e);
       return null;
     }
   }
@@ -3550,7 +3678,7 @@ public class CleverPush {
     return subscribeConsentRequired;
   }
 
-  public boolean isHasSubscribeConsent() {
+  public boolean hasSubscribeConsent() {
     return hasSubscribeConsent;
   }
 
@@ -3679,6 +3807,11 @@ public class CleverPush {
     return authorizerToken;
   }
 
+  /**
+   * Sets an authorization token for API calls.
+   *
+   * @param authorizerToken The authorization token to be set.
+   */
   public void setAuthorizerToken(String authorizerToken) {
     this.authorizerToken = authorizerToken;
   }
@@ -3695,55 +3828,120 @@ public class CleverPush {
    * This method used for TCF2 CMP
    * If get consent 1 in IABTCF_VendorConsents at position 1139 then perform subscribe or tracking according to IabTcfMode
    */
-  private void setTCF() {
-    if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
-      setTrackingConsentRequired(true);
-    }
-    if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-      setSubscribeConsentRequired(true);
-    }
-    Context mContext = context.getApplicationContext();
-    SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+  protected void setTCF() {
+    try {
+      IabTcfMode mode = getIabTcfMode();
+      setTrackingConsentRequired(mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT);
+      setSubscribeConsentRequired(mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT);
 
-    SharedPreferences.OnSharedPreferenceChangeListener mListener;
-    mListener = (preferences, key) -> {
-      if (key.equals(IABTCF_VendorConsents)) {
-        String vendorConsents = mPreferences.getString(IABTCF_VendorConsents, "0");
-        if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
-          char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
-          boolean hasConsent = (consentStatus == '1');
+      Context mContext = context.getApplicationContext();
+      SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
-          if (hasConsent) {
-            if (getIabTcfMode() == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
-              setTrackingConsent(true);
+      SharedPreferencesLiveData mSharedPreferencesLiveData = new SharedPreferencesLiveData(mPreferences, IABTCF_VendorConsents);
+
+      mSharedPreferencesLiveData.observeForever(new Observer<String>() {
+        @Override
+        public void onChanged(String vendorConsents) {
+          try {
+            if (vendorConsents != null && !vendorConsents.isEmpty()) {
+              if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
+                char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
+                boolean hasConsent = (consentStatus == '1');
+                if (mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+                  setTrackingConsent(hasConsent);
+                }
+                if (mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+                  setSubscribeConsent(hasConsent);
+                }
+
+                if (!hasConsent) {
+                  Logger.d(LOG_TAG, "setTCF Vendor does not have consent");
+                }
+              } else {
+                Logger.d(LOG_TAG, "setTCF Vendor consents string is too short to get character at index " + IABTCF_VendorConsent_POSITION + ".");
+              }
             }
-            if (getIabTcfMode() == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-              setSubscribeConsent(true);
-            }
-          } else {
-            Logger.d(LOG_TAG, "Vendor does not have consent");
+          } catch (Exception e) {
+            Logger.e(LOG_TAG, "Error processing VendorConsents for IABTCF", e);
           }
-        } else {
-          Logger.d(LOG_TAG, "Vendor consents string is too short to get character at index " + IABTCF_VendorConsent_POSITION + ".");
         }
-      }
-    };
-
-    mPreferences.registerOnSharedPreferenceChangeListener(mListener);
+      });
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error in setTCF", e);
+    }
   }
 
+  /**
+   * Sets the IAB TCF mode for handling tracking or subscription based on consent status.
+   * Possible modes: SUBSCRIBE_WAIT_FOR_CONSENT, TRACKING_WAIT_FOR_CONSENT, DISABLED.
+   *
+   * @param mode The IAB TCF mode to be set.
+   */
   public void setIabTcfMode(IabTcfMode mode) {
     this.iabTcfMode = mode;
   }
 
-  public IabTcfMode getIabTcfMode() {
+  protected IabTcfMode getIabTcfMode() {
     return iabTcfMode;
   }
 
-  public boolean isAutoResubscribe() {
+  private int getLocalTrackEventRetentionDays() {
+    return trackEventRetentionDays;
+  }
+
+  /**
+   * Sets the retention period (in days) for local tracking event data.
+   * Default is 90 days; data older than this period is deleted from the database.
+   *
+   * @param trackEventRetentionDays Number of days to retain local tracking event data.
+   */
+  public void setLocalTrackEventRetentionDays(int trackEventRetentionDays) {
+    this.trackEventRetentionDays = trackEventRetentionDays;
+  }
+
+  /**
+   * Retrieves the current date and time in the format "yyyy-MM-dd HH:mm:ss".
+   *
+   * @return The current date and time as a formatted string.
+   */
+  public String getCurrentDateTime() {
+    try {
+      Date time = Calendar.getInstance().getTime();
+      SimpleDateFormat outputFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      return outputFmt.format(time);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while getting current date and time", e);
+      return "";
+    }
+  }
+
+  /**
+   * Deletes data from the database based on the configured retention days.
+   * Retention days are obtained from the result of getLocalTrackEventRetentionDays().
+   */
+  private void deleteDataBasedOnRetentionDays() {
+    try {
+      int retentionDays = getLocalTrackEventRetentionDays();
+      Logger.d(LOG_TAG, "Retention days: "+ retentionDays);
+      DatabaseClient.getInstance(CleverPush.context)
+              .getAppDatabase()
+              .trackEventDao()
+              .deleteDataBasedOnRetentionDays(retentionDays);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while deleting data based on retention days", e);
+    }
+  }
+
+  private boolean isAutoResubscribe() {
     return autoResubscribe;
   }
 
+  /**
+   * Sets the auto-resubscribe flag, indicating whether the application should automatically attempt
+   * to resubscribe when notification permission is granted, and the subscriptionId is null.
+   *
+   * @param autoResubscribe True to enable auto-resubscribe, False to disable it.
+   */
   public void setAutoResubscribe(boolean autoResubscribe) {
     this.autoResubscribe = autoResubscribe;
   }
@@ -3752,7 +3950,43 @@ public class CleverPush {
     return autoRequestNotificationPermission;
   }
 
+  /**
+   * Sets the autoRequestNotificationPermission flag, determining whether the application should automatically
+   * request notification permission when subscribing. If set to false, the notification permission dialog
+   * will not be displayed if permission is not given during the subscription process.
+   *
+   * @param autoRequestNotificationPermission True to automatically request notification permission during subscribe,
+   *                                           False to disable automatic notification permission requests.
+   */
   public void setAutoRequestNotificationPermission(boolean autoRequestNotificationPermission) {
     this.autoRequestNotificationPermission = autoRequestNotificationPermission;
+  }
+
+  public int getBadgeCount() {
+    return BadgeHelper.getBadgeCount(CleverPush.context);
+  }
+
+  public void setBadgeCount(int badgeCount) {
+    BadgeHelper.updateCount(badgeCount, context);
+  }
+
+  /**
+   * Method to check if the lastClickedNotificationTime is within 60 minutes of current date and time
+   * */
+  private boolean isWithin60Minutes(String lastClickedNotificationTime) {
+    if (lastClickedNotificationTime == null || lastClickedNotificationTime.isEmpty()) {
+      return false;
+    }
+    try {
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      Date lastClickedTime = sdf.parse(lastClickedNotificationTime);
+      Date currentTime = Calendar.getInstance().getTime();
+      long diffInMilliseconds = Math.abs(currentTime.getTime() - lastClickedTime.getTime());
+      long diffInMinutes = diffInMilliseconds / (60 * 1000);
+      return diffInMinutes <= 60;
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error parsing date", e);
+      return false;
+    }
   }
 }

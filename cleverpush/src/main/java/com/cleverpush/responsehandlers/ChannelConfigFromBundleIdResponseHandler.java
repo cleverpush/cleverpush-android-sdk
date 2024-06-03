@@ -41,7 +41,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
             initializeListener.onInitializationSuccess();
           }
         } catch (Throwable ex) {
-          Logger.e(LOG_TAG, ex.getMessage(), ex);
+          Logger.e(LOG_TAG, "Error in onSuccess of fetch Channel Config via Package Name.", ex);
         }
       }
 
@@ -54,6 +54,7 @@ public class ChannelConfigFromBundleIdResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
           if (initializeListener != null) {
             initializeListener.onInitializationFailure(throwable);

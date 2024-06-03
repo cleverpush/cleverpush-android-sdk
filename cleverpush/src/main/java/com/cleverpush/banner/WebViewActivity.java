@@ -9,6 +9,7 @@ import android.webkit.WebView;
 import android.widget.ImageView;
 
 import com.cleverpush.R;
+import com.cleverpush.util.Logger;
 
 public class WebViewActivity extends Activity {
 
@@ -25,29 +26,46 @@ public class WebViewActivity extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_web_view);
     handleBundleData(getIntent().getExtras());
-
   }
 
   private void handleBundleData(Bundle extras) {
-    if (extras.containsKey("url")) {
-      url = extras.getString("url");
-      init();
+    try {
+      if (extras.containsKey("url")) {
+        url = extras.getString("url");
+        init();
+      }
+    } catch (Exception e) {
+      Logger.e("CleverPush", "WebViewActivity handleBundleData Exception: " + e.getLocalizedMessage(), e);
     }
   }
 
   @SuppressLint("SetJavaScriptEnabled")
   private void init() {
-    WebView webView = findViewById(R.id.webView);
-    ImageView closeButton = findViewById(R.id.ivClose);
+    try {
+      WebView webView = findViewById(R.id.webView);
+      ImageView closeButton = findViewById(R.id.ivClose);
 
-    webView.getSettings().setJavaScriptEnabled(true);
-    webView.loadUrl(url);
-
-    closeButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        finish();
+      if (webView == null) {
+        Logger.e("CleverPush", "WebViewActivity: WebView is null");
+        return;
       }
-    });
+
+      webView.getSettings().setJavaScriptEnabled(true);
+      webView.loadUrl(url);
+
+      if (closeButton == null) {
+        Logger.e("CleverPush","WebViewActivity: Close button is null");
+        return;
+      }
+
+      closeButton.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+          finish();
+        }
+      });
+    } catch (Exception e) {
+      Logger.e("CleverPush", "Error while setting webView. " + e.getLocalizedMessage(), e);
+    }
   }
 }

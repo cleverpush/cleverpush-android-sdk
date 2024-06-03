@@ -83,7 +83,7 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
               .setNeutralButton((neverButtonText == null) ? DEFAULT_NEVER : neverButtonText, this)
               .create();
     } catch (Exception e) {
-      Logger.e(TAG, "FiveStarsDialog build Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error while build FiveStarsDialog", e);
     }
   }
 
@@ -137,7 +137,7 @@ public class FiveStarsDialog implements DialogInterface.OnClickListener {
       }
       alertDialog.hide();
     } catch (Exception e) {
-      Logger.e(TAG, "onClick Exception: " + e.getLocalizedMessage());
+      Logger.e(TAG, "Error handling dialog button click for FiveStarsDialog.", e);
     }
   }
 

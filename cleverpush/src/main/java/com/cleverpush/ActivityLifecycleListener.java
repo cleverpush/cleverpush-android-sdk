@@ -1,5 +1,6 @@
 package com.cleverpush;
 
+import static com.cleverpush.Constants.IABTCF_VendorConsents;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.app.Activity;
@@ -7,9 +8,13 @@ import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.os.Handler;
+import android.os.Looper;
+import android.preference.PreferenceManager;
+
 import com.cleverpush.util.Logger;
 
 import androidx.annotation.NonNull;
@@ -21,7 +26,7 @@ import com.cleverpush.service.CleanUpService;
 
 import java.util.ArrayList;
 
-public class ActivityLifecycleListener implements Application.ActivityLifecycleCallbacks {
+public class ActivityLifecycleListener implements Application.ActivityLifecycleCallbacks, SharedPreferences.OnSharedPreferenceChangeListener {
 
   @SuppressLint("StaticFieldLeak")
   public static Activity currentActivity;
@@ -29,6 +34,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
   private int counter = 0;
   private static SessionListener sessionListener;
   private static ArrayList<ActivityInitializedListener> activityInitializedListeners = new ArrayList<>();
+  private Handler mainHandler = new Handler(Looper.getMainLooper());
 
   public ActivityLifecycleListener(SessionListener sessionListener) {
     this.sessionListener = sessionListener;
@@ -70,7 +76,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
       try {
         CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
       } catch (IllegalStateException illegalStateException) {
-        Logger.e(LOG_TAG, illegalStateException.getMessage());
+        Logger.e(LOG_TAG, "Error starting CleanUpService.", illegalStateException);
       }
     }
 
@@ -86,11 +92,21 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
         activityInitializedListeners.clear();
       }
     } catch (Exception error) {
-      Logger.e(LOG_TAG,
-          "activityInitializedListeners != null " + (activityInitializedListeners != null) + " " + error.getMessage());
+      Logger.e(LOG_TAG, "Error handling activityInitializedListeners - "
+              + "activityInitializedListeners != null " + (activityInitializedListeners != null), error);
     }
 
     counter++;
+
+    try {
+      // Register SharedPreferences.OnSharedPreferenceChangeListener
+      new Thread(() -> {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        prefs.registerOnSharedPreferenceChangeListener(this);
+      }).start();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while registering OnSharedPreferenceChangeListener. " + e.getMessage(), e);
+    }
   }
 
   @Override
@@ -115,6 +131,16 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     }
 
     CleverPush.getInstance(CleverPush.context).resetInitSessionCalled();
+
+    try {
+      // Unregister SharedPreferences.OnSharedPreferenceChangeListener
+      new Thread(() -> {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        prefs.unregisterOnSharedPreferenceChangeListener(this);
+      }).start();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while unregistering OnSharedPreferenceChangeListener. " + e.getMessage(), e);
+    }
   }
 
   @Override
@@ -167,5 +193,16 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
   @Nullable
   public static ActivityLifecycleListener getInstance() {
     return instance;
+  }
+
+  @Override
+  public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    mainHandler.post(() -> {
+      if (key.equalsIgnoreCase(IABTCF_VendorConsents)) {
+        if (CleverPush.getInstance(CleverPush.context).getIabTcfMode() != null && CleverPush.getInstance(CleverPush.context).getIabTcfMode() != IabTcfMode.DISABLED) {
+          CleverPush.getInstance(CleverPush.context).setTCF();
+        }
+      }
+    });
   }
 }

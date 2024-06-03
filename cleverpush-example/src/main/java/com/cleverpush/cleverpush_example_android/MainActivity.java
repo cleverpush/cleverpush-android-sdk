@@ -1,4 +1,4 @@
-package com.example.cleverpush;
+package com.cleverpush.cleverpush_example_android;
 
 import static com.cleverpush.Constants.LOG_TAG;
 
@@ -13,7 +13,7 @@ import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedListener;
 import com.cleverpush.util.Logger;
-import com.example.cleverpush.databinding.ActivityMainBinding;
+import com.cleverpush.cleverpush_example_android.databinding.ActivityMainBinding;
 
 import java.util.Map;
 
@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         CleverPush.getInstance(this).enableDevelopmentMode();
+//        CleverPush.getInstance(this).setLocalTrackEventRetentionDays(20);
         CleverPush.getInstance(this).subscribe();
         CleverPush.getInstance(this).init(
                 getString(R.string.channel_id),

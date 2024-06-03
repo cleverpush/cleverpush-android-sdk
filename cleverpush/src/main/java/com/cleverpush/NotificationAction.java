@@ -11,6 +11,12 @@ public class NotificationAction implements Serializable {
   String url;
   @SerializedName("icon")
   String icon;
+  @SerializedName("phone")
+  String phone;
+  @SerializedName("id")
+  String id;
+  @SerializedName("type")
+  String type;
 
   public String getTitle() {
     return title;
@@ -22,5 +28,17 @@ public class NotificationAction implements Serializable {
 
   public String getIcon() {
     return icon;
+  }
+
+  public String getPhone() {
+    return phone;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public String getType() {
+    return type;
   }
 }

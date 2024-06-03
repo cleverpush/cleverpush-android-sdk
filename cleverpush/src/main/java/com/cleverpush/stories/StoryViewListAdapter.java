@@ -75,7 +75,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       View itemViewStoryHead = inflater.inflate(R.layout.item_view_story, parent, false);
       return new StoryViewHolder(itemViewStoryHead);
     } catch (Exception e) {
-      Logger.e(TAG, e.getMessage());
+      Logger.e(TAG, "Error in onCreateViewHolder of StoryViewListAdapter", e);
       return null;
     }
   }
@@ -129,7 +129,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         }
       });
     } catch (Exception e) {
-      Logger.e(TAG, e.getLocalizedMessage());
+      Logger.e(TAG, "Error in onBindViewHolder of StoryViewListAdapter", e);
     }
   }
 
@@ -158,7 +158,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         }
       });
     } catch (Exception exception) {
-      Logger.e(TAG, exception.getLocalizedMessage());
+      Logger.e(TAG, "Error while loading image in StoryViewListAdapter", exception);
     }
   }
 

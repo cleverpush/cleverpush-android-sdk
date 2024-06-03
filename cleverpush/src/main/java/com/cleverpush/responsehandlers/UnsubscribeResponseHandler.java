@@ -36,7 +36,7 @@ public class UnsubscribeResponseHandler {
             listener.onSuccess();
           }
         } catch (Throwable throwable) {
-          Logger.e("CleverPush", "Error", throwable);
+          Logger.e("CleverPush", "Error in onSuccess of unsubscribe request", throwable);
 
           if (listener != null) {
             listener.onFailure(throwable);
@@ -51,15 +51,22 @@ public class UnsubscribeResponseHandler {
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response +
                   "\nError: " + throwable.getMessage()
+                  , throwable
           );
+          if (listener != null) {
+            listener.onFailure(throwable);
+          }
         } else {
           Logger.e("CleverPush", "Failed while unsubscribe request." +
                   "\nStatus code: " + statusCode +
                   "\nResponse: " + response
           );
-        }
-        if (listener != null) {
-          listener.onFailure(throwable);
+          if (listener != null) {
+            Exception genericException = new Exception("Failed while unsubscribe request." +
+                    "\nStatus code: " + statusCode +
+                    "\nResponse: " + response);
+            listener.onFailure(genericException);
+          }
         }
       }
     };
