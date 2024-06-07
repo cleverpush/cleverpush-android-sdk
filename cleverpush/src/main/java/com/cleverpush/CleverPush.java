@@ -2739,15 +2739,12 @@ public class CleverPush {
           });
         });
 
-        ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context).
-                getAppDatabase()
-                .trackEventDao()
-                .getBannerTrackEvent(eventId);
-        if (bannerTrackEvents.size() > 0) {
-          DatabaseClient.getInstance(CleverPush.context)
-                  .getAppDatabase()
-                  .trackEventDao()
-                  .increaseCount(eventId, getCurrentDateTime());
+        if (properties != null) {
+          for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            handleBannerTrackEvent(eventId, entry.getKey(), entry.getValue().toString());
+          }
+        } else {
+          handleBannerTrackEvent(eventId, "", "");
         }
 
         TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
@@ -2761,6 +2758,20 @@ public class CleverPush {
         Logger.e(LOG_TAG, message, ex);
       }
     });
+  }
+
+  private void handleBannerTrackEvent(String eventId, String eventProperty, String eventPropertyValue) {
+    ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context)
+        .getAppDatabase()
+        .trackEventDao()
+        .getBannerTrackEvent(eventId, eventProperty, eventPropertyValue);
+
+    if (bannerTrackEvents.size() > 0) {
+      DatabaseClient.getInstance(CleverPush.context)
+          .getAppDatabase()
+          .trackEventDao()
+          .increaseCount(eventId, getCurrentDateTime(), eventProperty, eventPropertyValue);
+    }
   }
 
   public void triggerFollowUpEvent(String eventName) {
