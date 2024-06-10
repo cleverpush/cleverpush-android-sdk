@@ -829,11 +829,11 @@ public class AppBannerModule {
 
         for (TableBannerTrackEvent bannerTrackEvent : bannerTrackEvents) {
           int count = bannerTrackEvent.getCount();
-          Logger.d(TAG, "kDDpp4H9Xo3YqXxXT count: " + count);
+          String property = bannerTrackEvent.getProperty();
           String createdDate = bannerTrackEvent.getCreatedDateTime();
           int pastDays = getDaysDifference(createdDate);
 
-          if (pastDays > Integer.parseInt(bannerTrackEvent.getProperty())) {
+          if (pastDays > Integer.parseInt(property)) {
             continue;
           }
 
