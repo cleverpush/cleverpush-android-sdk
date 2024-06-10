@@ -855,7 +855,7 @@ public class AppBannerModule {
     for (BannerTriggerConditionEventProperty eventProperty : eventProperties) {
       boolean propertyMatched = false;
       for (TriggeredEvent triggeredEvent : events) {
-        if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(event)) {
+        if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(event) || triggeredEvent.getProperties() == null) {
           continue;
         }
         String propertyValue = String.valueOf(triggeredEvent.getProperties().get(eventProperty.getProperty()));
