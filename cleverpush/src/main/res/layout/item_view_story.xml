@@ -1,17 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/parentLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="5dp">
 
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/ivChallenge"
-        android:layout_width="75dp"
-        android:layout_height="75dp"
-        android:padding="5dp" />
+    <LinearLayout
+        android:id="@+id/borderLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardViewShadow"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:background="@android:color/transparent"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:cardCornerRadius="50dp">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/ivChallengeCardView"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                app:cardCornerRadius="50dp">
+
+                <ImageView
+                    android:id="@+id/ivChallenge"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
+                    android:scaleType="centerCrop" />
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvTitle"
@@ -20,7 +47,6 @@
         android:layout_marginTop="10dp"
         android:gravity="center_horizontal"
         android:textColor="#000"
-        android:textSize="12dp" />
-
+        android:textSize="12sp" />
 
 </LinearLayout>

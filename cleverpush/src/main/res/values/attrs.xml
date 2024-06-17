@@ -16,6 +16,14 @@
         <attr name="title_text_size" format="dimension" />
         <attr name="story_icon_height" format="dimension" />
         <attr name="story_icon_width" format="dimension" />
+        <attr name="story_icon_corner_radius" format="dimension" />
+        <attr name="story_icon_space" format="dimension" />
+        <attr name="story_icon_shadow" format="boolean" />
+        <attr name="border_visibility" format="enum">
+            <enum name="gone" value="8" />
+            <enum name="invisible" value="4" />
+            <enum name="visible" value="0" />
+        </attr>
     </declare-styleable>
 
     <declare-styleable name="InboxView">
