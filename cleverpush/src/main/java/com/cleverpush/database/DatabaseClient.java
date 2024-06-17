@@ -3,6 +3,8 @@ package com.cleverpush.database;
 import android.content.Context;
 
 import androidx.room.Room;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 public class DatabaseClient {
 
@@ -15,7 +17,7 @@ public class DatabaseClient {
     appDatabase = Room.databaseBuilder(mCtx, CleverPushDatabase.class, "CleverPushDatabase")
             .fallbackToDestructiveMigration()
             .allowMainThreadQueries()
-            .addMigrations()
+            .addMigrations(MIGRATION_1_2)
             .build();
   }
 
@@ -29,4 +31,18 @@ public class DatabaseClient {
   public CleverPushDatabase getAppDatabase() {
     return appDatabase;
   }
+
+  Migration MIGRATION_1_2 = new Migration(1, 2) {
+    @Override
+    public void migrate(SupportSQLiteDatabase database) {
+      // add column in TableBannerTrackEvent
+      database.execSQL("ALTER TABLE cleverpush_tracked_events "
+          + " ADD COLUMN eventPropertyRelation TEXT");
+      database.execSQL("ALTER TABLE cleverpush_tracked_events "
+          + " ADD COLUMN eventProperty TEXT");
+      database.execSQL("ALTER TABLE cleverpush_tracked_events "
+          + " ADD COLUMN eventPropertyValue TEXT");
+    }
+  };
+
 }

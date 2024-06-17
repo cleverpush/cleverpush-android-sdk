@@ -29,6 +29,12 @@ public class TableBannerTrackEvent {
   private String createdDateTime;
   @ColumnInfo(name = "updatedDateTime")
   private String updatedDateTime;
+  @ColumnInfo(name = "eventPropertyRelation")
+  private String eventPropertyRelation;
+  @ColumnInfo(name = "eventProperty")
+  private String eventProperty;
+  @ColumnInfo(name = "eventPropertyValue")
+  private String eventPropertyValue;
 
   public int getId() {
     return id;
@@ -116,5 +122,29 @@ public class TableBannerTrackEvent {
 
   public void setUpdatedDateTime(String updatedDateTime) {
     this.updatedDateTime = updatedDateTime;
+  }
+
+  public String getEventPropertyRelation() {
+    return eventPropertyRelation;
+  }
+
+  public void setEventPropertyRelation(String eventPropertyRelation) {
+    this.eventPropertyRelation = eventPropertyRelation;
+  }
+
+  public String getEventProperty() {
+    return eventProperty;
+  }
+
+  public void setEventProperty(String eventProperty) {
+    this.eventProperty = eventProperty;
+  }
+
+  public String getEventPropertyValue() {
+    return eventPropertyValue;
+  }
+
+  public void setEventPropertyValue(String eventPropertyValue) {
+    this.eventPropertyValue = eventPropertyValue;
   }
 }
