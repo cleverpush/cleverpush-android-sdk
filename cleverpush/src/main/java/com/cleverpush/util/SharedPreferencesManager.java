@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.cleverpush.CleverPushPreferences;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -25,7 +27,7 @@ public class SharedPreferencesManager {
     return sharedPreferences;
   }
 
-  /*
+  /**
    * Migrate default shared preferences to CleverPush shared preferences
    * This method copies all key-value pairs from the default shared preferences to CleverPush shared preferences.
    * */
@@ -34,29 +36,87 @@ public class SharedPreferencesManager {
       SharedPreferences defaultPreferences = PreferenceManager.getDefaultSharedPreferences(context);
       SharedPreferences sdkPreferences = context.getSharedPreferences(SDK_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
+      // Define the keys to be migrated
+      String[] keysToMigrate = {
+          CleverPushPreferences.FCM_TOKEN,
+          CleverPushPreferences.HMS_TOKEN,
+          CleverPushPreferences.ADM_TOKEN,
+          CleverPushPreferences.CHANNEL_ID,
+          CleverPushPreferences.SUBSCRIPTION_ID,
+          CleverPushPreferences.SUBSCRIPTION_LAST_SYNC,
+          CleverPushPreferences.SUBSCRIPTION_TAGS,
+          CleverPushPreferences.SUBSCRIPTION_TOPICS,
+          CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION,
+          CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES,
+          CleverPushPreferences.SUBSCRIPTION_LANGUAGE,
+          CleverPushPreferences.SUBSCRIPTION_COUNTRY,
+          CleverPushPreferences.SUBSCRIPTION_CREATED_AT,
+          CleverPushPreferences.NOTIFICATIONS_JSON,
+          CleverPushPreferences.LAST_NOTIFICATION_ID,
+          CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID,
+          CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME,
+          CleverPushPreferences.APP_OPENS,
+          CleverPushPreferences.APP_REVIEW_SHOWN,
+          CleverPushPreferences.PENDING_TOPICS_DIALOG,
+          CleverPushPreferences.APP_BANNER_SESSIONS,
+          CleverPushPreferences.APP_BANNERS_DISABLED,
+          CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL,
+          CleverPushPreferences.APP_OPENED_STORIES,
+          CleverPushPreferences.APP_BANNER_SHOWING,
+          CleverPushPreferences.UNSUBSCRIBED,
+          CleverPushPreferences.TOPIC_LAST_CHECKED,
+          CleverPushPreferences.LAST_TIME_AUTO_SHOWED,
+          CleverPushPreferences.NOTIFICATION_STYLE,
+          CleverPushPreferences.DEVICE_ID,
+          CleverPushPreferences.SILENT_PUSH_APP_BANNER
+      };
+
       // Start migration
       SharedPreferences.Editor editor = sdkPreferences.edit();
+      for (String key : keysToMigrate) {
+        if (defaultPreferences.contains(key)) {
+          Object value = defaultPreferences.getAll().get(key);
+
+          // Handle different data types
+          if (value instanceof String) {
+            editor.putString(key, (String) value);
+          } else if (value instanceof Boolean) {
+            editor.putBoolean(key, (Boolean) value);
+          } else if (value instanceof Integer) {
+            editor.putInt(key, (Integer) value);
+          } else if (value instanceof Float) {
+            editor.putFloat(key, (Float) value);
+          } else if (value instanceof Long) {
+            editor.putLong(key, (Long) value);
+          } else if (value instanceof Set<?>) {
+            Set<String> stringSet = (Set<String>) value;
+            editor.putStringSet(key, stringSet);
+          }
+        }
+      }
+
       Map<String, ?> allEntries = defaultPreferences.getAll();
       for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
         String key = entry.getKey();
         Object value = entry.getValue();
 
-        // Handle different data types
-        if (value instanceof String) {
-          editor.putString(key, (String) value);
-        } else if (value instanceof Boolean) {
-          editor.putBoolean(key, (Boolean) value);
-        } else if (value instanceof Integer) {
-          editor.putInt(key, (Integer) value);
-        } else if (value instanceof Float) {
-          editor.putFloat(key, (Float) value);
-        } else if (value instanceof Long) {
-          editor.putLong(key, (Long) value);
-        } else if (value instanceof Set<?>) {
-          Set<String> stringSet = (Set<String>) value;
-          editor.putStringSet(key, stringSet);
+        if (key.contains("cleverpush")) {
+          // Handle different data types
+          if (value instanceof String) {
+            editor.putString(key, (String) value);
+          } else if (value instanceof Boolean) {
+            editor.putBoolean(key, (Boolean) value);
+          } else if (value instanceof Integer) {
+            editor.putInt(key, (Integer) value);
+          } else if (value instanceof Float) {
+            editor.putFloat(key, (Float) value);
+          } else if (value instanceof Long) {
+            editor.putLong(key, (Long) value);
+          } else if (value instanceof Set<?>) {
+            Set<String> stringSet = (Set<String>) value;
+            editor.putStringSet(key, stringSet);
+          }
         }
-        // Add handling for other data types if necessary
       }
       editor.apply();
     } catch (Exception e) {
