@@ -197,12 +197,14 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             break;
           }
         }
-      } else if (action.getDismiss()) {
-        appBannerPopup.dismiss();
       } else {
         if (isLastActionElement) {
           appBannerPopup.moveToNextScreen();
         }
+      }
+
+      if (action.getDismiss()) {
+        appBannerPopup.dismiss();
       }
 
       if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
