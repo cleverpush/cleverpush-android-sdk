@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.23 (20.06.2024)
+* Fixed an issue in `AppBanner` where the banner would not close when an URL was opened in the web view.
+
 ## 1.33.22 (17.06.2024)
 * Added more customization option in `StoryView`. (story_icon_corner_radius, story_icon_space, story_icon_shadow, border_visibility)
 * Added feature in `AppBanner` to support event property filters in targeting section.
