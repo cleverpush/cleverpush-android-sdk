@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.os.Handler;
 import android.util.Base64;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -142,6 +143,21 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       }
     } catch (Exception e) {
       Logger.e(TAG, "Error in AppBanner onBindViewHolder.", e);
+    }
+
+    try {
+      new Handler().postDelayed(new Runnable() {
+        @Override
+        public void run() {
+          if (!isBannerPositionFull()) {
+            appBannerPopup.getViewPager2().setPageTransformer((page, position1) -> {
+              appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+            });
+          }
+        }
+      }, 1000);
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while updating child height in AppBannerCarouselAdapter onBindViewHolder. " + e.getLocalizedMessage(), e);
     }
   }
 
@@ -352,11 +368,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) img.getLayoutParams();
 
-    if (!isBannerPositionFull()) {
-      layoutParams.height = 0;
-      layoutParams.dimensionRatio = "1";
-    }
-
     img.setLayoutParams(layoutParams);
 
     ConstraintSet imgConstraints = new ConstraintSet();
@@ -396,35 +407,33 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         final Bitmap bitmap = BitmapFactory.decodeStream(in);
 
         activity.runOnUiThread(() -> {
-          if (!isBannerPositionFull()) {
-            if (bitmap != null) {
-              // Calculate aspect ratio and adjust ImageView size
-              float imageAspectRatio = (float) bitmap.getWidth() / bitmap.getHeight();
-              int imageWidth = img.getWidth();  // Get the current width of ImageView
-              int imageHeight = (int) (imageWidth / imageAspectRatio);  // Calculate height based on aspect ratio
-              ViewGroup.LayoutParams imgLayoutParams = img.getLayoutParams();
-              imgLayoutParams.width = imageWidth;
-              imgLayoutParams.height = imageHeight;
-              img.setLayoutParams(imgLayoutParams);
-            }
-
-            appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
-              appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
-            });
-          }
-
           if (isGif) {
             Glide.with(CleverPush.context)
-                    .asGif()
-                    .load(imageUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(img);
+                .asGif()
+                .load(imageUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(img);
           } else {
             if (bitmap != null) {
               img.setImageBitmap(bitmap);
             }
           }
           progressBar.setVisibility(View.GONE);
+
+          try {
+            new Handler().postDelayed(new Runnable() {
+              @Override
+              public void run() {
+                if (!isBannerPositionFull()) {
+                  appBannerPopup.getViewPager2().setPageTransformer((page, position1) -> {
+                    appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+                  });
+                }
+              }
+            }, 1000);
+          } catch (Exception e) {
+            Logger.e(TAG, "Error while updating child height in composeImageBlock. " + e.getLocalizedMessage(), e);
+          }
         });
 
       } catch (Exception e) {
