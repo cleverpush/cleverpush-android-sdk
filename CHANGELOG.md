@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.24 (25.06.2024)
+* Fixed an issue in `AppBanner` where the banner image is not displaying according to scale when banner position is center, top or bottom.
+
 ## 1.33.23 (20.06.2024)
 * Fixed an issue in `AppBanner` where the banner would not close when an URL was opened in the web view.
 
