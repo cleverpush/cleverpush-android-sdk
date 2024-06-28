@@ -897,18 +897,37 @@ public class CleverPush {
    * even when it is not in the foreground, which qualifies as background location access.
    */
   private void showSettingsDialog(Activity activity) {
-    new AlertDialog.Builder(activity)
-        .setTitle("Permission Required")
-        .setMessage("This app needs background location access to enable geofencing features. Please enable this permission in the app settings." +
-            "\n\nPermission -> Location -> Allow all the time")
-        .setPositiveButton("Go to Settings", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-            requestBackgroundLocationPermission(activity);
-          }
-        })
-        .setNegativeButton("Cancel", null)
-        .show();
+    try {
+      Locale currentLocale = Locale.getDefault(); // Or use a more appropriate method to get the current locale
+      String title, message, positiveButton, negativeButton;
+
+      if ("de".equals(currentLocale.getLanguage())) {
+        title = "Erlaubnis erforderlich";
+        message = "Diese App benötigt Hintergrundzugriff auf den Standort, um Geofencing-Funktionen zu aktivieren. Bitte aktivieren Sie diese Berechtigung in den App-Einstellungen." +
+            "\n\nBerechtigung -> Standort -> Immer zulassen";
+        positiveButton = "Gehe zu den Einstellungen";
+        negativeButton = "Stornieren";
+      } else {
+        title = "Permission Required";
+        message = "This app needs background location access to enable geofencing features. Please enable this permission in the app settings." +
+            "\n\nPermission -> Location -> Allow all the time";
+        positiveButton = "Go to Settings";
+        negativeButton = "Cancel";
+      }
+      new AlertDialog.Builder(activity)
+          .setTitle(title)
+          .setMessage(message)
+          .setPositiveButton(positiveButton, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+              requestBackgroundLocationPermission(activity);
+            }
+          })
+          .setNegativeButton(negativeButton, null)
+          .show();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while displaying settings dialog. " + e.getLocalizedMessage(), e);
+    }
   }
 
   private void requestBackgroundLocationPermission(Activity activity) {
