@@ -10,6 +10,7 @@ import android.app.Application;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -17,10 +18,12 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
@@ -872,8 +875,12 @@ public class CleverPush {
         new PermissionActivity.PermissionCallback() {
           @Override
           public void onGrant() {
-            if (geofenceList == null || geofenceList.size() == 0) {
-              initGeoFences();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+              showSettingsDialog(dialogActivity);
+            } else {
+              if (geofenceList == null || geofenceList.size() == 0) {
+                initGeoFences();
+              }
             }
           }
 
@@ -882,6 +889,37 @@ public class CleverPush {
 
           }
         });
+  }
+
+  /**
+   * For geofencing, ACCESS_BACKGROUND_LOCATION permission is needed starting from Android 10 (API level 29).
+   * This is because geofencing is a feature that typically requires app to receive location updates
+   * even when it is not in the foreground, which qualifies as background location access.
+   */
+  private void showSettingsDialog(Activity activity) {
+    new AlertDialog.Builder(activity)
+        .setTitle("Permission Required")
+        .setMessage("This app needs background location access to enable geofencing features. Please enable this permission in the app settings." +
+            "\n\nPermission -> Location -> Allow all the time")
+        .setPositiveButton("Go to Settings", new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+            requestBackgroundLocationPermission(activity);
+          }
+        })
+        .setNegativeButton("Cancel", null)
+        .show();
+  }
+
+  private void requestBackgroundLocationPermission(Activity activity) {
+    try {
+      Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+      Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
+      intent.setData(uri);
+      activity.startActivity(intent);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while opening location permission screen. " + e.getLocalizedMessage(), e);
+    }
   }
 
   /**
@@ -925,8 +963,15 @@ public class CleverPush {
    * to check if app has location permission
    */
   public boolean hasLocationPermission() {
-    return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-        == PackageManager.PERMISSION_GRANTED;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+          == PackageManager.PERMISSION_GRANTED &&
+          ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+              == PackageManager.PERMISSION_GRANTED;
+    } else {
+      return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+          == PackageManager.PERMISSION_GRANTED;
+    }
   }
 
   /**
@@ -1208,11 +1253,13 @@ public class CleverPush {
                       .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
+                          Logger.i(LOG_TAG, "GoogleApiClient onConnected success");
                         }
                       })
                       .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                          Logger.e(LOG_TAG, "GoogleApiClient onConnected failure. " + e.getLocalizedMessage(), e);
                         }
                       });
             }

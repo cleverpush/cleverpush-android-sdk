@@ -126,7 +126,9 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
 
           if (geoFenceTimeoutCompleted) {
             geoFenceTimeoutCompleted = false;
-            countDownTimer.cancel();
+            if (countDownTimer != null) {
+              countDownTimer.cancel();
+            }
             geoFenceIndex += 1;
             geoFenceHandleTimer(geofencingEvent);
           }
