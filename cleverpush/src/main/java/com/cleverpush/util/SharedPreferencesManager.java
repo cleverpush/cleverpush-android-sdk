@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 
 import com.cleverpush.CleverPushPreferences;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,67 +31,70 @@ public class SharedPreferencesManager {
   /**
    * Migrate default shared preferences to CleverPush shared preferences
    * This method copies all key-value pairs from the default shared preferences to CleverPush shared preferences.
-   * */
+   */
   public static void migrateSharedPreferences(Context context) {
     try {
       SharedPreferences defaultPreferences = PreferenceManager.getDefaultSharedPreferences(context);
       SharedPreferences sdkPreferences = context.getSharedPreferences(SDK_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
       // Define the keys to be migrated
-      String[] keysToMigrate = {
-          CleverPushPreferences.FCM_TOKEN,
-          CleverPushPreferences.HMS_TOKEN,
-          CleverPushPreferences.ADM_TOKEN,
-          CleverPushPreferences.CHANNEL_ID,
-          CleverPushPreferences.SUBSCRIPTION_ID,
-          CleverPushPreferences.SUBSCRIPTION_LAST_SYNC,
-          CleverPushPreferences.SUBSCRIPTION_TAGS,
-          CleverPushPreferences.SUBSCRIPTION_TOPICS,
-          CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION,
-          CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES,
-          CleverPushPreferences.SUBSCRIPTION_LANGUAGE,
-          CleverPushPreferences.SUBSCRIPTION_COUNTRY,
-          CleverPushPreferences.SUBSCRIPTION_CREATED_AT,
-          CleverPushPreferences.NOTIFICATIONS_JSON,
-          CleverPushPreferences.LAST_NOTIFICATION_ID,
-          CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID,
-          CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME,
-          CleverPushPreferences.APP_OPENS,
-          CleverPushPreferences.APP_REVIEW_SHOWN,
-          CleverPushPreferences.PENDING_TOPICS_DIALOG,
-          CleverPushPreferences.APP_BANNER_SESSIONS,
-          CleverPushPreferences.APP_BANNERS_DISABLED,
-          CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL,
-          CleverPushPreferences.APP_OPENED_STORIES,
-          CleverPushPreferences.APP_BANNER_SHOWING,
-          CleverPushPreferences.UNSUBSCRIBED,
-          CleverPushPreferences.TOPIC_LAST_CHECKED,
-          CleverPushPreferences.LAST_TIME_AUTO_SHOWED,
-          CleverPushPreferences.NOTIFICATION_STYLE,
-          CleverPushPreferences.DEVICE_ID,
-          CleverPushPreferences.SILENT_PUSH_APP_BANNER
-      };
+      Map<String, String> keysToMigrate = new HashMap<>();
+      keysToMigrate.put("fcmToken", CleverPushPreferences.FCM_TOKEN);
+      keysToMigrate.put("hmsToken", CleverPushPreferences.HMS_TOKEN);
+      keysToMigrate.put("admToken", CleverPushPreferences.ADM_TOKEN);
+      keysToMigrate.put("channelId", CleverPushPreferences.CHANNEL_ID);
+      keysToMigrate.put("subscriptionId", CleverPushPreferences.SUBSCRIPTION_ID);
+      keysToMigrate.put("subscriptionLastSync", CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
+      keysToMigrate.put("subscriptionTags", CleverPushPreferences.SUBSCRIPTION_TAGS);
+      keysToMigrate.put("subscriptionTopics", CleverPushPreferences.SUBSCRIPTION_TOPICS);
+      keysToMigrate.put("subscriptionTopicsVersion", CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
+      keysToMigrate.put("subscriptionAttributes", CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+      keysToMigrate.put("subscriptionLanguage", CleverPushPreferences.SUBSCRIPTION_LANGUAGE);
+      keysToMigrate.put("subscriptionCountry", CleverPushPreferences.SUBSCRIPTION_COUNTRY);
+      keysToMigrate.put("subscriptionCreatedAt", CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
+      keysToMigrate.put("notifications", CleverPushPreferences.NOTIFICATIONS);
+      keysToMigrate.put("notificationsJson", CleverPushPreferences.NOTIFICATIONS_JSON);
+      keysToMigrate.put("lastNotificationId", CleverPushPreferences.LAST_NOTIFICATION_ID);
+      keysToMigrate.put("lastClickedNotificationId", CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID);
+      keysToMigrate.put("lastClickedNotificationTime", CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME);
+      keysToMigrate.put("appOpens", CleverPushPreferences.APP_OPENS);
+      keysToMigrate.put("appReviewShownAt", CleverPushPreferences.APP_REVIEW_SHOWN);
+      keysToMigrate.put("pendingTopicsDialog", CleverPushPreferences.PENDING_TOPICS_DIALOG);
+      keysToMigrate.put("appBannerSessions", CleverPushPreferences.APP_BANNER_SESSIONS);
+      keysToMigrate.put("appBannersDisabled", CleverPushPreferences.APP_BANNERS_DISABLED);
+      keysToMigrate.put("subscriptionTopicsDeselectAll", CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL);
+      keysToMigrate.put("openedStories", CleverPushPreferences.APP_OPENED_STORIES);
+      keysToMigrate.put("appBannerShowing", CleverPushPreferences.APP_BANNER_SHOWING);
+      keysToMigrate.put("unsubscribed", CleverPushPreferences.UNSUBSCRIBED);
+      keysToMigrate.put("topicLastChecked", CleverPushPreferences.TOPIC_LAST_CHECKED);
+      keysToMigrate.put("lastTimeAutoShowed", CleverPushPreferences.LAST_TIME_AUTO_SHOWED);
+      keysToMigrate.put("notificationStyle", CleverPushPreferences.NOTIFICATION_STYLE);
+      keysToMigrate.put("deviceId", CleverPushPreferences.DEVICE_ID);
+      keysToMigrate.put("silentPushBanners", CleverPushPreferences.SILENT_PUSH_APP_BANNER);
 
       // Start migration
       SharedPreferences.Editor editor = sdkPreferences.edit();
-      for (String key : keysToMigrate) {
-        if (defaultPreferences.contains(key)) {
-          Object value = defaultPreferences.getAll().get(key);
+      for (Map.Entry<String, String> entry : keysToMigrate.entrySet()) {
+        String oldKey = entry.getKey();
+        String newKey = entry.getValue();
+
+        if (defaultPreferences.contains(oldKey)) {
+          Object value = defaultPreferences.getAll().get(oldKey);
 
           // Handle different data types
           if (value instanceof String) {
-            editor.putString(key, (String) value);
+            editor.putString(newKey, (String) value);
           } else if (value instanceof Boolean) {
-            editor.putBoolean(key, (Boolean) value);
+            editor.putBoolean(newKey, (Boolean) value);
           } else if (value instanceof Integer) {
-            editor.putInt(key, (Integer) value);
+            editor.putInt(newKey, (Integer) value);
           } else if (value instanceof Float) {
-            editor.putFloat(key, (Float) value);
+            editor.putFloat(newKey, (Float) value);
           } else if (value instanceof Long) {
-            editor.putLong(key, (Long) value);
+            editor.putLong(newKey, (Long) value);
           } else if (value instanceof Set<?>) {
             Set<String> stringSet = (Set<String>) value;
-            editor.putStringSet(key, stringSet);
+            editor.putStringSet(newKey, stringSet);
           }
         }
       }
