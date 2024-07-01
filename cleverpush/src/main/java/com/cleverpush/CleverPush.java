@@ -898,7 +898,7 @@ public class CleverPush {
    */
   private void showSettingsDialog(Activity activity) {
     try {
-      Locale currentLocale = Locale.getDefault(); // Or use a more appropriate method to get the current locale
+      Locale currentLocale = Locale.getDefault();
       String title, message, positiveButton, negativeButton;
 
       if ("de".equals(currentLocale.getLanguage())) {
@@ -937,7 +937,7 @@ public class CleverPush {
       intent.setData(uri);
       activity.startActivity(intent);
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error while opening location permission screen. " + e.getLocalizedMessage(), e);
+      Logger.e(LOG_TAG, "Error while opening application's detail setting screen. " + e.getLocalizedMessage(), e);
     }
   }
 
