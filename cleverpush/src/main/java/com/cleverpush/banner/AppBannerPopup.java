@@ -10,7 +10,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
@@ -45,6 +44,7 @@ import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
 import com.cleverpush.util.CustomExceptionHandler;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -170,7 +170,7 @@ public class AppBannerPopup {
   }
 
   private void toggleShowing(boolean isShowing) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, isShowing);
     editor.apply();

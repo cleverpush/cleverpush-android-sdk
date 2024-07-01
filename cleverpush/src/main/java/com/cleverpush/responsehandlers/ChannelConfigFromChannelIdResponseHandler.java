@@ -4,13 +4,13 @@ import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 
 import org.json.JSONObject;
 
@@ -87,7 +87,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
   }
 
   public SharedPreferences getSharedPreferences(Context context) {
-    return PreferenceManager.getDefaultSharedPreferences(context);
+    return SharedPreferencesManager.getSharedPreferences(context);
   }
 
   public Context getContext() {

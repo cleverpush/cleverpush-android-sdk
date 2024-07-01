@@ -7,13 +7,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.SubscribedCallbackListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,7 +44,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
   void syncSubscription(String token, SubscribedCallbackListener subscribedListener, String senderId, boolean isRetry) {
     Logger.d(LOG_TAG, "syncSubscription");
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.context);
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(this.context);
     if (this.type == SubscriptionManagerType.ADM) {
       sharedPreferences.edit().putString(CleverPushPreferences.ADM_TOKEN, token).apply();
     } else if (this.type == SubscriptionManagerType.HMS) {

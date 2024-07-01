@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
@@ -20,6 +19,7 @@ import com.cleverpush.util.LifecycleUtils;
 import com.cleverpush.util.LimitedSizeQueue;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -62,7 +62,7 @@ public class NotificationDataProcessor {
     cleverPush.trackNotificationDelivered(notificationId, subscriptionId);
 
     boolean dontShowNotification = false;
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
 
     // default behaviour: do not show notification if application is in the foreground

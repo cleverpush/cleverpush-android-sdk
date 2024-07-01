@@ -2,13 +2,13 @@ package com.cleverpush.responsehandlers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.listener.RemoveTagCompletedListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -71,7 +71,7 @@ public class RemoveSubscriptionTagResponseHandler {
   }
 
   public SharedPreferences getSharedPreferences(Context context) {
-    return PreferenceManager.getDefaultSharedPreferences(context);
+    return SharedPreferencesManager.getSharedPreferences(CleverPush.context);
   }
 
   public Context getContext() {
