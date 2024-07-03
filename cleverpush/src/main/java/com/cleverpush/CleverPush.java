@@ -10,7 +10,6 @@ import android.app.Application;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -18,12 +17,10 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
@@ -92,6 +89,7 @@ import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
 import com.cleverpush.util.BroadcastReceiverUtils;
+import com.cleverpush.util.BackgroundLocationPermissionDialog;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
@@ -876,7 +874,7 @@ public class CleverPush {
           @Override
           public void onGrant() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-              showSettingsDialog(dialogActivity);
+              BackgroundLocationPermissionDialog.show(dialogActivity);
             } else {
               if (geofenceList == null || geofenceList.size() == 0) {
                 initGeoFences();
@@ -889,56 +887,6 @@ public class CleverPush {
 
           }
         });
-  }
-
-  /**
-   * For geofencing, ACCESS_BACKGROUND_LOCATION permission is needed starting from Android 10 (API level 29).
-   * This is because geofencing is a feature that typically requires app to receive location updates
-   * even when it is not in the foreground, which qualifies as background location access.
-   */
-  private void showSettingsDialog(Activity activity) {
-    try {
-      Locale currentLocale = Locale.getDefault();
-      String title, message, positiveButton, negativeButton;
-
-      if ("de".equals(currentLocale.getLanguage())) {
-        title = "Erlaubnis erforderlich";
-        message = "Diese App benötigt Hintergrundzugriff auf den Standort, um Geofencing-Funktionen zu aktivieren. Bitte aktivieren Sie diese Berechtigung in den App-Einstellungen." +
-            "\n\nBerechtigung -> Standort -> Immer zulassen";
-        positiveButton = "Gehe zu den Einstellungen";
-        negativeButton = "Stornieren";
-      } else {
-        title = "Permission Required";
-        message = "This app needs background location access to enable geofencing features. Please enable this permission in the app settings." +
-            "\n\nPermission -> Location -> Allow all the time";
-        positiveButton = "Go to Settings";
-        negativeButton = "Cancel";
-      }
-      new AlertDialog.Builder(activity)
-          .setTitle(title)
-          .setMessage(message)
-          .setPositiveButton(positiveButton, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-              requestBackgroundLocationPermission(activity);
-            }
-          })
-          .setNegativeButton(negativeButton, null)
-          .show();
-    } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error while displaying settings dialog. " + e.getLocalizedMessage(), e);
-    }
-  }
-
-  private void requestBackgroundLocationPermission(Activity activity) {
-    try {
-      Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-      Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
-      intent.setData(uri);
-      activity.startActivity(intent);
-    } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error while opening application's detail setting screen. " + e.getLocalizedMessage(), e);
-    }
   }
 
   /**
