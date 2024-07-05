@@ -70,6 +70,7 @@ public class Banner {
   private String description;
   private String mediaUrl;
   private List<BannerTargetEvent> eventFilters;
+  private NotificationPermission notificationPermission;
 
   private Banner() {
   }
@@ -284,6 +285,10 @@ public class Banner {
 
   public List<BannerTargetEvent> getEventFilters() {
     return eventFilters;
+  }
+
+  public NotificationPermission getNotificationPermission() {
+    return notificationPermission;
   }
 
   public static Banner create(JSONObject json) throws JSONException {
@@ -501,6 +506,9 @@ public class Banner {
       }
     }
 
+    if (json.has("notificationPermission")) {
+      banner.notificationPermission = NotificationPermission.fromString(json.optString("notificationPermission"));
+    }
 
     return banner;
   }

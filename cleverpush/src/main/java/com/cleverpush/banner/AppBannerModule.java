@@ -6,6 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.View;
@@ -21,6 +22,7 @@ import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
 import com.cleverpush.banner.models.BannerStopAtType;
 import com.cleverpush.banner.models.BannerSubscribedType;
+import com.cleverpush.banner.models.NotificationPermission;
 import com.cleverpush.banner.models.BannerTargetEvent;
 import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
@@ -531,6 +533,16 @@ public class AppBannerModule {
 
     if (banner.getSubscribedType() == BannerSubscribedType.Unsubscribed && getCleverPushInstance().isSubscribed()) {
       allowed = false;
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      if (banner.getNotificationPermission() == NotificationPermission.WithoutPermission && getCleverPushInstance().hasNotificationPermission()) {
+        allowed = false;
+      }
+
+      if (banner.getNotificationPermission() == NotificationPermission.WithPermission && !getCleverPushInstance().hasNotificationPermission()) {
+        allowed = false;
+      }
     }
 
     if (banner.getTags() != null && banner.getTags().size() > 0) {
