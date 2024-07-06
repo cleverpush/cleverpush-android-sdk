@@ -16,5 +16,5 @@ jobs:
         with:
           packages: 'tools platform-tools platforms;android-33 build-tools;31.0.0'
           cmdline-tools-version: 8092744
-      - name: Maven Publish
+      - name: Run Tests
         run: ./gradlew test --stacktrace --warning-mode=all
