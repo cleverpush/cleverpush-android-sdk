@@ -1,0 +1,36 @@
+name: CI Deploy
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  build:
+    name: Deploy new version to Maven
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout SDK
+        uses: actions/checkout@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'tools platform-tools platforms;android-33 build-tools;31.0.0'
+          cmdline-tools-version: 8092744
+      - name: Maven Publish
+        run: ./gradlew publish --warning-mode all --stacktrace
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      - name: Generate Changelog
+        run: |
+          sed -n "/$GITHUB_REF_NAME/,/^$/{/^$/q;p;}" CHANGELOG.md > ${{ github.workspace }}-CHANGELOG.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          token: ${{ secrets.RELEASE_TOKEN }}
