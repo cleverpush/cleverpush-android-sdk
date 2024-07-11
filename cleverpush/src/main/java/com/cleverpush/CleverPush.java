@@ -88,6 +88,7 @@ import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
 import com.cleverpush.util.BroadcastReceiverUtils;
+import com.cleverpush.util.BackgroundLocationPermissionDialog;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
@@ -881,8 +882,12 @@ public class CleverPush {
         new PermissionActivity.PermissionCallback() {
           @Override
           public void onGrant() {
-            if (geofenceList == null || geofenceList.size() == 0) {
-              initGeoFences();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+              BackgroundLocationPermissionDialog.show(dialogActivity);
+            } else {
+              if (geofenceList == null || geofenceList.size() == 0) {
+                initGeoFences();
+              }
             }
           }
 
@@ -934,8 +939,15 @@ public class CleverPush {
    * to check if app has location permission
    */
   public boolean hasLocationPermission() {
-    return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-        == PackageManager.PERMISSION_GRANTED;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+          == PackageManager.PERMISSION_GRANTED &&
+          ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+              == PackageManager.PERMISSION_GRANTED;
+    } else {
+      return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+          == PackageManager.PERMISSION_GRANTED;
+    }
   }
 
   /**
@@ -1217,11 +1229,13 @@ public class CleverPush {
                       .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
+                          Logger.i(LOG_TAG, "GoogleApiClient onConnected success");
                         }
                       })
                       .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                          Logger.e(LOG_TAG, "GoogleApiClient onConnected failure. " + e.getLocalizedMessage(), e);
                         }
                       });
             }
