@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.33.25 (12.07.2024)
+* Migrate default shared preferences to CleverPush shared preferences
+* Added feature in `AppBanner`, Trigger: Has Push Permission via System
+* Added ACCESS_BACKGROUND_LOCATION permission for GeoFence
+
 ## 1.33.24 (25.06.2024)
 * Fixed an issue in `AppBanner` where the banner image is not displaying according to scale when banner position is center, top or bottom.
 
