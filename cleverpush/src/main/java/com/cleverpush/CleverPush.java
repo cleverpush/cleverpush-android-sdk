@@ -1481,13 +1481,15 @@ public class CleverPush {
                     updatePendingTopicsDialog(true);
                   }
                 }
+              }
+            }
 
-                if (!isConfirmAlertShown()) {
-                  // If the confirm alert has not been tracked by the customer already,
-                  // we will track it here retroperspectively to ensure opt-in rate statistics
-                  // are correct
-                  self.setConfirmAlertShown();
-                }
+            if (isSubscriptionChanged()) {
+              if (!isConfirmAlertShown()) {
+                // If the confirm alert has not been tracked by the customer already,
+                // we will track it here retroperspectively to ensure opt-in rate statistics
+                // are correct
+                self.setConfirmAlertShown();
               }
             }
           }
@@ -3516,6 +3518,7 @@ public class CleverPush {
     try {
       subscriptionId = null;
       isSessionStartCalled = false;
+      confirmAlertShown = false;
       SharedPreferences sharedPreferences = getSharedPreferences(getContext());
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
