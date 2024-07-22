@@ -1484,13 +1484,11 @@ public class CleverPush {
               }
             }
 
-            if (isSubscriptionChanged()) {
-              if (!isConfirmAlertShown()) {
-                // If the confirm alert has not been tracked by the customer already,
-                // we will track it here retroperspectively to ensure opt-in rate statistics
-                // are correct
-                self.setConfirmAlertShown();
-              }
+            if (isSubscriptionChanged() && !isConfirmAlertShown()) {
+              // If the confirm alert has not been tracked by the customer already,
+              // we will track it here retroperspectively to ensure opt-in rate statistics
+              // are correct
+              self.setConfirmAlertShown();
             }
           }
 
