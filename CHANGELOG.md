@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.26 (23.07.2024)
+* Optimised the `setConfirmAlertShown` function.
+
 ## 1.33.25 (12.07.2024)
 * Migrate default shared preferences to CleverPush shared preferences
 * Added feature in `AppBanner`, Trigger: Has Push Permission via System
