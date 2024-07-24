@@ -20,7 +20,6 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
@@ -90,9 +89,11 @@ import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
 import com.cleverpush.util.BroadcastReceiverUtils;
 import com.cleverpush.util.DarkModeHelper;
+import com.cleverpush.util.BackgroundLocationPermissionDialog;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.MetaDataUtils;
 import com.cleverpush.util.NotificationCategorySetUp;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
@@ -130,7 +131,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.33.18";
+  public static final String SDK_VERSION = "1.33.25";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -217,9 +218,6 @@ public class CleverPush {
   public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
   private PendingIntent geofencePendingIntent;
   private GeofencingClient geofencingClient;
-
-  private String lastClickedNotificationId;
-  private long lastClickedNotificationTime;
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
@@ -460,6 +458,15 @@ public class CleverPush {
                    @Nullable final InitializeListener initializeListener) {
     this.channelId = channelId;
 
+    // Check if CleverPush SharedPreferences is created and contains the key channelId
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+    boolean containsChannelId = sharedPreferences.contains("channelId");
+
+    // If CleverPush SharedPreferences is not created or does not contain the key channelId, call migrateSharedPreferences
+    if (!containsChannelId) {
+      SharedPreferencesManager.migrateSharedPreferences(context);
+    }
+
     if (notificationReceivedListener != null) {
       this.setNotificationReceivedListener(notificationReceivedListener);
     }
@@ -527,7 +534,7 @@ public class CleverPush {
         fireInitializeListener();
       }
       // get channel config
-      getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId);
+      getChannelConfigFromChannelId(autoRegister, storedChannelId, storedSubscriptionId, initializeListener);
     } else {
       Logger.d(LOG_TAG,
           "No Channel ID specified (in AndroidManifest.xml or as firstParameter for init method), fetching config via Package Name: "
@@ -620,14 +627,14 @@ public class CleverPush {
     this.subscribedListener = subscribedListener;
   }
 
-  public void getChannelConfigFromChannelId(boolean autoRegister, String storedChannelId, String storedSubscriptionId) {
+  public void getChannelConfigFromChannelId(boolean autoRegister, String storedChannelId, String storedSubscriptionId, InitializeListener listener) {
     CleverPush instance = this;
     String configPath = "/channel/" + this.channelId + "/config";
     if (developmentMode) {
       configPath += "?t=" + System.currentTimeMillis();
     }
     CleverPushHttpClient.getWithRetry(configPath,
-        new ChannelConfigFromChannelIdResponseHandler(instance).getResponseHandler(autoRegister, storedChannelId,
+        new ChannelConfigFromChannelIdResponseHandler(instance, listener).getResponseHandler(autoRegister, storedChannelId,
             storedSubscriptionId));
   }
 
@@ -876,8 +883,12 @@ public class CleverPush {
         new PermissionActivity.PermissionCallback() {
           @Override
           public void onGrant() {
-            if (geofenceList == null || geofenceList.size() == 0) {
-              initGeoFences();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+              BackgroundLocationPermissionDialog.show(dialogActivity);
+            } else {
+              if (geofenceList == null || geofenceList.size() == 0) {
+                initGeoFences();
+              }
             }
           }
 
@@ -929,8 +940,15 @@ public class CleverPush {
    * to check if app has location permission
    */
   public boolean hasLocationPermission() {
-    return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-        == PackageManager.PERMISSION_GRANTED;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+          == PackageManager.PERMISSION_GRANTED &&
+          ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+              == PackageManager.PERMISSION_GRANTED;
+    } else {
+      return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+          == PackageManager.PERMISSION_GRANTED;
+    }
   }
 
   /**
@@ -944,7 +962,7 @@ public class CleverPush {
 
   private void savePreferencesMap(String mapKey, Map<String, Integer> inputMap) {
     Logger.d(LOG_TAG, "savePreferencesMap: " + mapKey + " - " + inputMap.toString());
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     JSONObject jsonObject = new JSONObject(inputMap);
     String jsonString = jsonObject.toString();
     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -954,7 +972,7 @@ public class CleverPush {
 
   private Map<String, Integer> loadPreferencesMap(String mapKey) {
     Map<String, Integer> outputMap = new HashMap<>();
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     try {
       String jsonString = sharedPreferences.getString(mapKey, (new JSONObject()).toString());
       JSONObject jsonObject = new JSONObject(jsonString);
@@ -972,7 +990,7 @@ public class CleverPush {
   }
 
   void checkTags(String urlStr, Map<String, ?> params) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
 
     try {
       URL url = new URL(urlStr);
@@ -1212,11 +1230,13 @@ public class CleverPush {
                       .addOnSuccessListener(getCurrentActivity(), new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
+                          Logger.i(LOG_TAG, "GoogleApiClient onConnected success");
                         }
                       })
                       .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                          Logger.e(LOG_TAG, "GoogleApiClient onConnected failure. " + e.getLocalizedMessage(), e);
                         }
                       });
             }
@@ -1313,7 +1333,6 @@ public class CleverPush {
 
       this.sessionStartedTimestamp = 0;
       this.sessionVisits = 0;
-      this.lastClickedNotificationId = null;
     }));
   }
 
@@ -1580,9 +1599,8 @@ public class CleverPush {
     }
 
     if (hasTrackingConsent) {
-      Iterator<TrackingConsentListener> iterator = trackingConsentListeners.iterator();
-      while (iterator.hasNext()) {
-        TrackingConsentListener listener = iterator.next();
+      Collection<TrackingConsentListener> copyTrackingConsentListeners = new ArrayList<>(trackingConsentListeners);
+      for (TrackingConsentListener listener : copyTrackingConsentListeners) {
         listener.ready();
       }
     }
@@ -1971,17 +1989,17 @@ public class CleverPush {
   }
 
   public boolean hasSubscriptionTopics() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TOPICS);
   }
 
   public boolean hasDeSelectAll() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return sharedPreferences.getBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, false);
   }
 
   public void setDeSelectAll(Boolean deSelectAll) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.SUBSCRIPTION_TOPICS_DESELECT_ALL, deSelectAll);
     editor.apply();
@@ -2473,7 +2491,7 @@ public class CleverPush {
 
   private CleverPushHttpClient.ResponseHandler pushSubscriptionAttributeValueResponseHandler(
       Map<String, Object> subscriptionAttributes) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
@@ -2551,7 +2569,7 @@ public class CleverPush {
 
   private CleverPushHttpClient.ResponseHandler pullSubscriptionAttributeValueResponseHandler(
       Map<String, Object> subscriptionAttributes) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
@@ -2614,7 +2632,7 @@ public class CleverPush {
   }
 
   public void setSubscriptionLanguage(String language) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     String currentLanguage = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
     if (currentLanguage == null || language != null && !currentLanguage.equals(language)) {
       SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -2627,7 +2645,7 @@ public class CleverPush {
   }
 
   public void setSubscriptionCountry(String country) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     String currentCountry = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_COUNTRY, null);
     if (currentCountry == null || country != null && !currentCountry.equals(country)) {
       SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -2726,8 +2744,12 @@ public class CleverPush {
                 jsonBody.put("properties", propertiesObject);
                 jsonBody.put("subscriptionId", subscriptionId);
 
-                if (this.lastClickedNotificationId != null) {
-                  jsonBody.put("notificationId", this.lastClickedNotificationId);
+                SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+                String lastClickedNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, null);
+                String lastClickedNotificationTime = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME, null);
+
+                if (lastClickedNotificationId != null && !lastClickedNotificationId.isEmpty() && isWithin60Minutes(lastClickedNotificationTime)) {
+                  jsonBody.put("notificationId", lastClickedNotificationId);
                 }
               } catch (JSONException ex) {
                 Logger.e(LOG_TAG, "Error creating trackEvent request parameter", ex);
@@ -2741,15 +2763,12 @@ public class CleverPush {
           });
         });
 
-        ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context).
-                getAppDatabase()
-                .trackEventDao()
-                .getBannerTrackEvent(eventId);
-        if (bannerTrackEvents.size() > 0) {
-          DatabaseClient.getInstance(CleverPush.context)
-                  .getAppDatabase()
-                  .trackEventDao()
-                  .increaseCount(eventId, getCurrentDateTime());
+        if (properties != null) {
+          for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            handleBannerTrackEvent(eventId, entry.getKey(), entry.getValue().toString());
+          }
+        } else {
+          handleBannerTrackEvent(eventId, "", "");
         }
 
         TriggeredEvent triggeredEvent = new TriggeredEvent(eventId, properties);
@@ -2763,6 +2782,20 @@ public class CleverPush {
         Logger.e(LOG_TAG, message, ex);
       }
     });
+  }
+
+  private void handleBannerTrackEvent(String eventId, String eventProperty, String eventPropertyValue) {
+    ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context)
+        .getAppDatabase()
+        .trackEventDao()
+        .getBannerTrackEvent(eventId, eventProperty, eventPropertyValue);
+
+    if (bannerTrackEvents.size() > 0) {
+      DatabaseClient.getInstance(CleverPush.context)
+          .getAppDatabase()
+          .trackEventDao()
+          .increaseCount(eventId, getCurrentDateTime(), eventProperty, eventPropertyValue);
+    }
   }
 
   public void triggerFollowUpEvent(String eventName) {
@@ -2846,7 +2879,10 @@ public class CleverPush {
 
     CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
 
-    lastClickedNotificationId = notificationId;
+    SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
+    editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, notificationId);
+    editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME, getCurrentDateTime());
+    editor.apply();
   }
 
   public void showAppBanner(String bannerId) {
@@ -2886,7 +2922,7 @@ public class CleverPush {
 
   void showPendingTopicsDialog() {
     this.getChannelConfig(config -> {
-      SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+      SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
       try {
         if (config != null && sharedPreferences.getBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, false)) {
           final int topicsDialogSeconds = config.optInt("topicsDialogMinimumSeconds", 0);
@@ -3277,7 +3313,7 @@ public class CleverPush {
   }
 
   private void updateTopicLastCheckedTime() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     sharedPreferences.edit()
         .putInt(CleverPushPreferences.TOPIC_LAST_CHECKED, (int) (System.currentTimeMillis() / 1000L)).apply();
   }
@@ -3357,17 +3393,17 @@ public class CleverPush {
   }
 
   private int getTopicLastChecked() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return sharedPreferences.getInt(CleverPushPreferences.TOPIC_LAST_CHECKED, 0);
   }
 
   private int getLastAutoShowedTime() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     return sharedPreferences.getInt(CleverPushPreferences.LAST_TIME_AUTO_SHOWED, 0);
   }
 
   private void updateLastAutoShowedTime() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     sharedPreferences.edit()
         .putInt(CleverPushPreferences.LAST_TIME_AUTO_SHOWED, (int) (System.currentTimeMillis() / 1000L)).apply();
   }
@@ -3515,7 +3551,7 @@ public class CleverPush {
   }
 
   private void saveAppBannersDisabled() {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(CleverPush.context);
+    SharedPreferences sharedPreferences = getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.remove(CleverPushPreferences.APP_BANNERS_DISABLED).apply();
     editor.putBoolean(CleverPushPreferences.APP_BANNERS_DISABLED, appBannersDisabled);
@@ -3566,7 +3602,8 @@ public class CleverPush {
   }
 
   public SharedPreferences getSharedPreferences(Context context) {
-    return PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferences sharedPreferences = context.getSharedPreferences(SharedPreferencesManager.SDK_PREFERENCES_NAME, Context.MODE_PRIVATE);
+    return sharedPreferences;
   }
 
   public void addOrUpdateChannelId(Context context, String channelId) {
@@ -3842,7 +3879,7 @@ public class CleverPush {
       setSubscribeConsentRequired(mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT);
 
       Context mContext = context.getApplicationContext();
-      SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+      SharedPreferences mPreferences = getSharedPreferences(CleverPush.context);
 
       SharedPreferencesLiveData mSharedPreferencesLiveData = new SharedPreferencesLiveData(mPreferences, IABTCF_VendorConsents);
 
@@ -3975,5 +4012,25 @@ public class CleverPush {
 
   public void setBadgeCount(int badgeCount) {
     BadgeHelper.updateCount(badgeCount, context);
+  }
+
+  /**
+   * Method to check if the lastClickedNotificationTime is within 60 minutes of current date and time
+   * */
+  private boolean isWithin60Minutes(String lastClickedNotificationTime) {
+    if (lastClickedNotificationTime == null || lastClickedNotificationTime.isEmpty()) {
+      return false;
+    }
+    try {
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      Date lastClickedTime = sdf.parse(lastClickedNotificationTime);
+      Date currentTime = Calendar.getInstance().getTime();
+      long diffInMilliseconds = Math.abs(currentTime.getTime() - lastClickedTime.getTime());
+      long diffInMinutes = diffInMilliseconds / (60 * 1000);
+      return diffInMinutes <= 60;
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error parsing date", e);
+      return false;
+    }
   }
 }

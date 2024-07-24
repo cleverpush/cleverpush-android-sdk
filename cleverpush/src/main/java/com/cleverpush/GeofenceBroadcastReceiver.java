@@ -11,9 +11,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.CountDownTimer;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
@@ -43,7 +43,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
       return;
     }
 
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
     channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
     subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
     transitionState =
@@ -126,7 +126,9 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
 
           if (geoFenceTimeoutCompleted) {
             geoFenceTimeoutCompleted = false;
-            countDownTimer.cancel();
+            if (countDownTimer != null) {
+              countDownTimer.cancel();
+            }
             geoFenceIndex += 1;
             geoFenceHandleTimer(geofencingEvent);
           }

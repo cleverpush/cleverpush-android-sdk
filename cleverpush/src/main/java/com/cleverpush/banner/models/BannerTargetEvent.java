@@ -1,7 +1,13 @@
 package com.cleverpush.banner.models;
 
+import com.cleverpush.util.Logger;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BannerTargetEvent {
   private String relation;
@@ -10,6 +16,7 @@ public class BannerTargetEvent {
   private String event;
   private String fromValue;
   private String toValue;
+  private List<BannerTriggerConditionEventProperty> eventProperties;
 
   public String getRelation() {
     return relation;
@@ -51,6 +58,10 @@ public class BannerTargetEvent {
     this.event = event;
   }
 
+  public List<BannerTriggerConditionEventProperty> getEventProperties() {
+    return eventProperties;
+  }
+
   public static BannerTargetEvent create(JSONObject json) throws JSONException {
     BannerTargetEvent bannerTargetEvent = new BannerTargetEvent();
 
@@ -71,6 +82,19 @@ public class BannerTargetEvent {
     }
     if (json.has("toValue")) {
       bannerTargetEvent.toValue = json.getString("toValue");
+    }
+    bannerTargetEvent.eventProperties = new ArrayList<>();
+    JSONArray eventPropertiesArray = json.optJSONArray("eventProperties");
+    if (eventPropertiesArray != null) {
+      for (int i = 0; i < eventPropertiesArray.length(); ++i) {
+        try {
+          BannerTriggerConditionEventProperty property =
+              BannerTriggerConditionEventProperty.create(eventPropertiesArray.getJSONObject(i));
+          bannerTargetEvent.eventProperties.add(property);
+        } catch (JSONException e) {
+          Logger.e("CleverPush", "Error creating BannerTriggerConditionEventProperty", e);
+        }
+      }
     }
 
     return bannerTargetEvent;

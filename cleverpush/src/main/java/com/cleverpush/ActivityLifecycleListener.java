@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.util.Logger;
 
@@ -23,6 +22,7 @@ import androidx.annotation.Nullable;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.service.CleanUpService;
+import com.cleverpush.util.SharedPreferencesManager;
 
 import java.util.ArrayList;
 
@@ -101,7 +101,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     try {
       // Register SharedPreferences.OnSharedPreferenceChangeListener
       new Thread(() -> {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences prefs = SharedPreferencesManager.getSharedPreferences(activity);
         prefs.registerOnSharedPreferenceChangeListener(this);
       }).start();
     } catch (Exception e) {
@@ -135,7 +135,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     try {
       // Unregister SharedPreferences.OnSharedPreferenceChangeListener
       new Thread(() -> {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences prefs = SharedPreferencesManager.getSharedPreferences(activity);
         prefs.unregisterOnSharedPreferenceChangeListener(this);
       }).start();
     } catch (Exception e) {

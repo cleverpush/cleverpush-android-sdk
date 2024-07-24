@@ -4,21 +4,24 @@ import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 
 import org.json.JSONObject;
 
 public class ChannelConfigFromChannelIdResponseHandler {
 
   private final CleverPush cleverPush;
+  private InitializeListener initializeListener;
 
-  public ChannelConfigFromChannelIdResponseHandler(CleverPush instance) {
+  public ChannelConfigFromChannelIdResponseHandler(CleverPush instance, InitializeListener initializeListener) {
     this.cleverPush = instance;
+    this.initializeListener = initializeListener;
   }
 
   public CleverPushHttpClient.ResponseHandler getResponseHandler(boolean autoRegister, String storedChannelId,
@@ -36,6 +39,9 @@ public class ChannelConfigFromChannelIdResponseHandler {
           cleverPush.subscribeOrSync(
               autoRegister || isChannelIdChanged, isChannelIdChanged);
 
+          if (initializeListener != null) {
+            initializeListener.onInitializationSuccess();
+          }
         } catch (Throwable ex) {
           Logger.e(LOG_TAG, "Error in onSuccess of fetch Channel Config.", ex);
         }
@@ -47,16 +53,24 @@ public class ChannelConfigFromChannelIdResponseHandler {
 
         if (throwable != null) {
           Logger.e("CleverPush", "Failed to fetch Channel Config." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response +
-                  "\nError: " + throwable.getMessage()
-                  , throwable
+              "\nStatus code: " + statusCode +
+              "\nResponse: " + response +
+              "\nError: " + throwable.getMessage()
           );
+          if (initializeListener != null) {
+            initializeListener.onInitializationFailure(throwable);
+          }
         } else {
           Logger.e("CleverPush", "Failed to fetch Channel Config." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response
+              "\nStatus code: " + statusCode +
+              "\nResponse: " + response
           );
+          if (initializeListener != null) {
+            Exception genericException = new Exception("Failed to fetch Channel Config." +
+                "\nStatus code: " + statusCode +
+                "\nResponse: " + response);
+            initializeListener.onInitializationFailure(genericException);
+          }
         }
 
         // trigger listeners
@@ -73,7 +87,7 @@ public class ChannelConfigFromChannelIdResponseHandler {
   }
 
   public SharedPreferences getSharedPreferences(Context context) {
-    return PreferenceManager.getDefaultSharedPreferences(context);
+    return SharedPreferencesManager.getSharedPreferences(context);
   }
 
   public Context getContext() {

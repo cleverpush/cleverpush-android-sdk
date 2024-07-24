@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +24,7 @@ import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.stories.models.StoryListModel;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -101,7 +101,7 @@ public class StoryView extends LinearLayout {
           Gson gson = gsonBuilder.create();
           StoryListModel model = gson.fromJson(response, StoryListModel.class);
           stories.addAll(model.getStories());
-          SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+          SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
           for (int i = 0; i < stories.size(); i++) {
             if (sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "")
                     .contains(stories.get(i).getId())) {
@@ -172,7 +172,7 @@ public class StoryView extends LinearLayout {
         ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
           @Override
           public void run() {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             String storyId = stories.get(position).getId();
             String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");

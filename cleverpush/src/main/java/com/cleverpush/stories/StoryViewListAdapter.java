@@ -27,8 +27,11 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.R;
@@ -36,8 +39,6 @@ import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 
 import java.util.ArrayList;
-
-import de.hdodenhof.circleimageview.CircleImageView;
 
 public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> {
 
@@ -85,14 +86,35 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   public void onBindViewHolder(StoryViewHolder holder, int position) {
     try {
       TextView nameTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
-      CircleImageView image = (CircleImageView) holder.itemView.findViewById(R.id.ivChallenge);
+      ImageView image = (ImageView) holder.itemView.findViewById(R.id.ivChallenge);
+      CardView cardView = (CardView) holder.itemView.findViewById(R.id.ivChallengeCardView);
+      CardView cardViewShadow = (CardView) holder.itemView.findViewById(R.id.cardViewShadow);
+      LinearLayout borderLayout = (LinearLayout) holder.itemView.findViewById(R.id.borderLayout);
+      LinearLayout parentLayout = (LinearLayout) holder.itemView.findViewById(R.id.parentLayout);
 
-      ViewGroup.LayoutParams params = image.getLayoutParams();
-      params.height =
-              (int) typedArray.getDimension(R.styleable.StoryView_story_icon_height, 206);
-      params.width =
-              (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
-      image.setLayoutParams(params);
+      int iconHeight = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_height, 206);
+      int iconWidth = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
+      boolean iconShadow = typedArray.getBoolean(R.styleable.StoryView_story_icon_shadow, false);
+      int borderVisibility = typedArray.getInt(R.styleable.StoryView_border_visibility, View.VISIBLE);
+
+      ViewGroup.LayoutParams imageParams = image.getLayoutParams();
+      imageParams.height = iconHeight;
+      imageParams.width = iconWidth;
+      image.setLayoutParams(imageParams);
+
+      ViewGroup.LayoutParams cardParams = cardView.getLayoutParams();
+      cardParams.height = iconHeight;
+      cardParams.width = iconWidth;
+      cardView.setLayoutParams(cardParams);
+
+      ViewGroup.LayoutParams cardViewShadowParams = cardViewShadow.getLayoutParams();
+      if (iconShadow) {
+        cardViewShadowParams.height = iconHeight + 7;
+      } else {
+        cardViewShadowParams.height = iconHeight;
+      }
+      cardViewShadowParams.width = iconWidth;
+      cardViewShadow.setLayoutParams(cardViewShadowParams);
 
       nameTextView.setVisibility(typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE));
       int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
@@ -103,20 +125,28 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
       loadImage(position, image);
 
-      if (stories.get(position).isOpened()) {
-        image.setBackground(null);
-      } else {
-        GradientDrawable border = new GradientDrawable();
-        border.setShape(GradientDrawable.OVAL);
-        border.setCornerRadii(new float[]{0, 0, 0, 0, 0, 0, 0, 0});
-        border.setColor(0xFFFFFFFF); //white background
-        border.setStroke(5, typedArray.getColor(R.styleable.StoryView_border_color,
-                DEFAULT_BORDER_COLOR)); //black border with full opacity
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-          image.setBackgroundDrawable(border);
-        } else {
-          image.setBackground(border);
-        }
+      float cornerRadius = typedArray.getDimension(R.styleable.StoryView_story_icon_corner_radius, -1);
+      if (cornerRadius != -1) {
+        cardView.setRadius(cornerRadius);
+        cardViewShadow.setRadius(cornerRadius + 3);
+      }
+
+      float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
+      if (iconSpace != -1) {
+        ViewGroup.MarginLayoutParams parentLayoutParams = (ViewGroup.MarginLayoutParams) parentLayout.getLayoutParams();
+        parentLayoutParams.setMargins(parentLayoutParams.leftMargin, parentLayoutParams.topMargin, (int) iconSpace, parentLayoutParams.bottomMargin);
+        parentLayout.setLayoutParams(parentLayoutParams);
+      }
+
+      if (iconShadow && borderVisibility == 0) {
+        applyIconBorder(position, borderLayout, cornerRadius);
+        cardView.setCardElevation(15);
+        cardView.setMaxCardElevation(15);
+      } else if (borderVisibility == 0) {
+        applyIconBorder(position, borderLayout, cornerRadius);
+      } else if (iconShadow) {
+        cardView.setCardElevation(15);
+        cardView.setMaxCardElevation(15);
       }
 
       image.setOnClickListener(new View.OnClickListener() {
@@ -133,12 +163,39 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     }
   }
 
+  public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius) {
+    try {
+      if (stories.get(position).isOpened()) {
+        borderLayout.setBackground(null);
+      } else {
+        GradientDrawable border = new GradientDrawable();
+        if (cornerRadius == -1) {
+          // No corner radius provided, display as a circle
+          border.setShape(GradientDrawable.OVAL);
+          border.setCornerRadii(new float[]{0, 0, 0, 0, 0, 0, 0, 0});
+        } else {
+          // Set the corner radius
+          border.setCornerRadius(cornerRadius);
+        }
+        border.setColor(0xFFFFFFFF); //white background
+        border.setStroke(5, typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR)); //black border with full opacity
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+          borderLayout.setBackgroundDrawable(border);
+        } else {
+          borderLayout.setBackground(border);
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while applying border to icon. " + e.getLocalizedMessage(), e);
+    }
+  }
+
   @Override
   public int getItemCount() {
     return stories.size();
   }
 
-  private void loadImage(int position, CircleImageView image) {
+  private void loadImage(int position, ImageView image) {
     try {
       ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
         @Override

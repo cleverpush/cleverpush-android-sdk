@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.33.25 (12.07.2024)
+* Migrate default shared preferences to CleverPush shared preferences
+* Added feature in `AppBanner`, Trigger: Has Push Permission via System
+* Added ACCESS_BACKGROUND_LOCATION permission for GeoFence
+
+## 1.33.24 (25.06.2024)
+* Fixed an issue in `AppBanner` where the banner image is not displaying according to scale when banner position is center, top or bottom.
+
+## 1.33.23 (20.06.2024)
+* Fixed an issue in `AppBanner` where the banner would not close when an URL was opened in the web view.
+
+## 1.33.22 (17.06.2024)
+* Added more customization option in `StoryView`. (story_icon_corner_radius, story_icon_space, story_icon_shadow, border_visibility)
+* Added feature in `AppBanner` to support event property filters in targeting section.
+
+## 1.33.21 (03.06.2024)
+* Resolved an issue in `HTML AppBanner`. It was not scrollable.
+* Optimize the `InitializeListener` for `init`(Added `onInitializationSuccess` and `onInitializationFailure` methods).
+
+## 1.33.20 (29.05.2024)
+* For NON-HTML `AppBanner` the Content needs to be centred vertically.
+* Optimised close button in `WebView` for `AppBanner`.
+
+## 1.33.19 (03.05.2024)
+* Resolved the issue of `ConcurrentModificationException` in `setTrackingConsent`
+* Optimised conversion tracking. Pass `lastClickedNotificationId` in `trackEvent` if it was within 60 minutes of the trackEvent call.
+
 ## 1.33.18 (22.04.2024)
 * Resolved the issue of `ConcurrentModificationException` in `setTrackingConsent`
 

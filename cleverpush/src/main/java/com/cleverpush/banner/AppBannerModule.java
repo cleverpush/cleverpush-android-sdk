@@ -6,6 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.View;
@@ -21,6 +22,7 @@ import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
 import com.cleverpush.banner.models.BannerStopAtType;
 import com.cleverpush.banner.models.BannerSubscribedType;
+import com.cleverpush.banner.models.NotificationPermission;
 import com.cleverpush.banner.models.BannerTargetEvent;
 import com.cleverpush.banner.models.BannerTrigger;
 import com.cleverpush.banner.models.BannerTriggerCondition;
@@ -533,6 +535,16 @@ public class AppBannerModule {
       allowed = false;
     }
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      if (banner.getNotificationPermission() == NotificationPermission.WithoutPermission && getCleverPushInstance().hasNotificationPermission()) {
+        allowed = false;
+      }
+
+      if (banner.getNotificationPermission() == NotificationPermission.WithPermission && !getCleverPushInstance().hasNotificationPermission()) {
+        allowed = false;
+      }
+    }
+
     if (banner.getTags() != null && banner.getTags().size() > 0) {
       allowed = false;
 
@@ -775,19 +787,54 @@ public class AppBannerModule {
   }
 
   private boolean checkTargetEventRelationFilter(CheckFilterRelation relation, String compareValue,
-                                                 String attributeValue, String fromValue, String toValue, String bannerId, String event) {
+                                                 String attributeValue, String fromValue, String toValue, String bannerId, String event, List<BannerTriggerConditionEventProperty> eventProperties) {
     try {
-      if (events.isEmpty() || event == null || event.isEmpty()) {
+      if (events.isEmpty() || event == null || event.isEmpty() || compareValue == null || compareValue.isEmpty()) {
         return false;
       }
+
       for (TriggeredEvent triggeredEvent : events) {
-        if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(event) || compareValue == null || compareValue.isEmpty()) {
-          return false;
+        if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(event)) {
+          continue;
         }
-        List<TableBannerTrackEvent> bannerTrackEvents = DatabaseClient.getInstance(CleverPush.context)
+
+        if (eventProperties.size() > 0) {
+          if (!checkEventProperties(eventProperties, event)) {
+            return false;
+          }
+
+          for (BannerTriggerConditionEventProperty eventProperty : eventProperties) {
+            List<TableBannerTrackEvent> bannerTrackEvents = DatabaseClient.getInstance(CleverPush.context)
                 .getAppDatabase()
                 .trackEventDao()
-                .getBannerTrackEvent(bannerId, event, compareValue, attributeValue, String.valueOf(relation), fromValue, toValue);
+                .getBannerTrackEvent(bannerId, event, compareValue, attributeValue, String.valueOf(relation), fromValue, toValue, eventProperty.getRelation(), eventProperty.getProperty(), eventProperty.getValue());
+
+            if (bannerTrackEvents.isEmpty()) {
+              return false;
+            }
+
+            for (TableBannerTrackEvent bannerTrackEvent : bannerTrackEvents) {
+              int count = bannerTrackEvent.getCount();
+              String createdDate = bannerTrackEvent.getCreatedDateTime();
+              int pastDays = getDaysDifference(createdDate);
+
+              if (pastDays > Integer.parseInt(bannerTrackEvent.getProperty())) {
+                return false;
+              }
+
+              if (!checkRelation(count, relation, attributeValue, fromValue, toValue)) {
+                return false;
+              }
+            }
+          }
+          return true;
+        }
+
+        List<TableBannerTrackEvent> bannerTrackEvents = DatabaseClient.getInstance(CleverPush.context)
+            .getAppDatabase()
+            .trackEventDao()
+            .getBannerTrackEvent(bannerId, event, compareValue, attributeValue, String.valueOf(relation), fromValue, toValue, "", "", "");
+
         if (bannerTrackEvents.isEmpty()) {
           return false;
         }
@@ -797,38 +844,15 @@ public class AppBannerModule {
           String property = bannerTrackEvent.getProperty();
           String createdDate = bannerTrackEvent.getCreatedDateTime();
           int pastDays = getDaysDifference(createdDate);
+
           if (pastDays > Integer.parseInt(property)) {
             continue;
           }
-          switch (relation) {
-            case Equals:
-              if (count != Integer.parseInt(attributeValue)) {
-                continue;
-              }
-              break;
-            case NotEqual:
-              if (count == Integer.parseInt(attributeValue)) {
-                continue;
-              }
-              break;
-            case GreaterThan:
-              if (count <= Integer.parseInt(attributeValue)) {
-                continue;
-              }
-              break;
-            case LessThan:
-              if (count >= Integer.parseInt(attributeValue)) {
-                continue;
-              }
-              break;
-            case Between:
-              int from = Integer.parseInt(fromValue);
-              int to = Integer.parseInt(toValue);
-              if (count < from || count > to) {
-                continue;
-              }
-              break;
+
+          if (!checkRelation(count, relation, attributeValue, fromValue, toValue)) {
+            continue;
           }
+
           return true;
         }
         return false;
@@ -837,6 +861,82 @@ public class AppBannerModule {
       Logger.e(TAG, "checkTargetEventRelationFilter: Error in AppBanner checking target event relation filter.", e);
     }
     return false;
+  }
+
+  private boolean checkEventProperties(List<BannerTriggerConditionEventProperty> eventProperties, String event) {
+    for (BannerTriggerConditionEventProperty eventProperty : eventProperties) {
+      boolean propertyMatched = false;
+      for (TriggeredEvent triggeredEvent : events) {
+        if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(event) || triggeredEvent.getProperties() == null) {
+          continue;
+        }
+        String propertyValue = String.valueOf(triggeredEvent.getProperties().get(eventProperty.getProperty()));
+        String comparePropertyValue = eventProperty.getValue();
+
+        boolean eventPropertiesMatching = checkRelationFilterForTargetEvent(true,
+            CheckFilterRelation.fromString(eventProperty.getRelation()),
+            propertyValue,
+            comparePropertyValue,
+            comparePropertyValue,
+            comparePropertyValue);
+
+        if (eventPropertiesMatching) {
+          propertyMatched = true;
+          break;  // Break inner loop if a match is found
+        }
+      }
+      if (!propertyMatched) {
+        return false;  // Return false if no matching event is found for the current eventProperty
+      }
+    }
+    return true;  // Return true only if all properties match
+  }
+
+  private boolean checkRelationFilterForTargetEvent(boolean allowed, CheckFilterRelation relation, String compareValue,
+                                                    String attributeValue, String fromValue, String toValue) {
+    if (relation == null) {
+      return false;
+    }
+    try {
+      switch (relation) {
+        case Equals:
+          return compareValue.equals(attributeValue);
+        case NotEqual:
+          return !compareValue.equals(attributeValue);
+        case GreaterThan:
+          return Double.parseDouble(compareValue) > Double.parseDouble(attributeValue);
+        case LessThan:
+          return Double.parseDouble(compareValue) < Double.parseDouble(attributeValue);
+        case Contains:
+          return compareValue.contains(attributeValue);
+        case NotContains:
+          return !compareValue.contains(attributeValue);
+        default:
+          return false;
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in AppBanner checking relation filter for target event", e);
+      return false;
+    }
+  }
+
+  private boolean checkRelation(int count, CheckFilterRelation relation, String attributeValue, String fromValue, String toValue) {
+    switch (relation) {
+      case Equals:
+        return count == Integer.parseInt(attributeValue);
+      case NotEqual:
+        return count != Integer.parseInt(attributeValue);
+      case GreaterThan:
+        return count > Integer.parseInt(attributeValue);
+      case LessThan:
+        return count < Integer.parseInt(attributeValue);
+      case Between:
+        int from = Integer.parseInt(fromValue);
+        int to = Integer.parseInt(toValue);
+        return count >= from && count <= to;
+      default:
+        return false;
+    }
   }
 
   private boolean checkDeeplinkTriggerCondition(BannerTriggerCondition condition) {
@@ -898,7 +998,7 @@ public class AppBannerModule {
         }
       }
 
-      boolean targetEvents = false;
+      boolean targetEvents = true;
       if (banner.getEventFilters() != null && banner.getEventFilters().size() > 0) {
         isTargetEvent = true;
         for (BannerTargetEvent bannerTargetEvent : banner.getEventFilters()) {
@@ -909,49 +1009,33 @@ public class AppBannerModule {
           String value = bannerTargetEvent.getValue();
           String fromValue = bannerTargetEvent.getFromValue();
           String toValue = bannerTargetEvent.getToValue();
+          List<BannerTriggerConditionEventProperty> eventProperties = bannerTargetEvent.getEventProperties();
           if (!isValidTargetValues(event, property, relationString, value, fromValue, toValue, banner.getId())) {
             continue;
           }
 
           String relation = String.valueOf(CheckFilterRelation.fromString(relationString));
-          ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context).
-                  getAppDatabase()
-                  .trackEventDao()
-                  .getBannerTrackEvent(banner.getId()
-                          , event
-                          , property
-                          , value != null ? value : ""
-                          , relation
-                          , fromValue != null ? fromValue : ""
-                          , toValue != null ? toValue : "");
-          if (bannerTrackEvents.size() == 0) {
-            TableBannerTrackEvent bannerTrackEvent = new TableBannerTrackEvent();
 
-            bannerTrackEvent.setBannerId(banner.getId());
-            bannerTrackEvent.setEventId(event);
-            bannerTrackEvent.setRelation(relation);
-            bannerTrackEvent.setProperty(property);
-            bannerTrackEvent.setValue(value != null ? value : "");
-            bannerTrackEvent.setFromValue(fromValue != null ? fromValue : "");
-            bannerTrackEvent.setToValue(toValue != null ? toValue : "");
-            bannerTrackEvent.setCount(0);
-            bannerTrackEvent.setCreatedDateTime(getCleverPushInstance().getCurrentDateTime());
-            bannerTrackEvent.setUpdatedDateTime(getCleverPushInstance().getCurrentDateTime());
-
-            DatabaseClient.getInstance(CleverPush.context).getAppDatabase()
-                    .trackEventDao()
-                    .insert(bannerTrackEvent);
+          if (eventProperties.size() > 0) {
+            for (BannerTriggerConditionEventProperty eventProperty : eventProperties) {
+              handleBannerTrackEvent(banner.getId(), event, property, value, relation, fromValue, toValue,
+                  eventProperty.getRelation(), eventProperty.getProperty(), eventProperty.getValue());
+            }
+          } else {
+            handleBannerTrackEvent(banner.getId(), event, property, value, relation, fromValue, toValue, "", "", "");
           }
-          targetConditionTrue = this.checkTargetEventRelationFilter(CheckFilterRelation.fromString(relationString)
-                  , property
-                  , value != null ? value : ""
-                  , fromValue != null ? fromValue : ""
-                  , toValue != null ? toValue : ""
-                  , banner.getId()
-                  , event);
 
-          if (targetConditionTrue) {
-            targetEvents = true;
+          targetConditionTrue = this.checkTargetEventRelationFilter(CheckFilterRelation.fromString(relationString)
+              , property
+              , value != null ? value : ""
+              , fromValue != null ? fromValue : ""
+              , toValue != null ? toValue : ""
+              , banner.getId()
+              , event
+              , eventProperties);
+
+          if (!targetConditionTrue) {
+            targetEvents = false;
             break;
           }
         }
@@ -986,6 +1070,41 @@ public class AppBannerModule {
         getActivityLifecycleListener().setActivityInitializedListener(
             () -> filteredBanners.add(new AppBannerPopup(getCurrentActivity(), banner)));
       }
+    }
+  }
+
+  private void handleBannerTrackEvent(String bannerId, String event, String property, String value, String relation,
+                                      String fromValue, String toValue, String eventPropertyRelation,
+                                      String eventProperty, String eventPropertyValue) {
+    ArrayList<TableBannerTrackEvent> bannerTrackEvents = (ArrayList<TableBannerTrackEvent>) DatabaseClient.getInstance(CleverPush.context)
+        .getAppDatabase()
+        .trackEventDao()
+        .getBannerTrackEvent(bannerId, event, property, value != null ? value : "", relation,
+            fromValue != null ? fromValue : "", toValue != null ? toValue : "",
+            eventPropertyRelation != null ? eventPropertyRelation : "",
+            eventProperty != null ? eventProperty : "",
+            eventPropertyValue != null ? eventPropertyValue : "");
+
+    if (bannerTrackEvents.size() == 0) {
+      TableBannerTrackEvent bannerTrackEvent = new TableBannerTrackEvent();
+      bannerTrackEvent.setBannerId(bannerId);
+      bannerTrackEvent.setEventId(event);
+      bannerTrackEvent.setRelation(relation);
+      bannerTrackEvent.setProperty(property);
+      bannerTrackEvent.setValue(value != null ? value : "");
+      bannerTrackEvent.setFromValue(fromValue != null ? fromValue : "");
+      bannerTrackEvent.setToValue(toValue != null ? toValue : "");
+      bannerTrackEvent.setCount(0);
+      bannerTrackEvent.setCreatedDateTime(getCleverPushInstance().getCurrentDateTime());
+      bannerTrackEvent.setUpdatedDateTime(getCleverPushInstance().getCurrentDateTime());
+      bannerTrackEvent.setEventPropertyRelation(eventPropertyRelation != null ? eventPropertyRelation : "");
+      bannerTrackEvent.setEventProperty(eventProperty != null ? eventProperty : "");
+      bannerTrackEvent.setEventPropertyValue(eventPropertyValue != null ? eventPropertyValue : "");
+
+      DatabaseClient.getInstance(CleverPush.context)
+          .getAppDatabase()
+          .trackEventDao()
+          .insert(bannerTrackEvent);
     }
   }
 

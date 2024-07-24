@@ -18,7 +18,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -41,6 +40,7 @@ import com.cleverpush.R;
 import com.cleverpush.Subscription;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.NotificationCategorySetUp;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
 
@@ -331,7 +331,7 @@ public class NotificationService {
 
   NotificationStyle getNotificationStyle(Context context) {
     try {
-      SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
       String notificationStyleCode = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_STYLE, null);
       if (notificationStyleCode != null) {
         return NotificationStyle.lookupByCode(notificationStyleCode);

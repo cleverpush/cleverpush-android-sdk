@@ -3,6 +3,7 @@ package com.cleverpush.banner;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,6 +11,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.os.Handler;
 import android.util.Base64;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -104,6 +106,13 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
     try {
       body.removeAllViews();
+      try {
+        if (isBannerPositionFull() && data.getContentType() != null && !data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
+          body.setGravity(Gravity.CENTER);
+        }
+      } catch (Exception e) {
+        Logger.e(TAG, "Error in AppBanner displaying component to center when position is full.", e);
+      }
 
       HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
       if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(data.getId())) {
@@ -134,6 +143,21 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       }
     } catch (Exception e) {
       Logger.e(TAG, "Error in AppBanner onBindViewHolder.", e);
+    }
+
+    try {
+      new Handler().postDelayed(new Runnable() {
+        @Override
+        public void run() {
+          if (!isBannerPositionFull()) {
+            appBannerPopup.getViewPager2().setPageTransformer((page, position1) -> {
+              appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+            });
+          }
+        }
+      }, 1000);
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while updating child height in AppBannerCarouselAdapter onBindViewHolder. " + e.getLocalizedMessage(), e);
     }
   }
 
@@ -189,12 +213,14 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             break;
           }
         }
-      } else if (action.getDismiss()) {
-        appBannerPopup.dismiss();
       } else {
         if (isLastActionElement) {
           appBannerPopup.moveToNextScreen();
         }
+      }
+
+      if (action.getDismiss()) {
+        appBannerPopup.dismiss();
       }
 
       if (action.isOpenBySystem() && action.getUrl() != null && !action.getUrl().isEmpty()) {
@@ -243,9 +269,20 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.MATCH_PARENT
+        LinearLayout.LayoutParams.WRAP_CONTENT
     );
-    params.setMargins(0, 20, 0, 20);
+
+    // Determine if the device is a tablet
+    boolean isTablet = (activity.getResources().getConfiguration().screenLayout
+        & Configuration.SCREENLAYOUT_SIZE_MASK)
+        >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+
+    // Set margins based on device type
+    if (isTablet) {
+      params.setMargins(0, 10, 0, 10);
+    } else {
+      params.setMargins(0, 20, 0, 20);
+    }
     button.setLayoutParams(params);
 
     GradientDrawable bg = new GradientDrawable();
@@ -331,11 +368,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) img.getLayoutParams();
 
-    if (!isBannerPositionFull()) {
-      layoutParams.height = 0;
-      layoutParams.dimensionRatio = "1";
-    }
-
     img.setLayoutParams(layoutParams);
 
     ConstraintSet imgConstraints = new ConstraintSet();
@@ -375,35 +407,33 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         final Bitmap bitmap = BitmapFactory.decodeStream(in);
 
         activity.runOnUiThread(() -> {
-          if (!isBannerPositionFull()) {
-            if (bitmap != null) {
-              // Calculate aspect ratio and adjust ImageView size
-              float imageAspectRatio = (float) bitmap.getWidth() / bitmap.getHeight();
-              int imageWidth = img.getWidth();  // Get the current width of ImageView
-              int imageHeight = (int) (imageWidth / imageAspectRatio);  // Calculate height based on aspect ratio
-              ViewGroup.LayoutParams imgLayoutParams = img.getLayoutParams();
-              imgLayoutParams.width = imageWidth;
-              imgLayoutParams.height = imageHeight;
-              img.setLayoutParams(imgLayoutParams);
-            }
-
-            appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
-              appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
-            });
-          }
-
           if (isGif) {
             Glide.with(CleverPush.context)
-                    .asGif()
-                    .load(imageUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(img);
+                .asGif()
+                .load(imageUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(img);
           } else {
             if (bitmap != null) {
               img.setImageBitmap(bitmap);
             }
           }
           progressBar.setVisibility(View.GONE);
+
+          try {
+            new Handler().postDelayed(new Runnable() {
+              @Override
+              public void run() {
+                if (!isBannerPositionFull()) {
+                  appBannerPopup.getViewPager2().setPageTransformer((page, position1) -> {
+                    appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+                  });
+                }
+              }
+            }, 1000);
+          } catch (Exception e) {
+            Logger.e(TAG, "Error while updating child height in composeImageBlock. " + e.getLocalizedMessage(), e);
+          }
         });
 
       } catch (Exception e) {
@@ -517,6 +547,14 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         webView.getSettings().setLoadsImagesAutomatically(true);
         webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
         webView.setWebViewClient(new AppBannerWebViewClient());
+
+        // Ensure WebView is scrollable
+        webView.setOnTouchListener((v, event) -> {
+          if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+          }
+          return false;
+        });
 
         fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
