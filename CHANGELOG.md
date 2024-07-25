@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.27 (25.07.2024)
+* Fixed an issue in `TopiDialog`, In dark mode text was not showing in `MaterialComponents.Light` theme
+
 ## 1.33.26 (23.07.2024)
 * Optimised the `setConfirmAlertShown` function.
 
