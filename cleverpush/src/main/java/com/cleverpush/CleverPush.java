@@ -2179,7 +2179,7 @@ public class CleverPush {
         Logger.d(LOG_TAG, "addSubscriptionTopic: There is no subscription for CleverPush SDK.");
         return;
       }
-      Set<String> topics = this.getSubscriptionTopics();
+      Set<String> topics = new HashSet<>(this.getSubscriptionTopics());
       if (topics.contains(topicId)) {
         if (completionListener != null) {
           completionListener.onComplete();
@@ -2189,7 +2189,6 @@ public class CleverPush {
       topics.add(topicId);
       List<String> list = new ArrayList<>(topics);
       String[] topicsArray = list.toArray(new String[0]);
-      this.setSubscriptionTopics(topicsArray);
 
       JSONObject jsonBody = new JSONObject();
       try {
@@ -2200,7 +2199,7 @@ public class CleverPush {
         Logger.e(LOG_TAG, "Error creating addSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
-          new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
+          new SetSubscriptionTopicsResponseHandler(this).getResponseHandlerForTopic(topicsArray, completionListener);
       CleverPushHttpClient.postWithRetry(
           "/subscription/topic/add",
           jsonBody,
@@ -2234,7 +2233,7 @@ public class CleverPush {
         Logger.d(LOG_TAG, "removeSubscriptionTopic: There is no subscription for CleverPush SDK.");
         return;
       }
-      Set<String> topics = this.getSubscriptionTopics();
+      Set<String> topics = new HashSet<>(this.getSubscriptionTopics());
       if (!topics.contains(topicId)) {
         if (completionListener != null) {
           completionListener.onComplete();
@@ -2244,7 +2243,6 @@ public class CleverPush {
       topics.remove(topicId);
       List<String> list = new ArrayList<>(topics);
       String[] topicsArray = list.toArray(new String[0]);
-      this.setSubscriptionTopics(topicsArray);
 
       JSONObject jsonBody = new JSONObject();
       try {
@@ -2256,7 +2254,7 @@ public class CleverPush {
         Logger.e(LOG_TAG, "Error creating removeSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
-          new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener);
+          new SetSubscriptionTopicsResponseHandler(this).getResponseHandlerForTopic(topicsArray, completionListener);
       CleverPushHttpClient.postWithRetry("/subscription/topic/remove",
           jsonBody,
           responseHandler);
@@ -2365,12 +2363,6 @@ public class CleverPush {
     new Thread(() -> {
       SharedPreferences sharedPreferences = getSharedPreferences(getContext());
       final int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
-      SharedPreferences.Editor editor = sharedPreferences.edit();
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
-      editor.apply();
-      editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(Arrays.asList(topicIds)));
-      editor.putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion);
-      editor.apply();
 
       this.getSubscriptionId(subscriptionId -> {
         if (subscriptionId != null && !subscriptionId.isEmpty()) {
