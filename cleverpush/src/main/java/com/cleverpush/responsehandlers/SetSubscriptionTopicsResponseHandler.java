@@ -21,7 +21,8 @@ public class SetSubscriptionTopicsResponseHandler {
   }
 
   public CleverPushHttpClient.ResponseHandler getResponseHandler(String[] topicIds,
-                                                                 CompletionFailureListener completionListener, boolean isSetSubscriptionTopics) {
+                                                                 CompletionFailureListener completionListener,
+                                                                 boolean isSetSubscriptionTopics) {
     return new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
