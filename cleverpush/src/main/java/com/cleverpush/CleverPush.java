@@ -2189,6 +2189,7 @@ public class CleverPush {
       topics.add(topicId);
       List<String> list = new ArrayList<>(topics);
       String[] topicsArray = list.toArray(new String[0]);
+      this.setSubscriptionTopics(topicsArray);
 
       JSONObject jsonBody = new JSONObject();
       try {
@@ -2199,7 +2200,7 @@ public class CleverPush {
         Logger.e(LOG_TAG, "Error creating addSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
-          new SetSubscriptionTopicsResponseHandler(this).getResponseHandlerForTopic(topicsArray, completionListener);
+          new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener, false);
       CleverPushHttpClient.postWithRetry(
           "/subscription/topic/add",
           jsonBody,
@@ -2243,6 +2244,7 @@ public class CleverPush {
       topics.remove(topicId);
       List<String> list = new ArrayList<>(topics);
       String[] topicsArray = list.toArray(new String[0]);
+      this.setSubscriptionTopics(topicsArray);
 
       JSONObject jsonBody = new JSONObject();
       try {
@@ -2254,7 +2256,7 @@ public class CleverPush {
         Logger.e(LOG_TAG, "Error creating removeSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
-          new SetSubscriptionTopicsResponseHandler(this).getResponseHandlerForTopic(topicsArray, completionListener);
+          new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicsArray, completionListener, false);
       CleverPushHttpClient.postWithRetry("/subscription/topic/remove",
           jsonBody,
           responseHandler);
@@ -2384,7 +2386,7 @@ public class CleverPush {
           Logger.d(LOG_TAG, "setSubscriptionTopics: " + Arrays.toString(topicIds));
 
           CleverPushHttpClient.postWithRetry("/subscription/sync/" + getChannelId(getContext()), jsonBody,
-              new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicIds, completionListener));
+              new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicIds, completionListener, true));
         } else {
           Logger.d(LOG_TAG, "setSubscriptionTopics: There is no subscription for CleverPush SDK.");
         }
