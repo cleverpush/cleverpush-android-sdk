@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -45,7 +46,7 @@ public class StoredNotificationsService {
     if (notificationsJson != null) {
       try {
         List<Notification> notifications = gson.fromJson(notificationsJson, NotificationList.class);
-        return new HashSet<>(notifications);
+        return new LinkedHashSet<>(notifications);
       } catch (Exception ex) {
         Logger.e(LOG_TAG, "StoredNotificationsService: error while getting stored notifications from local", ex);
       }
