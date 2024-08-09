@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.28 (09.08.2024)
+* Fixed the issue whereby `removeSubscriptionTopic` and `addSubscriptionTopic` were not functioning correctly when the internet was unavailable.
+* Resolves issue in `getNotifications`, notification not updated correctly. 
+
 ## 1.33.27 (25.07.2024)
 * Fixed an issue in `TopiDialog`, In dark mode text was not showing in `MaterialComponents.Light` theme
 
