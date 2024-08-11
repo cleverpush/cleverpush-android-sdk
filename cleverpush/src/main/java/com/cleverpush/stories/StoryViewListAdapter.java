@@ -18,7 +18,6 @@ import android.text.TextUtils;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.request.RequestOptions;
-import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
@@ -27,8 +26,10 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.cardview.widget.CardView;
@@ -44,15 +45,19 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
   private int DEFAULT_BORDER_COLOR = Color.BLACK;
   private int DEFAULT_TEXT_COLOR = Color.BLACK;
+  private int DEFAULT_UNREAD_COUNT_BACKGROUND_COLOR = Color.BLACK;
+  private int DEFAULT_UNREAD_COUNT_TEXT_COLOR = Color.WHITE;
 
   private Context context;
   private ArrayList<Story> stories;
   private OnItemClickListener onItemClickListener;
   private TypedArray typedArray;
+  public static StoryViewListAdapter storyViewListAdapter;
+  private int parentLayoutWidth;
   private static final String TAG = "CleverPush/StoryViewAdapter";
 
   public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray,
-                              OnItemClickListener onItemClickListener) {
+                              OnItemClickListener onItemClickListener, int parentLayoutWidth) {
     if (context == null) {
       if (CleverPush.getInstance(CleverPush.context).getCurrentContext() != null) {
         this.context = CleverPush.getInstance(CleverPush.context).getCurrentContext();
@@ -63,6 +68,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     this.stories = stories;
     this.typedArray = typedArray;
     this.onItemClickListener = onItemClickListener;
+    this.parentLayoutWidth = parentLayoutWidth;
   }
 
   @Override
@@ -86,52 +92,221 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   public void onBindViewHolder(StoryViewHolder holder, int position) {
     try {
       TextView nameTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
+      TextView unreadCountTextView = (TextView) holder.itemView.findViewById(R.id.tvUnreadCount);
+      FrameLayout unreadCountFrameLayout = (FrameLayout) holder.itemView.findViewById(R.id.unreadCountFrameLayout);
+      RelativeLayout unreadCountRelativeLayout = (RelativeLayout) holder.itemView.findViewById(R.id.unreadCountRelativeLayout);
       ImageView image = (ImageView) holder.itemView.findViewById(R.id.ivChallenge);
       CardView cardView = (CardView) holder.itemView.findViewById(R.id.ivChallengeCardView);
       CardView cardViewShadow = (CardView) holder.itemView.findViewById(R.id.cardViewShadow);
       LinearLayout borderLayout = (LinearLayout) holder.itemView.findViewById(R.id.borderLayout);
+      LinearLayout storyLayout = (LinearLayout) holder.itemView.findViewById(R.id.storyLayout);
+      LinearLayout imageLayout = (LinearLayout) holder.itemView.findViewById(R.id.imageLayout);
       LinearLayout parentLayout = (LinearLayout) holder.itemView.findViewById(R.id.parentLayout);
+      RelativeLayout titleInsideLayout = (RelativeLayout) holder.itemView.findViewById(R.id.titleInsideLayout);
+      TextView tvTitleInside = (TextView) holder.itemView.findViewById(R.id.tvTitleInside);
 
       int iconHeight = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_height, 206);
       int iconWidth = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
       boolean iconShadow = typedArray.getBoolean(R.styleable.StoryView_story_icon_shadow, false);
       int borderVisibility = typedArray.getInt(R.styleable.StoryView_border_visibility, View.VISIBLE);
+      float borderMargin = typedArray.getDimension(R.styleable.StoryView_border_margin, 5.0F);
+      int borderWidth = (int) typedArray.getDimension(R.styleable.StoryView_border_width, 5);
+      float cornerRadius = typedArray.getDimension(R.styleable.StoryView_story_icon_corner_radius, -1);
+      int subStoryUnreadCount = typedArray.getInt(R.styleable.StoryView_sub_story_unread_count_visibility, View.GONE);
+      boolean restrictToThreeItems = typedArray.getBoolean(R.styleable.StoryView_restrict_to_three_items, false);
+      float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
+      int titlePosition = typedArray.getInt(R.styleable.StoryView_title_position, 0);
+      int titleVisibility = typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE);
 
-      ViewGroup.LayoutParams imageParams = image.getLayoutParams();
-      imageParams.height = iconHeight;
-      imageParams.width = iconWidth;
-      image.setLayoutParams(imageParams);
+      int padding = convertDpToPx(context, 3);
 
-      ViewGroup.LayoutParams cardParams = cardView.getLayoutParams();
-      cardParams.height = iconHeight;
-      cardParams.width = iconWidth;
-      cardView.setLayoutParams(cardParams);
+      parentLayout.setPadding(padding, padding, padding, padding);
 
-      ViewGroup.LayoutParams cardViewShadowParams = cardViewShadow.getLayoutParams();
-      if (iconShadow) {
-        cardViewShadowParams.height = iconHeight + 7;
-      } else {
-        cardViewShadowParams.height = iconHeight;
+      if (restrictToThreeItems) {
+        int width = parentLayoutWidth / 3;
+        if (iconSpace != -1) {
+          width = (int) (width - iconSpace);
+        }
+        if (subStoryUnreadCount == 0) {
+          width = width - 30;
+        }
+        width = width - (padding * 2);
+        iconWidth = width;
       }
-      cardViewShadowParams.width = iconWidth;
-      cardViewShadow.setLayoutParams(cardViewShadowParams);
 
-      nameTextView.setVisibility(typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE));
-      int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
-      nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
-      nameTextView.setText(stories.get(position).getTitle());
-      nameTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
-      applyFont(nameTextView, typedArray);
+      if (subStoryUnreadCount == 0) {
+        unreadCountTextView.setVisibility(View.VISIBLE);
+        if (stories.get(position).isOpened() && stories.get(position).getUnreadCount() == 0) {
+          unreadCountTextView.setVisibility(View.GONE);
+        } else {
+          unreadCountTextView.setText(stories.get(position).getUnreadCount() + "");
+        }
+        unreadCountTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color, DEFAULT_UNREAD_COUNT_TEXT_COLOR));
+
+        GradientDrawable circleDrawable = new GradientDrawable();
+        circleDrawable.setShape(GradientDrawable.OVAL);
+        int backgroundColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_background_color, DEFAULT_UNREAD_COUNT_BACKGROUND_COLOR);
+        circleDrawable.setColor(backgroundColor);
+
+        unreadCountTextView.setBackground(circleDrawable);
+
+        ViewGroup.LayoutParams unreadCountFrameLayoutParams = unreadCountFrameLayout.getLayoutParams();
+        unreadCountFrameLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        if (cornerRadius == -1) {
+          unreadCountFrameLayoutParams.width = iconWidth;
+        } else {
+          unreadCountFrameLayoutParams.width = iconWidth + 30;
+        }
+        unreadCountFrameLayout.setLayoutParams(unreadCountFrameLayoutParams);
+
+        ViewGroup.LayoutParams unreadCountRelativeLayoutParams = unreadCountRelativeLayout.getLayoutParams();
+        unreadCountRelativeLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        if (cornerRadius == -1) {
+          unreadCountRelativeLayoutParams.width = iconWidth;
+        } else {
+          unreadCountRelativeLayoutParams.width = iconWidth + 30;
+        }
+        unreadCountRelativeLayout.setLayoutParams(unreadCountRelativeLayoutParams);
+
+      } else {
+        unreadCountTextView.setVisibility(View.GONE);
+
+        ViewGroup.LayoutParams unreadCountFrameLayoutParams = unreadCountFrameLayout.getLayoutParams();
+        unreadCountFrameLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;;
+        unreadCountFrameLayoutParams.width = iconWidth;
+        unreadCountFrameLayout.setLayoutParams(unreadCountFrameLayoutParams);
+
+        ViewGroup.LayoutParams unreadCountRelativeLayoutParams = unreadCountRelativeLayout.getLayoutParams();
+        unreadCountRelativeLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;;
+        unreadCountRelativeLayoutParams.width = iconWidth;
+        unreadCountRelativeLayout.setLayoutParams(unreadCountRelativeLayoutParams);
+      }
+
+      if (borderVisibility == 0 && !stories.get(position).isOpened()) {
+        ViewGroup.LayoutParams imageParams = image.getLayoutParams();
+        if (cornerRadius == -1) {
+          imageParams.height = (int) (iconHeight - borderMargin - 12);
+        } else {
+          imageParams.height = iconHeight;
+        }
+        imageParams.width = (int) (iconWidth - borderMargin - 12);
+        image.setLayoutParams(imageParams);
+
+        ViewGroup.LayoutParams titleInsideLayoutParams = titleInsideLayout.getLayoutParams();
+        if (cornerRadius == -1) {
+          titleInsideLayoutParams.height = (int) (iconHeight - borderMargin - 12);
+        } else {
+          titleInsideLayoutParams.height = iconHeight;
+        }
+        titleInsideLayoutParams.width = (int) (iconWidth - borderMargin - 12);
+        titleInsideLayout.setLayoutParams(titleInsideLayoutParams);
+
+        ViewGroup.LayoutParams cardParams = cardView.getLayoutParams();
+        if (cornerRadius == -1) {
+          cardParams.height = (int) (iconHeight - borderMargin - 12);
+        } else {
+          cardParams.height = iconHeight;
+        }
+        cardParams.width = (int) (iconWidth - borderMargin - 12);
+        cardView.setLayoutParams(cardParams);
+
+        ViewGroup.LayoutParams imageLayoutParams = imageLayout.getLayoutParams();
+        imageLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        imageLayoutParams.width = (int) (iconWidth - borderMargin - 12);
+        imageLayout.setLayoutParams(imageLayoutParams);
+
+        ViewGroup.LayoutParams cardViewShadowParams = cardViewShadow.getLayoutParams();
+        if (iconShadow) {
+          cardViewShadowParams.height = iconHeight + 7;
+        } else {
+          if (cornerRadius == -1) {
+            cardViewShadowParams.height = (int) (iconHeight - borderMargin - 12);
+          } else {
+            cardViewShadowParams.height = iconHeight;
+          }
+        }
+        cardViewShadowParams.width = (int) (iconWidth - borderMargin - 12);
+        cardViewShadow.setLayoutParams(cardViewShadowParams);
+      } else {
+        ViewGroup.LayoutParams imageParams = image.getLayoutParams();
+        imageParams.height = iconHeight;
+        imageParams.width = iconWidth;
+        image.setLayoutParams(imageParams);
+
+        ViewGroup.LayoutParams titleInsideLayoutParams = titleInsideLayout.getLayoutParams();
+        titleInsideLayoutParams.height = iconHeight;
+        titleInsideLayoutParams.width = iconWidth;
+        titleInsideLayout.setLayoutParams(titleInsideLayoutParams);
+
+        ViewGroup.LayoutParams cardParams = cardView.getLayoutParams();
+        cardParams.height = iconHeight;
+        cardParams.width = iconWidth;
+        cardView.setLayoutParams(cardParams);
+
+        ViewGroup.LayoutParams imageLayoutParams = imageLayout.getLayoutParams();
+        imageLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        imageLayoutParams.width = iconWidth;
+        imageLayout.setLayoutParams(imageLayoutParams);
+
+        ViewGroup.LayoutParams cardViewShadowParams = cardViewShadow.getLayoutParams();
+        if (iconShadow) {
+          cardViewShadowParams.height = iconHeight + 7;
+        } else {
+          cardViewShadowParams.height = iconHeight;
+        }
+        cardViewShadowParams.width = iconWidth;
+        cardViewShadow.setLayoutParams(cardViewShadowParams);
+      }
+
+      ViewGroup.LayoutParams storyLayoutParams = storyLayout.getLayoutParams();
+      storyLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+      storyLayoutParams.width = iconWidth;
+      storyLayout.setLayoutParams(storyLayoutParams);
+
+      if (titleVisibility == 0) {
+        if (titlePosition == 0) {
+          nameTextView.setVisibility(View.VISIBLE);
+          titleInsideLayout.setVisibility(View.GONE);
+
+          int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
+          nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
+          nameTextView.setText(stories.get(position).getTitle());
+          nameTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
+          applyFont(nameTextView, typedArray);
+        } else {
+          nameTextView.setVisibility(View.GONE);
+          titleInsideLayout.setVisibility(View.VISIBLE);
+
+          int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
+          tvTitleInside.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
+          tvTitleInside.setText(stories.get(position).getTitle());
+          tvTitleInside.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
+          applyFont(tvTitleInside, typedArray);
+
+          RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) tvTitleInside.getLayoutParams();
+          layoutParams.removeRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+          layoutParams.removeRule(RelativeLayout.ALIGN_PARENT_TOP);
+
+          if (titlePosition == 1) {
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+          } else if (titlePosition == 2) {
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+          }
+
+          tvTitleInside.setLayoutParams(layoutParams);
+        }
+      } else {
+        nameTextView.setVisibility(View.GONE);
+        titleInsideLayout.setVisibility(View.GONE);
+      }
 
       loadImage(position, image);
 
-      float cornerRadius = typedArray.getDimension(R.styleable.StoryView_story_icon_corner_radius, -1);
       if (cornerRadius != -1) {
         cardView.setRadius(cornerRadius);
         cardViewShadow.setRadius(cornerRadius + 3);
       }
 
-      float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
       if (iconSpace != -1) {
         ViewGroup.MarginLayoutParams parentLayoutParams = (ViewGroup.MarginLayoutParams) parentLayout.getLayoutParams();
         parentLayoutParams.setMargins(parentLayoutParams.leftMargin, parentLayoutParams.topMargin, (int) iconSpace, parentLayoutParams.bottomMargin);
@@ -139,11 +314,11 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       }
 
       if (iconShadow && borderVisibility == 0) {
-        applyIconBorder(position, borderLayout, cornerRadius);
+        applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout);
         cardView.setCardElevation(15);
         cardView.setMaxCardElevation(15);
       } else if (borderVisibility == 0) {
-        applyIconBorder(position, borderLayout, cornerRadius);
+        applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout);
       } else if (iconShadow) {
         cardView.setCardElevation(15);
         cardView.setMaxCardElevation(15);
@@ -163,7 +338,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     }
   }
 
-  public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius) {
+  public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius, int borderWidth, float borderMargin, LinearLayout imageLayout) {
     try {
       if (stories.get(position).isOpened()) {
         borderLayout.setBackground(null);
@@ -178,16 +353,25 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
           border.setCornerRadius(cornerRadius);
         }
         border.setColor(0xFFFFFFFF); //white background
-        border.setStroke(5, typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR)); //black border with full opacity
+        border.setStroke(borderWidth, typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR)); //black border with full opacity
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
           borderLayout.setBackgroundDrawable(border);
         } else {
           borderLayout.setBackground(border);
         }
+
+        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) imageLayout.getLayoutParams();
+        params.setMargins((int) borderMargin, (int) borderMargin, (int) borderMargin, (int) borderMargin);
+        imageLayout.setLayoutParams(params);
       }
     } catch (Exception e) {
       Logger.e(TAG, "Error while applying border to icon. " + e.getLocalizedMessage(), e);
     }
+  }
+
+  public static int convertDpToPx(Context context, int dp) {
+    float density = context.getResources().getDisplayMetrics().density;
+    return Math.round(dp * density);
   }
 
   @Override
@@ -197,7 +381,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
   private void loadImage(int position, ImageView image) {
     try {
-      ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+      CleverPush.getInstance(CleverPush.context).getCurrentActivity().runOnUiThread(new Runnable() {
         @Override
         public void run() {
           String imageUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
@@ -294,5 +478,18 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   @Override
   public int getItemViewType(int position) {
     return position;
+  }
+
+  public void updateStories(ArrayList<Story> stories) {
+    this.stories = stories;
+    notifyDataSetChanged();
+  }
+
+  public static void setStoryViewListAdapter(StoryViewListAdapter storyViewAdapter) {
+    storyViewListAdapter = storyViewAdapter;
+  }
+
+  public static StoryViewListAdapter getStoryViewListAdapter() {
+    return storyViewListAdapter;
   }
 }

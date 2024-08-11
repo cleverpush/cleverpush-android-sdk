@@ -27,6 +27,8 @@ public class Story implements Serializable {
   private Content content;
 
   private boolean opened = false;
+  private int subStoryCount = 0;
+  private int unreadCount = 0;
 
   public String getId() {
     return this.id;
@@ -66,5 +68,21 @@ public class Story implements Serializable {
 
   public void setOpened(boolean opened) {
     this.opened = opened;
+  }
+
+  public int getUnreadCount() {
+    return unreadCount;
+  }
+
+  public void setUnreadCount(int unreadCount) {
+    this.unreadCount = unreadCount;
+  }
+
+  public int getSubStoryCount() {
+    return subStoryCount;
+  }
+
+  public void setSubStoryCount(int subStoryCount) {
+    this.subStoryCount = subStoryCount;
   }
 }

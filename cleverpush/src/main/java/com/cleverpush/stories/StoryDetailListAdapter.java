@@ -26,13 +26,18 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
   private ArrayList<Story> stories;
   private StoryChangeListener storyChangeListener;
   public StoryViewOpenedListener storyViewOpenedListener;
+  int subStoryPosition = 0;
+  boolean isHideStoryShareButton = false;
   private static final String TAG = "CleverPush/StoryDetailAdapter";
 
-  public StoryDetailListAdapter(Activity activity, ArrayList<Story> stories, StoryChangeListener storyChangeListener, StoryViewOpenedListener storyViewOpenedListener) {
+  public StoryDetailListAdapter(Activity activity, ArrayList<Story> stories, StoryChangeListener storyChangeListener,
+                                StoryViewOpenedListener storyViewOpenedListener, int subStoryPosition, boolean isHideStoryShareButton) {
     this.activity = activity;
     this.stories = stories;
     this.storyChangeListener = storyChangeListener;
     this.storyViewOpenedListener = storyViewOpenedListener;
+    this.subStoryPosition = subStoryPosition;
+    this.isHideStoryShareButton = isHideStoryShareButton;
   }
 
   @Override
@@ -46,7 +51,6 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
   public void onBindViewHolder(@NonNull StoryDetailViewHolder storyDetailViewHolder, int position) {
     try {
       storyDetailViewHolder.setIsRecyclable(false);
-      storyDetailViewHolder.progressBar.setVisibility(View.VISIBLE);
 
       int measuredWidth = 0;
       int measuredHeight = 0;
@@ -68,8 +72,9 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
               "<body>\n" +
               "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, activity) + " height="
               + convertPixelsToDp(measuredHeight, activity) + ">\n" +
-              " <a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + stories.get(
-              position).getId() + "/html\">\n" +
+              "<a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + stories.get(position).getId() +
+//              position).getId() + "/html\">\n" +
+              "/html?hideStoryShareButton=" + isHideStoryShareButton + "&#page=page-" + subStoryPosition + "\">\n" +
               "    </a>\n" +
               "  </amp-story-player>\n" +
               "  <script>\n" +
@@ -82,6 +87,9 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
               "    });\n" +
               "    player.addEventListener('ready', function (event) {\n" +
               "       storyDetailJavascriptInterface.ready();" +
+              "    });\n" +
+              "    player.addEventListener('storyNavigation', function (event) {\n" +
+              "      storyDetailJavascriptInterface.storyNavigation(" + position + ", Number(event.detail.pageId?.split('-')?.[1] || 111));\n" +
               "    });\n" +
               "  </script>\n" +
               "</body>\n" +

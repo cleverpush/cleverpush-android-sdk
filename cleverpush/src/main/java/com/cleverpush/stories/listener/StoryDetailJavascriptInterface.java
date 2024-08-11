@@ -1,8 +1,6 @@
 package com.cleverpush.stories.listener;
 
 import android.app.Activity;
-import android.os.Handler;
-import android.view.View;
 import android.webkit.JavascriptInterface;
 
 import com.cleverpush.stories.StoryDetailViewHolder;
@@ -32,13 +30,11 @@ public class StoryDetailJavascriptInterface {
 
   @JavascriptInterface
   public void ready() {
-    new Handler().postDelayed(new Runnable() {
-      @Override
-      public void run() {
-        activity.runOnUiThread(() -> storyDetailViewHolder.progressBar.setVisibility(View.GONE));
-      }
-    }, 800);
 
   }
 
+  @JavascriptInterface
+  public void storyNavigation(int position, int subStoryIndex) {
+    storyChangeListener.onStoryNavigation(position, subStoryIndex);
+  }
 }

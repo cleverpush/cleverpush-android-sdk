@@ -4,39 +4,114 @@
     android:id="@+id/parentLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:background="#fff"
     android:gravity="center_horizontal"
-    android:orientation="vertical"
-    android:padding="5dp">
+    android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/borderLayout"
+        android:id="@+id/unreadCountLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardViewShadow"
-            android:layout_width="75dp"
-            android:layout_height="75dp"
-            android:background="@android:color/transparent"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:cardCornerRadius="50dp">
+        <FrameLayout
+            android:id="@+id/unreadCountFrameLayout"
+            android:layout_width="95dp"
+            android:layout_height="wrap_content">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/ivChallengeCardView"
-                android:layout_width="75dp"
-                android:layout_height="75dp"
-                app:cardCornerRadius="50dp">
+            <LinearLayout
+                android:id="@+id/storyLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/ivChallenge"
-                    android:layout_width="75dp"
-                    android:layout_height="75dp"
-                    android:scaleType="centerCrop" />
+                <LinearLayout
+                    android:id="@+id/borderLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-            </androidx.cardview.widget.CardView>
+                    <LinearLayout
+                        android:id="@+id/imageLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:orientation="vertical">
 
-        </androidx.cardview.widget.CardView>
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/cardViewShadow"
+                            android:layout_width="75dp"
+                            android:layout_height="75dp"
+                            android:background="@android:color/transparent"
+                            app:cardBackgroundColor="@android:color/transparent"
+                            app:cardCornerRadius="50dp">
+
+                            <androidx.cardview.widget.CardView
+                                android:id="@+id/ivChallengeCardView"
+                                android:layout_width="75dp"
+                                android:layout_height="75dp"
+                                app:cardCornerRadius="50dp">
+
+                                <FrameLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content">
+
+                                    <ImageView
+                                        android:id="@+id/ivChallenge"
+                                        android:layout_width="75dp"
+                                        android:layout_height="75dp"
+                                        android:scaleType="centerCrop"
+                                        android:src="@drawable/app_banner_default_image" />
+
+                                    <RelativeLayout
+                                        android:id="@+id/titleInsideLayout"
+                                        android:layout_width="75dp"
+                                        android:layout_height="75dp"
+                                        android:visibility="visible"
+                                        android:padding="5dp">
+
+                                        <TextView
+                                            android:id="@+id/tvTitleInside"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:gravity="center_horizontal"
+                                            android:textColor="@color/cp_black"
+                                            android:textSize="12sp" />
+
+                                    </RelativeLayout>
+
+                                </FrameLayout>
+
+                            </androidx.cardview.widget.CardView>
+
+                        </androidx.cardview.widget.CardView>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:id="@+id/unreadCountRelativeLayout"
+                android:layout_width="95dp"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/tvUnreadCount"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_alignParentEnd="true"
+                    android:background="@drawable/circle"
+                    android:gravity="center"
+                    android:text="0"
+                    android:textColor="@color/cp_black"
+                    android:textSize="12sp" />
+
+            </RelativeLayout>
+
+        </FrameLayout>
 
     </LinearLayout>
 

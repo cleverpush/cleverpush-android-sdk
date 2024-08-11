@@ -27,6 +27,8 @@ public class CleverPushPreferences {
   public static final String APP_BANNERS_DISABLED = "CleverPush_APP_BANNERS_DISABLED";
   public static final String SUBSCRIPTION_TOPICS_DESELECT_ALL = "CleverPush_SUBSCRIPTION_TOPICS_DESELECT_ALL";
   public static final String APP_OPENED_STORIES = "CleverPush_APP_OPENED_STORIES";
+  public static final String STORIES_UNREAD_COUNT = "CleverPush_STORIES_UNREAD_COUNT";
+  public static final String SUB_STORY_POSITION = "CleverPush_SUB_STORY_POSITION";
   public static final String APP_BANNER_SHOWING = "CleverPush_APP_BANNER_SHOWING";
   public static final String UNSUBSCRIBED = "CleverPush_UNSUBSCRIBED";
   public static final String TOPIC_LAST_CHECKED = "CleverPush_TOPIC_LAST_CHECKED";
