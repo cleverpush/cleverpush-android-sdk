@@ -18,6 +18,7 @@ import android.text.TextUtils;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.request.RequestOptions;
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
@@ -381,7 +382,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
   private void loadImage(int position, ImageView image) {
     try {
-      CleverPush.getInstance(CleverPush.context).getCurrentActivity().runOnUiThread(new Runnable() {
+      ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
         @Override
         public void run() {
           String imageUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
