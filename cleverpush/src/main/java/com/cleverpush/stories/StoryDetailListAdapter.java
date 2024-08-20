@@ -95,7 +95,6 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
         + convertPixelsToDp(measuredHeight, activity) + ">\n" +
         "<a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId+
         "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&%23page=page-" + subStoryPosition + "\">\n" +
-//              "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "\">\n" +
         "    </a>\n" +
         "  </amp-story-player>\n" +
         "  <script>\n" +

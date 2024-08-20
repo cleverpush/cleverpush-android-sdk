@@ -213,6 +213,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
 
         recyclerView.smoothScrollToPosition(selectedPosition);
+
         String storyId = stories.get(position + 1).getId();
         setStoryOpened(storyId);
       } else {
@@ -253,7 +254,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       int unreadCount = subStoryCount - (subStoryPosition + 1);
 
       SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
-      SharedPreferences.Editor editor = sharedPreferences.edit();
 
       String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT, "");
       String subStoryPositionString = sharedPreferences.getString(CleverPushPreferences.SUB_STORY_POSITION, "");
@@ -270,39 +270,39 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       if (selectedPosition == position) {
         if (storyUnreadCountString.isEmpty()) {
           storyUnreadCountMap.put(storyId, unreadCount);
-          editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT, gson.toJson(storyUnreadCountMap)).apply();
+          subStoryPositionMap.put(storyId, subStoryPosition);
 
-          subStoryPositionMap.put(storyId, (subStoryPosition));
-          editor.putString(CleverPushPreferences.SUB_STORY_POSITION, gson.toJson(subStoryPositionMap)).apply();
-
-          stories.get(selectedPosition).setUnreadCount(unreadCount);
+          updateStoryPreferences(gson.toJson(storyUnreadCountMap), gson.toJson(subStoryPositionMap), unreadCount, sharedPreferences);
         } else {
           if (storyUnreadCountMap.containsKey(storyId) && subStoryPositionMap.containsKey(storyId)) {
             int preferencesSubStoryPosition = subStoryPositionMap.get(storyId);
 
             if (subStoryPosition > (preferencesSubStoryPosition)) {
               storyUnreadCountMap.put(storyId, unreadCount);
-              editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT, gson.toJson(storyUnreadCountMap)).apply();
+              subStoryPositionMap.put(storyId, subStoryPosition);
 
-              subStoryPositionMap.put(storyId, (subStoryPosition));
-              editor.putString(CleverPushPreferences.SUB_STORY_POSITION, gson.toJson(subStoryPositionMap)).apply();
-
-              stories.get(selectedPosition).setUnreadCount(unreadCount);
+              updateStoryPreferences(gson.toJson(storyUnreadCountMap), gson.toJson(subStoryPositionMap), unreadCount, sharedPreferences);
             }
           } else {
             storyUnreadCountMap.put(storyId, unreadCount);
-            editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT, gson.toJson(storyUnreadCountMap)).apply();
+            subStoryPositionMap.put(storyId, subStoryPosition);
 
-            subStoryPositionMap.put(storyId, (subStoryPosition));
-            editor.putString(CleverPushPreferences.SUB_STORY_POSITION, gson.toJson(subStoryPositionMap)).apply();
-
-            stories.get(selectedPosition).setUnreadCount(unreadCount);
+            updateStoryPreferences(gson.toJson(storyUnreadCountMap), gson.toJson(subStoryPositionMap), unreadCount, sharedPreferences);
           }
         }
       }
     } catch (Exception e) {
       Logger.e(TAG, "Error handling onStoryNavigation in StoryDetailActivity", e);
     }
+  }
+
+  private void updateStoryPreferences(String unreadCountMap, String subStoryPositionMap, int unreadCount, SharedPreferences sharedPreferences) {
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT, unreadCountMap).apply();
+    editor.putString(CleverPushPreferences.SUB_STORY_POSITION, subStoryPositionMap).apply();
+    editor.apply();
+
+    stories.get(selectedPosition).setUnreadCount(unreadCount);
   }
 
   private void updateStoryStates() {
