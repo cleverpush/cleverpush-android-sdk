@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.0 (20.08.2024)
+* Added more customization option in `StoryView`. (border_margin, border_width, close_button_position, title_position, restrict_to_three_items, sub_story_unread_count_visibility, sub_story_unread_count_background_color, sub_story_unread_count_text_color, sort_to_last_index)
+
 ## 1.33.28 (09.08.2024)
 * Fixed the issue whereby `removeSubscriptionTopic` and `addSubscriptionTopic` were not functioning correctly when the internet was unavailable.
 * Resolves issue in `getNotifications`, notification not updated correctly. 
