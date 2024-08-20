@@ -5,6 +5,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class Content implements Serializable {
 
@@ -29,6 +30,10 @@ public class Content implements Serializable {
   @SerializedName("preview")
   @Expose
   private Preview preview;
+
+  @SerializedName("pages")
+  @Expose
+  private List<Object> pages;
 
   public int getVersion() {
     return this.version;
@@ -70,4 +75,11 @@ public class Content implements Serializable {
     this.preview = preview;
   }
 
+  public List<Object> getPages() {
+    return pages;
+  }
+
+  public void setPages(List<Object> pages) {
+    this.pages = pages;
+  }
 }

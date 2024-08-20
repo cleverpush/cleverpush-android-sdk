@@ -6,4 +6,6 @@ public interface StoryChangeListener {
 
   void onPrevious(int position);
 
+  void onStoryNavigation(int position, int subStoryPosition);
+
 }

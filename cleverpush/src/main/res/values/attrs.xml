@@ -4,8 +4,16 @@
         <attr name="border_color" format="color" />
         <attr name="background_color" format="color" />
         <attr name="text_color" format="color" />
-        <attr name="story_view_height" format="dimension" />
-        <attr name="story_view_width" format="dimension" />
+        <attr name="story_view_height" format="dimension" >
+            <enum name="fill_parent" value="-1" />
+            <enum name="match_parent" value="-1" />
+            <enum name="wrap_content" value="-2" />
+        </attr>
+        <attr name="story_view_width" format="dimension" >
+            <enum name="fill_parent" value="-1" />
+            <enum name="match_parent" value="-1" />
+            <enum name="wrap_content" value="-2" />
+        </attr>
         <attr name="font_family" format="string" />
         <attr name="widget_id" format="string" />
         <attr name="title_visibility" format="enum">
@@ -23,6 +31,29 @@
             <enum name="gone" value="8" />
             <enum name="invisible" value="4" />
             <enum name="visible" value="0" />
+        </attr>
+        <attr name="border_margin" format="dimension" />
+        <attr name="border_width" format="dimension" />
+        <attr name="sub_story_unread_count_visibility" format="enum" >
+            <enum name="gone" value="8" />
+            <enum name="invisible" value="4" />
+            <enum name="visible" value="0" />
+        </attr>
+        <attr name="sub_story_unread_count_background_color" format="color" />
+        <attr name="sub_story_unread_count_text_color" format="color" />
+        <attr name="restrict_to_three_items" format="boolean" />
+        <attr name="close_button_position" format="enum">
+            <enum name="left" value="0" />
+            <enum name="right" value="1" />
+        </attr>
+        <attr name="title_position" format="enum">
+            <enum name="position_default" value="0" />
+            <enum name="position_inside_bottom" value="1" />
+            <enum name="position_inside_top" value="2" />
+        </attr>
+        <attr name="sort_to_last_index" format="enum">
+            <enum name="position_default" value="0" />
+            <enum name="position_end" value="1" />
         </attr>
     </declare-styleable>
 
