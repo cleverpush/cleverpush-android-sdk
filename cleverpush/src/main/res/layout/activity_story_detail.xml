@@ -31,6 +31,3 @@
         android:src="@drawable/ic_close"
         android:visibility="gone" />
 </RelativeLayout>
-
-
-

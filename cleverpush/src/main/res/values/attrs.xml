@@ -6,7 +6,6 @@
         <attr name="text_color" format="color" />
         <attr name="story_view_height" format="dimension" >
             <enum name="fill_parent" value="-1" />
-                 Introduced in API Level 8. -->
             <enum name="match_parent" value="-1" />
             <enum name="wrap_content" value="-2" />
         </attr>

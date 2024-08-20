@@ -11,39 +11,6 @@
         android:orientation="vertical"
         tools:context="com.cleverpush.cleverpush_example_android.MainActivity">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/ivChallengeCardView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="15dp"
-            app:cardCornerRadius="15dp">
-
-            <com.cleverpush.stories.StoryView
-                android:id="@+id/storyView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:story_view_width="match_parent"
-                app:border_color="#FFEB3B"
-                app:text_color="#000"
-                app:title_visibility="visible"
-                app:title_text_size="12sp"
-                app:story_icon_height="90dp"
-                app:story_icon_width="150dp"
-                app:story_icon_corner_radius="10dp"
-                app:story_icon_shadow="false"
-                app:border_visibility="visible"
-                app:border_margin="4dp"
-                app:border_width="4dp"
-                app:close_button_position="right"
-                app:sub_story_unread_count_visibility="visible"
-                app:restrict_to_three_items="true"
-                app:title_position="position_inside_bottom"
-                app:sub_story_unread_count_background_color="@android:color/holo_red_dark"
-                app:sub_story_unread_count_text_color="@color/white"
-                app:widget_id="CyELm3daayQGuSGTD" />
-
-        </androidx.cardview.widget.CardView>
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSubscribe"
             android:layout_width="wrap_content"

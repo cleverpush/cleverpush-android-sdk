@@ -11,6 +11,8 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.R;
 import com.cleverpush.listener.StoryViewOpenedListener;
 import com.cleverpush.stories.listener.StoryChangeListener;
@@ -28,16 +30,21 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
   public StoryViewOpenedListener storyViewOpenedListener;
   int subStoryPosition = 0;
   boolean isHideStoryShareButton = false;
+  String widgetId = null;
   private static final String TAG = "CleverPush/StoryDetailAdapter";
+  private StoryDetailViewHolder storyDetailViewHolder;
+  int measuredWidth = 0;
+  int measuredHeight = 0;
 
   public StoryDetailListAdapter(Activity activity, ArrayList<Story> stories, StoryChangeListener storyChangeListener,
-                                StoryViewOpenedListener storyViewOpenedListener, int subStoryPosition, boolean isHideStoryShareButton) {
+                                StoryViewOpenedListener storyViewOpenedListener, int subStoryPosition, boolean isHideStoryShareButton, String widgetId) {
     this.activity = activity;
     this.stories = stories;
     this.storyChangeListener = storyChangeListener;
     this.storyViewOpenedListener = storyViewOpenedListener;
     this.subStoryPosition = subStoryPosition;
     this.isHideStoryShareButton = isHideStoryShareButton;
+    this.widgetId = widgetId;
   }
 
   @Override
@@ -50,50 +57,13 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
   @Override
   public void onBindViewHolder(@NonNull StoryDetailViewHolder storyDetailViewHolder, int position) {
     try {
+      this.storyDetailViewHolder = storyDetailViewHolder;
       storyDetailViewHolder.setIsRecyclable(false);
 
-      int measuredWidth = 0;
-      int measuredHeight = 0;
       WindowManager windowManager = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
       Display display = windowManager.getDefaultDisplay();
       measuredWidth = display.getWidth();
       measuredHeight = display.getHeight();
-
-      String htmlContent = "<!DOCTYPE html>\n" +
-              "<html>\n" +
-              "<head>\n" +
-              "  <script     async src=\"https://cdn.ampproject.org/v0.js\"></script>\n" +
-              "  <script\n" +
-              "    async\n" +
-              "    custom-element=\"amp-story-player\"\n" +
-              "    src=\"https://cdn.ampproject.org/v0/amp-story-player-0.1.js\"\n" +
-              "  ></script>\n" +
-              "</head>\n" +
-              "<body>\n" +
-              "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, activity) + " height="
-              + convertPixelsToDp(measuredHeight, activity) + ">\n" +
-              "<a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + stories.get(position).getId() +
-//              position).getId() + "/html\">\n" +
-              "/html?hideStoryShareButton=" + isHideStoryShareButton + "&#page=page-" + subStoryPosition + "\">\n" +
-              "    </a>\n" +
-              "  </amp-story-player>\n" +
-              "  <script>\n" +
-              "    var player = document.querySelector('amp-story-player');\n" +
-              "    player.addEventListener('noPreviousStory', function (event) {\n" +
-              "      storyDetailJavascriptInterface.previous(" + position + ");" +
-              "    });\n" +
-              "    player.addEventListener('noNextStory', function (event) {\n" +
-              "      storyDetailJavascriptInterface.next(" + position + ");" +
-              "    });\n" +
-              "    player.addEventListener('ready', function (event) {\n" +
-              "       storyDetailJavascriptInterface.ready();" +
-              "    });\n" +
-              "    player.addEventListener('storyNavigation', function (event) {\n" +
-              "      storyDetailJavascriptInterface.storyNavigation(" + position + ", Number(event.detail.pageId?.split('-')?.[1] || 111));\n" +
-              "    });\n" +
-              "  </script>\n" +
-              "</body>\n" +
-              "</html>";
 
       storyDetailViewHolder.webView.getSettings().setJavaScriptEnabled(true);
       storyDetailViewHolder.webView.getSettings().setLoadsImagesAutomatically(true);
@@ -101,10 +71,61 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
               new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity),
               "storyDetailJavascriptInterface");
       storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener));
-      storyDetailViewHolder.webView.loadData(htmlContent, "text/html; charset=utf-8", "UTF-8");
+      storyDetailViewHolder.webView.loadData(loadHtml(position, subStoryPosition), "text/html; charset=utf-8", "UTF-8");
     } catch (Exception e) {
       Logger.e(TAG, "Error in StoryDetail onBindViewHolder.", e);
     }
+  }
+
+  public String loadHtml(int position, int subStoryPosition) {
+    String storyId = stories.get(position).getId();
+
+    String htmlContent = "<!DOCTYPE html>\n" +
+        "<html>\n" +
+        "<head>\n" +
+        "  <script     async src=\"https://cdn.ampproject.org/v0.js\"></script>\n" +
+        "  <script\n" +
+        "    async\n" +
+        "    custom-element=\"amp-story-player\"\n" +
+        "    src=\"https://cdn.ampproject.org/v0/amp-story-player-0.1.js\"\n" +
+        "  ></script>\n" +
+        "</head>\n" +
+        "<body>\n" +
+        "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, activity) + " height="
+        + convertPixelsToDp(measuredHeight, activity) + ">\n" +
+        "<a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId+
+        "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&%23page=page-" + subStoryPosition + "\">\n" +
+//              "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "\">\n" +
+        "    </a>\n" +
+        "  </amp-story-player>\n" +
+        "  <script>\n" +
+        "    var player = document.querySelector('amp-story-player');\n" +
+        "    player.addEventListener('noPreviousStory', function (event) {\n" +
+        "      storyDetailJavascriptInterface.previous(" + position + ");" +
+        "    });\n" +
+        "    player.addEventListener('noNextStory', function (event) {\n" +
+        "      storyDetailJavascriptInterface.next(" + position + ");" +
+        "    });\n" +
+        "    player.addEventListener('ready', function (event) {\n" +
+        "       storyDetailJavascriptInterface.ready();" +
+        "    });\n" +
+        "    player.addEventListener('storyNavigation', function (event) {\n" +
+        "      storyDetailJavascriptInterface.storyNavigation(" + position + ", Number(event.detail.pageId?.split('-')?.[1]));\n" +
+        "    });\n" +
+        "  </script>\n" +
+        "</body>\n" +
+        "</html>";
+
+    return htmlContent;
+  }
+
+  public void refresh (int position, int subStoryPosition) {
+    ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        storyDetailViewHolder.webView.loadData(loadHtml(position, subStoryPosition), "text/html; charset=utf-8", "UTF-8");
+      }
+    });
   }
 
   @Override

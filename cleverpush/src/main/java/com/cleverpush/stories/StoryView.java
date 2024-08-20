@@ -5,13 +5,10 @@ import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -49,7 +46,7 @@ public class StoryView extends LinearLayout {
   private boolean loading = false;
   private ArrayList<Story> stories = new ArrayList<>();
   private String widgetId = null;
-
+  public static StoryView storyView;
   public StoryViewOpenedListener storyViewOpenedListener;
 
   public String getWidgetId() {
@@ -136,6 +133,11 @@ public class StoryView extends LinearLayout {
               stories.get(i).setOpened(false);
             }
           }
+
+          ArrayList<Story> categorizeStories = categorizeStories(stories);
+          stories.clear();
+          stories.addAll(categorizeStories);
+
           ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -213,9 +215,14 @@ public class StoryView extends LinearLayout {
           public void run() {
             SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            String storyId = stories.get(position).getId();
             String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
             String subStoryPositionString = sharedPreferences.getString(CleverPushPreferences.SUB_STORY_POSITION, "");
+
+            ArrayList<Story> categorizeStories = categorizeStories(stories);
+            stories.clear();
+            stories.addAll(categorizeStories);
+
+            String storyId = categorizeStories.get(position).getId();
             if (preferencesString.isEmpty()) {
               editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
             } else {
@@ -230,14 +237,19 @@ public class StoryView extends LinearLayout {
               Map<String, Integer> subStoryPositionMap = new Gson().fromJson(subStoryPositionString, type);
 
               if (subStoryPositionMap.containsKey(storyId)) {
-                subStoryIndex = subStoryPositionMap.get(storyId);
+                subStoryIndex = subStoryPositionMap.get(storyId) + 1;
+              }
+
+              if (categorizeStories.get(position).getSubStoryCount() == subStoryIndex) {
+                subStoryIndex = 0;
               }
             }
 
             int closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, 0);
 
-            stories.get(position).setOpened(true);
-            StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewOpenedListener, storyViewListAdapter, closeButtonPosition, subStoryIndex);
+            categorizeStories.get(position).setOpened(true);
+            StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, categorizeStories, position, storyViewOpenedListener, storyViewListAdapter,
+                closeButtonPosition, subStoryIndex, widgetId, StoryView.this);
             recyclerView.smoothScrollToPosition(position);
           }
         });
@@ -258,7 +270,46 @@ public class StoryView extends LinearLayout {
   }
 
   public void updateStories(ArrayList<Story> stories) {
-    this.stories = stories;
+    this.stories.clear();
+    this.stories.addAll(stories);
+    ArrayList<Story> categorizedStories = categorizeStories(this.stories);
+
+    if (storyViewListAdapter != null) {
+      storyViewListAdapter.updateStories(categorizedStories);
+      storyViewListAdapter.notifyDataSetChanged();
+    }
+  }
+
+  public static StoryView getStoryView() {
+    return storyView;
+  }
+
+  public static void setStoryView(StoryView storyview) {
+    storyView = storyview;
+  }
+
+  private ArrayList<Story> categorizeStories(ArrayList<Story> stories) {
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+    String preferencesString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT, "");
+
+    ArrayList<Story> openedStories = new ArrayList<>();
+    ArrayList<Story> unseenStories = new ArrayList<>();
+
+    for (Story story : stories) {
+      if (preferencesString.contains(story.getId())) {
+        story.setOpened(true);
+        openedStories.add(story);
+      } else {
+        story.setOpened(false);
+        unseenStories.add(story);
+      }
+    }
+
+    ArrayList<Story> categorizeStories = new ArrayList<>();
+    categorizeStories.addAll(unseenStories);
+    categorizeStories.addAll(openedStories);
+
+    return categorizeStories;
   }
 
 }

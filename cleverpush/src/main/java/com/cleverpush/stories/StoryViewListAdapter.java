@@ -1,5 +1,7 @@
 package com.cleverpush.stories;
 
+import static com.cleverpush.stories.StoryView.DEFAULT_BACKGROUND_COLOR;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -118,6 +120,9 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
       int titlePosition = typedArray.getInt(R.styleable.StoryView_title_position, 0);
       int titleVisibility = typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE);
+      int storyViewBackgroundColor = typedArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR);
+
+      parentLayout.setBackgroundColor(storyViewBackgroundColor);
 
       int padding = convertDpToPx(context, 3);
 
@@ -268,6 +273,11 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         if (titlePosition == 0) {
           nameTextView.setVisibility(View.VISIBLE);
           titleInsideLayout.setVisibility(View.GONE);
+
+          ViewGroup.LayoutParams nameTextViewParams = nameTextView.getLayoutParams();
+          nameTextViewParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+          nameTextViewParams.width = iconWidth;
+          nameTextView.setLayoutParams(nameTextViewParams);
 
           int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
           nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
