@@ -48,6 +48,7 @@ public class StoryView extends LinearLayout {
   private String widgetId = null;
   public static StoryView storyView;
   public StoryViewOpenedListener storyViewOpenedListener;
+  private int sortToLastIndex = 0;
 
   public String getWidgetId() {
     return widgetId;
@@ -134,9 +135,12 @@ public class StoryView extends LinearLayout {
             }
           }
 
-          ArrayList<Story> categorizeStories = categorizeStories(stories);
-          stories.clear();
-          stories.addAll(categorizeStories);
+          sortToLastIndex = attrArray.getInt(R.styleable.StoryView_sort_to_last_index, 0);
+          if (sortToLastIndex == 1) {
+            ArrayList<Story> categorizeStories = categorizeStories(stories);
+            stories.clear();
+            stories.addAll(categorizeStories);
+          }
 
           ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
             @Override
@@ -218,11 +222,13 @@ public class StoryView extends LinearLayout {
             String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
             String subStoryPositionString = sharedPreferences.getString(CleverPushPreferences.SUB_STORY_POSITION, "");
 
-            ArrayList<Story> categorizeStories = categorizeStories(stories);
-            stories.clear();
-            stories.addAll(categorizeStories);
+            if (sortToLastIndex == 1) {
+              ArrayList<Story> categorizeStories = categorizeStories(stories);
+              stories.clear();
+              stories.addAll(categorizeStories);
+            }
 
-            String storyId = categorizeStories.get(position).getId();
+            String storyId = stories.get(position).getId();
             if (preferencesString.isEmpty()) {
               editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
             } else {
@@ -240,16 +246,16 @@ public class StoryView extends LinearLayout {
                 subStoryIndex = subStoryPositionMap.get(storyId) + 1;
               }
 
-              if (categorizeStories.get(position).getSubStoryCount() == subStoryIndex) {
+              if (stories.get(position).getSubStoryCount() == subStoryIndex) {
                 subStoryIndex = 0;
               }
             }
 
             int closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, 0);
 
-            categorizeStories.get(position).setOpened(true);
-            StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, categorizeStories, position, storyViewOpenedListener, storyViewListAdapter,
-                closeButtonPosition, subStoryIndex, widgetId, StoryView.this);
+            stories.get(position).setOpened(true);
+            StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewOpenedListener, storyViewListAdapter,
+                closeButtonPosition, subStoryIndex, widgetId, sortToLastIndex, StoryView.this);
             recyclerView.smoothScrollToPosition(position);
           }
         });
@@ -272,10 +278,13 @@ public class StoryView extends LinearLayout {
   public void updateStories(ArrayList<Story> stories) {
     this.stories.clear();
     this.stories.addAll(stories);
-    ArrayList<Story> categorizedStories = categorizeStories(this.stories);
-
     if (storyViewListAdapter != null) {
-      storyViewListAdapter.updateStories(categorizedStories);
+      if (sortToLastIndex == 1) {
+        ArrayList<Story> categorizedStories = categorizeStories(this.stories);
+        storyViewListAdapter.updateStories(categorizedStories);
+      } else {
+        storyViewListAdapter.updateStories(this.stories);
+      }
       storyViewListAdapter.notifyDataSetChanged();
     }
   }

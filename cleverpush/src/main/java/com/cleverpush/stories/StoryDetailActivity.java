@@ -43,12 +43,14 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   private int closeButtonPosition;
   private static final String TAG = "CleverPush/AppStoryDetails";
   private int subStoryPosition = 0;
+  private int sortToLastIndex = 0;
   private String widgetId = null;
   StoryDetailListAdapter storyDetailListAdapter;
   StoryView storyView;
 
   public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewOpenedListener storyViewOpenedListener,
-                            StoryViewListAdapter storyViewListAdapter, int closeButtonPosition, int subStoryPosition, String widgetId, StoryView storyView) {
+                            StoryViewListAdapter storyViewListAdapter, int closeButtonPosition, int subStoryPosition, String widgetId,
+                            int sortToLastIndex, StoryView storyView) {
     try {
       ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
         @Override
@@ -60,6 +62,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
           intent.putExtra("closeButtonPosition", closeButtonPosition);
           intent.putExtra("subStoryPosition", subStoryPosition);
           intent.putExtra("widgetId", widgetId);
+          intent.putExtra("sortToLastIndex", sortToLastIndex);
           StoryViewListAdapter.setStoryViewListAdapter(storyViewListAdapter);
           StoryView.setStoryView(storyView);
           activity.startActivity(intent);
@@ -140,6 +143,9 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
         if (extras.containsKey("widgetId")) {
           widgetId = extras.getString("widgetId");
+        }
+        if (extras.containsKey("sortToLastIndex")) {
+          sortToLastIndex = extras.getInt("sortToLastIndex");
         }
         storyViewListAdapter = StoryViewListAdapter.getStoryViewListAdapter();
         storyView = StoryView.getStoryView();
@@ -333,9 +339,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
       }
 
-      ArrayList<Story> categorizeStories = categorizeStories(stories);
-      stories.clear();
-      stories.addAll(categorizeStories);
+      if (sortToLastIndex == 1) {
+        ArrayList<Story> categorizeStories = categorizeStories(stories);
+        stories.clear();
+        stories.addAll(categorizeStories);
+      }
 
       runOnUiThread(() -> {
         if (storyView != null) {

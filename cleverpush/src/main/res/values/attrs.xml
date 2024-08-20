@@ -51,6 +51,10 @@
             <enum name="position_inside_bottom" value="1" />
             <enum name="position_inside_top" value="2" />
         </attr>
+        <attr name="sort_to_last_index" format="enum">
+            <enum name="position_default" value="0" />
+            <enum name="position_end" value="1" />
+        </attr>
     </declare-styleable>
 
     <declare-styleable name="InboxView">
