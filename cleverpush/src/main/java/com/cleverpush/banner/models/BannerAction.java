@@ -24,6 +24,8 @@ public class BannerAction {
   private Map<String, Object> customData;
   private String blockId;
   private String multipleScreenId;
+  private Event event;
+  private List<EventProperty> eventProperties;
 
   private BannerAction() {
   }
@@ -96,6 +98,14 @@ public class BannerAction {
     this.multipleScreenId = multipleScreenId;
   }
 
+  public Event getEvent() {
+    return event;
+  }
+
+  public List<EventProperty> getEventProperties() {
+    return eventProperties;
+  }
+
   public static BannerAction create(JSONObject json) throws JSONException {
     BannerAction banner = new BannerAction();
 
@@ -139,6 +149,18 @@ public class BannerAction {
 
       banner.attributeId = json.optString("attributeId");
       banner.attributeValue = json.optString("attributeValue");
+
+      if (json.has("event")) {
+        banner.event = Event.create(json.optJSONObject("event"));
+      }
+
+      JSONArray eventPropertiesArray = json.optJSONArray("eventProperties");
+      if (eventPropertiesArray != null) {
+        banner.eventProperties = new ArrayList<>();
+        for (int i = 0; i < eventPropertiesArray.length(); ++i) {
+          banner.eventProperties.add(EventProperty.create(eventPropertiesArray.getJSONObject(i)));
+        }
+      }
     }
 
     return banner;

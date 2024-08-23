@@ -1,6 +1,8 @@
 package com.cleverpush.inbox;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -38,6 +40,8 @@ import com.cleverpush.Notification;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerScreens;
+import com.cleverpush.banner.models.Event;
+import com.cleverpush.banner.models.EventProperty;
 import com.cleverpush.banner.models.blocks.BannerBackground;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
@@ -46,6 +50,7 @@ import com.cleverpush.util.ColorUtils;
 import com.cleverpush.util.CustomExceptionHandler;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.SharedPreferencesManager;
+import com.cleverpush.util.VoucherCodeUtils;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -56,7 +61,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -243,7 +250,43 @@ public class InboxDetailActivity extends AppCompatActivity {
           getCleverPushInstance().setSubscriptionAttribute(action.getAttributeId(), action.getAttributeValue());
         }
 
-        if (action.getType().equals("switchScreen")) {
+        if (action.getType().equals("copyToClipboard")) {
+          String copyText = action.getName();
+          if (copyText.contains("{voucherCode}")) {
+            String voucherCode = "";
+            HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
+            if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(data.getId())) {
+              voucherCode = currentVoucherCodePlaceholder.get(data.getId());
+            }
+            copyText = VoucherCodeUtils.replaceVoucherCodeString(copyText, voucherCode);
+          }
+          ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
+          ClipData clip = ClipData.newPlainText("Voucher Code", copyText);
+          clipboard.setPrimaryClip(clip);
+        }
+
+        if (action.getType().equals("geoLocation")) {
+          getCleverPushInstance().requestLocationPermission();
+        }
+
+        if (action.getType().equals("trackEvent")) {
+          Event event = action.getEvent();
+          if (event != null) {
+            List<EventProperty> eventProperties = action.getEventProperties();
+            if (eventProperties != null && eventProperties.size() > 0) {
+              for (int i = 0; i < eventProperties.size(); i++) {
+                final String property = eventProperties.get(i).getProperty();
+                final String value = eventProperties.get(i).getValue();
+                if (property != null && value != null) {
+                  getCleverPushInstance().trackEvent(event.getName(), new HashMap<String, Object>() {{
+                    put(property, value);
+                  }});
+                }
+              }
+            } else {
+              getCleverPushInstance().trackEvent(event.getName());
+            }
+          }
         }
       } catch (Exception e) {
         Logger.e(TAG, "Error in setOpenedListener of InboxView", e);

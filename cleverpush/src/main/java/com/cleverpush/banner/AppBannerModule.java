@@ -22,6 +22,8 @@ import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
 import com.cleverpush.banner.models.BannerStopAtType;
 import com.cleverpush.banner.models.BannerSubscribedType;
+import com.cleverpush.banner.models.Event;
+import com.cleverpush.banner.models.EventProperty;
 import com.cleverpush.banner.models.NotificationPermission;
 import com.cleverpush.banner.models.BannerTargetEvent;
 import com.cleverpush.banner.models.BannerTrigger;
@@ -1352,6 +1354,26 @@ public class AppBannerModule {
 
         if (action.getType().equals("geoLocation")) {
           getCleverPushInstance().requestLocationPermission();
+        }
+
+        if (action.getType().equals("trackEvent")) {
+          Event event = action.getEvent();
+          if (event != null) {
+            List<EventProperty> eventProperties = action.getEventProperties();
+            if (eventProperties != null && eventProperties.size() > 0) {
+              for (int i = 0; i < eventProperties.size(); i++) {
+                final String property = eventProperties.get(i).getProperty();
+                final String value = eventProperties.get(i).getValue();
+                if (property != null && value != null) {
+                  getCleverPushInstance().trackEvent(event.getName(), new HashMap<String, Object>() {{
+                    put(property, value);
+                  }});
+                }
+              }
+            } else {
+              getCleverPushInstance().trackEvent(event.getName());
+            }
+          }
         }
       });
 
