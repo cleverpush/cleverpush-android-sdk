@@ -226,6 +226,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
           int subStoryIndex = getSubStoryPosition();
           storyDetailListAdapter.subStoryPosition = subStoryIndex;
           storyDetailListAdapter.selectedPosition = selectedPosition;
+          storyDetailListAdapter.apiCallMap.put(selectedPosition, false);
           storyDetailListAdapter.refresh(selectedPosition, subStoryIndex);
         }
 
@@ -252,6 +253,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
           int subStoryIndex = getSubStoryPosition();
           storyDetailListAdapter.subStoryPosition = subStoryPosition;
           storyDetailListAdapter.selectedPosition = selectedPosition;
+          storyDetailListAdapter.apiCallMap.put(selectedPosition, false);
           storyDetailListAdapter.refresh(selectedPosition, subStoryIndex);
         }
 
