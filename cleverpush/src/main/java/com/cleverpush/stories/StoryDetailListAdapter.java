@@ -2,25 +2,36 @@ package com.cleverpush.stories;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.ActivityLifecycleListener;
+import com.cleverpush.CleverPushHttpClient;
+import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
 import com.cleverpush.listener.StoryViewOpenedListener;
+import com.cleverpush.responsehandlers.TrackStoryOpenedShownResponseHandler;
 import com.cleverpush.stories.listener.StoryChangeListener;
 import com.cleverpush.stories.listener.StoryDetailJavascriptInterface;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailViewHolder> {
 
@@ -35,9 +46,11 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
   private StoryDetailViewHolder storyDetailViewHolder;
   int measuredWidth = 0;
   int measuredHeight = 0;
+  int selectedPosition = 0;
 
   public StoryDetailListAdapter(Activity activity, ArrayList<Story> stories, StoryChangeListener storyChangeListener,
-                                StoryViewOpenedListener storyViewOpenedListener, int subStoryPosition, boolean isHideStoryShareButton, String widgetId) {
+                                StoryViewOpenedListener storyViewOpenedListener, int subStoryPosition, boolean isHideStoryShareButton,
+                                String widgetId, int selectedPosition) {
     this.activity = activity;
     this.stories = stories;
     this.storyChangeListener = storyChangeListener;
@@ -45,6 +58,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
     this.subStoryPosition = subStoryPosition;
     this.isHideStoryShareButton = isHideStoryShareButton;
     this.widgetId = widgetId;
+    this.selectedPosition = selectedPosition;
   }
 
   @Override
@@ -70,7 +84,18 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
       storyDetailViewHolder.webView.addJavascriptInterface(
               new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity),
               "storyDetailJavascriptInterface");
-      storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener));
+
+      storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener) {
+        @Override
+        public void onPageFinished(WebView view, String url) {
+          super.onPageFinished(view, url);
+
+          // Call the trackStoriesShown method when content is fully rendered
+          if (selectedPosition == position) {
+            trackStoriesShown(position);
+          }
+        }
+      });
       storyDetailViewHolder.webView.loadData(loadHtml(position, subStoryPosition), "text/html; charset=utf-8", "UTF-8");
     } catch (Exception e) {
       Logger.e(TAG, "Error in StoryDetail onBindViewHolder.", e);
@@ -148,4 +173,38 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
   public int getItemViewType(int position) {
     return position;
   }
+
+  private void trackStoriesShown(int position) {
+    if (widgetId == null || widgetId.length() == 0) {
+      return;
+    }
+
+    if (selectedPosition == position) {
+      String storyPath = "/story-widget/" + widgetId + "/track-shown";
+
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(activity.getApplicationContext());
+      String storyOpenPreferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+
+      String currentStoryId = stories.get(position).getId();
+
+      if (storyOpenPreferencesString.contains(currentStoryId)) {
+
+        ArrayList<String> storyIds = new ArrayList<>();
+        if (!storyOpenPreferencesString.isEmpty()) {
+          storyIds = new ArrayList<>(Arrays.asList(storyOpenPreferencesString.split(",")));
+        }
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+          jsonBody.put("stories", new JSONArray(storyIds));
+        } catch (JSONException ex) {
+          Logger.e(TAG, "Error creating track stories shown request parameter", ex);
+        }
+
+        CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
+            new TrackStoryOpenedShownResponseHandler().getResponseHandler(false));
+      }
+    }
+  }
+
 }
