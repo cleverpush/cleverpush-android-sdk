@@ -1,5 +1,7 @@
 package com.cleverpush.stories;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,9 +17,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
 import com.cleverpush.ActivityLifecycleListener;
+import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
 import com.cleverpush.listener.StoryViewOpenedListener;
+import com.cleverpush.responsehandlers.TrackStoryOpenedShownResponseHandler;
 import com.cleverpush.stories.listener.OnSwipeDownListener;
 import com.cleverpush.stories.listener.OnSwipeTouchListener;
 import com.cleverpush.stories.listener.StoryChangeListener;
@@ -27,8 +31,13 @@ import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -149,6 +158,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
         storyViewListAdapter = StoryViewListAdapter.getStoryViewListAdapter();
         storyView = StoryView.getStoryView();
+        trackStoryOpened();
         if (extras.containsKey("stories")) {
           stories = (ArrayList<Story>) extras.getSerializable("stories");
           loadStoryDetails();
@@ -174,7 +184,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
       SnapHelper snapHelper = new PagerSnapHelper();
       storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this,
-          storyViewOpenedListener, subStoryPosition, isHideStoryShareButton, widgetId);
+          storyViewOpenedListener, subStoryPosition, isHideStoryShareButton, widgetId, selectedPosition);
       recyclerView.setLayoutManager(linearLayoutManager);
       snapHelper.attachToRecyclerView(recyclerView);
       recyclerView.setAdapter(storyDetailListAdapter);
@@ -215,6 +225,8 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         if (storyDetailListAdapter != null) {
           int subStoryIndex = getSubStoryPosition();
           storyDetailListAdapter.subStoryPosition = subStoryIndex;
+          storyDetailListAdapter.selectedPosition = selectedPosition;
+          storyDetailListAdapter.apiCallMap.put(selectedPosition, false);
           storyDetailListAdapter.refresh(selectedPosition, subStoryIndex);
         }
 
@@ -222,6 +234,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
         String storyId = stories.get(position + 1).getId();
         setStoryOpened(storyId);
+        trackStoryOpened();
       } else {
         runOnUiThread(this::finish);
       }
@@ -239,6 +252,8 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         if (storyDetailListAdapter != null) {
           int subStoryIndex = getSubStoryPosition();
           storyDetailListAdapter.subStoryPosition = subStoryPosition;
+          storyDetailListAdapter.selectedPosition = selectedPosition;
+          storyDetailListAdapter.apiCallMap.put(selectedPosition, false);
           storyDetailListAdapter.refresh(selectedPosition, subStoryIndex);
         }
 
@@ -246,6 +261,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
         String storyId = stories.get(position - 1).getId();
         setStoryOpened(storyId);
+        trackStoryOpened();
       }
     } catch (Exception e) {
       Logger.e(TAG, "Error handling onPrevious in StoryDetailActivity", e);
@@ -437,6 +453,33 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     categorizeStories.addAll(openedStories);
 
     return categorizeStories;
+  }
+
+  public void trackStoryOpened() {
+    if (widgetId == null || widgetId.length() == 0) {
+      return;
+    }
+
+    String storyPath = "/story-widget/" + widgetId + "/track-opened";
+    Logger.d(TAG, "Loading stories: " + storyPath);
+
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
+    String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+
+    ArrayList<String> storyIds = new ArrayList<>();
+    if (!preferencesString.isEmpty()) {
+      storyIds = new ArrayList<>(Arrays.asList(preferencesString.split(",")));
+    }
+
+    JSONObject jsonBody = new JSONObject();
+    try {
+      jsonBody.put("stories", new JSONArray(storyIds));
+    } catch (JSONException ex) {
+      Logger.e(LOG_TAG, "Error creating trackStoryOpened request parameter", ex);
+    }
+
+    CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
+        new TrackStoryOpenedShownResponseHandler().getResponseHandler(true));
   }
 
 }
