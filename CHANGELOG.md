@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.2 (04.09.2024)
+* Added a feature in the `StoryView` and implemented the `track-opened` and `track-shown` APIs for the story widget.
+* Fixed an issue in `SetTrackingConsent` where, when setting `SetTrackingConsent(false)`, attributes and tags were not being removed.
+
 ## 1.34.1 (29.08.2024)
 * Added a feature in `AppBanner` to support `trackEvent` in actions on buttons and images.
 
