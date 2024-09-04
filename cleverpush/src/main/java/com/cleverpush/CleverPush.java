@@ -1641,11 +1641,7 @@ public class CleverPush {
 
       if (subscribedTagIds != null && subscribedTagIds.size() > 0) {
         String[] tagIdsArray = subscribedTagIds.toArray(new String[0]);
-        if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
-          removeSubscriptionTagTrackingImplementation(null, tagIdsArray);
-        } else {
-          removeSubscriptionTags(tagIdsArray);
-        }
+        removeSubscriptionTagTrackingImplementation(null, tagIdsArray);
       }
 
       if (subscriptionAttributes != null && subscriptionAttributes.size() > 0) {
@@ -1654,17 +1650,9 @@ public class CleverPush {
           Object value = entry.getValue();
 
           if (value instanceof String) {
-            if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
-              this.setSubscriptionAttributeObjectImplementation(key, "", new SetSubscriptionAttributeResponseHandler());
-            } else {
-              this.setSubscriptionAttribute(key, "");
-            }
+            this.setSubscriptionAttributeObjectImplementation(key, "", new SetSubscriptionAttributeResponseHandler());
           } else {
-            if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED) {
-              this.setSubscriptionAttributeObjectImplementation(key, new String[0], new SetSubscriptionAttributeResponseHandler());
-            } else {
-              this.setSubscriptionAttribute(key, new String[0]);
-            }
+            this.setSubscriptionAttributeObjectImplementation(key, new String[0], new SetSubscriptionAttributeResponseHandler());
           }
         }
       }
