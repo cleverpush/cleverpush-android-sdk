@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -476,6 +477,23 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     webView.getSettings().setJavaScriptEnabled(true);
     webView.setVerticalScrollBarEnabled(false);
     webView.setHorizontalScrollBarEnabled(false);
+
+    webView.setWebViewClient(new WebViewClient() {
+      @Override
+      public void onPageFinished(WebView view, String url) {
+        super.onPageFinished(view, url);
+        webView.evaluateJavascript(
+            "CleverPush.trackEvent = function(eventId, properties) {\n" +
+                "  CleverPush.trackEventStringified(eventId, properties ? JSON.stringify(properties) : null);\n" +
+                "};\n" +
+                "CleverPush.trackClick = function(buttonId, customData) {\n" +
+                "  CleverPush.trackClickStringified(buttonId, customData ? JSON.stringify(customData) : null);\n" +
+                "};\n",
+            null
+        );
+      }
+    });
+
     webView.loadUrl(block.getUrl());
     webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
 
@@ -666,6 +684,36 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     @JavascriptInterface
     public void showTopicsDialog() {
       CleverPush.getInstance(CleverPush.context).showTopicsDialog();
+    }
+
+    @JavascriptInterface
+    public void goToScreen(String screenId) {
+      try {
+        activity.runOnUiThread(() -> {
+          for (int i = 0; i < screens.size(); i++) {
+            if (screens.get(i).getId() != null && screens.get(i).getId().equals(screenId)) {
+              appBannerPopup.moveToNextScreen(i);
+              break;
+            }
+          }
+        });
+      } catch (Exception e) {
+        Logger.e(TAG, "Error while performing goToScreen in HTML banner. " + e.getLocalizedMessage(), e);
+      }
+    }
+
+    @JavascriptInterface
+    public void nextScreen() {
+      activity.runOnUiThread(() -> {
+        appBannerPopup.moveToNextScreen();
+      });
+    }
+
+    @JavascriptInterface
+    public void previousScreen() {
+      activity.runOnUiThread(() -> {
+        appBannerPopup.moveToPreviousScreen();
+      });
     }
   }
 
