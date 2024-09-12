@@ -88,6 +88,9 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
 
       storyDetailViewHolder.webView.getSettings().setJavaScriptEnabled(true);
       storyDetailViewHolder.webView.getSettings().setLoadsImagesAutomatically(true);
+      storyDetailViewHolder.webView.getSettings().setDomStorageEnabled(true);
+      storyDetailViewHolder.webView.getSettings().setAllowFileAccess(true);
+
       storyDetailViewHolder.webView.addJavascriptInterface(
               new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity),
               "storyDetailJavascriptInterface");
@@ -102,7 +105,8 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
           }
         }
       });
-      storyDetailViewHolder.webView.loadData(loadHtml(position, subStoryPosition), "text/html; charset=utf-8", "UTF-8");
+      String htmlContent = loadHtml(position, subStoryPosition);
+      storyDetailViewHolder.webView.loadDataWithBaseURL(null, htmlContent, "text/html; charset=utf-8", "UTF-8", null);
     } catch (Exception e) {
       Logger.e(TAG, "Error in StoryDetail onBindViewHolder.", e);
     }
@@ -110,50 +114,56 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
 
   public String loadHtml(int position, int subStoryPosition) {
     String storyId = stories.get(position).getId();
+    String customURL = "";
+    if (stories.get(position).getContent().getPages() != null && stories.get(position).getContent().getPages().size() > 1) {
+      customURL = "https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&%23page=page-" + subStoryPosition;
+    } else {
+      customURL = "https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
+    }
 
-    String htmlContent = "<!DOCTYPE html>\n" +
+    return "<!DOCTYPE html>\n" +
         "<html>\n" +
         "<head>\n" +
-        "  <script     async src=\"https://cdn.ampproject.org/v0.js\"></script>\n" +
-        "  <script\n" +
-        "    async\n" +
-        "    custom-element=\"amp-story-player\"\n" +
-        "    src=\"https://cdn.ampproject.org/v0/amp-story-player-0.1.js\"\n" +
-        "  ></script>\n" +
+        "  <script src=\"https://cdn.ampproject.org/amp-story-player-v0.js\"></script>\n" +
+        "  <link rel=\"stylesheet\" href=\"https://cdn.ampproject.org/amp-story-player-v0.css\">\n" +
+        "  <style>\n" +
+        "    body { margin: 0; padding: 0; }\n" +
+        "    amp-story-player { display: block; margin: 0; padding: 0; width: 100%%; height: " + convertPixelsToDp(measuredHeight, activity) + "px; }\n" +
+        "  </style>\n" +
         "</head>\n" +
         "<body>\n" +
-        "<amp-story-player layout=\"fixed\" width=" + convertPixelsToDp(measuredWidth, activity) + " height="
-        + convertPixelsToDp(measuredHeight, activity) + ">\n" +
-        "<a href=\"https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId+
-        "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&%23page=page-" + subStoryPosition + "\">\n" +
+        "  <amp-story-player width=\"100%%\" height=\"" + convertPixelsToDp(measuredHeight, activity) + "\">\n" +
+        "    <a href=\"" + customURL + "\">\"Story Title\"\n" +
         "    </a>\n" +
         "  </amp-story-player>\n" +
         "  <script>\n" +
-        "    var player = document.querySelector('amp-story-player');\n" +
-        "    player.addEventListener('noPreviousStory', function (event) {\n" +
-        "      storyDetailJavascriptInterface.previous(" + position + ");" +
+        "    var playerEl = document.querySelector('amp-story-player');\n" +
+        "    var player = new AmpStoryPlayer(window, playerEl);\n" +
+        "    playerEl.addEventListener('noPreviousStory', function (event) {\n" +
+        "      storyDetailJavascriptInterface.previous(" + position + ");\n" +
         "    });\n" +
-        "    player.addEventListener('noNextStory', function (event) {\n" +
-        "      storyDetailJavascriptInterface.next(" + position + ");" +
+        "    playerEl.addEventListener('noNextStory', function (event) {\n" +
+        "      storyDetailJavascriptInterface.next(" + position + ");\n" +
+        "    });\n" +
+        "    playerEl.addEventListener('storyNavigation', function (event) {\n" +
+        "      var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 111);\n" +
+        "      storyDetailJavascriptInterface.storyNavigation(" + position + ", subStoryIndex);\n" +
         "    });\n" +
         "    player.addEventListener('ready', function (event) {\n" +
         "       storyDetailJavascriptInterface.ready();" +
         "    });\n" +
-        "    player.addEventListener('storyNavigation', function (event) {\n" +
-        "      storyDetailJavascriptInterface.storyNavigation(" + position + ", Number(event.detail.pageId?.split('-')?.[1]));\n" +
-        "    });\n" +
+        "    player.go(" + position + ");" +
         "  </script>\n" +
         "</body>\n" +
         "</html>";
-
-    return htmlContent;
   }
 
   public void refresh (int position, int subStoryPosition) {
     ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        storyDetailViewHolder.webView.loadData(loadHtml(position, subStoryPosition), "text/html; charset=utf-8", "UTF-8");
+        String htmlContent = loadHtml(position, subStoryPosition);
+        storyDetailViewHolder.webView.loadDataWithBaseURL(null, htmlContent, "text/html; charset=utf-8", "UTF-8", null);
       }
     });
   }
