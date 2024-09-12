@@ -108,6 +108,7 @@ public class StoryView extends LinearLayout {
           stories.addAll(model.getStories());
           SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
           String preferencesString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT, "");
+          String storyOpenPreferences = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
           for (int i = 0; i < stories.size(); i++) {
             if (stories.get(i).getContent().getPages() != null) {
               stories.get(i).setSubStoryCount(stories.get(i).getContent().getPages().size());
@@ -127,8 +128,7 @@ public class StoryView extends LinearLayout {
               stories.get(i).setUnreadCount(stories.get(i).getContent().getPages().size());
             }
 
-            if (sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "")
-                    .contains(stories.get(i).getId())) {
+            if (storyOpenPreferences.contains(stories.get(i).getId())) {
               stories.get(i).setOpened(true);
             } else {
               stories.get(i).setOpened(false);

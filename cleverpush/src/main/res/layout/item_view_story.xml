@@ -39,15 +39,17 @@
                         android:layout_gravity="center_horizontal"
                         android:orientation="vertical">
 
-                        <androidx.cardview.widget.CardView
+                        <com.cleverpush.util.RoundedLinearLayout
                             android:id="@+id/cardViewShadow"
                             android:layout_width="75dp"
-                            android:layout_height="75dp"
-                            android:background="@android:color/transparent"
-                            app:cardBackgroundColor="@android:color/transparent"
-                            app:cardCornerRadius="50dp">
+                            android:layout_height="75dp">
 
-                            <androidx.cardview.widget.CardView
+                            <FrameLayout
+                                android:id="@+id/shadowFrame"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <com.cleverpush.util.RoundedLinearLayout
                                 android:id="@+id/ivChallengeCardView"
                                 android:layout_width="75dp"
                                 android:layout_height="75dp"
@@ -83,9 +85,11 @@
 
                                 </FrameLayout>
 
-                            </androidx.cardview.widget.CardView>
+                            </com.cleverpush.util.RoundedLinearLayout>
 
-                        </androidx.cardview.widget.CardView>
+                            </FrameLayout>
+
+                        </com.cleverpush.util.RoundedLinearLayout>
 
                     </LinearLayout>
 

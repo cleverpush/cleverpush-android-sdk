@@ -41,6 +41,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cleverpush.R;
 import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
+import com.cleverpush.util.RoundedLinearLayout;
 
 import java.util.ArrayList;
 
@@ -99,9 +100,10 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       FrameLayout unreadCountFrameLayout = (FrameLayout) holder.itemView.findViewById(R.id.unreadCountFrameLayout);
       RelativeLayout unreadCountRelativeLayout = (RelativeLayout) holder.itemView.findViewById(R.id.unreadCountRelativeLayout);
       ImageView image = (ImageView) holder.itemView.findViewById(R.id.ivChallenge);
-      CardView cardView = (CardView) holder.itemView.findViewById(R.id.ivChallengeCardView);
-      CardView cardViewShadow = (CardView) holder.itemView.findViewById(R.id.cardViewShadow);
+      RoundedLinearLayout cardView = (RoundedLinearLayout) holder.itemView.findViewById(R.id.ivChallengeCardView);
+      RoundedLinearLayout cardViewShadow = (RoundedLinearLayout) holder.itemView.findViewById(R.id.cardViewShadow);
       LinearLayout borderLayout = (LinearLayout) holder.itemView.findViewById(R.id.borderLayout);
+      FrameLayout shadowFrame = (FrameLayout) holder.itemView.findViewById(R.id.shadowFrame);
       LinearLayout storyLayout = (LinearLayout) holder.itemView.findViewById(R.id.storyLayout);
       LinearLayout imageLayout = (LinearLayout) holder.itemView.findViewById(R.id.imageLayout);
       LinearLayout parentLayout = (LinearLayout) holder.itemView.findViewById(R.id.parentLayout);
@@ -109,6 +111,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       TextView tvTitleInside = (TextView) holder.itemView.findViewById(R.id.tvTitleInside);
 
       int iconHeight = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_height, 206);
+      int iconHeightPercentage = typedArray.getInt(R.styleable.StoryView_story_icon_height_percentage, 0);
       int iconWidth = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
       boolean iconShadow = typedArray.getBoolean(R.styleable.StoryView_story_icon_shadow, false);
       int borderVisibility = typedArray.getInt(R.styleable.StoryView_border_visibility, View.VISIBLE);
@@ -116,7 +119,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       int borderWidth = (int) typedArray.getDimension(R.styleable.StoryView_border_width, 5);
       float cornerRadius = typedArray.getDimension(R.styleable.StoryView_story_icon_corner_radius, -1);
       int subStoryUnreadCount = typedArray.getInt(R.styleable.StoryView_sub_story_unread_count_visibility, View.GONE);
-      boolean restrictToThreeItems = typedArray.getBoolean(R.styleable.StoryView_restrict_to_three_items, false);
+      int restrictToItems = typedArray.getInt(R.styleable.StoryView_restrict_to_items, 0);
       float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
       int titlePosition = typedArray.getInt(R.styleable.StoryView_title_position, 0);
       int titleVisibility = typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE);
@@ -128,23 +131,35 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
       parentLayout.setPadding(padding, padding, padding, padding);
 
-      if (restrictToThreeItems) {
-        int width = parentLayoutWidth / 3;
+      if (restrictToItems > 0) {
+        float width = (float) parentLayoutWidth / restrictToItems;
+        width = width + 5;
         if (iconSpace != -1) {
-          width = (int) (width - iconSpace);
+          width = (width - (iconSpace * 2));
         }
         if (subStoryUnreadCount == 0) {
           width = width - 30;
         }
         width = width - (padding * 2);
-        iconWidth = width;
+        float decimalPart = width - (int) width;
+
+        if (decimalPart >= 0.5) {
+          iconWidth = (int) Math.ceil(width);
+        } else {
+          iconWidth = (int) Math.floor(width);
+          iconWidth += (int) (decimalPart * 10);
+        }
+      }
+
+      if (iconHeightPercentage > 0) {
+        iconHeight = (int) ((iconWidth * iconHeightPercentage) / 100.0);
       }
 
       if (subStoryUnreadCount == 0) {
-        unreadCountTextView.setVisibility(View.VISIBLE);
-        if (stories.get(position).isOpened() && stories.get(position).getUnreadCount() == 0) {
+        if (stories.get(position).getUnreadCount() == 0) {
           unreadCountTextView.setVisibility(View.GONE);
         } else {
+          unreadCountTextView.setVisibility(View.VISIBLE);
           unreadCountTextView.setText(stories.get(position).getUnreadCount() + "");
         }
         unreadCountTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color, DEFAULT_UNREAD_COUNT_TEXT_COLOR));
@@ -161,7 +176,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         if (cornerRadius == -1) {
           unreadCountFrameLayoutParams.width = iconWidth;
         } else {
-          unreadCountFrameLayoutParams.width = iconWidth + 30;
+          unreadCountFrameLayoutParams.width = iconWidth + 25;
         }
         unreadCountFrameLayout.setLayoutParams(unreadCountFrameLayoutParams);
 
@@ -170,7 +185,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         if (cornerRadius == -1) {
           unreadCountRelativeLayoutParams.width = iconWidth;
         } else {
-          unreadCountRelativeLayoutParams.width = iconWidth + 30;
+          unreadCountRelativeLayoutParams.width = iconWidth + 25;
         }
         unreadCountRelativeLayout.setLayoutParams(unreadCountRelativeLayoutParams);
 
@@ -224,6 +239,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         ViewGroup.LayoutParams cardViewShadowParams = cardViewShadow.getLayoutParams();
         if (iconShadow) {
           cardViewShadowParams.height = iconHeight + 7;
+          shadowFrame.setBackgroundColor(Color.parseColor("#838383"));
         } else {
           if (cornerRadius == -1) {
             cardViewShadowParams.height = (int) (iconHeight - borderMargin - 12);
@@ -257,6 +273,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         ViewGroup.LayoutParams cardViewShadowParams = cardViewShadow.getLayoutParams();
         if (iconShadow) {
           cardViewShadowParams.height = iconHeight + 7;
+          shadowFrame.setBackgroundColor(Color.parseColor("#838383"));
         } else {
           cardViewShadowParams.height = iconHeight;
         }
@@ -314,25 +331,18 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       loadImage(position, image);
 
       if (cornerRadius != -1) {
-        cardView.setRadius(cornerRadius);
-        cardViewShadow.setRadius(cornerRadius + 3);
+        cardView.setCornerRadius(cornerRadius);
+        cardViewShadow.setCornerRadius(cornerRadius);
       }
 
       if (iconSpace != -1) {
         ViewGroup.MarginLayoutParams parentLayoutParams = (ViewGroup.MarginLayoutParams) parentLayout.getLayoutParams();
-        parentLayoutParams.setMargins(parentLayoutParams.leftMargin, parentLayoutParams.topMargin, (int) iconSpace, parentLayoutParams.bottomMargin);
+        parentLayoutParams.setMargins((int) iconSpace, parentLayoutParams.topMargin, (int) iconSpace, parentLayoutParams.bottomMargin);
         parentLayout.setLayoutParams(parentLayoutParams);
       }
 
-      if (iconShadow && borderVisibility == 0) {
-        applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout);
-        cardView.setCardElevation(15);
-        cardView.setMaxCardElevation(15);
-      } else if (borderVisibility == 0) {
-        applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout);
-      } else if (iconShadow) {
-        cardView.setCardElevation(15);
-        cardView.setMaxCardElevation(15);
+      if (borderVisibility == 0) {
+        applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor);
       }
 
       image.setOnClickListener(new View.OnClickListener() {
@@ -349,32 +359,36 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     }
   }
 
-  public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius, int borderWidth, float borderMargin, LinearLayout imageLayout) {
+  public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius, int borderWidth, float borderMargin, LinearLayout imageLayout, int storyViewBackgroundColor) {
     try {
-      if (stories.get(position).isOpened()) {
-        borderLayout.setBackground(null);
+      GradientDrawable border = new GradientDrawable();
+
+      if (cornerRadius == -1) {
+        // No corner radius provided, display as a circle
+        border.setShape(GradientDrawable.OVAL);
+        border.setCornerRadii(new float[]{0, 0, 0, 0, 0, 0, 0, 0});
       } else {
-        GradientDrawable border = new GradientDrawable();
-        if (cornerRadius == -1) {
-          // No corner radius provided, display as a circle
-          border.setShape(GradientDrawable.OVAL);
-          border.setCornerRadii(new float[]{0, 0, 0, 0, 0, 0, 0, 0});
-        } else {
-          // Set the corner radius
-          border.setCornerRadius(cornerRadius);
-        }
-        border.setColor(0xFFFFFFFF); //white background
-        border.setStroke(borderWidth, typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR)); //black border with full opacity
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-          borderLayout.setBackgroundDrawable(border);
-        } else {
-          borderLayout.setBackground(border);
-        }
+        // Set the corner radius
+        border.setCornerRadius(cornerRadius + 5);
+      }
+
+      if (stories.get(position).isOpened()) {
+        border.setColor(storyViewBackgroundColor); // Transparent background
+        border.setStroke(borderWidth, storyViewBackgroundColor); // Transparent stroke
+      } else {
+        border.setColor(0xFFFFFFFF); // White background
+        border.setStroke(borderWidth, typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR)); // Black or desired border color
+      }
+
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+        borderLayout.setBackgroundDrawable(border);
+      } else {
+        borderLayout.setBackground(border);
+      }
 
         ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) imageLayout.getLayoutParams();
         params.setMargins((int) borderMargin, (int) borderMargin, (int) borderMargin, (int) borderMargin);
         imageLayout.setLayoutParams(params);
-      }
     } catch (Exception e) {
       Logger.e(TAG, "Error while applying border to icon. " + e.getLocalizedMessage(), e);
     }
@@ -395,7 +409,8 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
         @Override
         public void run() {
-          String imageUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
+          String widgetUrl = stories.get(position).getContent().getPreview().getWidgetSrc();
+          String posterPortraitUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
 
           RequestOptions options = new RequestOptions()
                   .fitCenter()
@@ -403,10 +418,23 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
                   .error(R.drawable.ic_story_placeholder)
                   .priority(Priority.HIGH);
 
-          Glide.with(context)
-                  .load(imageUrl)
-                  .apply(options)
-                  .into(image);
+          if (widgetUrl != null && !widgetUrl.isEmpty()) {
+            Glide.with(context)
+                .load(widgetUrl)
+                .apply(options)
+                .error(
+                    Glide.with(context)
+                        .load(posterPortraitUrl) // Fallback to posterPortraitUrl if widgetUrl fails
+                        .apply(options)
+                        .error(R.drawable.ic_story_placeholder) // Final fallback placeholder
+                )
+                .into(image);
+          } else {
+            Glide.with(context)
+                .load(posterPortraitUrl)
+                .apply(options)
+                .into(image);
+          }
         }
       });
     } catch (Exception exception) {

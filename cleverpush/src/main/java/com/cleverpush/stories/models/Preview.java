@@ -38,6 +38,10 @@ public class Preview implements Serializable {
   @Expose
   private String posterSquareSrc;
 
+  @SerializedName("widgetSrc")
+  @Expose
+  private String widgetSrc;
+
   public String getPublisher() {
     return this.publisher;
   }
@@ -94,4 +98,11 @@ public class Preview implements Serializable {
     this.posterSquareSrc = posterSquareSrc;
   }
 
+  public String getWidgetSrc() {
+    return widgetSrc;
+  }
+
+  public void setWidgetSrc(String widgetSrc) {
+    this.widgetSrc = widgetSrc;
+  }
 }

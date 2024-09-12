@@ -415,7 +415,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
           editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
         }
       }
-      editor.commit();
+      editor.apply();
       String storyIds = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
       for (int i = 0; i < stories.size(); i++) {
         stories.get(i).setOpened(storyIds.contains(stories.get(i).getId()));

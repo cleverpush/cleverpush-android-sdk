@@ -23,6 +23,7 @@
         </attr>
         <attr name="title_text_size" format="dimension" />
         <attr name="story_icon_height" format="dimension" />
+        <attr name="story_icon_height_percentage" format="integer" />
         <attr name="story_icon_width" format="dimension" />
         <attr name="story_icon_corner_radius" format="dimension" />
         <attr name="story_icon_space" format="dimension" />
@@ -41,7 +42,7 @@
         </attr>
         <attr name="sub_story_unread_count_background_color" format="color" />
         <attr name="sub_story_unread_count_text_color" format="color" />
-        <attr name="restrict_to_three_items" format="boolean" />
+        <attr name="restrict_to_items" format="integer" />
         <attr name="close_button_position" format="enum">
             <enum name="left" value="0" />
             <enum name="right" value="1" />
