@@ -92,7 +92,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
       storyDetailViewHolder.webView.getSettings().setAllowFileAccess(true);
 
       storyDetailViewHolder.webView.addJavascriptInterface(
-              new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity),
+              new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity, storyViewOpenedListener),
               "storyDetailJavascriptInterface");
 
       storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener) {
@@ -152,7 +152,17 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
         "    player.addEventListener('ready', function (event) {\n" +
         "       storyDetailJavascriptInterface.ready();" +
         "    });\n" +
-        "    player.go(" + position + ");" +
+        "    window.addEventListener('message', function (event) {\n" +
+        "      try { \n" +
+        "          var data = JSON.parse(event.data); \n" +
+        "          if (data.type === 'storyButtonCallback') { \n" +
+        "              window.storyDetailJavascriptInterface.storyButtonCallbackUrl(JSON.stringify(data)); \n" +
+        "          } \n" +
+        "      } catch (error) { \n" +
+        "          console.error (error); \n" +
+        "      }\n" +
+        "    });\n" +
+        "    player.go(" + position + ");\n" +
         "  </script>\n" +
         "</body>\n" +
         "</html>";
