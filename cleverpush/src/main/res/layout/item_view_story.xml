@@ -79,7 +79,9 @@
                                             android:layout_height="wrap_content"
                                             android:gravity="center_horizontal"
                                             android:textColor="@color/cp_black"
-                                            android:textSize="12sp" />
+                                            android:textSize="12sp"
+                                            android:maxLines="2"
+                                            android:ellipsize="end" />
 
                                     </RelativeLayout>
 
@@ -126,6 +128,8 @@
         android:layout_marginTop="10dp"
         android:gravity="center_horizontal"
         android:textColor="#000"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:maxLines="2"
+        android:ellipsize="end"/>
 
 </LinearLayout>

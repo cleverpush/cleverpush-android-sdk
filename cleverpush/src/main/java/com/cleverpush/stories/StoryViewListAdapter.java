@@ -35,7 +35,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.R;
@@ -149,6 +148,10 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
           iconWidth = (int) Math.floor(width);
           iconWidth += (int) (decimalPart * 10);
         }
+
+        if (subStoryUnreadCount == 0) {
+          iconWidth += 5;
+        }
       }
 
       if (iconHeightPercentage > 0) {
@@ -193,12 +196,12 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         unreadCountTextView.setVisibility(View.GONE);
 
         ViewGroup.LayoutParams unreadCountFrameLayoutParams = unreadCountFrameLayout.getLayoutParams();
-        unreadCountFrameLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;;
+        unreadCountFrameLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
         unreadCountFrameLayoutParams.width = iconWidth;
         unreadCountFrameLayout.setLayoutParams(unreadCountFrameLayoutParams);
 
         ViewGroup.LayoutParams unreadCountRelativeLayoutParams = unreadCountRelativeLayout.getLayoutParams();
-        unreadCountRelativeLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;;
+        unreadCountRelativeLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
         unreadCountRelativeLayoutParams.width = iconWidth;
         unreadCountRelativeLayout.setLayoutParams(unreadCountRelativeLayoutParams);
       }
@@ -341,6 +344,12 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         parentLayout.setLayoutParams(parentLayoutParams);
       }
 
+      if (subStoryUnreadCount == 0) {
+        ViewGroup.MarginLayoutParams parentLayoutParams = (ViewGroup.MarginLayoutParams) parentLayout.getLayoutParams();
+        parentLayoutParams.setMargins(parentLayoutParams.leftMargin, parentLayoutParams.topMargin, parentLayoutParams.rightMargin - 5, parentLayoutParams.bottomMargin);
+        parentLayout.setLayoutParams(parentLayoutParams);
+      }
+
       if (borderVisibility == 0) {
         applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor);
       }
@@ -386,9 +395,9 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         borderLayout.setBackground(border);
       }
 
-        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) imageLayout.getLayoutParams();
-        params.setMargins((int) borderMargin, (int) borderMargin, (int) borderMargin, (int) borderMargin);
-        imageLayout.setLayoutParams(params);
+      ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) imageLayout.getLayoutParams();
+      params.setMargins((int) borderMargin, (int) borderMargin, (int) borderMargin, (int) borderMargin);
+      imageLayout.setLayoutParams(params);
     } catch (Exception e) {
       Logger.e(TAG, "Error while applying border to icon. " + e.getLocalizedMessage(), e);
     }
