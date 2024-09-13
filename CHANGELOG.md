@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.3 (12.09.2024)
+* Optimised the `StoryView` and added more customization options (restrict_to_items, story_icon_height_percentage)
+* Added a feature in `AppBanner's` HTML block to support for navigating to the next or previous screen, as well as jumping to a specific screen.
+
 ## 1.34.2 (04.09.2024)
 * Added a feature in the `StoryView` and implemented the `track-opened` and `track-shown` APIs for the story widget.
 * Fixed an issue in `SetTrackingConsent` where, when setting `SetTrackingConsent(false)`, attributes and tags were not being removed.
