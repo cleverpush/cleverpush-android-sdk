@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.4 (17.09.2024)
+* Optimized `StoryView` by removing the margin when `unread_count_visibility` is not set to `visible`.
+* Fixed an issue in `StoryView` where stories couldn't be opened when implementing `setOpenedListener`.
+
 ## 1.34.3 (13.09.2024)
 * Optimised the `StoryView` and added more customization options (restrict_to_items, story_icon_height_percentage)
 * Added a feature in `AppBanner's` HTML block to support for navigating to the next or previous screen, as well as jumping to a specific screen.
