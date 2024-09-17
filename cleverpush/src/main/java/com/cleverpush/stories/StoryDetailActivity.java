@@ -57,9 +57,8 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   StoryDetailListAdapter storyDetailListAdapter;
   StoryView storyView;
 
-  public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewOpenedListener storyViewOpenedListener,
-                            StoryViewListAdapter storyViewListAdapter, int closeButtonPosition, int subStoryPosition, String widgetId,
-                            int sortToLastIndex, StoryView storyView) {
+  public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewListAdapter storyViewListAdapter,
+                            int closeButtonPosition, int subStoryPosition, String widgetId, int sortToLastIndex, StoryView storyView) {
     try {
       ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
         @Override
@@ -67,7 +66,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
           Intent intent = new Intent(activity, StoryDetailActivity.class);
           intent.putExtra("stories", stories);
           intent.putExtra("selectedPosition", selectedPosition);
-          intent.putExtra("storyViewOpenedListener", storyViewOpenedListener);
           intent.putExtra("closeButtonPosition", closeButtonPosition);
           intent.putExtra("subStoryPosition", subStoryPosition);
           intent.putExtra("widgetId", widgetId);
@@ -141,9 +139,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         if (extras.containsKey("selectedPosition")) {
           selectedPosition = extras.getInt("selectedPosition");
         }
-        if (extras.containsKey("storyViewOpenedListener")) {
-          storyViewOpenedListener = (StoryViewOpenedListener) getIntent().getSerializableExtra("storyViewOpenedListener");
-        }
         if (extras.containsKey("closeButtonPosition")) {
           closeButtonPosition = extras.getInt("closeButtonPosition");
         }
@@ -158,6 +153,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
         storyViewListAdapter = StoryViewListAdapter.getStoryViewListAdapter();
         storyView = StoryView.getStoryView();
+        storyViewOpenedListener = storyView.storyViewOpenedListener;
         trackStoryOpened();
         if (extras.containsKey("stories")) {
           stories = (ArrayList<Story>) extras.getSerializable("stories");

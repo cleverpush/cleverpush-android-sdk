@@ -254,7 +254,7 @@ public class StoryView extends LinearLayout {
             int closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, 0);
 
             stories.get(position).setOpened(true);
-            StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewOpenedListener, storyViewListAdapter,
+            StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewListAdapter,
                 closeButtonPosition, subStoryIndex, widgetId, sortToLastIndex, StoryView.this);
             recyclerView.smoothScrollToPosition(position);
           }

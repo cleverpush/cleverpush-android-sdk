@@ -12,12 +12,17 @@ import com.cleverpush.util.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class StoryDetailJavascriptInterface {
 
   private StoryDetailViewHolder storyDetailViewHolder;
   private StoryChangeListener storyChangeListener;
   private Activity activity;
   StoryViewOpenedListener storyViewOpenedListener;
+  String currentTimeStamp = "";
 
   public StoryDetailJavascriptInterface(StoryDetailViewHolder storyDetailViewHolder,
                                         StoryChangeListener storyChangeListener, Activity activity, StoryViewOpenedListener storyViewOpenedListener) {
@@ -50,17 +55,37 @@ public class StoryDetailJavascriptInterface {
   @JavascriptInterface
   public void storyButtonCallbackUrl(String data) {
     try {
-      if (data != null && !data.isEmpty()) {
-        JSONObject jsonObject = new JSONObject(data);
-        String url = jsonObject.optString("callbackUrl");
+      String previousTimeStamp = currentTimeStamp;
+      currentTimeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(new Date());
 
-        if (url != null && !url.isEmpty()) {
-          Uri uri = Uri.parse(url);
-          if (storyViewOpenedListener != null) {
-            storyViewOpenedListener.opened(uri);
-          } else {
-            if (uri != null) {
-              activity.startActivity(new Intent(Intent.ACTION_VIEW, uri));
+      boolean shouldPerformAction = false;
+
+      if (previousTimeStamp.isEmpty()) {
+        shouldPerformAction = true;
+      } else {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
+        Date previousDate = sdf.parse(previousTimeStamp);
+        Date currentDate = sdf.parse(currentTimeStamp);
+
+        long diffInMilliseconds = currentDate.getTime() - previousDate.getTime();
+
+        if (diffInMilliseconds > 350) {
+          shouldPerformAction = true;
+        }
+      }
+      if (shouldPerformAction) {
+        if (data != null && !data.isEmpty()) {
+          JSONObject jsonObject = new JSONObject(data);
+          String url = jsonObject.optString("callbackUrl");
+
+          if (url != null && !url.isEmpty()) {
+            Uri uri = Uri.parse(url);
+            if (storyViewOpenedListener != null) {
+              storyViewOpenedListener.opened(uri);
+            } else {
+              if (uri != null) {
+                activity.startActivity(new Intent(Intent.ACTION_VIEW, uri));
+              }
             }
           }
         }
