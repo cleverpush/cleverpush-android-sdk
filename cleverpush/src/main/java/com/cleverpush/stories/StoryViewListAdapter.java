@@ -132,7 +132,6 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
       if (restrictToItems > 0) {
         float width = (float) parentLayoutWidth / restrictToItems;
-        width = width + 5;
         if (iconSpace != -1) {
           width = (width - (iconSpace * 2));
         }
@@ -150,7 +149,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         }
 
         if (subStoryUnreadCount == 0) {
-          iconWidth += 5;
+          iconWidth += 10;
         }
       }
 
@@ -192,6 +191,9 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         }
         unreadCountRelativeLayout.setLayoutParams(unreadCountRelativeLayoutParams);
 
+        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) storyLayout.getLayoutParams();
+        params.setMargins(params.leftMargin, 40, params.rightMargin, params.bottomMargin);
+        storyLayout.setLayoutParams(params);
       } else {
         unreadCountTextView.setVisibility(View.GONE);
 
@@ -204,6 +206,10 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         unreadCountRelativeLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
         unreadCountRelativeLayoutParams.width = iconWidth;
         unreadCountRelativeLayout.setLayoutParams(unreadCountRelativeLayoutParams);
+
+        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) storyLayout.getLayoutParams();
+        params.setMargins(params.leftMargin, params.topMargin, params.rightMargin, params.bottomMargin);
+        storyLayout.setLayoutParams(params);
       }
 
       if (borderVisibility == 0 && !stories.get(position).isOpened()) {
@@ -422,10 +428,10 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
           String posterPortraitUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
 
           RequestOptions options = new RequestOptions()
-                  .fitCenter()
-                  .placeholder(R.drawable.ic_story_placeholder)
-                  .error(R.drawable.ic_story_placeholder)
-                  .priority(Priority.HIGH);
+              .fitCenter()
+              .placeholder(R.drawable.ic_story_placeholder)
+              .error(R.drawable.ic_story_placeholder)
+              .priority(Priority.HIGH);
 
           if (widgetUrl != null && !widgetUrl.isEmpty()) {
             Glide.with(context)
