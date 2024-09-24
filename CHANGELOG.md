@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.5 (24.09.2024)
+* Optimised the `StoryView`, and Added support for grouping stories.
+
 ## 1.34.4 (17.09.2024)
 * Optimized `StoryView` by removing the margin when `unread_count_visibility` is not set to `visible`.
 * Fixed an issue in `StoryView` where stories couldn't be opened when implementing `setOpenedListener`.
