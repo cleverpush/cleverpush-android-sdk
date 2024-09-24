@@ -9,8 +9,6 @@ import java.util.List;
 
 public class StoryListModel {
 
-  public static final long serialVersionUID = -3003827553749596304L;
-
   @SerializedName("widget")
   @Expose
   private Widget widget;

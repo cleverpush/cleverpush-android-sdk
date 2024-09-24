@@ -8,8 +8,6 @@ import java.io.Serializable;
 
 public class Story implements Serializable {
 
-  public static final long serialVersionUID = -2893386129178459307L;
-
   @SerializedName("_id")
   @Expose
   private String id;

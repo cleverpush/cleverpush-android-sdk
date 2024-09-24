@@ -8,8 +8,6 @@ import java.io.Serializable;
 
 public class Preview implements Serializable {
 
-  public static final long serialVersionUID = 8816554666381866475L;
-
   @SerializedName("publisher")
   @Expose
   private String publisher;

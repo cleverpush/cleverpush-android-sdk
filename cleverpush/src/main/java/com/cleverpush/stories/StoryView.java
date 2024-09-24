@@ -24,6 +24,7 @@ import com.cleverpush.listener.StoryViewOpenedListener;
 import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.stories.models.StoryListModel;
+import com.cleverpush.stories.models.Widget;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.Gson;
@@ -32,7 +33,10 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class StoryView extends LinearLayout {
 
@@ -45,6 +49,7 @@ public class StoryView extends LinearLayout {
   private Context context;
   private boolean loading = false;
   private ArrayList<Story> stories = new ArrayList<>();
+  private Widget widget = new Widget();
   private String widgetId = null;
   public static StoryView storyView;
   public StoryViewOpenedListener storyViewOpenedListener;
@@ -52,6 +57,10 @@ public class StoryView extends LinearLayout {
 
   public String getWidgetId() {
     return widgetId;
+  }
+
+  public Widget getWidget() {
+    return widget;
   }
 
   public void setWidgetId(String widgetId) {
@@ -106,32 +115,59 @@ public class StoryView extends LinearLayout {
           Gson gson = gsonBuilder.create();
           StoryListModel model = gson.fromJson(response, StoryListModel.class);
           stories.addAll(model.getStories());
+          widget = model.getWidget();
           SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
-          String preferencesString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT, "");
           String storyOpenPreferences = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
           for (int i = 0; i < stories.size(); i++) {
-            if (stories.get(i).getContent().getPages() != null) {
-              stories.get(i).setSubStoryCount(stories.get(i).getContent().getPages().size());
-            }
-            if (!preferencesString.isEmpty()) {
-              Type type = new TypeToken<Map<String, Integer>>() {}.getType();
-              Map<String, Integer> existingMap = gson.fromJson(preferencesString, type);
-              String storyId = stories.get(i).getId();
+            if (widget != null && widget.isGroupStoryCategories()) {
+              String[] storyIdArray = stories.get(i).getId().split(",");
+              int subStoryCount = storyIdArray.length;
+              stories.get(i).setSubStoryCount(subStoryCount);
+              String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
+              String[] readStoryIdArray = storyUnreadCountString.split(",");
 
-              if (existingMap.containsKey(storyId)) {
-                int unreadCount = existingMap.get(storyId);
-                stories.get(i).setUnreadCount(unreadCount);
-              } else {
-                stories.get(i).setUnreadCount(stories.get(i).getContent().getPages().size());
+              int readCount = 0;
+              for (String subStoryID : storyIdArray) {
+                if (Arrays.asList(readStoryIdArray).contains(subStoryID)) {
+                  readCount++;
+                }
               }
-            } else {
-              stories.get(i).setUnreadCount(stories.get(i).getContent().getPages().size());
-            }
 
-            if (storyOpenPreferences.contains(stories.get(i).getId())) {
-              stories.get(i).setOpened(true);
+              int unreadCount = storyIdArray.length - readCount;
+
+              stories.get(i).setUnreadCount(unreadCount);
+
+              setOpenedForGroupStories();
             } else {
-              stories.get(i).setOpened(false);
+              String preferencesString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT, "");
+
+              if (stories.get(i).getContent().getPages() != null) {
+                stories.get(i).setSubStoryCount(stories.get(i).getContent().getPages().size());
+              }
+              if (!preferencesString.isEmpty()) {
+                Type type = new TypeToken<Map<String, Integer>>() {}.getType();
+                Map<String, Integer> existingMap = gson.fromJson(preferencesString, type);
+                String storyId = stories.get(i).getId();
+
+                if (existingMap.containsKey(storyId)) {
+                  int unreadCount = existingMap.get(storyId);
+                  stories.get(i).setUnreadCount(unreadCount);
+                } else {
+                  if (stories.get(i).getContent().getPages() != null) {
+                    stories.get(i).setUnreadCount(stories.get(i).getContent().getPages().size());
+                  }
+                }
+              } else {
+                if (stories.get(i).getContent().getPages() != null) {
+                  stories.get(i).setUnreadCount(stories.get(i).getContent().getPages().size());
+                }
+              }
+
+              if (storyOpenPreferences.contains(stories.get(i).getId())) {
+                stories.get(i).setOpened(true);
+              } else {
+                stories.get(i).setOpened(false);
+              }
             }
           }
 
@@ -201,7 +237,7 @@ public class StoryView extends LinearLayout {
           LinearLayoutManager linearLayoutManager =
               new LinearLayoutManager(ActivityLifecycleListener.currentActivity, LinearLayoutManager.HORIZONTAL, false);
           storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, attrArray,
-              getOnItemClickListener(stories, recyclerView),recyclerViewWidth);
+              getOnItemClickListener(stories, recyclerView),recyclerViewWidth, widget.isGroupStoryCategories());
           recyclerView.setLayoutManager(linearLayoutManager);
           recyclerView.setAdapter(storyViewListAdapter);
         }
@@ -238,16 +274,33 @@ public class StoryView extends LinearLayout {
             }
 
             int subStoryIndex = 0;
-            if (!subStoryPositionString.isEmpty()) {
-              Type type = new TypeToken<Map<String, Integer>>() {}.getType();
-              Map<String, Integer> subStoryPositionMap = new Gson().fromJson(subStoryPositionString, type);
+            if (widget != null && widget.isGroupStoryCategories()) {
+              String[] storyIdArray = stories.get(position).getId().split(",");
+              String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
+              String[] readStoryIdArray = storyUnreadCountString.split(",");
 
-              if (subStoryPositionMap.containsKey(storyId)) {
-                subStoryIndex = subStoryPositionMap.get(storyId) + 1;
+              for (String subStoryID : storyIdArray) {
+                if (Arrays.asList(readStoryIdArray).contains(subStoryID)) {
+                  subStoryIndex++;
+                }
               }
 
-              if (stories.get(position).getSubStoryCount() == subStoryIndex) {
+              if (storyIdArray.length == subStoryIndex) {
                 subStoryIndex = 0;
+              }
+            } else {
+              if (!subStoryPositionString.isEmpty()) {
+                Type type = new TypeToken<Map<String, Integer>>() {
+                }.getType();
+                Map<String, Integer> subStoryPositionMap = new Gson().fromJson(subStoryPositionString, type);
+
+                if (subStoryPositionMap.containsKey(storyId)) {
+                  subStoryIndex = subStoryPositionMap.get(storyId) + 1;
+                }
+
+                if (stories.get(position).getSubStoryCount() == subStoryIndex) {
+                  subStoryIndex = 0;
+                }
               }
             }
 
@@ -305,12 +358,33 @@ public class StoryView extends LinearLayout {
     ArrayList<Story> unseenStories = new ArrayList<>();
 
     for (Story story : stories) {
-      if (preferencesString.contains(story.getId())) {
-        story.setOpened(true);
-        openedStories.add(story);
+      if (widget != null && widget.isGroupStoryCategories()) {
+        String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
+        Set<String> readStoryIds = storyUnreadCountString.isEmpty() ? new HashSet<>() : new HashSet<>(Arrays.asList(storyUnreadCountString.split(",")));
+        String[] storyIdArray = story.getId().split(",");
+
+        boolean isOpened = false;
+        for (String subStoryID : storyIdArray) {
+          if (readStoryIds.contains(subStoryID)) {
+            isOpened = true;
+            break;
+          }
+        }
+
+        story.setOpened(isOpened);
+        if (isOpened) {
+          openedStories.add(story);
+        } else {
+          unseenStories.add(story);
+        }
       } else {
-        story.setOpened(false);
-        unseenStories.add(story);
+        if (preferencesString.contains(story.getId())) {
+          story.setOpened(true);
+          openedStories.add(story);
+        } else {
+          story.setOpened(false);
+          unseenStories.add(story);
+        }
       }
     }
 
@@ -319,6 +393,33 @@ public class StoryView extends LinearLayout {
     categorizeStories.addAll(openedStories);
 
     return categorizeStories;
+  }
+
+  private void setOpenedForGroupStories() {
+    try {
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+      String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
+
+      if (!storyUnreadCountString.isEmpty()) {
+        Set<String> readStoryIds = new HashSet<>(Arrays.asList(storyUnreadCountString.split(",")));
+
+        for (int i = 0; i < stories.size(); i++) {
+          String[] storyIdArray = stories.get(i).getId().split(",");
+          boolean isOpened = false;
+
+          for (String subStoryID : storyIdArray) {
+            if (readStoryIds.contains(subStoryID)) {
+              isOpened = true;
+              break;
+            }
+          }
+
+          stories.get(i).setOpened(isOpened);
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while setOpened in story for group stories. " + e.getLocalizedMessage(), e);
+    }
   }
 
 }
