@@ -9,8 +9,6 @@ import java.util.List;
 
 public class Content implements Serializable {
 
-  public static final long serialVersionUID = -4831841894049729349L;
-
   @SerializedName("version")
   @Expose
   private int version;
@@ -34,6 +32,10 @@ public class Content implements Serializable {
   @SerializedName("pages")
   @Expose
   private List<Object> pages;
+
+  @SerializedName("subtitle")
+  @Expose
+  private String subtitle;
 
   public int getVersion() {
     return this.version;
@@ -81,5 +83,13 @@ public class Content implements Serializable {
 
   public void setPages(List<Object> pages) {
     this.pages = pages;
+  }
+
+  public String getSubtitle() {
+    return subtitle;
+  }
+
+  public void setSubtitle(String subtitle) {
+    this.subtitle = subtitle;
   }
 }

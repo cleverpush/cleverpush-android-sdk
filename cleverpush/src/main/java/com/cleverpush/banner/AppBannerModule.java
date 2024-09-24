@@ -943,7 +943,7 @@ public class AppBannerModule {
 
   private boolean checkDeeplinkTriggerCondition(BannerTriggerCondition condition) {
     Set<String> deepLinks = getCurrentNotificationDeeplink();
-    Logger.e(TAG, "deepLinks: " + new Gson().toJson(deepLinks));
+    Logger.i(TAG, "deepLinks: " + new Gson().toJson(deepLinks));
     if (deepLinks.size() == 0) {
       return false;
     }

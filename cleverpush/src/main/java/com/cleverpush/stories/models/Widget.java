@@ -9,8 +9,6 @@ import java.util.List;
 
 public class Widget {
 
-  public static final long serialVersionUID = -7102250436681274220L;
-
   @SerializedName("_id")
   @Expose
   private String id;
@@ -54,6 +52,10 @@ public class Widget {
   @SerializedName("createdAt")
   @Expose
   private String createdAt;
+
+  @SerializedName("groupStoryCategories")
+  @Expose
+  private boolean groupStoryCategories = false;
 
   public String getId() {
     return this.id;
@@ -143,4 +145,11 @@ public class Widget {
     this.createdAt = createdAt;
   }
 
+  public boolean isGroupStoryCategories() {
+    return groupStoryCategories;
+  }
+
+  public void setGroupStoryCategories(boolean groupStoryCategories) {
+    this.groupStoryCategories = groupStoryCategories;
+  }
 }

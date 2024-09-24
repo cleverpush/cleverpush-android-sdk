@@ -57,10 +57,11 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   private TypedArray typedArray;
   public static StoryViewListAdapter storyViewListAdapter;
   private int parentLayoutWidth;
+  private boolean isGroupStoryCategories;
   private static final String TAG = "CleverPush/StoryViewAdapter";
 
   public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray,
-                              OnItemClickListener onItemClickListener, int parentLayoutWidth) {
+                              OnItemClickListener onItemClickListener, int parentLayoutWidth, boolean isGroupStoryCategories) {
     if (context == null) {
       if (CleverPush.getInstance(CleverPush.context).getCurrentContext() != null) {
         this.context = CleverPush.getInstance(CleverPush.context).getCurrentContext();
@@ -72,6 +73,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     this.typedArray = typedArray;
     this.onItemClickListener = onItemClickListener;
     this.parentLayoutWidth = parentLayoutWidth;
+    this.isGroupStoryCategories = isGroupStoryCategories;
   }
 
   @Override
@@ -158,7 +160,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       }
 
       if (subStoryUnreadCount == 0) {
-        if (stories.get(position).getUnreadCount() == 0) {
+        if (stories.get(position).getUnreadCount() <= 0) {
           unreadCountTextView.setVisibility(View.GONE);
         } else {
           unreadCountTextView.setVisibility(View.VISIBLE);
@@ -307,7 +309,17 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
           int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
           nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
-          nameTextView.setText(stories.get(position).getTitle());
+          if (isGroupStoryCategories) {
+            if (stories.get(position).getContent().getSubtitle() != null && !stories.get(position).getContent().getSubtitle().isEmpty()) {
+              nameTextView.setText(stories.get(position).getContent().getSubtitle());
+            } else if (stories.get(position).getContent().getTitle() != null && !stories.get(position).getContent().getTitle().isEmpty()) {
+              nameTextView.setText(stories.get(position).getContent().getTitle());
+            }
+          } else {
+            if (stories.get(position).getTitle() != null && !stories.get(position).getTitle().isEmpty()) {
+              nameTextView.setText(stories.get(position).getTitle());
+            }
+          }
           nameTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
           applyFont(nameTextView, typedArray);
         } else {
@@ -316,7 +328,17 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
           int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
           tvTitleInside.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
-          tvTitleInside.setText(stories.get(position).getTitle());
+          if (isGroupStoryCategories) {
+            if (stories.get(position).getContent().getSubtitle() != null && !stories.get(position).getContent().getSubtitle().isEmpty()) {
+              tvTitleInside.setText(stories.get(position).getContent().getSubtitle());
+            } else if (stories.get(position).getContent().getTitle() != null && !stories.get(position).getContent().getTitle().isEmpty()) {
+              tvTitleInside.setText(stories.get(position).getContent().getTitle());
+            }
+          } else {
+            if (stories.get(position).getTitle() != null && !stories.get(position).getTitle().isEmpty()) {
+              tvTitleInside.setText(stories.get(position).getTitle());
+            }
+          }
           tvTitleInside.setTextColor(typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR));
           applyFont(tvTitleInside, typedArray);
 
