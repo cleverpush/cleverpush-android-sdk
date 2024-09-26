@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.6 (26.09.2024)
+* Track confirm-alert statistics also on denied notification permissions.
+
 ## 1.34.5 (24.09.2024)
 * Optimised the `StoryView`, and Added support for grouping stories.
 
