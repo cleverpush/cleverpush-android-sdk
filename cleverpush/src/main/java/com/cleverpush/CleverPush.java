@@ -913,6 +913,7 @@ public class CleverPush {
       return;
     }
     this.pendingRequestNotificationPermissionCall = false;
+    CleverPush self = this;
     this.requestPermission(dialogActivity, Manifest.permission.POST_NOTIFICATIONS,
         new PermissionActivity.PermissionCallback() {
           @Override
@@ -932,6 +933,8 @@ public class CleverPush {
                 pendingSubscribeCallbackListener.onFailure(new Exception(error));
               }
             }
+
+            self.setConfirmAlertShown();
           }
         });
   }
