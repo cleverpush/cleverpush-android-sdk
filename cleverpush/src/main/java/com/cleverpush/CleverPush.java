@@ -932,9 +932,9 @@ public class CleverPush {
               if (pendingSubscribeCallbackListener != null) {
                 pendingSubscribeCallbackListener.onFailure(new Exception(error));
               }
-            }
 
-            self.setConfirmAlertShown();
+              self.setConfirmAlertShown();
+            }
           }
         });
   }
