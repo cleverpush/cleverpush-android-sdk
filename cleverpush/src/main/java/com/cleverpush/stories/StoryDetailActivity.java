@@ -60,6 +60,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   StoryDetailListAdapter storyDetailListAdapter;
   StoryView storyView;
   private Widget widget = new Widget();
+  public static boolean isOpenFromButton = false;
 
   public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewListAdapter storyViewListAdapter,
                             int closeButtonPosition, int subStoryPosition, String widgetId, int sortToLastIndex, StoryView storyView) {
@@ -123,6 +124,17 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         finish();
       }
     });
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    if (isOpenFromButton) {
+      isOpenFromButton = false;
+      if (storyDetailListAdapter != null) {
+        storyDetailListAdapter.restartStoryTimer();
+      }
+    }
   }
 
   @Override
@@ -237,6 +249,9 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         setStoryOpened(storyId);
         trackStoryOpened();
       } else {
+        if (widget != null && widget.isGroupStoryCategories()) {
+          setStoryOpened("");
+        }
         runOnUiThread(this::finish);
       }
     } catch (Exception e) {
@@ -283,7 +298,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
       if (selectedPosition == position) {
         if (widget != null && widget.isGroupStoryCategories()) {
-          updateUnreadStoryCountForGroup(selectedPosition);
+          updateUnreadStoryCountForGroup(selectedPosition, subStoryPosition);
         } else {
           String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT, "");
           String subStoryPositionString = sharedPreferences.getString(CleverPushPreferences.SUB_STORY_POSITION, "");
@@ -339,7 +354,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       if (widget != null && widget.isGroupStoryCategories()) {
         setOpenedForGroupStories();
         for (int i = 0; i < stories.size(); i++) {
-          updateUnreadStoryCountForGroup(i);
+          updateUnreadStoryCountForGroup(i, -1);
         }
       } else {
         String openStoriesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
@@ -399,6 +414,8 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         for (String subStoryID : storyIdArray) {
           if (Arrays.asList(readStoryIdArray).contains(subStoryID)) {
             subStoryIndex++;
+          } else {
+            break;
           }
         }
 
@@ -475,10 +492,10 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         Set<String> readStoryIds = storyUnreadCountString.isEmpty() ? new HashSet<>() : new HashSet<>(Arrays.asList(storyUnreadCountString.split(",")));
         String[] storyIdArray = story.getId().split(",");
 
-        boolean isOpened = false;
+        boolean isOpened = true;
         for (String subStoryID : storyIdArray) {
-          if (readStoryIds.contains(subStoryID)) {
-            isOpened = true;
+          if (!readStoryIds.contains(subStoryID)) {
+            isOpened = false;
             break;
           }
         }
@@ -546,11 +563,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
         for (int i = 0; i < stories.size(); i++) {
           String[] storyIdArray = stories.get(i).getId().split(",");
-          boolean isOpened = false;
+          boolean isOpened = true;
 
           for (String subStoryID : storyIdArray) {
-            if (readStoryIds.contains(subStoryID)) {
-              isOpened = true;
+            if (!readStoryIds.contains(subStoryID)) {
+              isOpened = false;
               break;
             }
           }
@@ -559,11 +576,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
       }
     } catch (Exception e) {
-      Logger.e(TAG, "Error while setOpened for group stories. " + e.getLocalizedMessage(), e);
+      Logger.e(TAG, "Error while setting opened for group stories. " + e.getLocalizedMessage(), e);
     }
   }
 
-  private void updateUnreadStoryCountForGroup(int selectedPosition) {
+  private void updateUnreadStoryCountForGroup(int selectedPosition, int subStoryPosition) {
     try {
       SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
       SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -571,20 +588,22 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
       String[] storyIdArray = stories.get(selectedPosition).getId().split(",");
 
-      String subStoryId = "";
-      if (subStoryPosition >= 0 && subStoryPosition < storyIdArray.length) {
-        subStoryId = storyIdArray[subStoryPosition];
-      }
-
-      if (storyUnreadCountString.isEmpty()) {
-        editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, subStoryId);
-      } else {
-        if (!storyUnreadCountString.contains(subStoryId)) {
-          editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, storyUnreadCountString + "," + subStoryId);
+      if (selectedPosition != -1) {
+        String subStoryId = "";
+        if (subStoryPosition >= 0 && subStoryPosition < storyIdArray.length) {
+          subStoryId = storyIdArray[subStoryPosition];
         }
+
+        if (storyUnreadCountString.isEmpty()) {
+          editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, subStoryId);
+        } else {
+          if (!storyUnreadCountString.contains(subStoryId)) {
+            editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, storyUnreadCountString + "," + subStoryId);
+          }
+        }
+        editor.apply();
+        storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
       }
-      editor.apply();
-      storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
 
       String[] readStoryIdArray = storyUnreadCountString.split(",");
 

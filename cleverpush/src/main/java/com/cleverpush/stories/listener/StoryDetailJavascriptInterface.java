@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.webkit.JavascriptInterface;
 
 import com.cleverpush.listener.StoryViewOpenedListener;
+import com.cleverpush.stories.StoryDetailActivity;
+import com.cleverpush.stories.StoryDetailListAdapter;
 import com.cleverpush.stories.StoryDetailViewHolder;
 import com.cleverpush.util.Logger;
 
@@ -23,13 +25,15 @@ public class StoryDetailJavascriptInterface {
   private Activity activity;
   StoryViewOpenedListener storyViewOpenedListener;
   String currentTimeStamp = "";
+  StoryDetailListAdapter storyDetailListAdapter;
 
   public StoryDetailJavascriptInterface(StoryDetailViewHolder storyDetailViewHolder,
-                                        StoryChangeListener storyChangeListener, Activity activity, StoryViewOpenedListener storyViewOpenedListener) {
+                                        StoryChangeListener storyChangeListener, Activity activity, StoryViewOpenedListener storyViewOpenedListener, StoryDetailListAdapter storyDetailListAdapter) {
     this.storyDetailViewHolder = storyDetailViewHolder;
     this.storyChangeListener = storyChangeListener;
     this.storyViewOpenedListener = storyViewOpenedListener;
     this.activity = activity;
+    this.storyDetailListAdapter = storyDetailListAdapter;
   }
 
   @JavascriptInterface
@@ -80,6 +84,8 @@ public class StoryDetailJavascriptInterface {
 
           if (url != null && !url.isEmpty()) {
             Uri uri = Uri.parse(url);
+            StoryDetailActivity.isOpenFromButton = true;
+            storyDetailListAdapter.pauseStoryTimer();
             if (storyViewOpenedListener != null) {
               storyViewOpenedListener.opened(uri);
             } else {

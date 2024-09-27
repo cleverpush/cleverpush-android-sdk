@@ -92,7 +92,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
       storyDetailViewHolder.webView.getSettings().setAllowFileAccess(true);
 
       storyDetailViewHolder.webView.addJavascriptInterface(
-              new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity, storyViewOpenedListener),
+              new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity, storyViewOpenedListener, StoryDetailListAdapter.this),
               "storyDetailJavascriptInterface");
 
       storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener) {
@@ -116,7 +116,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
     String storyId = stories.get(position).getId();
     String customURL = "";
     if (stories.get(position).getContent().getPages() != null && stories.get(position).getContent().getPages().size() > 1) {
-      customURL = "https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&%23page=page-" + subStoryPosition;
+      customURL = "https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&#page=page-" + subStoryPosition;
     } else {
       customURL = "https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
     }
@@ -139,6 +139,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
         "  <script>\n" +
         "    var playerEl = document.querySelector('amp-story-player');\n" +
         "    var player = new AmpStoryPlayer(window, playerEl);\n" +
+        "    window.player = player;" +
         "    playerEl.addEventListener('noPreviousStory', function (event) {\n" +
         "      storyDetailJavascriptInterface.previous(" + position + ");\n" +
         "    });\n" +
@@ -162,7 +163,6 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
         "          console.error (error); \n" +
         "      }\n" +
         "    });\n" +
-        "    player.go(" + position + ");\n" +
         "  </script>\n" +
         "</body>\n" +
         "</html>";
@@ -228,6 +228,56 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
 
       CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
           new TrackStoryOpenedShownResponseHandler().getResponseHandler(false));
+    }
+  }
+
+  public void restartStoryTimer() {
+    try {
+      if (storyDetailViewHolder != null && storyDetailViewHolder.webView != null) {
+//        storyDetailViewHolder.webView.onResume();
+        storyDetailViewHolder.webView.post(new Runnable() {
+          @Override
+          public void run() {
+            Logger.i(TAG, "Inside restartStoryTimer -> webView.post -> run");
+            storyDetailViewHolder.webView.evaluateJavascript(
+                "if (window.player) { " +
+                    "   console.log('restartStoryTimer Player is available.'); " +
+                    "   setTimeout(function() { window.player.play(); }, 500); " +
+                    "} else { " +
+                    "   console.error('Player is not available.'); " +
+                    "}"
+                , null
+            );
+          }
+        });
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while restarting story player. " + e.getLocalizedMessage(), e);
+    }
+  }
+
+  public void pauseStoryTimer() {
+    try {
+      if (storyDetailViewHolder != null && storyDetailViewHolder.webView != null) {
+//        storyDetailViewHolder.webView.onPause();
+        storyDetailViewHolder.webView.post(new Runnable() {
+          @Override
+          public void run() {
+            Logger.i(TAG, "Inside pauseStoryTimer -> webView.post -> run");
+            storyDetailViewHolder.webView.evaluateJavascript(
+                "if (window.player) { " +
+                    "   console.log('pauseStoryTimer player is available.'); " +
+                    "   setTimeout(function() { window.player.pause(); }, 500); " +
+                    "} else { " +
+                    "   console.error('Player is not available.'); " +
+                    "}"
+                , null
+            );
+          }
+        });
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while restarting story player. " + e.getLocalizedMessage(), e);
     }
   }
 

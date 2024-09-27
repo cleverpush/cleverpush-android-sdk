@@ -166,12 +166,15 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
           unreadCountTextView.setVisibility(View.VISIBLE);
           unreadCountTextView.setText(stories.get(position).getUnreadCount() + "");
         }
-        unreadCountTextView.setTextColor(typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color, DEFAULT_UNREAD_COUNT_TEXT_COLOR));
+        int textColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color, DEFAULT_UNREAD_COUNT_TEXT_COLOR);
+        unreadCountTextView.setTextColor(textColor);
 
         GradientDrawable circleDrawable = new GradientDrawable();
         circleDrawable.setShape(GradientDrawable.OVAL);
         int backgroundColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_background_color, DEFAULT_UNREAD_COUNT_BACKGROUND_COLOR);
         circleDrawable.setColor(backgroundColor);
+        int unreadCountBorderWidth = 3;
+        circleDrawable.setStroke(unreadCountBorderWidth, textColor);
 
         unreadCountTextView.setBackground(circleDrawable);
 
