@@ -1,4 +1,3 @@
-
 package com.cleverpush.stories.models;
 
 import com.google.gson.annotations.Expose;

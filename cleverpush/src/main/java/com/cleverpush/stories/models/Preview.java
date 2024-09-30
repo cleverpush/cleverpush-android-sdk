@@ -1,4 +1,3 @@
-
 package com.cleverpush.stories.models;
 
 import com.google.gson.annotations.Expose;
@@ -39,6 +38,10 @@ public class Preview implements Serializable {
   @SerializedName("widgetSrc")
   @Expose
   private String widgetSrc;
+
+  @SerializedName("widgetDarkSrc")
+  @Expose
+  private String widgetDarkSrc;
 
   public String getPublisher() {
     return this.publisher;
@@ -102,5 +105,13 @@ public class Preview implements Serializable {
 
   public void setWidgetSrc(String widgetSrc) {
     this.widgetSrc = widgetSrc;
+  }
+
+  public String getWidgetDarkSrc() {
+    return widgetDarkSrc;
+  }
+
+  public void setWidgetDarkSrc(String widgetDarkSrc) {
+    this.widgetDarkSrc = widgetDarkSrc;
   }
 }
