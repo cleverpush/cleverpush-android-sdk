@@ -139,7 +139,6 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
         "  <script>\n" +
         "    var playerEl = document.querySelector('amp-story-player');\n" +
         "    var player = new AmpStoryPlayer(window, playerEl);\n" +
-        "    window.player = player;" +
         "    playerEl.addEventListener('noPreviousStory', function (event) {\n" +
         "      storyDetailJavascriptInterface.previous(" + position + ");\n" +
         "    });\n" +
@@ -228,56 +227,6 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
 
       CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
           new TrackStoryOpenedShownResponseHandler().getResponseHandler(false));
-    }
-  }
-
-  public void restartStoryTimer() {
-    try {
-      if (storyDetailViewHolder != null && storyDetailViewHolder.webView != null) {
-//        storyDetailViewHolder.webView.onResume();
-        storyDetailViewHolder.webView.post(new Runnable() {
-          @Override
-          public void run() {
-            Logger.i(TAG, "Inside restartStoryTimer -> webView.post -> run");
-            storyDetailViewHolder.webView.evaluateJavascript(
-                "if (window.player) { " +
-                    "   console.log('restartStoryTimer Player is available.'); " +
-                    "   setTimeout(function() { window.player.play(); }, 500); " +
-                    "} else { " +
-                    "   console.error('Player is not available.'); " +
-                    "}"
-                , null
-            );
-          }
-        });
-      }
-    } catch (Exception e) {
-      Logger.e(TAG, "Error while restarting story player. " + e.getLocalizedMessage(), e);
-    }
-  }
-
-  public void pauseStoryTimer() {
-    try {
-      if (storyDetailViewHolder != null && storyDetailViewHolder.webView != null) {
-//        storyDetailViewHolder.webView.onPause();
-        storyDetailViewHolder.webView.post(new Runnable() {
-          @Override
-          public void run() {
-            Logger.i(TAG, "Inside pauseStoryTimer -> webView.post -> run");
-            storyDetailViewHolder.webView.evaluateJavascript(
-                "if (window.player) { " +
-                    "   console.log('pauseStoryTimer player is available.'); " +
-                    "   setTimeout(function() { window.player.pause(); }, 500); " +
-                    "} else { " +
-                    "   console.error('Player is not available.'); " +
-                    "}"
-                , null
-            );
-          }
-        });
-      }
-    } catch (Exception e) {
-      Logger.e(TAG, "Error while restarting story player. " + e.getLocalizedMessage(), e);
     }
   }
 

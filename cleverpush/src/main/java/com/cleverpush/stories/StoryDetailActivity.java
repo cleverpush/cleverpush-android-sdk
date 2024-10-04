@@ -272,11 +272,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "  <link rel=\"stylesheet\" href=\"https://cdn.ampproject.org/amp-story-player-v0.css\">\n" +
         "  <style>\n" +
         "    body { margin: 0; padding: 0; }\n" +
-        "    amp-story-player { display: block; margin: 0; padding: 0; width: 100%%; height: " + convertPixelsToDp(measuredHeight, getApplicationContext()) + "px; }\n" +
+        "    amp-story-player { display: block; margin: 0; padding: 0; width: 100%; height: " + convertPixelsToDp(measuredHeight, getApplicationContext()) + "px; }\n" +
         "  </style>\n" +
         "</head>\n" +
         "<body>\n" +
-        "  <amp-story-player width=\"100%%\" height=\"" + convertPixelsToDp(measuredHeight, getApplicationContext()) + "\">\n" +
+        "  <amp-story-player>\n" +
         anchorTags.toString() +
         "  </amp-story-player>\n" +
         "  <script>\n" +
