@@ -97,7 +97,7 @@ public class StoryView extends LinearLayout {
     }
     loading = true;
 
-    String storyPath = "/story-widget/" + widgetId + "/config";
+    String storyPath = "/story-widget/" + widgetId + "/config?platform=app";
     Logger.d(TAG, "Loading stories: " + storyPath);
 
     CleverPush.getInstance(this.context).getActivityLifecycleListener().setActivityInitializedListener(() -> {

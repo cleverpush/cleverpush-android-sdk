@@ -3,18 +3,18 @@ package com.cleverpush.stories;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.ImageView;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.PagerSnapHelper;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SnapHelper;
 
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPushHttpClient;
@@ -25,6 +25,7 @@ import com.cleverpush.responsehandlers.TrackStoryOpenedShownResponseHandler;
 import com.cleverpush.stories.listener.OnSwipeDownListener;
 import com.cleverpush.stories.listener.OnSwipeTouchListener;
 import com.cleverpush.stories.listener.StoryChangeListener;
+import com.cleverpush.stories.listener.StoryDetailJavascriptInterface;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.stories.models.Widget;
 import com.cleverpush.util.Logger;
@@ -47,20 +48,21 @@ import java.util.Set;
 public class StoryDetailActivity extends Activity implements StoryChangeListener {
 
   public static int selectedPosition = 0;
-  private RecyclerView recyclerView;
+  private WebView webView;
   private OnSwipeTouchListener onSwipeTouchListener;
   private ArrayList<Story> stories = new ArrayList<>();
   public StoryViewOpenedListener storyViewOpenedListener;
   private StoryViewListAdapter storyViewListAdapter;
   private int closeButtonPosition;
   private static final String TAG = "CleverPush/AppStoryDetails";
-  private int subStoryPosition = 0;
   private int sortToLastIndex = 0;
   private String widgetId = null;
-  StoryDetailListAdapter storyDetailListAdapter;
   StoryView storyView;
   private Widget widget = new Widget();
   public static boolean isOpenFromButton = false;
+  int measuredWidth = 0;
+  int measuredHeight = 0;
+  boolean isHideStoryShareButton = false;
 
   public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewListAdapter storyViewListAdapter,
                             int closeButtonPosition, int subStoryPosition, String widgetId, int sortToLastIndex, StoryView storyView) {
@@ -93,7 +95,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   }
 
   private void init() {
-    recyclerView = findViewById(R.id.rvStories);
+    webView = findViewById(R.id.webView);
     ImageView closeButtonLeft, closeButtonRight;
     closeButtonLeft = findViewById(R.id.ivClose);
     closeButtonRight = findViewById(R.id.ivCloseRight);
@@ -105,12 +107,37 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       configureCloseButton(closeButtonRight, closeButtonLeft);
     }
 
-    onSwipeTouchListener = new OnSwipeTouchListener(this, recyclerView, new OnSwipeDownListener() {
-      @Override
-      public void onSwipeDown() {
-        finish();
-      }
-    });
+    try {
+      onSwipeTouchListener = new OnSwipeTouchListener(this, new OnSwipeDownListener() {
+        @Override
+        public void onSwipeDown() {
+          finish();
+        }
+      });
+
+      // Set the touch listener for the WebView
+      webView.setOnTouchListener(new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+
+          if (onSwipeTouchListener.getGestureDetector().onTouchEvent(event)) {
+            return true;  // Swipe detected and handled
+          }
+          return v.onTouchEvent(event);
+        }
+      });
+
+      View rootView = findViewById(android.R.id.content);
+      rootView.setOnTouchListener(new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+          // Handle swipe gestures on the root view
+          return onSwipeTouchListener.getGestureDetector().onTouchEvent(event);
+        }
+      });
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while detecting gestures. " + e.getLocalizedMessage(), e);
+    }
   }
 
   private void configureCloseButton(ImageView visibleButton, ImageView hiddenButton) {
@@ -131,9 +158,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     super.onResume();
     if (isOpenFromButton) {
       isOpenFromButton = false;
-      if (storyDetailListAdapter != null) {
-        storyDetailListAdapter.restartStoryTimer();
-      }
+      restartStoryTimer();
     }
   }
 
@@ -145,7 +170,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
   @Override
   public boolean dispatchTouchEvent(MotionEvent event) {
-    onSwipeTouchListener.getGestureDetector().onTouchEvent(event);
+    // Allow the GestureDetector to process the swipe gesture first
+    if (onSwipeTouchListener.getGestureDetector().onTouchEvent(event)) {
+      return true; // Swipe gesture detected and handled
+    }
+    // If no swipe detected, proceed with the default dispatch
     return super.dispatchTouchEvent(event);
   }
 
@@ -158,9 +187,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         if (extras.containsKey("closeButtonPosition")) {
           closeButtonPosition = extras.getInt("closeButtonPosition");
         }
-        if (extras.containsKey("subStoryPosition")) {
-          subStoryPosition = extras.getInt("subStoryPosition");
-        }
         if (extras.containsKey("widgetId")) {
           widgetId = extras.getString("widgetId");
         }
@@ -171,7 +197,10 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         storyView = StoryView.getStoryView();
         storyViewOpenedListener = storyView.storyViewOpenedListener;
         widget = storyView.getWidget();
-        trackStoryOpened();
+        if (selectedPosition == 0) {
+          trackStoryOpened();
+          trackStoryShown(selectedPosition);
+        }
         if (extras.containsKey("stories")) {
           stories = (ArrayList<Story>) extras.getSerializable("stories");
           loadStoryDetails();
@@ -190,97 +219,122 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
   private void loadStoryDetails() {
     try {
-      boolean isHideStoryShareButton = false;
       if (closeButtonPosition == 1) {
         isHideStoryShareButton = true;
       }
-      LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-      SnapHelper snapHelper = new PagerSnapHelper();
-      storyDetailListAdapter = new StoryDetailListAdapter(this, stories, this,
-          storyViewOpenedListener, subStoryPosition, isHideStoryShareButton, widgetId, selectedPosition);
-      recyclerView.setLayoutManager(linearLayoutManager);
-      snapHelper.attachToRecyclerView(recyclerView);
-      recyclerView.setAdapter(storyDetailListAdapter);
-      recyclerView.smoothScrollToPosition(selectedPosition);
 
-      recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+      WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+      Display display = windowManager.getDefaultDisplay();
+      measuredWidth = display.getWidth();
+      measuredHeight = display.getHeight();
+
+      webView.getSettings().setJavaScriptEnabled(true);
+      webView.getSettings().setLoadsImagesAutomatically(true);
+      webView.getSettings().setDomStorageEnabled(true);
+      webView.getSettings().setAllowFileAccess(true);
+
+      webView.addJavascriptInterface(
+          new StoryDetailJavascriptInterface(this, StoryDetailActivity.this, storyViewOpenedListener, null),
+          "storyDetailJavascriptInterface");
+
+      webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener) {
         @Override
-        public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-          super.onScrollStateChanged(recyclerView, newState);
-          if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-            LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-            int position = layoutManager.findFirstVisibleItemPosition();
-            selectedPosition = position;
-
-            if (storyDetailListAdapter != null) {
-              int subStoryIndex = getSubStoryPosition();
-              storyDetailListAdapter.subStoryPosition = subStoryIndex;
-              storyDetailListAdapter.refresh(selectedPosition, subStoryIndex);
-            }
-            recyclerView.smoothScrollToPosition(selectedPosition);
-            String storyId = stories.get(position).getId();
-            setStoryOpened(storyId);
-          }
+        public void onPageFinished(WebView view, String url) {
+          super.onPageFinished(view, url);
         }
       });
-
+      String htmlContent = loadHtml();
+      webView.loadDataWithBaseURL(null, htmlContent, "text/html; charset=utf-8", "UTF-8", null);
     } catch (Exception e) {
       Logger.e(TAG, "Error loading story details in StoryDetailActivity", e);
     }
   }
 
+  public String loadHtml() {
+    StringBuilder anchorTags = new StringBuilder();
+
+    for (int i = 0; i < stories.size(); i++) {
+      String storyId = stories.get(i).getId();
+      String customURL = "";
+      int subStoryIndex = getSubStoryPosition(i);
+      if (stories.get(i).getContent().getPages() != null && stories.get(i).getContent().getPages().size() > 1) {
+        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&#page=page-" + subStoryIndex;
+      } else {
+        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
+      }
+      anchorTags.append("    <a href=\"").append(customURL).append("\">\"Story Title ").append(i + 1).append(" \"</a>\n");
+    }
+
+    return "<!DOCTYPE html>\n" +
+        "<html>\n" +
+        "<head>\n" +
+        "  <script src=\"https://cdn.ampproject.org/amp-story-player-v0.js\"></script>\n" +
+        "  <link rel=\"stylesheet\" href=\"https://cdn.ampproject.org/amp-story-player-v0.css\">\n" +
+        "  <style>\n" +
+        "    body { margin: 0; padding: 0; }\n" +
+        "    amp-story-player { display: block; margin: 0; padding: 0; width: 100%%; height: " + convertPixelsToDp(measuredHeight, getApplicationContext()) + "px; }\n" +
+        "  </style>\n" +
+        "</head>\n" +
+        "<body>\n" +
+        "  <amp-story-player width=\"100%%\" height=\"" + convertPixelsToDp(measuredHeight, getApplicationContext()) + "\">\n" +
+        anchorTags.toString() +
+        "  </amp-story-player>\n" +
+        "  <script>\n" +
+        "    var playerEl = document.querySelector('amp-story-player');\n" +
+        "    var player = new AmpStoryPlayer(window, playerEl);\n" +
+        "    window.player = player;\n" +
+        "    player.addEventListener('noNextStory', (event) => {\n" +
+        "       storyDetailJavascriptInterface.noNext();\n" +
+        "    });\n" +
+        "    playerEl.addEventListener('storyNavigation', function (event) {\n" +
+        "      var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 111);\n" +
+        "      storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
+        "    });\n" +
+        "    player.addEventListener('ready', function (event) {\n" +
+        "       storyDetailJavascriptInterface.ready();\n" +
+        "       player.go(" + selectedPosition + ")\n" +
+        "    });\n" +
+        "    playerEl.addEventListener('navigation', function (event) {\n" +
+        "      storyDetailJavascriptInterface.navigation(event.detail.index);\n" +
+        "    });\n" +
+        "    window.addEventListener('message', function (event) {\n" +
+        "      try { \n" +
+        "          var data = JSON.parse(event.data); \n" +
+        "          if (data.type === 'storyButtonCallback') { \n" +
+        "              window.storyDetailJavascriptInterface.storyButtonCallbackUrl(JSON.stringify(data)); \n" +
+        "          } \n" +
+        "      } catch (error) { \n" +
+        "          console.error (error); \n" +
+        "      }\n" +
+        "    });\n" +
+        "  </script>\n" +
+        "</body>\n" +
+        "</html>";
+  }
+
+  public float convertPixelsToDp(float px, Context context) {
+    if (px == 0) {
+      return 0f;
+    }
+    return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+  }
+
   @Override
   public void onNext(int position) {
-    try {
-      if (position != stories.size() - 1) {
-        selectedPosition = position + 1;
 
-        if (storyDetailListAdapter != null) {
-          int subStoryIndex = getSubStoryPosition();
-          storyDetailListAdapter.subStoryPosition = subStoryIndex;
-          storyDetailListAdapter.selectedPosition = selectedPosition;
-          storyDetailListAdapter.apiCallMap.put(selectedPosition, false);
-          storyDetailListAdapter.refresh(selectedPosition, subStoryIndex);
-        }
-
-        recyclerView.smoothScrollToPosition(selectedPosition);
-
-        String storyId = stories.get(position + 1).getId();
-        setStoryOpened(storyId);
-        trackStoryOpened();
-      } else {
-        if (widget != null && widget.isGroupStoryCategories()) {
-          setStoryOpened("");
-        }
-        runOnUiThread(this::finish);
-      }
-    } catch (Exception e) {
-      Logger.e(TAG, "Error handling onNext in StoryDetailActivity", e);
-    }
   }
 
   @Override
   public void onPrevious(int position) {
+
+  }
+
+  @Override
+  public void noNext() {
     try {
-      if (position != 0) {
-        selectedPosition = position - 1;
-
-        if (storyDetailListAdapter != null) {
-          int subStoryIndex = getSubStoryPosition();
-          storyDetailListAdapter.subStoryPosition = subStoryPosition;
-          storyDetailListAdapter.selectedPosition = selectedPosition;
-          storyDetailListAdapter.apiCallMap.put(selectedPosition, false);
-          storyDetailListAdapter.refresh(selectedPosition, subStoryIndex);
-        }
-
-        recyclerView.smoothScrollToPosition(position - 1);
-
-        String storyId = stories.get(position - 1).getId();
-        setStoryOpened(storyId);
-        trackStoryOpened();
-      }
+      runOnUiThread(this::finish);
     } catch (Exception e) {
-      Logger.e(TAG, "Error handling onPrevious in StoryDetailActivity", e);
+      Logger.e(TAG, "Error handling noNext in StoryDetailActivity", e);
     }
   }
 
@@ -294,48 +348,56 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
 
       Gson gson = new Gson();
-      Type type = new TypeToken<Map<String, Integer>>() {}.getType();
+      Type type = new TypeToken<Map<String, Integer>>() {
+      }.getType();
 
-      if (selectedPosition == position) {
-        if (widget != null && widget.isGroupStoryCategories()) {
-          updateUnreadStoryCountForGroup(selectedPosition, subStoryPosition);
+      if (widget != null && widget.isGroupStoryCategories()) {
+        updateUnreadStoryCountForGroup(selectedPosition, subStoryPosition);
+      } else {
+        String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT, "");
+        String subStoryPositionString = sharedPreferences.getString(CleverPushPreferences.SUB_STORY_POSITION, "");
+
+        Map<String, Integer> storyUnreadCountMap = gson.fromJson(storyUnreadCountString, type);
+        Map<String, Integer> subStoryPositionMap = gson.fromJson(subStoryPositionString, type);
+
+        if (storyUnreadCountMap == null) storyUnreadCountMap = new HashMap<>();
+        if (subStoryPositionMap == null) subStoryPositionMap = new HashMap<>();
+
+        if (storyUnreadCountString.isEmpty()) {
+          storyUnreadCountMap.put(storyId, unreadCount);
+          subStoryPositionMap.put(storyId, subStoryPosition);
+
+          updateStoryPreferences(gson.toJson(storyUnreadCountMap), gson.toJson(subStoryPositionMap), unreadCount, sharedPreferences);
         } else {
-          String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT, "");
-          String subStoryPositionString = sharedPreferences.getString(CleverPushPreferences.SUB_STORY_POSITION, "");
+          if (storyUnreadCountMap.containsKey(storyId) && subStoryPositionMap.containsKey(storyId)) {
+            int preferencesSubStoryPosition = subStoryPositionMap.get(storyId);
 
-          Map<String, Integer> storyUnreadCountMap = gson.fromJson(storyUnreadCountString, type);
-          Map<String, Integer> subStoryPositionMap = gson.fromJson(subStoryPositionString, type);
-
-          if (storyUnreadCountMap == null) storyUnreadCountMap = new HashMap<>();
-          if (subStoryPositionMap == null) subStoryPositionMap = new HashMap<>();
-
-          if (storyUnreadCountString.isEmpty()) {
-            storyUnreadCountMap.put(storyId, unreadCount);
-            subStoryPositionMap.put(storyId, subStoryPosition);
-
-            updateStoryPreferences(gson.toJson(storyUnreadCountMap), gson.toJson(subStoryPositionMap), unreadCount, sharedPreferences);
-          } else {
-            if (storyUnreadCountMap.containsKey(storyId) && subStoryPositionMap.containsKey(storyId)) {
-              int preferencesSubStoryPosition = subStoryPositionMap.get(storyId);
-
-              if (subStoryPosition > (preferencesSubStoryPosition)) {
-                storyUnreadCountMap.put(storyId, unreadCount);
-                subStoryPositionMap.put(storyId, subStoryPosition);
-
-                updateStoryPreferences(gson.toJson(storyUnreadCountMap), gson.toJson(subStoryPositionMap), unreadCount, sharedPreferences);
-              }
-            } else {
+            if (subStoryPosition > (preferencesSubStoryPosition)) {
               storyUnreadCountMap.put(storyId, unreadCount);
               subStoryPositionMap.put(storyId, subStoryPosition);
 
               updateStoryPreferences(gson.toJson(storyUnreadCountMap), gson.toJson(subStoryPositionMap), unreadCount, sharedPreferences);
             }
+          } else {
+            storyUnreadCountMap.put(storyId, unreadCount);
+            subStoryPositionMap.put(storyId, subStoryPosition);
+
+            updateStoryPreferences(gson.toJson(storyUnreadCountMap), gson.toJson(subStoryPositionMap), unreadCount, sharedPreferences);
           }
         }
       }
     } catch (Exception e) {
       Logger.e(TAG, "Error handling onStoryNavigation in StoryDetailActivity", e);
     }
+  }
+
+  @Override
+  public void onNavigation(int position) {
+    selectedPosition = position;
+    String storyId = stories.get(position).getId();
+    setStoryOpened(storyId);
+    trackStoryOpened();
+    trackStoryShown(selectedPosition);
   }
 
   private void updateStoryPreferences(String unreadCountMap, String subStoryPositionMap, int unreadCount, SharedPreferences sharedPreferences) {
@@ -402,7 +464,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     }
   }
 
-  private int getSubStoryPosition() {
+  private int getSubStoryPosition(int selectedPosition) {
     int subStoryIndex = 0;
     try {
       SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
@@ -440,7 +502,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
           }
         }
       }
-      subStoryPosition = subStoryIndex;
     } catch (Exception e) {
       Logger.e(TAG, "Error while getSubStoryPosition. " + e.getLocalizedMessage(), e);
     }
@@ -532,7 +593,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     }
 
     String storyPath = "/story-widget/" + widgetId + "/track-opened";
-    Logger.d(TAG, "Loading stories: " + storyPath);
 
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
     String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
@@ -551,6 +611,32 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
     CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
         new TrackStoryOpenedShownResponseHandler().getResponseHandler(true));
+  }
+
+  private void trackStoryShown(int position) {
+    if (widgetId == null || widgetId.length() == 0) {
+      return;
+    }
+
+    String storyPath = "/story-widget/" + widgetId + "/track-shown";
+
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
+    String storyOpenPreferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+
+    ArrayList<String> storyIds = new ArrayList<>();
+    if (!storyOpenPreferencesString.isEmpty()) {
+      storyIds = new ArrayList<>(Arrays.asList(storyOpenPreferencesString.split(",")));
+    }
+
+    JSONObject jsonBody = new JSONObject();
+    try {
+      jsonBody.put("stories", new JSONArray(storyIds));
+    } catch (JSONException ex) {
+      Logger.e(TAG, "Error creating track stories shown request parameter", ex);
+    }
+
+    CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
+        new TrackStoryOpenedShownResponseHandler().getResponseHandler(false));
   }
 
   private void setOpenedForGroupStories() {
@@ -621,4 +707,21 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     }
   }
 
+  public void restartStoryTimer() {
+    try {
+      if (webView != null) {
+        webView.post(new Runnable() {
+          @Override
+          public void run() {
+            webView.evaluateJavascript(
+                "document.querySelector('amp-story-player').shadowRoot.querySelector('iframe').contentWindow.postMessage(JSON.stringify({ type: 'triggerStoryFocusEvent' }), '*');",
+                null
+            );
+          }
+        });
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while restarting story player. " + e.getLocalizedMessage(), e);
+    }
+  }
 }

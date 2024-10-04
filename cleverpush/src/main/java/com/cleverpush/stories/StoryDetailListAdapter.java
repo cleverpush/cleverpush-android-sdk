@@ -92,7 +92,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
       storyDetailViewHolder.webView.getSettings().setAllowFileAccess(true);
 
       storyDetailViewHolder.webView.addJavascriptInterface(
-              new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity, storyViewOpenedListener, StoryDetailListAdapter.this),
+              new StoryDetailJavascriptInterface(storyChangeListener, activity, storyViewOpenedListener, StoryDetailListAdapter.this),
               "storyDetailJavascriptInterface");
 
       storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener) {
