@@ -2,8 +2,11 @@
 <resources>
     <declare-styleable name="StoryView">
         <attr name="border_color" format="color" />
+        <attr name="border_color_dark_mode" format="color" />
         <attr name="background_color" format="color" />
+        <attr name="background_color_dark_mode" format="color" />
         <attr name="text_color" format="color" />
+        <attr name="text_color_dark_mode" format="color" />
         <attr name="story_view_height" format="dimension" >
             <enum name="fill_parent" value="-1" />
             <enum name="match_parent" value="-1" />
@@ -41,7 +44,9 @@
             <enum name="visible" value="0" />
         </attr>
         <attr name="sub_story_unread_count_background_color" format="color" />
+        <attr name="sub_story_unread_count_background_color_dark_mode" format="color" />
         <attr name="sub_story_unread_count_text_color" format="color" />
+        <attr name="sub_story_unread_count_text_color_dark_mode" format="color" />
         <attr name="restrict_to_items" format="integer" />
         <attr name="close_button_position" format="enum">
             <enum name="left" value="0" />
@@ -56,6 +61,7 @@
             <enum name="position_default" value="0" />
             <enum name="position_end" value="1" />
         </attr>
+        <attr name="dark_mode_enabled" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="InboxView">

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -96,7 +97,7 @@ public class StoryView extends LinearLayout {
     }
     loading = true;
 
-    String storyPath = "/story-widget/" + widgetId + "/config";
+    String storyPath = "/story-widget/" + widgetId + "/config?platform=app";
     Logger.d(TAG, "Loading stories: " + storyPath);
 
     CleverPush.getInstance(this.context).getActivityLifecycleListener().setActivityInitializedListener(() -> {
@@ -282,6 +283,8 @@ public class StoryView extends LinearLayout {
               for (String subStoryID : storyIdArray) {
                 if (Arrays.asList(readStoryIdArray).contains(subStoryID)) {
                   subStoryIndex++;
+                } else {
+                  break;
                 }
               }
 
@@ -306,7 +309,9 @@ public class StoryView extends LinearLayout {
 
             int closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, 0);
 
-            stories.get(position).setOpened(true);
+            if (widget != null && !widget.isGroupStoryCategories()) {
+              stories.get(position).setOpened(true);
+            }
             StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewListAdapter,
                 closeButtonPosition, subStoryIndex, widgetId, sortToLastIndex, StoryView.this);
             recyclerView.smoothScrollToPosition(position);
@@ -363,10 +368,10 @@ public class StoryView extends LinearLayout {
         Set<String> readStoryIds = storyUnreadCountString.isEmpty() ? new HashSet<>() : new HashSet<>(Arrays.asList(storyUnreadCountString.split(",")));
         String[] storyIdArray = story.getId().split(",");
 
-        boolean isOpened = false;
+        boolean isOpened = true;
         for (String subStoryID : storyIdArray) {
-          if (readStoryIds.contains(subStoryID)) {
-            isOpened = true;
+          if (!readStoryIds.contains(subStoryID)) {
+            isOpened = false;
             break;
           }
         }
@@ -405,11 +410,11 @@ public class StoryView extends LinearLayout {
 
         for (int i = 0; i < stories.size(); i++) {
           String[] storyIdArray = stories.get(i).getId().split(",");
-          boolean isOpened = false;
+          boolean isOpened = true;
 
           for (String subStoryID : storyIdArray) {
-            if (readStoryIds.contains(subStoryID)) {
-              isOpened = true;
+            if (!readStoryIds.contains(subStoryID)) {
+              isOpened = false;
               break;
             }
           }
@@ -418,7 +423,7 @@ public class StoryView extends LinearLayout {
         }
       }
     } catch (Exception e) {
-      Logger.e(TAG, "Error while setOpened in story for group stories. " + e.getLocalizedMessage(), e);
+      Logger.e(TAG, "Error while setting opened for group stories. " + e.getLocalizedMessage(), e);
     }
   }
 

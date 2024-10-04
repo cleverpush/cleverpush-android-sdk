@@ -8,4 +8,7 @@ public interface StoryChangeListener {
 
   void onStoryNavigation(int position, int subStoryPosition);
 
+  void onNavigation(int position);
+
+  void noNext();
 }

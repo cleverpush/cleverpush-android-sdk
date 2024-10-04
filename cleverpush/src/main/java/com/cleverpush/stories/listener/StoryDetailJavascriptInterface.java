@@ -6,7 +6,8 @@ import android.net.Uri;
 import android.webkit.JavascriptInterface;
 
 import com.cleverpush.listener.StoryViewOpenedListener;
-import com.cleverpush.stories.StoryDetailViewHolder;
+import com.cleverpush.stories.StoryDetailActivity;
+import com.cleverpush.stories.StoryDetailListAdapter;
 import com.cleverpush.util.Logger;
 
 import org.json.JSONException;
@@ -17,19 +18,17 @@ import java.util.Date;
 import java.util.Locale;
 
 public class StoryDetailJavascriptInterface {
-
-  private StoryDetailViewHolder storyDetailViewHolder;
   private StoryChangeListener storyChangeListener;
   private Activity activity;
   StoryViewOpenedListener storyViewOpenedListener;
   String currentTimeStamp = "";
+  StoryDetailListAdapter storyDetailListAdapter;
 
-  public StoryDetailJavascriptInterface(StoryDetailViewHolder storyDetailViewHolder,
-                                        StoryChangeListener storyChangeListener, Activity activity, StoryViewOpenedListener storyViewOpenedListener) {
-    this.storyDetailViewHolder = storyDetailViewHolder;
+  public StoryDetailJavascriptInterface(StoryChangeListener storyChangeListener, Activity activity, StoryViewOpenedListener storyViewOpenedListener, StoryDetailListAdapter storyDetailListAdapter) {
     this.storyChangeListener = storyChangeListener;
     this.storyViewOpenedListener = storyViewOpenedListener;
     this.activity = activity;
+    this.storyDetailListAdapter = storyDetailListAdapter;
   }
 
   @JavascriptInterface
@@ -45,6 +44,16 @@ public class StoryDetailJavascriptInterface {
   @JavascriptInterface
   public void ready() {
 
+  }
+
+  @JavascriptInterface
+  public void noNext() {
+    storyChangeListener.noNext();
+  }
+
+  @JavascriptInterface
+  public void navigation(int position) {
+    storyChangeListener.onNavigation(position);
   }
 
   @JavascriptInterface
@@ -80,6 +89,7 @@ public class StoryDetailJavascriptInterface {
 
           if (url != null && !url.isEmpty()) {
             Uri uri = Uri.parse(url);
+            StoryDetailActivity.isOpenFromButton = true;
             if (storyViewOpenedListener != null) {
               storyViewOpenedListener.opened(uri);
             } else {

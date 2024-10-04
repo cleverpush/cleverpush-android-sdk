@@ -92,7 +92,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
       storyDetailViewHolder.webView.getSettings().setAllowFileAccess(true);
 
       storyDetailViewHolder.webView.addJavascriptInterface(
-              new StoryDetailJavascriptInterface(storyDetailViewHolder, storyChangeListener, activity, storyViewOpenedListener),
+              new StoryDetailJavascriptInterface(storyChangeListener, activity, storyViewOpenedListener, StoryDetailListAdapter.this),
               "storyDetailJavascriptInterface");
 
       storyDetailViewHolder.webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener) {
@@ -116,7 +116,7 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
     String storyId = stories.get(position).getId();
     String customURL = "";
     if (stories.get(position).getContent().getPages() != null && stories.get(position).getContent().getPages().size() > 1) {
-      customURL = "https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&%23page=page-" + subStoryPosition;
+      customURL = "https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&#page=page-" + subStoryPosition;
     } else {
       customURL = "https://api.cleverpush.com/channel/" + stories.get(position).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
     }
@@ -162,7 +162,6 @@ public class StoryDetailListAdapter extends RecyclerView.Adapter<StoryDetailView
         "          console.error (error); \n" +
         "      }\n" +
         "    });\n" +
-        "    player.go(" + position + ");\n" +
         "  </script>\n" +
         "</body>\n" +
         "</html>";
