@@ -124,15 +124,15 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
       int titlePosition = typedArray.getInt(R.styleable.StoryView_title_position, 0);
       int titleVisibility = typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE);
-      boolean isDarkModeEnable = typedArray.getBoolean(R.styleable.StoryView_dark_mode_enable, false);
+      boolean isDarkModeEnabled = typedArray.getBoolean(R.styleable.StoryView_dark_mode_enabled, false);
       int storyViewBackgroundColor = 0;
-      if (isDarkModeEnable) {
+      if (isDarkModeEnabled) {
         storyViewBackgroundColor = typedArray.getColor(R.styleable.StoryView_background_color_dark_mode, DEFAULT_BACKGROUND_COLOR);
       } else {
         storyViewBackgroundColor = typedArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR);
       }
       int textColor = 0;
-      if (isDarkModeEnable) {
+      if (isDarkModeEnabled) {
         textColor = typedArray.getColor(R.styleable.StoryView_text_color_dark_mode, DEFAULT_TEXT_COLOR);
       } else {
         textColor = typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR);
@@ -179,7 +179,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
           unreadCountTextView.setText(stories.get(position).getUnreadCount() + "");
         }
         int unreadCountTextColor = 0;
-        if (isDarkModeEnable) {
+        if (isDarkModeEnabled) {
           unreadCountTextColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color_dark_mode, DEFAULT_UNREAD_COUNT_TEXT_COLOR);
         } else {
           unreadCountTextColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color, DEFAULT_UNREAD_COUNT_TEXT_COLOR);
@@ -189,7 +189,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         GradientDrawable circleDrawable = new GradientDrawable();
         circleDrawable.setShape(GradientDrawable.OVAL);
         int backgroundColor = 0;
-        if (isDarkModeEnable) {
+        if (isDarkModeEnabled) {
           backgroundColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_background_color_dark_mode, DEFAULT_UNREAD_COUNT_BACKGROUND_COLOR);;
         } else {
           backgroundColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_background_color, DEFAULT_UNREAD_COUNT_BACKGROUND_COLOR);
@@ -384,7 +384,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         titleInsideLayout.setVisibility(View.GONE);
       }
 
-      loadImage(position, image, isDarkModeEnable);
+      loadImage(position, image, isDarkModeEnabled);
 
       if (cornerRadius != -1) {
         cardView.setCornerRadius(cornerRadius);
@@ -404,7 +404,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       }
 
       if (borderVisibility == 0) {
-        applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor, isDarkModeEnable);
+        applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor, isDarkModeEnabled);
       }
 
       image.setOnClickListener(new View.OnClickListener() {
@@ -422,7 +422,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   }
 
   public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius, int borderWidth, float borderMargin,
-                              LinearLayout imageLayout, int storyViewBackgroundColor, boolean isDarkModeEnable) {
+                              LinearLayout imageLayout, int storyViewBackgroundColor, boolean isDarkModeEnabled) {
     try {
       GradientDrawable border = new GradientDrawable();
 
@@ -441,7 +441,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       } else {
         border.setColor(0xFFFFFFFF); // White background
         int borderColor = 0;
-        if (isDarkModeEnable) {
+        if (isDarkModeEnabled) {
           borderColor = typedArray.getColor(R.styleable.StoryView_border_color_dark_mode, DEFAULT_BORDER_COLOR);
         } else {
           borderColor = typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
@@ -473,13 +473,13 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     return stories.size();
   }
 
-  private void loadImage(int position, ImageView image, boolean isDarkModeEnable) {
+  private void loadImage(int position, ImageView image, boolean isDarkModeEnabled) {
     try {
       ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
         @Override
         public void run() {
           String widgetUrl = "";
-          if (isDarkModeEnable) {
+          if (isDarkModeEnabled) {
             widgetUrl = stories.get(position).getContent().getPreview().getWidgetDarkSrc();
           } else {
             widgetUrl = stories.get(position).getContent().getPreview().getWidgetSrc();
