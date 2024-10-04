@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.7 (04.10.2024)
+* Optimised the `StoryView` and added more customization options support dark mode UI.(dark_mode_enabled, border_color_dark_mode, background_color_dark_mode, text_color_dark_mode, sub_story_unread_count_background_color_dark_mode, sub_story_unread_count_text_color_dark_mode)
+
 ## 1.34.6 (26.09.2024)
 * Track confirm-alert statistics also on denied notification permissions.
 
