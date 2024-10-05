@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.8 (05.10.2024)
+* Optimised the `StoryView` to support automated resuming of stories after opening a URL inside a story
+
 ## 1.34.7 (04.10.2024)
 * Optimised the `StoryView` and added more customization options support dark mode UI.(dark_mode_enabled, border_color_dark_mode, background_color_dark_mode, text_color_dark_mode, sub_story_unread_count_background_color_dark_mode, sub_story_unread_count_text_color_dark_mode)
 
