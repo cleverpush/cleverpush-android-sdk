@@ -11,4 +11,6 @@ public interface StoryChangeListener {
   void onNavigation(int position);
 
   void noNext();
+
+  void onOpenURL();
 }

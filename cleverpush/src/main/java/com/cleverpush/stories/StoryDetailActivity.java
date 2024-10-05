@@ -158,8 +158,13 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     super.onResume();
     if (isOpenFromButton) {
       isOpenFromButton = false;
-      restartStoryTimer();
+      evaluateJavascript("player.play();");
     }
+  }
+
+  @Override
+  public void onOpenURL() {
+    evaluateJavascript("player.pause();");
   }
 
   @Override
@@ -234,7 +239,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       webView.getSettings().setAllowFileAccess(true);
 
       webView.addJavascriptInterface(
-          new StoryDetailJavascriptInterface(this, StoryDetailActivity.this, storyViewOpenedListener, null),
+          new StoryDetailJavascriptInterface(this, StoryDetailActivity.this, storyViewOpenedListener),
           "storyDetailJavascriptInterface");
 
       webView.setWebViewClient(new StoryViewWebViewClient(storyViewOpenedListener) {
@@ -262,7 +267,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       } else {
         customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
       }
-      anchorTags.append("    <a href=\"").append(customURL).append("\">\"Story Title ").append(i + 1).append(" \"</a>\n");
+      anchorTags.append("<a href=\"").append(customURL).append("\">Story ").append(i + 1).append("</a>\n");
     }
 
     return "<!DOCTYPE html>\n" +
@@ -287,7 +292,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "       storyDetailJavascriptInterface.noNext();\n" +
         "    });\n" +
         "    playerEl.addEventListener('storyNavigation', function (event) {\n" +
-        "      var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 111);\n" +
+        "      var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 0);\n" +
         "      storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
         "    });\n" +
         "    player.addEventListener('ready', function (event) {\n" +
@@ -303,9 +308,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "          if (data.type === 'storyButtonCallback') { \n" +
         "              window.storyDetailJavascriptInterface.storyButtonCallbackUrl(JSON.stringify(data)); \n" +
         "          } \n" +
-        "      } catch (error) { \n" +
-        "          console.error (error); \n" +
-        "      }\n" +
+        "      } catch (ignored) {}\n" +
         "    });\n" +
         "  </script>\n" +
         "</body>\n" +
@@ -707,21 +710,18 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     }
   }
 
-  public void restartStoryTimer() {
+  public void evaluateJavascript(String javascript) {
     try {
       if (webView != null) {
         webView.post(new Runnable() {
           @Override
           public void run() {
-            webView.evaluateJavascript(
-                "document.querySelector('amp-story-player').shadowRoot.querySelector('iframe').contentWindow.postMessage(JSON.stringify({ type: 'triggerStoryFocusEvent' }), '*');",
-                null
-            );
+            webView.evaluateJavascript(javascript, null);
           }
         });
       }
     } catch (Exception e) {
-      Logger.e(TAG, "Error while restarting story player. " + e.getLocalizedMessage(), e);
+      Logger.e(TAG, "Error while sending webview JS " + e.getLocalizedMessage(), e);
     }
   }
 }

@@ -7,7 +7,6 @@ import android.webkit.JavascriptInterface;
 
 import com.cleverpush.listener.StoryViewOpenedListener;
 import com.cleverpush.stories.StoryDetailActivity;
-import com.cleverpush.stories.StoryDetailListAdapter;
 import com.cleverpush.util.Logger;
 
 import org.json.JSONException;
@@ -22,13 +21,11 @@ public class StoryDetailJavascriptInterface {
   private Activity activity;
   StoryViewOpenedListener storyViewOpenedListener;
   String currentTimeStamp = "";
-  StoryDetailListAdapter storyDetailListAdapter;
 
-  public StoryDetailJavascriptInterface(StoryChangeListener storyChangeListener, Activity activity, StoryViewOpenedListener storyViewOpenedListener, StoryDetailListAdapter storyDetailListAdapter) {
+  public StoryDetailJavascriptInterface(StoryChangeListener storyChangeListener, Activity activity, StoryViewOpenedListener storyViewOpenedListener) {
     this.storyChangeListener = storyChangeListener;
     this.storyViewOpenedListener = storyViewOpenedListener;
     this.activity = activity;
-    this.storyDetailListAdapter = storyDetailListAdapter;
   }
 
   @JavascriptInterface
