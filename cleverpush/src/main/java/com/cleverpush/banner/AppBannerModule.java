@@ -706,10 +706,7 @@ public class AppBannerModule {
       }
 
       if (allowed && relation.equals(CheckFilterRelation.Between)) {
-        if (resultFrom != VersionComparison.EQUALS
-            && resultFrom != VersionComparison.GREATER_THAN
-            && resultTo != VersionComparison.EQUALS
-            && resultTo != VersionComparison.GREATER_THAN) {
+        if (resultFrom == VersionComparison.LESS_THAN || resultTo == VersionComparison.GREATER_THAN) {
           allowed = false;
         }
       }
