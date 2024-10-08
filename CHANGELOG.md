@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.34.9 (08.10.2024)
+* Optimised dark mode support for `StoryView` using `setDarkModeEnabled(boolean)`, which now applies dark or light mode based on system settings.
+* Fixed an issue in `AppBanner` where the app version filter with "between" targeting was not working.
+* Fixed an issue in `AppBanner` where background color was not set correctly if there was a trailing space.
+
 ## 1.34.8 (05.10.2024)
 * Optimised the `StoryView` to support automated resuming of stories after opening a URL inside a story
 
