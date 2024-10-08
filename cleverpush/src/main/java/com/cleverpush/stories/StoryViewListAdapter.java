@@ -59,9 +59,10 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   private int parentLayoutWidth;
   private boolean isGroupStoryCategories;
   private static final String TAG = "CleverPush/StoryViewAdapter";
+  boolean isDarkModeEnabled;
 
   public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray,
-                              OnItemClickListener onItemClickListener, int parentLayoutWidth, boolean isGroupStoryCategories) {
+                              OnItemClickListener onItemClickListener, int parentLayoutWidth, boolean isGroupStoryCategories, boolean isDarkModeEnabled) {
     if (context == null) {
       if (CleverPush.getInstance(CleverPush.context).getCurrentContext() != null) {
         this.context = CleverPush.getInstance(CleverPush.context).getCurrentContext();
@@ -74,6 +75,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     this.onItemClickListener = onItemClickListener;
     this.parentLayoutWidth = parentLayoutWidth;
     this.isGroupStoryCategories = isGroupStoryCategories;
+    this.isDarkModeEnabled = isDarkModeEnabled;
   }
 
   @Override
@@ -124,7 +126,6 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
       int titlePosition = typedArray.getInt(R.styleable.StoryView_title_position, 0);
       int titleVisibility = typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE);
-      boolean isDarkModeEnabled = typedArray.getBoolean(R.styleable.StoryView_dark_mode_enabled, false);
       int storyViewBackgroundColor = 0;
       if (isDarkModeEnabled) {
         storyViewBackgroundColor = typedArray.getColor(R.styleable.StoryView_background_color_dark_mode, DEFAULT_BACKGROUND_COLOR);
@@ -163,7 +164,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         }
 
         if (subStoryUnreadCount == 0) {
-          iconWidth += 10;
+          iconWidth += 9;
         }
       }
 

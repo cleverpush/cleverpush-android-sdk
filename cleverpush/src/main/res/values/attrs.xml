@@ -61,7 +61,6 @@
             <enum name="position_default" value="0" />
             <enum name="position_end" value="1" />
         </attr>
-        <attr name="dark_mode_enabled" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="InboxView">
