@@ -55,6 +55,7 @@ public class StoryView extends LinearLayout {
   public static StoryView storyView;
   public StoryViewOpenedListener storyViewOpenedListener;
   private int sortToLastIndex = 0;
+  private boolean isDarkModeEnabled = false;
 
   public String getWidgetId() {
     return widgetId;
@@ -67,6 +68,13 @@ public class StoryView extends LinearLayout {
   public void setWidgetId(String widgetId) {
     this.widgetId = widgetId;
     loadStory();
+  }
+
+  public void setDarkModeEnabled(boolean darkModeEnabled) {
+    this.isDarkModeEnabled = darkModeEnabled;
+    if (storyViewListAdapter != null) {
+      storyViewListAdapter.notifyDataSetChanged();
+    }
   }
 
   public void setOpenedListener(StoryViewOpenedListener storyViewOpenedListener) {
@@ -238,7 +246,7 @@ public class StoryView extends LinearLayout {
           LinearLayoutManager linearLayoutManager =
               new LinearLayoutManager(ActivityLifecycleListener.currentActivity, LinearLayoutManager.HORIZONTAL, false);
           storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, attrArray,
-              getOnItemClickListener(stories, recyclerView),recyclerViewWidth, widget.isGroupStoryCategories());
+              getOnItemClickListener(stories, recyclerView),recyclerViewWidth, widget.isGroupStoryCategories(), isDarkModeEnabled);
           recyclerView.setLayoutManager(linearLayoutManager);
           recyclerView.setAdapter(storyViewListAdapter);
         }
