@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.10 (14.10.2024)
+* Optimized `StoryView` statistic tracking.
+
 ## 1.34.9 (08.10.2024)
 * Optimised dark mode support for `StoryView` using `setDarkModeEnabled(boolean)`, which now applies dark or light mode based on system settings.
 * Fixed an issue in `AppBanner` where the app version filter with "between" targeting was not working.
@@ -9,7 +12,7 @@
 * Optimised the `StoryView` to support automated resuming of stories after opening a URL inside a story
 
 ## 1.34.7 (04.10.2024)
-* Optimised the `StoryView` and added more customization options support dark mode UI.(dark_mode_enabled, border_color_dark_mode, background_color_dark_mode, text_color_dark_mode, sub_story_unread_count_background_color_dark_mode, sub_story_unread_count_text_color_dark_mode)
+* Optimised the `StoryView` and added more customization options support dark mode UI.(border_color_dark_mode, background_color_dark_mode, text_color_dark_mode, sub_story_unread_count_background_color_dark_mode, sub_story_unread_count_text_color_dark_mode)
 
 ## 1.34.6 (26.09.2024)
 * Track confirm-alert statistics also on denied notification permissions.
