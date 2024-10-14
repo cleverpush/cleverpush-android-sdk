@@ -22,6 +22,7 @@ import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.R;
 import com.cleverpush.listener.StoryViewOpenedListener;
+import com.cleverpush.responsehandlers.TrackStoryOpenedShownResponseHandler;
 import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.stories.models.StoryListModel;
@@ -31,6 +32,10 @@ import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -246,9 +251,11 @@ public class StoryView extends LinearLayout {
           LinearLayoutManager linearLayoutManager =
               new LinearLayoutManager(ActivityLifecycleListener.currentActivity, LinearLayoutManager.HORIZONTAL, false);
           storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, attrArray,
-              getOnItemClickListener(stories, recyclerView),recyclerViewWidth, widget.isGroupStoryCategories(), isDarkModeEnabled, widgetId);
+              getOnItemClickListener(stories, recyclerView),recyclerViewWidth, widget.isGroupStoryCategories(), isDarkModeEnabled);
           recyclerView.setLayoutManager(linearLayoutManager);
           recyclerView.setAdapter(storyViewListAdapter);
+
+          trackStoryShown();
         }
       });
     } catch (Exception e) {
@@ -435,4 +442,34 @@ public class StoryView extends LinearLayout {
     }
   }
 
+  private void trackStoryShown() {
+    if (widgetId == null || widgetId.length() == 0) {
+      return;
+    }
+
+    if (stories.size() == 0) {
+      return;
+    }
+
+    String storyPath = "/story-widget/" + widgetId + "/track-shown";
+
+    ArrayList<String> storyIds = new ArrayList<>();
+
+    for (int i = 0; i < stories.size(); i++) {
+      String storyIdStr = stories.get(i).getId();
+      if (!storyIdStr.isEmpty()) {
+        storyIds.addAll(Arrays.asList(storyIdStr.split(",")));
+      }
+    }
+
+    JSONObject jsonBody = new JSONObject();
+    try {
+      jsonBody.put("stories", new JSONArray(storyIds));
+    } catch (JSONException ex) {
+      Logger.e(TAG, "Error creating track stories shown request parameter", ex);
+    }
+
+    CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
+        new TrackStoryOpenedShownResponseHandler().getResponseHandler(false));
+  }
 }
