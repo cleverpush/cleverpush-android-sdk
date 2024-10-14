@@ -246,7 +246,7 @@ public class StoryView extends LinearLayout {
           LinearLayoutManager linearLayoutManager =
               new LinearLayoutManager(ActivityLifecycleListener.currentActivity, LinearLayoutManager.HORIZONTAL, false);
           storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, attrArray,
-              getOnItemClickListener(stories, recyclerView),recyclerViewWidth, widget.isGroupStoryCategories(), isDarkModeEnabled);
+              getOnItemClickListener(stories, recyclerView),recyclerViewWidth, widget.isGroupStoryCategories(), isDarkModeEnabled, widgetId);
           recyclerView.setLayoutManager(linearLayoutManager);
           recyclerView.setAdapter(storyViewListAdapter);
         }

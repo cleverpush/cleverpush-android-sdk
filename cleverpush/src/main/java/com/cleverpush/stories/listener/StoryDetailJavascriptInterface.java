@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.webkit.JavascriptInterface;
 
+import com.cleverpush.CleverPush;
+import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.listener.StoryViewOpenedListener;
 import com.cleverpush.stories.StoryDetailActivity;
 import com.cleverpush.util.Logger;
@@ -83,6 +85,13 @@ public class StoryDetailJavascriptInterface {
         if (data != null && !data.isEmpty()) {
           JSONObject jsonObject = new JSONObject(data);
           String url = jsonObject.optString("callbackUrl");
+          String trackingUrl = jsonObject.optString("url");
+
+          if (trackingUrl != null && !trackingUrl.isEmpty()) {
+            CleverPush.getInstance(activity).getActivityLifecycleListener().setActivityInitializedListener(() -> {
+              CleverPushHttpClient.getWithRetryWithoutBaseUrl(trackingUrl, null);
+            });
+          }
 
           if (url != null && !url.isEmpty()) {
             Uri uri = Uri.parse(url);
