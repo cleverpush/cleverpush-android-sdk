@@ -204,7 +204,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         widget = storyView.getWidget();
         if (selectedPosition == 0) {
           trackStoryOpened();
-          trackStoryShown(selectedPosition);
         }
         if (extras.containsKey("stories")) {
           stories = (ArrayList<Story>) extras.getSerializable("stories");
@@ -400,7 +399,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     String storyId = stories.get(position).getId();
     setStoryOpened(storyId);
     trackStoryOpened();
-    trackStoryShown(selectedPosition);
   }
 
   private void updateStoryPreferences(String unreadCountMap, String subStoryPositionMap, int unreadCount, SharedPreferences sharedPreferences) {
@@ -614,32 +612,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
     CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
         new TrackStoryOpenedShownResponseHandler().getResponseHandler(true));
-  }
-
-  private void trackStoryShown(int position) {
-    if (widgetId == null || widgetId.length() == 0) {
-      return;
-    }
-
-    String storyPath = "/story-widget/" + widgetId + "/track-shown";
-
-    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
-    String storyOpenPreferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
-
-    ArrayList<String> storyIds = new ArrayList<>();
-    if (!storyOpenPreferencesString.isEmpty()) {
-      storyIds = new ArrayList<>(Arrays.asList(storyOpenPreferencesString.split(",")));
-    }
-
-    JSONObject jsonBody = new JSONObject();
-    try {
-      jsonBody.put("stories", new JSONArray(storyIds));
-    } catch (JSONException ex) {
-      Logger.e(TAG, "Error creating track stories shown request parameter", ex);
-    }
-
-    CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
-        new TrackStoryOpenedShownResponseHandler().getResponseHandler(false));
   }
 
   private void setOpenedForGroupStories() {

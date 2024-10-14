@@ -90,7 +90,7 @@ public class CleverPushHttpClient {
       if (authorizerToken != null && authorizerToken.length() > 0) {
         jsonBody.put("authorizationToken", authorizerToken);
       }
-      new Thread(() -> makeRequest(url, "POST", jsonBody, responseHandler)).start();
+      new Thread(() -> makeRequest(url, "POST", jsonBody, responseHandler, false)).start();
     } catch (Exception e) {
       Logger.e(LOG_TAG, "CleverPushHttpClient: Error in post request", e);
     }
@@ -106,10 +106,10 @@ public class CleverPushHttpClient {
       }
     }
     String finalUrl = url;
-    new Thread(() -> makeRequest(finalUrl, null, null, responseHandler)).start();
+    new Thread(() -> makeRequest(finalUrl, null, null, responseHandler, false)).start();
   }
 
-  private static void makeRequest(String url, String method, JSONObject jsonBody, ResponseHandler responseHandler) {
+  private static void makeRequest(String url, String method, JSONObject jsonBody, ResponseHandler responseHandler, boolean isWithoutBaseUrl) {
     HttpURLConnection con = null;
     int httpResponse = -1;
     String json = null;
@@ -119,7 +119,11 @@ public class CleverPushHttpClient {
             ""));
 
     try {
-      con = (HttpURLConnection) new URL(BASE_URL + url).openConnection();
+      if (isWithoutBaseUrl) {
+        con = (HttpURLConnection) new URL(url).openConnection();
+      } else {
+        con = (HttpURLConnection) new URL(BASE_URL + url).openConnection();
+      }
       con.setUseCaches(false);
       con.setConnectTimeout(TIMEOUT);
       con.setReadTimeout(TIMEOUT);
@@ -197,5 +201,46 @@ public class CleverPushHttpClient {
         con.disconnect();
       }
     }
+  }
+
+  public static void getWithRetryWithoutBaseUrl(final String url, final ResponseHandler responseHandler) {
+    getWithRetryWithoutBaseUrl(url, responseHandler, 0, INITIAL_RETRY_DELAY);
+  }
+
+  private static void getWithRetryWithoutBaseUrl(final String url, final ResponseHandler responseHandler, final int retryCount, final int retryDelay) {
+    getWithoutBaseUrl(url, new ResponseHandler() {
+      @Override
+      public void onSuccess(String response) {
+        if (responseHandler != null) {
+          responseHandler.onSuccess(response);
+        }
+      }
+
+      @Override
+      public void onFailure(int statusCode, String response, Throwable throwable) {
+        if (retryCount < MAX_RETRIES) {
+          int nextRetryDelay = retryDelay * MULTIPLY_FACTOR;
+          new Handler(Looper.getMainLooper()).postDelayed(() ->
+              getWithRetryWithoutBaseUrl(url, responseHandler, retryCount + 1, nextRetryDelay), retryDelay);
+        } else {
+          if (responseHandler != null) {
+            responseHandler.onFailure(statusCode, response, throwable);
+          }
+        }
+      }
+    });
+  }
+
+  private static void getWithoutBaseUrl(String url, final ResponseHandler responseHandler) {
+    String authorizerToken = CleverPush.getInstance(CleverPush.context).getAuthorizerToken();
+    if (authorizerToken != null && authorizerToken.length() > 0) {
+      if (url.contains("?")) {
+        url += "&authorizationToken=" + authorizerToken;
+      } else {
+        url += "?authorizationToken=" + authorizerToken;
+      }
+    }
+    String finalUrl = url;
+    new Thread(() -> makeRequest(finalUrl, null, null, responseHandler, true)).start();
   }
 }

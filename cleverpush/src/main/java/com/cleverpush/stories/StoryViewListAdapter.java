@@ -22,6 +22,8 @@ import com.bumptech.glide.Priority;
 import com.bumptech.glide.request.RequestOptions;
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
+import com.cleverpush.CleverPushHttpClient;
+import com.cleverpush.responsehandlers.TrackStoryOpenedShownResponseHandler;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 
@@ -42,7 +44,12 @@ import com.cleverpush.stories.listener.OnItemClickListener;
 import com.cleverpush.stories.models.Story;
 import com.cleverpush.util.RoundedLinearLayout;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> {
 
@@ -60,9 +67,10 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   private boolean isGroupStoryCategories;
   private static final String TAG = "CleverPush/StoryViewAdapter";
   boolean isDarkModeEnabled;
+  private String widgetId = null;
 
-  public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray,
-                              OnItemClickListener onItemClickListener, int parentLayoutWidth, boolean isGroupStoryCategories, boolean isDarkModeEnabled) {
+  public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray, OnItemClickListener onItemClickListener,
+                              int parentLayoutWidth, boolean isGroupStoryCategories, boolean isDarkModeEnabled, String widgetId) {
     if (context == null) {
       if (CleverPush.getInstance(CleverPush.context).getCurrentContext() != null) {
         this.context = CleverPush.getInstance(CleverPush.context).getCurrentContext();
@@ -76,6 +84,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     this.parentLayoutWidth = parentLayoutWidth;
     this.isGroupStoryCategories = isGroupStoryCategories;
     this.isDarkModeEnabled = isDarkModeEnabled;
+    this.widgetId = widgetId;
   }
 
   @Override
@@ -420,6 +429,8 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     } catch (Exception e) {
       Logger.e(TAG, "Error in onBindViewHolder of StoryViewListAdapter", e);
     }
+
+    trackStoryShown(position);
   }
 
   public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius, int borderWidth, float borderMargin,
@@ -605,5 +616,30 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
   public static StoryViewListAdapter getStoryViewListAdapter() {
     return storyViewListAdapter;
+  }
+
+  private void trackStoryShown(int position) {
+    if (widgetId == null || widgetId.length() == 0) {
+      return;
+    }
+
+    String storyPath = "/story-widget/" + widgetId + "/track-shown";
+
+    ArrayList<String> storyIds = new ArrayList<>();
+
+    String storyIdStr = stories.get(position).getId();
+    if (!storyIdStr.isEmpty()) {
+      storyIds = new ArrayList<>(Arrays.asList(storyIdStr.split(",")));
+    }
+
+    JSONObject jsonBody = new JSONObject();
+    try {
+      jsonBody.put("stories", new JSONArray(storyIds));
+    } catch (JSONException ex) {
+      Logger.e(TAG, "Error creating track stories shown request parameter", ex);
+    }
+
+    CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
+        new TrackStoryOpenedShownResponseHandler().getResponseHandler(false));
   }
 }
