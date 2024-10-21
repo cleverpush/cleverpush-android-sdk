@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.11 (21.10.2024)
+* Optimized `StoryView` for unreadCount.
+
 ## 1.34.10 (14.10.2024)
 * Optimized `StoryView` statistic tracking.
 
