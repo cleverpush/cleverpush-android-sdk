@@ -185,6 +185,10 @@ public class StoryView extends LinearLayout {
             }
           }
 
+          if (widget != null && widget.isGroupStoryCategories()) {
+            syncUnreadStoryIds();
+          }
+
           sortToLastIndex = attrArray.getInt(R.styleable.StoryView_sort_to_last_index, 0);
           if (sortToLastIndex == 1) {
             ArrayList<Story> categorizeStories = categorizeStories(stories);
@@ -471,5 +475,39 @@ public class StoryView extends LinearLayout {
 
     CleverPushHttpClient.postWithRetry(storyPath, jsonBody,
         new TrackStoryOpenedShownResponseHandler().getResponseHandler(false));
+  }
+
+  private void syncUnreadStoryIds() {
+    try {
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
+
+      if (!storyUnreadCountString.isEmpty()) {
+        Set<String> readStoryIds = new HashSet<>(Arrays.asList(storyUnreadCountString.split(",")));
+
+        StringBuilder updatedUnreadStoryIds = new StringBuilder();
+        for (int i = 0; i < stories.size(); i++) {
+          String[] storyIdArray = stories.get(i).getId().split(",");
+
+          for (String subStoryID : storyIdArray) {
+            if (readStoryIds.contains(subStoryID)) {
+              if (updatedUnreadStoryIds.length() == 0) {
+                updatedUnreadStoryIds = new StringBuilder(subStoryID);
+              } else {
+                updatedUnreadStoryIds.append(",").append(subStoryID);
+              }
+            }
+          }
+        }
+
+        editor.remove(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP);
+        editor.apply();
+        editor.putString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, String.valueOf(updatedUnreadStoryIds));
+        editor.apply();
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while updating unread story IDs. " + e.getLocalizedMessage(), e);
+    }
   }
 }
