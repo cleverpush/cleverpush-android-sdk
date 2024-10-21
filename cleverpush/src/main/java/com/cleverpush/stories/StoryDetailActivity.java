@@ -334,6 +334,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   @Override
   public void noNext() {
     try {
+      updateStoryStates();
       runOnUiThread(this::finish);
     } catch (Exception e) {
       Logger.e(TAG, "Error handling noNext in StoryDetailActivity", e);
@@ -648,8 +649,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
       String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
       String[] storyIdArray = stories.get(selectedPosition).getId().split(",");
-
-      if (selectedPosition != -1) {
+      if (subStoryPosition != -1) {
         String subStoryId = "";
         if (subStoryPosition >= 0 && subStoryPosition < storyIdArray.length) {
           subStoryId = storyIdArray[subStoryPosition];
