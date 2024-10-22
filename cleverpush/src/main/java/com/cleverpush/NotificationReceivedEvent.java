@@ -13,7 +13,7 @@ public class NotificationReceivedEvent {
     this.notification = notification;
   }
 
-  Context getContext() {
+  Public Context getContext() {
     return this.context;
   }
 
