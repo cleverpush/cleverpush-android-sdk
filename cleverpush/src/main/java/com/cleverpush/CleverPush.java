@@ -225,6 +225,7 @@ public class CleverPush {
   private boolean autoResubscribe = false;
   private boolean autoRequestNotificationPermission = true;
   private boolean isSessionStartCalled = false;
+  private boolean shouldPlayNotificationSound = true;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -4018,5 +4019,13 @@ public class CleverPush {
       Logger.e(LOG_TAG, "Error parsing date", e);
       return false;
     }
+  }
+
+  public boolean isShouldPlayNotificationSound() {
+    return shouldPlayNotificationSound;
+  }
+
+  public void setShouldPlayNotificationSound(boolean shouldPlayNotificationSound) {
+    this.shouldPlayNotificationSound = shouldPlayNotificationSound;
   }
 }

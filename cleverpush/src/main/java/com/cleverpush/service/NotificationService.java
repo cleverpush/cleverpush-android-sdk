@@ -145,6 +145,7 @@ public class NotificationService {
     String voucherCode = notification.getVoucherCode();
     String iconUrl = notification.getIconUrl();
     String mediaUrl = notification.getMediaUrl();
+    boolean shouldPlaySound = CleverPush.getInstance(context).isShouldPlayNotificationSound();
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
@@ -184,8 +185,14 @@ public class NotificationService {
         if (notification.notificationChannel != null) {
           channel = (NotificationChannel) notification.notificationChannel;
         } else {
-          int importance = NotificationManager.IMPORTANCE_DEFAULT;
-          channel = new NotificationChannel("default", "Default", importance);
+          int importance;
+          if (shouldPlaySound) {
+            importance = NotificationManager.IMPORTANCE_DEFAULT;
+            channel = new NotificationChannel("default", "Default", importance);
+          } else {
+            importance = NotificationManager.IMPORTANCE_LOW;
+            channel = new NotificationChannel("default_silent", "Default Silent", importance);
+          }
         }
 
         channel.setDescription(channel.getName().toString());
@@ -217,8 +224,14 @@ public class NotificationService {
         .setContentTitle(title)
         .setContentText(text)
         .setSmallIcon(getSmallIcon(context))
-        .setAutoCancel(true)
-        .setSound(soundUri);
+        .setAutoCancel(true);
+
+    if (shouldPlaySound) {
+      notificationBuilder.setSound(soundUri != null ? soundUri : RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+    } else {
+      notificationBuilder.setSound(null);
+      notificationBuilder.setDefaults(0);
+    }
 
     if (notification.getActions() != null && notification.getActions().length > 0) {
       List<NotificationCompat.Action> actions = new ArrayList<>();
