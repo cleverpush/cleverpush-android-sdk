@@ -71,6 +71,7 @@ public class Banner {
   private String mediaUrl;
   private List<BannerTargetEvent> eventFilters;
   private NotificationPermission notificationPermission;
+  private int everyXDays;
 
   private Banner() {
   }
@@ -291,6 +292,10 @@ public class Banner {
     return notificationPermission;
   }
 
+  public int getEveryXDays() {
+    return everyXDays;
+  }
+
   public static Banner create(JSONObject json) throws JSONException {
     Banner banner = new Banner();
 
@@ -509,6 +514,8 @@ public class Banner {
     if (json.has("notificationPermission")) {
       banner.notificationPermission = NotificationPermission.fromString(json.optString("notificationPermission"));
     }
+
+    banner.everyXDays = json.optInt("everyXDays");
 
     return banner;
   }

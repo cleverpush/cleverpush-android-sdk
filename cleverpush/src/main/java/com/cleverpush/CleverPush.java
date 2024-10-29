@@ -460,11 +460,17 @@ public class CleverPush {
 
     // Check if CleverPush SharedPreferences is created and contains the key channelId
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
-    boolean containsChannelId = sharedPreferences.contains("channelId");
+    boolean containsChannelId = sharedPreferences.contains(CleverPushPreferences.CHANNEL_ID);
+    boolean containsAppInstallationDate = sharedPreferences.contains(CleverPushPreferences.APP_INSTALLATION_DATE);
 
     // If CleverPush SharedPreferences is not created or does not contain the key channelId, call migrateSharedPreferences
     if (!containsChannelId) {
       SharedPreferencesManager.migrateSharedPreferences(context);
+    }
+
+    if (!containsAppInstallationDate) {
+      String installationDate = new SimpleDateFormat(DATE_FORMAT_ISO, Locale.getDefault()).format(new Date());
+      sharedPreferences.edit().putString(CleverPushPreferences.APP_INSTALLATION_DATE, installationDate).apply();
     }
 
     if (notificationReceivedListener != null) {
