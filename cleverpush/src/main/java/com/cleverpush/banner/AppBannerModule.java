@@ -957,7 +957,6 @@ public class AppBannerModule {
   private boolean checkDaysSinceInstallationTriggerCondition(BannerTriggerCondition condition) {
     try {
       int days = condition.getDays();
-      Logger.i(TAG, "days: " + days);
 
       String appInstallationDate = sharedPreferences.getString(CleverPushPreferences.APP_INSTALLATION_DATE, "");
       if (appInstallationDate.isEmpty()) {
