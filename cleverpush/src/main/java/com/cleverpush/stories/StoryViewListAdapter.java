@@ -60,6 +60,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   private boolean isGroupStoryCategories;
   private static final String TAG = "CleverPush/StoryViewAdapter";
   boolean isDarkModeEnabled;
+  boolean updateView = false;
 
   public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray, OnItemClickListener onItemClickListener,
                               int parentLayoutWidth, boolean isGroupStoryCategories, boolean isDarkModeEnabled) {
@@ -126,6 +127,9 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
       int titlePosition = typedArray.getInt(R.styleable.StoryView_title_position, 0);
       int titleVisibility = typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE);
+      int unreadCountBadgeHeight = (int) typedArray.getDimension(R.styleable.StoryView_sub_story_unread_count_badge_height, 73);
+      int unreadCountBadgeWidth = (int) typedArray.getDimension(R.styleable.StoryView_sub_story_unread_count_badge_width, 73);
+
       int storyViewBackgroundColor = 0;
       if (isDarkModeEnabled) {
         storyViewBackgroundColor = typedArray.getColor(R.styleable.StoryView_background_color_dark_mode, DEFAULT_BACKGROUND_COLOR);
@@ -176,6 +180,11 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         if (stories.get(position).getUnreadCount() <= 0) {
           unreadCountTextView.setVisibility(View.GONE);
         } else {
+          ViewGroup.LayoutParams unreadCountTextViewLayoutParams = unreadCountTextView.getLayoutParams();
+          unreadCountTextViewLayoutParams.height = unreadCountBadgeHeight;
+          unreadCountTextViewLayoutParams.width = unreadCountBadgeWidth;
+          unreadCountTextView.setLayoutParams(unreadCountTextViewLayoutParams);
+
           unreadCountTextView.setVisibility(View.VISIBLE);
           unreadCountTextView.setText(stories.get(position).getUnreadCount() + "");
         }
@@ -353,20 +362,35 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
           titleInsideLayout.setVisibility(View.VISIBLE);
 
           int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
+          int minTitleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_min_text_size, 12);
+          int maxTitleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_max_text_size, 32);
+
           tvTitleInside.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
-          if (isGroupStoryCategories) {
-            if (stories.get(position).getContent().getSubtitle() != null && !stories.get(position).getContent().getSubtitle().isEmpty()) {
-              tvTitleInside.setText(stories.get(position).getContent().getSubtitle());
-            } else if (stories.get(position).getContent().getTitle() != null && !stories.get(position).getContent().getTitle().isEmpty()) {
-              tvTitleInside.setText(stories.get(position).getContent().getTitle());
-            }
-          } else {
-            if (stories.get(position).getTitle() != null && !stories.get(position).getTitle().isEmpty()) {
-              tvTitleInside.setText(stories.get(position).getTitle());
-            }
-          }
+
+          String titleText = getTitleText(stories, position);
+          tvTitleInside.setText(titleText);
           tvTitleInside.setTextColor(textColor);
           applyFont(tvTitleInside, typedArray);
+
+          // Measure the available width for the title
+          int availableWidth = holder.itemView.getWidth() - (tvTitleInside.getPaddingLeft() + tvTitleInside.getPaddingRight());
+
+          if (updateView) {
+            availableWidth = 0;
+          }
+
+          // Calculate the appropriate text size
+          float textSize = Math.min(maxTitleTextSize, titleTextSize); // Start with the smaller of max or defined size
+          Paint paint = new Paint();
+          paint.setTextSize(textSize);
+
+          while (paint.measureText(titleText) > availableWidth && textSize > minTitleTextSize) {
+            textSize--; // Decrease text size until it fits or reaches the minimum
+            paint.setTextSize(textSize);
+          }
+
+          // Set the final text size
+          tvTitleInside.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 
           RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) tvTitleInside.getLayoutParams();
           layoutParams.removeRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
@@ -420,6 +444,21 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     } catch (Exception e) {
       Logger.e(TAG, "Error in onBindViewHolder of StoryViewListAdapter", e);
     }
+  }
+
+  private String getTitleText( ArrayList<Story> stories, int position) {
+    if (isGroupStoryCategories) {
+      if (stories.get(position).getContent().getSubtitle() != null && !stories.get(position).getContent().getSubtitle().isEmpty()) {
+        return stories.get(position).getContent().getSubtitle();
+      } else if (stories.get(position).getContent().getTitle() != null && !stories.get(position).getContent().getTitle().isEmpty()) {
+        return stories.get(position).getContent().getTitle();
+      }
+    } else {
+      if (stories.get(position).getTitle() != null && !stories.get(position).getTitle().isEmpty()) {
+        return stories.get(position).getTitle();
+      }
+    }
+    return "";
   }
 
   public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius, int borderWidth, float borderMargin,
@@ -595,6 +634,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   }
 
   public void updateStories(ArrayList<Story> stories) {
+    updateView = true;
     this.stories = stories;
     notifyDataSetChanged();
   }

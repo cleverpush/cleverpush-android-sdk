@@ -24,7 +24,14 @@
             <enum name="invisible" value="4" />
             <enum name="visible" value="0" />
         </attr>
+        <attr name="title_position" format="enum">
+            <enum name="position_default" value="0" />
+            <enum name="position_inside_bottom" value="1" />
+            <enum name="position_inside_top" value="2" />
+        </attr>
         <attr name="title_text_size" format="dimension" />
+        <attr name="title_min_text_size" format="dimension" />
+        <attr name="title_max_text_size" format="dimension" />
         <attr name="story_icon_height" format="dimension" />
         <attr name="story_icon_height_percentage" format="integer" />
         <attr name="story_icon_width" format="dimension" />
@@ -47,15 +54,12 @@
         <attr name="sub_story_unread_count_background_color_dark_mode" format="color" />
         <attr name="sub_story_unread_count_text_color" format="color" />
         <attr name="sub_story_unread_count_text_color_dark_mode" format="color" />
+        <attr name="sub_story_unread_count_badge_height" format="dimension" />
+        <attr name="sub_story_unread_count_badge_width" format="dimension" />
         <attr name="restrict_to_items" format="integer" />
         <attr name="close_button_position" format="enum">
             <enum name="left" value="0" />
             <enum name="right" value="1" />
-        </attr>
-        <attr name="title_position" format="enum">
-            <enum name="position_default" value="0" />
-            <enum name="position_inside_bottom" value="1" />
-            <enum name="position_inside_top" value="2" />
         </attr>
         <attr name="sort_to_last_index" format="enum">
             <enum name="position_default" value="0" />
