@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.12 (31.10.2024)
+* Made the `context` getter public for `NotificationReceivedEvent` in `NotificationServiceExtension`.
+* Added more customization option in `StoryView`. (title_max_text_size, title_min_text_size, sub_story_unread_count_badge_height, sub_story_unread_count_badge_width)
+
 ## 1.34.11 (21.10.2024)
 * Optimized `StoryView` for unreadCount.
 
