@@ -7,14 +7,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPushHttpClient;
@@ -49,6 +50,8 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
   public static int selectedPosition = 0;
   private WebView webView;
+  private RelativeLayout parentLayout;
+  private ImageView closeButtonLeft, closeButtonRight;
   private OnSwipeTouchListener onSwipeTouchListener;
   private ArrayList<Story> stories = new ArrayList<>();
   public StoryViewOpenedListener storyViewOpenedListener;
@@ -79,6 +82,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
           intent.putExtra("sortToLastIndex", sortToLastIndex);
           StoryViewListAdapter.setStoryViewListAdapter(storyViewListAdapter);
           StoryView.setStoryView(storyView);
+          intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
           activity.startActivity(intent);
         }
       });
@@ -96,16 +100,12 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
   private void init() {
     webView = findViewById(R.id.webView);
-    ImageView closeButtonLeft, closeButtonRight;
+    parentLayout = findViewById(R.id.parentLayout);
     closeButtonLeft = findViewById(R.id.ivClose);
     closeButtonRight = findViewById(R.id.ivCloseRight);
+    parentLayout.setAlpha(0.0f);
+    webView.setAlpha(0.0f);
     handleBundleData(getIntent().getExtras());
-
-    if (closeButtonPosition == 0) {
-      configureCloseButton(closeButtonLeft, closeButtonRight);
-    } else {
-      configureCloseButton(closeButtonRight, closeButtonLeft);
-    }
 
     try {
       onSwipeTouchListener = new OnSwipeTouchListener(this, new OnSwipeDownListener() {
@@ -160,11 +160,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       isOpenFromButton = false;
       evaluateJavascript("player.play();");
     }
-  }
-
-  @Override
-  public void onOpenURL() {
-    evaluateJavascript("player.pause();");
   }
 
   @Override
@@ -245,6 +240,21 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         @Override
         public void onPageFinished(WebView view, String url) {
           super.onPageFinished(view, url);
+          if (closeButtonPosition == 0) {
+            configureCloseButton(closeButtonLeft, closeButtonRight);
+          } else {
+            configureCloseButton(closeButtonRight, closeButtonLeft);
+          }
+          new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+              try {
+                parentLayout.animate().alpha(1.0f).setDuration(500).start();
+                webView.animate().alpha(1.0f).setDuration(500).start();
+              } catch (Exception ignored) {
+              }
+            }
+          }, 500);
         }
       });
       String htmlContent = loadHtml();
@@ -255,19 +265,34 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   }
 
   public String loadHtml() {
-    StringBuilder anchorTags = new StringBuilder();
+    StringBuilder anchorTags = new StringBuilder("[\n");
 
     for (int i = 0; i < stories.size(); i++) {
       String storyId = stories.get(i).getId();
-      String customURL = "";
+      String customURL;
       int subStoryIndex = getSubStoryPosition(i);
+
       if (stories.get(i).getContent().getPages() != null && stories.get(i).getContent().getPages().size() > 1) {
-        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&#page=page-" + subStoryIndex;
+        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
+            + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId
+            + "&#page=page-" + subStoryIndex;
       } else {
-        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
+        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
+            + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
       }
-      anchorTags.append("<a href=\"").append(customURL).append("\">Story ").append(i + 1).append("</a>\n");
+
+      anchorTags.append("    {\n")
+          .append("        href: '").append(customURL).append("'\n")
+          .append("    }");
+
+      if (i < stories.size() - 1) {
+        anchorTags.append(",\n");
+      } else {
+        anchorTags.append("\n");
+      }
     }
+
+    anchorTags.append("]");
 
     return "<!DOCTYPE html>\n" +
         "<html>\n" +
@@ -281,7 +306,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "</head>\n" +
         "<body>\n" +
         "  <amp-story-player>\n" +
-        anchorTags.toString() +
         "  </amp-story-player>\n" +
         "  <script>\n" +
         "    var playerEl = document.querySelector('amp-story-player');\n" +
@@ -295,6 +319,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "      storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
         "    });\n" +
         "    player.addEventListener('ready', function (event) {\n" +
+        "       player.add("+anchorTags.toString()+");" +
         "       storyDetailJavascriptInterface.ready();\n" +
         "       player.go(" + selectedPosition + ")\n" +
         "    });\n" +
@@ -339,6 +364,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     } catch (Exception e) {
       Logger.e(TAG, "Error handling noNext in StoryDetailActivity", e);
     }
+  }
+
+  @Override
+  public void onOpenURL() {
+    evaluateJavascript("player.pause();");
   }
 
   @Override

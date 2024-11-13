@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/parentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -17,7 +18,8 @@
         android:layout_marginTop="12dp"
         android:background="@drawable/drawable_circle_filled_dark_gray"
         android:padding="10dp"
-        android:src="@drawable/ic_close" />
+        android:src="@drawable/ic_close"
+        android:visibility="gone" />
 
     <ImageView
         android:id="@+id/ivCloseRight"

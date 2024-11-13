@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="StoryView">
-        <attr name="border_color" format="color" />
-        <attr name="border_color_dark_mode" format="color" />
         <attr name="background_color" format="color" />
         <attr name="background_color_dark_mode" format="color" />
         <attr name="text_color" format="color" />
@@ -45,6 +43,10 @@
         </attr>
         <attr name="border_margin" format="dimension" />
         <attr name="border_width" format="dimension" />
+        <attr name="border_color" format="color" />
+        <attr name="border_color_dark_mode" format="color" />
+        <attr name="border_color_loading" format="color" />
+        <attr name="border_color_loading_dark_mode" format="color" />
         <attr name="sub_story_unread_count_visibility" format="enum" >
             <enum name="gone" value="8" />
             <enum name="invisible" value="4" />
