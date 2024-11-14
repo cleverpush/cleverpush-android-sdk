@@ -310,7 +310,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "      var player = new AmpStoryPlayer(window, playerEl);\n" +
         "      document.body.appendChild(playerEl);\n" +
         "      player.load();\n" +
-        "      // setTimeout(() => {\n" +
         "      window.player = player;\n" +
         "      player.addEventListener('noNextStory', function(event) {\n" +
         "         storyDetailJavascriptInterface.noNext();\n" +
@@ -349,7 +348,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "          }\n" +
         "        } catch (ignored) {}\n" +
         "      });\n" +
-        "      // }, 0);\n" +
         "    });\n" +
         "  </script>\n" +
         "</body>\n" +
