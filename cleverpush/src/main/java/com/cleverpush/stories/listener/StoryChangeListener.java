@@ -13,4 +13,6 @@ public interface StoryChangeListener {
   void noNext();
 
   void onOpenURL();
+
+  void onStoryReady();
 }

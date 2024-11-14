@@ -240,21 +240,21 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         @Override
         public void onPageFinished(WebView view, String url) {
           super.onPageFinished(view, url);
-          if (closeButtonPosition == 0) {
-            configureCloseButton(closeButtonLeft, closeButtonRight);
-          } else {
-            configureCloseButton(closeButtonRight, closeButtonLeft);
-          }
-          new Handler().postDelayed(new Runnable() {
+          /*new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
               try {
+                if (closeButtonPosition == 0) {
+                  configureCloseButton(closeButtonLeft, closeButtonRight);
+                } else {
+                  configureCloseButton(closeButtonRight, closeButtonLeft);
+                }
                 parentLayout.animate().alpha(1.0f).setDuration(500).start();
                 webView.animate().alpha(1.0f).setDuration(500).start();
               } catch (Exception ignored) {
               }
             }
-          }, 500);
+          }, 500);*/
         }
       });
       String htmlContent = loadHtml();
@@ -320,8 +320,13 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "    });\n" +
         "    player.addEventListener('ready', function (event) {\n" +
         "       player.add("+anchorTags.toString()+");" +
-        "       storyDetailJavascriptInterface.ready();\n" +
         "       player.go(" + selectedPosition + ")\n" +
+        "       if(player.isReady) { \n" +
+        "         storyDetailJavascriptInterface.ready();\n" +
+        "         console.log('onStoryReady Player is ready!');" +
+        "       } else {" +
+        "         console.log('onStoryReady Player is not ready!');" +
+        "       }" +
         "    });\n" +
         "    playerEl.addEventListener('navigation', function (event) {\n" +
         "      storyDetailJavascriptInterface.navigation(event.detail.index);\n" +
@@ -369,6 +374,28 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   @Override
   public void onOpenURL() {
     evaluateJavascript("player.pause();");
+  }
+
+  @Override
+  public void onStoryReady() {
+    new Handler().postDelayed(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          runOnUiThread(() -> {
+            if (closeButtonPosition == 0) {
+              configureCloseButton(closeButtonLeft, closeButtonRight);
+            } else {
+              configureCloseButton(closeButtonRight, closeButtonLeft);
+            }
+
+            parentLayout.animate().alpha(1.0f).setDuration(500).start();
+            webView.animate().alpha(1.0f).setDuration(500).start();
+          });
+        } catch (Exception ignored) {
+        }
+      }
+    }, 500);
   }
 
   @Override
