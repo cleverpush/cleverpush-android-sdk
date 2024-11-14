@@ -239,21 +239,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         @Override
         public void onPageFinished(WebView view, String url) {
           super.onPageFinished(view, url);
-          /*new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-              try {
-                if (closeButtonPosition == 0) {
-                  configureCloseButton(closeButtonLeft, closeButtonRight);
-                } else {
-                  configureCloseButton(closeButtonRight, closeButtonLeft);
-                }
-                parentLayout.animate().alpha(1.0f).setDuration(500).start();
-                webView.animate().alpha(1.0f).setDuration(500).start();
-              } catch (Exception ignored) {
-              }
-            }
-          }, 500);*/
         }
       });
       String htmlContent = loadHtml();
