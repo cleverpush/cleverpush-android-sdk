@@ -264,79 +264,107 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   }
 
   public String loadHtml() {
-    StringBuilder anchorTags = new StringBuilder("[\n");
+    ArrayList<String> storyURLs = new ArrayList<String>();
 
     for (int i = 0; i < stories.size(); i++) {
       String storyId = stories.get(i).getId();
-      String customURL;
+      String storyURL;
       int subStoryIndex = getSubStoryPosition(i);
 
       if (stories.get(i).getContent().getPages() != null && stories.get(i).getContent().getPages().size() > 1) {
-        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
+        storyURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
             + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId
             + "&#page=page-" + subStoryIndex;
       } else {
-        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
+        storyURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
             + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
       }
 
-      anchorTags.append("    {\n")
-          .append("        href: '").append(customURL).append("'\n")
-          .append("    }");
-
-      if (i < stories.size() - 1) {
-        anchorTags.append(",\n");
-      } else {
-        anchorTags.append("\n");
-      }
+      storyURLs.add(storyURL);
     }
 
-    anchorTags.append("]");
+    JSONArray storyURLsJsonArray = new JSONArray(storyURLs);
 
     return "<!DOCTYPE html>\n" +
         "<html>\n" +
         "<head>\n" +
-        "  <script src=\"https://cdn.ampproject.org/amp-story-player-v0.js\"></script>\n" +
-        "  <link rel=\"stylesheet\" href=\"https://cdn.ampproject.org/amp-story-player-v0.css\">\n" +
         "  <style>\n" +
         "    body { margin: 0; padding: 0; }\n" +
         "    amp-story-player { display: block; margin: 0; padding: 0; width: 100%; height: " + convertPixelsToDp(measuredHeight, getApplicationContext()) + "px; }\n" +
         "  </style>\n" +
         "</head>\n" +
         "<body>\n" +
-        "  <amp-story-player>\n" +
-        "  </amp-story-player>\n" +
         "  <script>\n" +
-        "    var playerEl = document.querySelector('amp-story-player');\n" +
-        "    var player = new AmpStoryPlayer(window, playerEl);\n" +
-        "    window.player = player;\n" +
-        "    player.addEventListener('noNextStory', (event) => {\n" +
-        "       storyDetailJavascriptInterface.noNext();\n" +
-        "    });\n" +
-        "    playerEl.addEventListener('storyNavigation', function (event) {\n" +
-        "      var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 0);\n" +
-        "      storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
-        "    });\n" +
-        "    player.addEventListener('ready', function (event) {\n" +
-        "       player.add("+anchorTags.toString()+");" +
-        "       player.go(" + selectedPosition + ")\n" +
-        "       if(player.isReady) { \n" +
-        "         storyDetailJavascriptInterface.ready();\n" +
-        "         console.log('onStoryReady Player is ready!');" +
-        "       } else {" +
-        "         console.log('onStoryReady Player is not ready!');" +
-        "       }" +
-        "    });\n" +
-        "    playerEl.addEventListener('navigation', function (event) {\n" +
-        "      storyDetailJavascriptInterface.navigation(event.detail.index);\n" +
-        "    });\n" +
-        "    window.addEventListener('message', function (event) {\n" +
-        "      try { \n" +
-        "          var data = JSON.parse(event.data); \n" +
-        "          if (data.type === 'storyButtonCallback') { \n" +
+        "    function loadAmpResources(callback) {\n" +
+        "    if (window.ampStoryPlayerLoaded) {\n" +
+        "      if (typeof callback === 'function') {\n" +
+        "        callback();\n" +
+        "      }\n" +
+        "      return;\n" +
+        "    }\n" +
+        "    window.ampStoryPlayerLoaded = true;\n" +
+        "      const script = document.createElement('script');\n" +
+        "      const link = document.createElement('link');\n" +
+        "      script.src = 'https://cdn.ampproject.org/amp-story-player-v0.js';\n" +
+        "      script.async = true;\n" +
+        "      script.onload = callback;\n" +
+        "      link.href = 'https://cdn.ampproject.org/amp-story-player-v0.css';\n" +
+        "      link.rel = 'stylesheet';\n" +
+        "      link.type = 'text/css';\n" +
+        "      document.head.append(script, link);\n" +
+        "    }\n" +
+        "    \n" +
+        "    loadAmpResources(function() {\n" +
+        "      var playerEl = document.createElement('amp-story-player');\n" +
+        "      var storyURLs = " + storyURLsJsonArray.toString() + "\n" +
+        "      storyURLs.forEach(function(storyURL) {\n" +
+        "        var anker = document.createElement('a');\n" +
+        "        anker.setAttribute('href', storyURL);\n" +
+        "        playerEl.appendChild(anker);\n" +
+        "      });\n" +
+        "      var player = new AmpStoryPlayer(window, playerEl);\n" +
+        "      document.body.appendChild(playerEl);\n" +
+        "      player.load();\n" +
+        "      // setTimeout(() => {\n" +
+        "      window.player = player;\n" +
+        "      player.addEventListener('noNextStory', function(event) {\n" +
+        "         storyDetailJavascriptInterface.noNext();\n" +
+        "      });\n" +
+        "      playerEl.addEventListener('storyNavigation', function(event) {\n" +
+        "        var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 0);\n" +
+        "        storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
+        "      });\n" +
+        "      \n" +
+        "      function onPlayerReady() {" +
+        "         console.log('onStoryReady Player is ready!');\n" +
+        "         player.go(" + selectedPosition + ")\n" +
+        "      }\n" +
+        "      \n" +
+        "      if (player.isReady) {\n" +
+        "        onPlayerReady();\n" +
+        "      } else {\n" +
+        "        player.addEventListener('ready', function(event) {\n" +
+        "          onPlayerReady();\n" +
+        "        });\n" +
+        "      }\n" +
+        "      playerEl.addEventListener('navigation', function(event) {\n" +
+        "        storyDetailJavascriptInterface.navigation(event.detail.index);\n" +
+        "      });\n" +
+        "      window.addEventListener('message', function(event) {\n" +
+        "        try {\n" +
+        "          if (typeof event.data === 'object') {\n" +
+        "            if (event.data.name === 'storyContentLoaded') {\n" +
+        "              storyDetailJavascriptInterface.ready();\n" +
+        "            }\n" +
+        "          } else {\n" +
+        "            var data = JSON.parse(event.data); \n" +
+        "            if (data.type === 'storyButtonCallback') { \n" +
         "              window.storyDetailJavascriptInterface.storyButtonCallbackUrl(JSON.stringify(data)); \n" +
-        "          } \n" +
-        "      } catch (ignored) {}\n" +
+        "            } \n" +
+        "          }\n" +
+        "        } catch (ignored) {}\n" +
+        "      });\n" +
+        "      // }, 0);\n" +
         "    });\n" +
         "  </script>\n" +
         "</body>\n" +
