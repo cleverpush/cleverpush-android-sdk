@@ -12,9 +12,9 @@ import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPushHttpClient;
@@ -49,6 +49,8 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
   public static int selectedPosition = 0;
   private WebView webView;
+  private RelativeLayout parentLayout;
+  private ImageView closeButtonLeft, closeButtonRight;
   private OnSwipeTouchListener onSwipeTouchListener;
   private ArrayList<Story> stories = new ArrayList<>();
   public StoryViewOpenedListener storyViewOpenedListener;
@@ -79,6 +81,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
           intent.putExtra("sortToLastIndex", sortToLastIndex);
           StoryViewListAdapter.setStoryViewListAdapter(storyViewListAdapter);
           StoryView.setStoryView(storyView);
+          intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
           activity.startActivity(intent);
         }
       });
@@ -96,16 +99,12 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
   private void init() {
     webView = findViewById(R.id.webView);
-    ImageView closeButtonLeft, closeButtonRight;
+    parentLayout = findViewById(R.id.parentLayout);
     closeButtonLeft = findViewById(R.id.ivClose);
     closeButtonRight = findViewById(R.id.ivCloseRight);
+    parentLayout.setAlpha(0.0f);
+    webView.setAlpha(0.0f);
     handleBundleData(getIntent().getExtras());
-
-    if (closeButtonPosition == 0) {
-      configureCloseButton(closeButtonLeft, closeButtonRight);
-    } else {
-      configureCloseButton(closeButtonRight, closeButtonLeft);
-    }
 
     try {
       onSwipeTouchListener = new OnSwipeTouchListener(this, new OnSwipeDownListener() {
@@ -160,11 +159,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       isOpenFromButton = false;
       evaluateJavascript("player.play();");
     }
-  }
-
-  @Override
-  public void onOpenURL() {
-    evaluateJavascript("player.pause();");
   }
 
   @Override
@@ -255,59 +249,105 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   }
 
   public String loadHtml() {
-    StringBuilder anchorTags = new StringBuilder();
+    ArrayList<String> storyURLs = new ArrayList<String>();
 
     for (int i = 0; i < stories.size(); i++) {
       String storyId = stories.get(i).getId();
-      String customURL = "";
+      String storyURL;
       int subStoryIndex = getSubStoryPosition(i);
+
       if (stories.get(i).getContent().getPages() != null && stories.get(i).getContent().getPages().size() > 1) {
-        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId + "&#page=page-" + subStoryIndex;
+        storyURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
+            + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId
+            + "&#page=page-" + subStoryIndex;
       } else {
-        customURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
+        storyURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
+            + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
       }
-      anchorTags.append("<a href=\"").append(customURL).append("\">Story ").append(i + 1).append("</a>\n");
+
+      storyURLs.add(storyURL);
     }
+
+    JSONArray storyURLsJsonArray = new JSONArray(storyURLs);
 
     return "<!DOCTYPE html>\n" +
         "<html>\n" +
         "<head>\n" +
-        "  <script src=\"https://cdn.ampproject.org/amp-story-player-v0.js\"></script>\n" +
-        "  <link rel=\"stylesheet\" href=\"https://cdn.ampproject.org/amp-story-player-v0.css\">\n" +
         "  <style>\n" +
         "    body { margin: 0; padding: 0; }\n" +
         "    amp-story-player { display: block; margin: 0; padding: 0; width: 100%; height: " + convertPixelsToDp(measuredHeight, getApplicationContext()) + "px; }\n" +
         "  </style>\n" +
         "</head>\n" +
         "<body>\n" +
-        "  <amp-story-player>\n" +
-        anchorTags.toString() +
-        "  </amp-story-player>\n" +
         "  <script>\n" +
-        "    var playerEl = document.querySelector('amp-story-player');\n" +
-        "    var player = new AmpStoryPlayer(window, playerEl);\n" +
-        "    window.player = player;\n" +
-        "    player.addEventListener('noNextStory', (event) => {\n" +
-        "       storyDetailJavascriptInterface.noNext();\n" +
-        "    });\n" +
-        "    playerEl.addEventListener('storyNavigation', function (event) {\n" +
-        "      var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 0);\n" +
-        "      storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
-        "    });\n" +
-        "    player.addEventListener('ready', function (event) {\n" +
-        "       storyDetailJavascriptInterface.ready();\n" +
-        "       player.go(" + selectedPosition + ")\n" +
-        "    });\n" +
-        "    playerEl.addEventListener('navigation', function (event) {\n" +
-        "      storyDetailJavascriptInterface.navigation(event.detail.index);\n" +
-        "    });\n" +
-        "    window.addEventListener('message', function (event) {\n" +
-        "      try { \n" +
-        "          var data = JSON.parse(event.data); \n" +
-        "          if (data.type === 'storyButtonCallback') { \n" +
+        "    function loadAmpResources(callback) {\n" +
+        "    if (window.ampStoryPlayerLoaded) {\n" +
+        "      if (typeof callback === 'function') {\n" +
+        "        callback();\n" +
+        "      }\n" +
+        "      return;\n" +
+        "    }\n" +
+        "    window.ampStoryPlayerLoaded = true;\n" +
+        "      const script = document.createElement('script');\n" +
+        "      const link = document.createElement('link');\n" +
+        "      script.src = 'https://cdn.ampproject.org/amp-story-player-v0.js';\n" +
+        "      script.async = true;\n" +
+        "      script.onload = callback;\n" +
+        "      link.href = 'https://cdn.ampproject.org/amp-story-player-v0.css';\n" +
+        "      link.rel = 'stylesheet';\n" +
+        "      link.type = 'text/css';\n" +
+        "      document.head.append(script, link);\n" +
+        "    }\n" +
+        "    \n" +
+        "    loadAmpResources(function() {\n" +
+        "      var playerEl = document.createElement('amp-story-player');\n" +
+        "      var storyURLs = " + storyURLsJsonArray.toString() + "\n" +
+        "      storyURLs.forEach(function(storyURL) {\n" +
+        "        var anker = document.createElement('a');\n" +
+        "        anker.setAttribute('href', storyURL);\n" +
+        "        playerEl.appendChild(anker);\n" +
+        "      });\n" +
+        "      var player = new AmpStoryPlayer(window, playerEl);\n" +
+        "      document.body.appendChild(playerEl);\n" +
+        "      player.load();\n" +
+        "      window.player = player;\n" +
+        "      player.addEventListener('noNextStory', function(event) {\n" +
+        "         storyDetailJavascriptInterface.noNext();\n" +
+        "      });\n" +
+        "      playerEl.addEventListener('storyNavigation', function(event) {\n" +
+        "        var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 0);\n" +
+        "        storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
+        "      });\n" +
+        "      \n" +
+        "      function onPlayerReady() {\n" +
+        "         console.log('onStoryReady Player is ready!');\n" +
+        "         player.go(" + selectedPosition + ")\n" +
+        "      }\n" +
+        "      \n" +
+        "      if (player.isReady) {\n" +
+        "        onPlayerReady();\n" +
+        "      } else {\n" +
+        "        player.addEventListener('ready', function(event) {\n" +
+        "          onPlayerReady();\n" +
+        "        });\n" +
+        "      }\n" +
+        "      playerEl.addEventListener('navigation', function(event) {\n" +
+        "        storyDetailJavascriptInterface.navigation(event.detail.index);\n" +
+        "      });\n" +
+        "      window.addEventListener('message', function(event) {\n" +
+        "        try {\n" +
+        "          if (typeof event.data === 'object') {\n" +
+        "            if (event.data.name === 'storyContentLoaded') {\n" +
+        "              storyDetailJavascriptInterface.ready();\n" +
+        "            }\n" +
+        "          } else {\n" +
+        "            var data = JSON.parse(event.data); \n" +
+        "            if (data.type === 'storyButtonCallback') { \n" +
         "              window.storyDetailJavascriptInterface.storyButtonCallbackUrl(JSON.stringify(data)); \n" +
-        "          } \n" +
-        "      } catch (ignored) {}\n" +
+        "            } \n" +
+        "          }\n" +
+        "        } catch (ignored) {}\n" +
+        "      });\n" +
         "    });\n" +
         "  </script>\n" +
         "</body>\n" +
@@ -338,6 +378,28 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       runOnUiThread(this::finish);
     } catch (Exception e) {
       Logger.e(TAG, "Error handling noNext in StoryDetailActivity", e);
+    }
+  }
+
+  @Override
+  public void onOpenURL() {
+    evaluateJavascript("player.pause();");
+  }
+
+  @Override
+  public void onStoryReady() {
+    try {
+      runOnUiThread(() -> {
+        if (closeButtonPosition == 0) {
+          configureCloseButton(closeButtonLeft, closeButtonRight);
+        } else {
+          configureCloseButton(closeButtonRight, closeButtonLeft);
+        }
+
+        parentLayout.animate().alpha(1.0f).setDuration(500).start();
+        webView.animate().alpha(1.0f).setDuration(500).start();
+      });
+    } catch (Exception ignored) {
     }
   }
 

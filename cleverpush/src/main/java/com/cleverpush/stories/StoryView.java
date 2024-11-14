@@ -276,7 +276,6 @@ public class StoryView extends LinearLayout {
             SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
-            String subStoryPositionString = sharedPreferences.getString(CleverPushPreferences.SUB_STORY_POSITION, "");
 
             if (sortToLastIndex == 1) {
               ArrayList<Story> categorizeStories = categorizeStories(stories);
@@ -293,38 +292,7 @@ public class StoryView extends LinearLayout {
               }
             }
 
-            int subStoryIndex = 0;
-            if (widget != null && widget.isGroupStoryCategories()) {
-              String[] storyIdArray = stories.get(position).getId().split(",");
-              String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
-              String[] readStoryIdArray = storyUnreadCountString.split(",");
-
-              for (String subStoryID : storyIdArray) {
-                if (Arrays.asList(readStoryIdArray).contains(subStoryID)) {
-                  subStoryIndex++;
-                } else {
-                  break;
-                }
-              }
-
-              if (storyIdArray.length == subStoryIndex) {
-                subStoryIndex = 0;
-              }
-            } else {
-              if (!subStoryPositionString.isEmpty()) {
-                Type type = new TypeToken<Map<String, Integer>>() {
-                }.getType();
-                Map<String, Integer> subStoryPositionMap = new Gson().fromJson(subStoryPositionString, type);
-
-                if (subStoryPositionMap.containsKey(storyId)) {
-                  subStoryIndex = subStoryPositionMap.get(storyId) + 1;
-                }
-
-                if (stories.get(position).getSubStoryCount() == subStoryIndex) {
-                  subStoryIndex = 0;
-                }
-              }
-            }
+            int subStoryIndex = calculateSubStoryIndex(sharedPreferences, stories.get(position));
 
             int closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, 0);
 
@@ -340,6 +308,45 @@ public class StoryView extends LinearLayout {
         Logger.e(TAG, "Error getOnItemClickListener of StoryView.", e);
       }
     };
+  }
+
+  private int calculateSubStoryIndex(SharedPreferences sharedPreferences, Story story) {
+    int subStoryIndex = 0;
+    String subStoryPositionString = sharedPreferences.getString(CleverPushPreferences.SUB_STORY_POSITION, "");
+
+    if (widget != null && widget.isGroupStoryCategories()) {
+      String[] storyIdArray = story.getId().split(",");
+      String storyUnreadCountString = sharedPreferences.getString(CleverPushPreferences.STORIES_UNREAD_COUNT_GROUP, "");
+      String[] readStoryIdArray = storyUnreadCountString.split(",");
+
+      for (String subStoryID : storyIdArray) {
+        if (Arrays.asList(readStoryIdArray).contains(subStoryID)) {
+          subStoryIndex++;
+        } else {
+          break;
+        }
+      }
+
+      if (storyIdArray.length == subStoryIndex) {
+        subStoryIndex = 0;
+      }
+    } else {
+      if (!subStoryPositionString.isEmpty()) {
+        String storyId = story.getId();
+        Type type = new TypeToken<Map<String, Integer>>() {
+        }.getType();
+        Map<String, Integer> subStoryPositionMap = new Gson().fromJson(subStoryPositionString, type);
+
+        if (subStoryPositionMap.containsKey(storyId)) {
+          subStoryIndex = subStoryPositionMap.get(storyId) + 1;
+        }
+
+        if (story.getSubStoryCount() == subStoryIndex) {
+          subStoryIndex = 0;
+        }
+      }
+    }
+    return subStoryIndex;
   }
 
   private int getDimensionOrEnum(TypedArray attrArray, int index) {

@@ -2,6 +2,7 @@ package com.cleverpush.stories;
 
 import static com.cleverpush.stories.StoryView.DEFAULT_BACKGROUND_COLOR;
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -13,7 +14,9 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.text.TextUtils;
 
@@ -127,8 +130,8 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
       int titlePosition = typedArray.getInt(R.styleable.StoryView_title_position, 0);
       int titleVisibility = typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE);
-      int unreadCountBadgeHeight = (int) typedArray.getDimension(R.styleable.StoryView_sub_story_unread_count_badge_height, 73);
-      int unreadCountBadgeWidth = (int) typedArray.getDimension(R.styleable.StoryView_sub_story_unread_count_badge_width, 73);
+      int unreadCountBadgeHeight = (int) typedArray.getDimension(R.styleable.StoryView_sub_story_unread_count_badge_height, 78);
+      int unreadCountBadgeWidth = (int) typedArray.getDimension(R.styleable.StoryView_sub_story_unread_count_badge_width, 78);
 
       int storyViewBackgroundColor = 0;
       if (isDarkModeEnabled) {
@@ -298,22 +301,38 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       } else {
         ViewGroup.LayoutParams imageParams = image.getLayoutParams();
         imageParams.height = iconHeight;
-        imageParams.width = iconWidth;
+        if (cornerRadius == -1) {
+          imageParams.width = iconWidth;
+        } else {
+          imageParams.width = (int) (iconWidth - borderMargin - 12);
+        }
         image.setLayoutParams(imageParams);
 
         ViewGroup.LayoutParams titleInsideLayoutParams = titleInsideLayout.getLayoutParams();
         titleInsideLayoutParams.height = iconHeight;
-        titleInsideLayoutParams.width = iconWidth;
+        if (cornerRadius == -1) {
+          titleInsideLayoutParams.width = iconWidth - 12;
+        } else {
+          titleInsideLayoutParams.width = (int) (iconWidth - borderMargin - 12);
+        }
         titleInsideLayout.setLayoutParams(titleInsideLayoutParams);
 
         ViewGroup.LayoutParams cardParams = cardView.getLayoutParams();
         cardParams.height = iconHeight;
-        cardParams.width = iconWidth;
+        if (cornerRadius == -1) {
+          cardParams.width = iconWidth - 12;
+        } else {
+          cardParams.width = (int) (iconWidth - borderMargin - 12);
+        }
         cardView.setLayoutParams(cardParams);
 
         ViewGroup.LayoutParams imageLayoutParams = imageLayout.getLayoutParams();
         imageLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-        imageLayoutParams.width = iconWidth;
+        if (cornerRadius == -1) {
+          imageLayoutParams.width = iconWidth - 12;
+        } else {
+          imageLayoutParams.width = (int) (iconWidth - borderMargin - 12);
+        }
         imageLayout.setLayoutParams(imageLayoutParams);
 
         ViewGroup.LayoutParams cardViewShadowParams = cardViewShadow.getLayoutParams();
@@ -323,7 +342,11 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         } else {
           cardViewShadowParams.height = iconHeight;
         }
-        cardViewShadowParams.width = iconWidth;
+        if (cornerRadius == -1) {
+          cardViewShadowParams.width = iconWidth - 12;
+        } else {
+          cardViewShadowParams.width = (int) (iconWidth - borderMargin - 12);
+        }
         cardViewShadow.setLayoutParams(cardViewShadowParams);
       }
 
@@ -344,17 +367,8 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
           int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
           nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
-          if (isGroupStoryCategories) {
-            if (stories.get(position).getContent().getSubtitle() != null && !stories.get(position).getContent().getSubtitle().isEmpty()) {
-              nameTextView.setText(stories.get(position).getContent().getSubtitle());
-            } else if (stories.get(position).getContent().getTitle() != null && !stories.get(position).getContent().getTitle().isEmpty()) {
-              nameTextView.setText(stories.get(position).getContent().getTitle());
-            }
-          } else {
-            if (stories.get(position).getTitle() != null && !stories.get(position).getTitle().isEmpty()) {
-              nameTextView.setText(stories.get(position).getTitle());
-            }
-          }
+          String titleText = getTitleText(stories, position);
+          nameTextView.setText(titleText);
           nameTextView.setTextColor(textColor);
           applyFont(nameTextView, typedArray);
         } else {
@@ -414,6 +428,9 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       if (cornerRadius != -1) {
         cardView.setCornerRadius(cornerRadius);
         cardViewShadow.setCornerRadius(cornerRadius);
+      } else {
+        cardView.setCornerRadius(350);
+        cardViewShadow.setCornerRadius(350);
       }
 
       if (iconSpace != -1) {
@@ -432,12 +449,14 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor, isDarkModeEnabled);
       }
 
+      int finalStoryViewBackgroundColor = storyViewBackgroundColor;
       image.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View view) {
           if (onItemClickListener == null) {
             return;
           }
+          applyGradientIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, finalStoryViewBackgroundColor, isDarkModeEnabled);
           onItemClickListener.onClicked(position);
         }
       });
@@ -456,6 +475,8 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     } else {
       if (stories.get(position).getTitle() != null && !stories.get(position).getTitle().isEmpty()) {
         return stories.get(position).getTitle();
+      } else if (stories.get(position).getContent().getTitle() != null && !stories.get(position).getContent().getTitle().isEmpty()) {
+        return stories.get(position).getContent().getTitle();
       }
     }
     return "";
@@ -500,6 +521,78 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       imageLayout.setLayoutParams(params);
     } catch (Exception e) {
       Logger.e(TAG, "Error while applying border to icon. " + e.getLocalizedMessage(), e);
+    }
+  }
+
+  public void applyGradientIconBorder(int position, LinearLayout borderLayout, float cornerRadius, int borderWidth, float borderMargin,
+                                      LinearLayout imageLayout, int storyViewBackgroundColor, boolean isDarkModeEnabled) {
+    try {
+      int DEFAULT_ANIM_COLOR;
+      if (isDarkModeEnabled) {
+        DEFAULT_ANIM_COLOR = typedArray.getColor(R.styleable.StoryView_border_color_dark_mode, DEFAULT_BORDER_COLOR);
+      } else {
+        DEFAULT_ANIM_COLOR = typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
+      }
+      int borderAnimColor;
+      if (isDarkModeEnabled) {
+        borderAnimColor = typedArray.getColor(R.styleable.StoryView_border_color_loading_dark_mode, DEFAULT_ANIM_COLOR);
+      } else {
+        borderAnimColor = typedArray.getColor(R.styleable.StoryView_border_color_loading, DEFAULT_ANIM_COLOR);
+      }
+
+      GradientDrawable gradientBorder = new GradientDrawable(
+          GradientDrawable.Orientation.LEFT_RIGHT,
+          new int[]{borderAnimColor, borderAnimColor, borderAnimColor}
+      );
+      gradientBorder.setShape(cornerRadius == -1 ? GradientDrawable.OVAL : GradientDrawable.RECTANGLE);
+
+      if (cornerRadius != -1) {
+        gradientBorder.setCornerRadius(cornerRadius + borderWidth);
+      }
+
+      GradientDrawable innerDrawable = new GradientDrawable();
+      innerDrawable.setShape(cornerRadius == -1 ? GradientDrawable.OVAL : GradientDrawable.RECTANGLE);
+
+      if (cornerRadius != -1) {
+        innerDrawable.setCornerRadius(cornerRadius);
+      }
+
+      if (stories.get(position).isOpened()) {
+        innerDrawable.setColor(storyViewBackgroundColor); // Transparent background
+      } else {
+        innerDrawable.setColor(0xFFFFFFFF); // White background
+      }
+
+      // Layer the gradient border over the inner drawable
+      LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{gradientBorder, innerDrawable});
+      layerDrawable.setLayerInset(1, borderWidth, borderWidth, borderWidth, borderWidth);
+
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+        borderLayout.setBackgroundDrawable(layerDrawable);
+      } else {
+        borderLayout.setBackground(layerDrawable);
+      }
+
+      ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) imageLayout.getLayoutParams();
+      params.setMargins((int) borderMargin, (int) borderMargin, (int) borderMargin, (int) borderMargin);
+      imageLayout.setLayoutParams(params);
+
+      // Add fade-in/out animation by changing the alpha of the gradient border
+      ValueAnimator alphaAnimator = ValueAnimator.ofInt(0, 255); // Alpha values from transparent to fully opaque
+      alphaAnimator.setDuration(1000); // Duration of each fade in/out cycle
+      alphaAnimator.setRepeatCount(ValueAnimator.INFINITE); // Repeat indefinitely
+      alphaAnimator.setRepeatMode(ValueAnimator.REVERSE); // Reverse back to start alpha
+
+      alphaAnimator.addUpdateListener(animator -> {
+        int alphaValue = (int) animator.getAnimatedValue();
+        gradientBorder.setAlpha(alphaValue); // Apply the animated alpha to the gradient
+        borderLayout.invalidate(); // Redraw the view to apply the alpha change
+      });
+
+      alphaAnimator.start();
+
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while applying gradient border to icon. " + e.getLocalizedMessage(), e);
     }
   }
 

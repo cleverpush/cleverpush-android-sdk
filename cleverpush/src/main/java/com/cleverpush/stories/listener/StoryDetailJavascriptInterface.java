@@ -42,7 +42,7 @@ public class StoryDetailJavascriptInterface {
 
   @JavascriptInterface
   public void ready() {
-
+    storyChangeListener.onStoryReady();
   }
 
   @JavascriptInterface

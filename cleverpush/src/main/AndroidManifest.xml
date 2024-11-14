@@ -24,7 +24,7 @@
 
         <activity
             android:name=".stories.StoryDetailActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:theme="@style/Theme.Transparent" />
 
         <activity
             android:name=".banner.WebViewActivity"
