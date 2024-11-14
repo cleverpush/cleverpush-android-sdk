@@ -335,7 +335,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         "        storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
         "      });\n" +
         "      \n" +
-        "      function onPlayerReady() {" +
+        "      function onPlayerReady() {\n" +
         "         console.log('onStoryReady Player is ready!');\n" +
         "         player.go(" + selectedPosition + ")\n" +
         "      }\n" +
