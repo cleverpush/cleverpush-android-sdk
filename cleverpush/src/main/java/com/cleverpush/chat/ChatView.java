@@ -16,7 +16,6 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.util.Logger;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -226,7 +225,7 @@ public class ChatView extends WebView {
       byte[] buffer = new byte[size];
       is.read(buffer);
       return new String(buffer, StandardCharsets.UTF_8);
-    } catch (IOException e) {
+    } catch (Exception e) {
       Logger.e(LOG_TAG, "Error reading ChatView HTML template: " + e.getMessage());
       return null;
     }
