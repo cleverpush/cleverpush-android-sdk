@@ -16,6 +16,9 @@ import com.cleverpush.CleverPush;
 import com.cleverpush.listener.ChatUrlOpenedListener;
 import com.cleverpush.util.Logger;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 public class ChatView extends WebView {
   private String lastSubscriptionId;
   private Handler handler;
@@ -143,7 +146,7 @@ public class ChatView extends WebView {
 
     boolean isSubscriptionChanged = CleverPush.getInstance(CleverPush.context).isSubscriptionChanged();
     if (isSubscriptionChanged
-            || !CleverPush.getInstance(CleverPush.context).isSubscribed()) {
+        || !CleverPush.getInstance(CleverPush.context).isSubscribed()) {
       CleverPush.getInstance(CleverPush.context).setSubscriptionChanged(false);
       WebStorage.getInstance().deleteAllData();
     }
@@ -155,8 +158,8 @@ public class ChatView extends WebView {
     new Thread(() -> {
       getCleverPushInstance().getChannelConfig(config -> {
         String configJson = config != null ? config.toString() : "null";
-        String brandingColorStr = "", backgroundColor = "", chatSenderBubbleTextColor = "", chatSenderBubbleBackgroundColor = "", chatSendButtonBackgroundColor = "", chatReceiverBubbleBackgroundColor ="",
-                chatReceiverBubbleTextColor = "", chatInputContainerBackgroundColor = "", chatTimestampTextColor = "", chatInputTextColor = "", chatInputBackgroundColor = "";
+        String brandingColorStr = "", backgroundColor = "", chatSenderBubbleTextColor = "", chatSenderBubbleBackgroundColor = "", chatSendButtonBackgroundColor = "", chatReceiverBubbleBackgroundColor = "",
+            chatReceiverBubbleTextColor = "", chatInputContainerBackgroundColor = "", chatTimestampTextColor = "", chatInputTextColor = "", chatInputBackgroundColor = "";
         int brandingColor = getCleverPushInstance().getBrandingColor();
         if (brandingColor != 0) {
           brandingColorStr = "#" + Integer.toHexString(brandingColor).substring(2);
@@ -192,83 +195,40 @@ public class ChatView extends WebView {
           chatInputBackgroundColor = getChatInputBackgroundColor();
         }
 
-        String data = "<!DOCTYPE html>\n" +
-            "<html>\n" +
-            "<head>\n" +
-            "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>\n" +
-            "<style>\n" +
-            "html, body { margin: 0; padding: 0; height: 100%; }\n" +
-            "</style>\n" +
-            "</head>\n" +
-            "<body>\n" +
-            "<div class='cleverpush-chat-target' style='height: 100%;'></div>\n" +
-            "<script>\n" +
-            "window.cleverpushHandleSubscribe = function() { window.cleverpushAppInterface.subscribe() };\n" +
-            "var cleverpushConfig = " + configJson + ";\n" +
-            "cleverpushConfig.chatStylingOptions = {};\n" +
-            "(cleverpushConfig || {}).nativeApp = true;\n" +
-            "(cleverpushConfig || {}).nativeAppPlatform = 'Android';\n" +
-            "(cleverpushConfig || {}).brandingColor = '" + brandingColorStr + "';\n" +
-            "(cleverpushConfig || {}).chatBackgroundColor = '" + backgroundColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.widgetTextColor = '" + chatSenderBubbleTextColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.chatButtonColor = '" + chatSendButtonBackgroundColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.widgetInputBoxColor = '" + chatInputBackgroundColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.widgetInputTextColor = '" + chatInputTextColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.receiverBubbleColor = '" + chatReceiverBubbleBackgroundColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.inputContainer = '" + chatInputContainerBackgroundColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.dateColor = '" + chatTimestampTextColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.receiverTextColor = '" + chatReceiverBubbleTextColor + "';\n" +
-            "(cleverpushConfig || {}).chatStylingOptions.chatSenderBubbleBackgroundColor = '" + chatSenderBubbleBackgroundColor + "';\n" +
-            "var cleverpushSubscriptionId = '" + subscriptionId + "';\n" +
-            "</script>\n" +
-            "<script>\n" +
-            "      function showErrorView() {\n" +
-            "        document.body.innerHTML = `\n" +
-            "        <style>\n" +
-            "        .cleverpush-chat-error {\n" +
-            "          color: #555;\n" +
-            "          text-align: center;\n" +
-            "          font-family: sans-serif;\n" +
-            "          padding: center;\n" +
-            "          height: 100%;\n" +
-            "          display: flex;\n" +
-            "          align-items: center;\n" +
-            "          justify-content: center;\n" +
-            "          flex-direction: column;\n" +
-            "        }\n" +
-            "        .cleverpush-chat-error h1 {\n" +
-            "          font-size: 24px;\n" +
-            "          font-weight: normal;\n" +
-            "          margin-bottom: 25px;\n" +
-            "        }\n" +
-            "        .cleverpush-chat-error button {\n" +
-            "          background-color: #555;\n" +
-            "          color: #fff;\n" +
-            "          border: none;\n" +
-            "          font-weight: bold;\n" +
-            "          display: block;\n" +
-            "          font-size: 16px;\n" +
-            "          border-radius: 200px;\n" +
-            "          padding: 7.5px 15px;\n" +
-            "          cursor: pointer;\n" +
-            "          font-family: sans-serif;\n" +
-            "        }\n" +
-            "        </style>\n" +
-            "        <div class='cleverpush-chat-error'>\n" +
-            "        <h1>Laden fehlgeschlagen</h1>\n" +
-            "        <button onclick='window.cleverpushAppInterface.reload()' type='button'>Erneut versuchen</button>\n"
-            +
-            "        </div>`;\n" +
-            "      }\n" +
-            "      if (!cleverpushConfig) { showErrorView() }\n" +
-            "    </script>\n" +
-            "<script onerror='showErrorView()' src='https://static.cleverpush.com/sdk/cleverpush-chat.js'></script>\n" +
-            "</body>\n" +
-            "</html>";
+        String htmlTemplate = loadHtmlTemplate("chat_view_template.html");
+        if (htmlTemplate == null) return;
+
+        String data = htmlTemplate
+            .replace("{{configJson}}", configJson)
+            .replace("{{brandingColorStr}}", brandingColorStr)
+            .replace("{{backgroundColor}}", backgroundColor)
+            .replace("{{chatSenderBubbleTextColor}}", chatSenderBubbleTextColor)
+            .replace("{{chatSenderBubbleBackgroundColor}}", chatSenderBubbleBackgroundColor)
+            .replace("{{chatSendButtonBackgroundColor}}", chatSendButtonBackgroundColor)
+            .replace("{{chatReceiverBubbleBackgroundColor}}", chatReceiverBubbleBackgroundColor)
+            .replace("{{chatReceiverBubbleTextColor}}", chatReceiverBubbleTextColor)
+            .replace("{{chatInputContainerBackgroundColor}}", chatInputContainerBackgroundColor)
+            .replace("{{chatTimestampTextColor}}", chatTimestampTextColor)
+            .replace("{{chatInputTextColor}}", chatInputTextColor)
+            .replace("{{chatInputBackgroundColor}}", chatInputBackgroundColor)
+            .replace("{{subscriptionId}}", subscriptionId);
+
         getHandler().post(
             () -> webView.loadDataWithBaseURL("file:///android_asset/", data, "text/html", "UTF-8", null));
       });
     }).start();
+  }
+
+  private String loadHtmlTemplate(String filename) {
+    try (InputStream is = getContext().getAssets().open(filename)) {
+      int size = is.available();
+      byte[] buffer = new byte[size];
+      is.read(buffer);
+      return new String(buffer, StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error reading ChatView HTML template: " + e.getMessage());
+      return null;
+    }
   }
 
   void init() {

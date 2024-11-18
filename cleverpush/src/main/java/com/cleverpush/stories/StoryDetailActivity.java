@@ -37,6 +37,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -248,9 +251,8 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     }
   }
 
-  public String loadHtml() {
-    ArrayList<String> storyURLs = new ArrayList<String>();
-
+  private String loadHtml() {
+    ArrayList<String> storyURLs = new ArrayList<>();
     for (int i = 0; i < stories.size(); i++) {
       String storyId = stories.get(i).getId();
       String storyURL;
@@ -269,89 +271,28 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     }
 
     JSONArray storyURLsJsonArray = new JSONArray(storyURLs);
+    String htmlTemplate = loadHtmlTemplate();
 
-    return "<!DOCTYPE html>\n" +
-        "<html>\n" +
-        "<head>\n" +
-        "  <style>\n" +
-        "    body { margin: 0; padding: 0; }\n" +
-        "    amp-story-player { display: block; margin: 0; padding: 0; width: 100%; height: " + convertPixelsToDp(measuredHeight, getApplicationContext()) + "px; }\n" +
-        "  </style>\n" +
-        "</head>\n" +
-        "<body>\n" +
-        "  <script>\n" +
-        "    function loadAmpResources(callback) {\n" +
-        "    if (window.ampStoryPlayerLoaded) {\n" +
-        "      if (typeof callback === 'function') {\n" +
-        "        callback();\n" +
-        "      }\n" +
-        "      return;\n" +
-        "    }\n" +
-        "    window.ampStoryPlayerLoaded = true;\n" +
-        "      const script = document.createElement('script');\n" +
-        "      const link = document.createElement('link');\n" +
-        "      script.src = 'https://cdn.ampproject.org/amp-story-player-v0.js';\n" +
-        "      script.async = true;\n" +
-        "      script.onload = callback;\n" +
-        "      link.href = 'https://cdn.ampproject.org/amp-story-player-v0.css';\n" +
-        "      link.rel = 'stylesheet';\n" +
-        "      link.type = 'text/css';\n" +
-        "      document.head.append(script, link);\n" +
-        "    }\n" +
-        "    \n" +
-        "    loadAmpResources(function() {\n" +
-        "      var playerEl = document.createElement('amp-story-player');\n" +
-        "      var storyURLs = " + storyURLsJsonArray.toString() + "\n" +
-        "      storyURLs.forEach(function(storyURL) {\n" +
-        "        var anker = document.createElement('a');\n" +
-        "        anker.setAttribute('href', storyURL);\n" +
-        "        playerEl.appendChild(anker);\n" +
-        "      });\n" +
-        "      var player = new AmpStoryPlayer(window, playerEl);\n" +
-        "      document.body.appendChild(playerEl);\n" +
-        "      player.load();\n" +
-        "      window.player = player;\n" +
-        "      player.addEventListener('noNextStory', function(event) {\n" +
-        "         storyDetailJavascriptInterface.noNext();\n" +
-        "      });\n" +
-        "      playerEl.addEventListener('storyNavigation', function(event) {\n" +
-        "        var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 0);\n" +
-        "        storyDetailJavascriptInterface.storyNavigation(" + selectedPosition + ", subStoryIndex);\n" +
-        "      });\n" +
-        "      \n" +
-        "      function onPlayerReady() {\n" +
-        "         console.log('onStoryReady Player is ready!');\n" +
-        "         player.go(" + selectedPosition + ")\n" +
-        "      }\n" +
-        "      \n" +
-        "      if (player.isReady) {\n" +
-        "        onPlayerReady();\n" +
-        "      } else {\n" +
-        "        player.addEventListener('ready', function(event) {\n" +
-        "          onPlayerReady();\n" +
-        "        });\n" +
-        "      }\n" +
-        "      playerEl.addEventListener('navigation', function(event) {\n" +
-        "        storyDetailJavascriptInterface.navigation(event.detail.index);\n" +
-        "      });\n" +
-        "      window.addEventListener('message', function(event) {\n" +
-        "        try {\n" +
-        "          if (typeof event.data === 'object') {\n" +
-        "            if (event.data.name === 'storyContentLoaded') {\n" +
-        "              storyDetailJavascriptInterface.ready();\n" +
-        "            }\n" +
-        "          } else {\n" +
-        "            var data = JSON.parse(event.data); \n" +
-        "            if (data.type === 'storyButtonCallback') { \n" +
-        "              window.storyDetailJavascriptInterface.storyButtonCallbackUrl(JSON.stringify(data)); \n" +
-        "            } \n" +
-        "          }\n" +
-        "        } catch (ignored) {}\n" +
-        "      });\n" +
-        "    });\n" +
-        "  </script>\n" +
-        "</body>\n" +
-        "</html>";
+    return htmlTemplate
+        .replace("{{measuredHeight}}", String.valueOf(convertPixelsToDp(measuredHeight, getApplicationContext())))
+        .replace("{{storyURLs}}", storyURLsJsonArray.toString())
+        .replace("{{selectedPosition}}", String.valueOf(selectedPosition));
+  }
+
+  private String loadHtmlTemplate() {
+    StringBuilder html = new StringBuilder();
+    try {
+      InputStream inputStream = getAssets().open("story_detail_template.html");
+      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        html.append(line).append("\n");
+      }
+      reader.close();
+    } catch (Exception e) {
+      Logger.e(TAG, "Error reading story detail HTML template", e);
+    }
+    return html.toString();
   }
 
   public float convertPixelsToDp(float px, Context context) {

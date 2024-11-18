@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { margin: 0; padding: 0; }
+    amp-story-player { display: block; margin: 0; padding: 0; width: 100%; height: {{measuredHeight}}px; }
+  </style>
+</head>
+<body>
+<script>
+  function loadAmpResources(callback) {
+    if (window.ampStoryPlayerLoaded) {
+      if (typeof callback === 'function') {
+        callback();
+      }
+      return;
+    }
+    window.ampStoryPlayerLoaded = true;
+    const script = document.createElement('script');
+    const link = document.createElement('link');
+    script.src = 'https://cdn.ampproject.org/amp-story-player-v0.js';
+    script.async = true;
+    script.onload = callback;
+    link.href = 'https://cdn.ampproject.org/amp-story-player-v0.css';
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    document.head.append(script, link);
+  }
+  loadAmpResources(function() {
+    var playerEl = document.createElement('amp-story-player');
+    var storyURLs = {{storyURLs}};
+    storyURLs.forEach(function(storyURL) {
+      var anker = document.createElement('a');
+      anker.setAttribute('href', storyURL);
+      playerEl.appendChild(anker);
+    });
+    var player = new AmpStoryPlayer(window, playerEl);
+    document.body.appendChild(playerEl);
+    player.load();
+    window.player = player;
+    player.addEventListener('noNextStory', function(event) {
+      storyDetailJavascriptInterface.noNext();
+    });
+    playerEl.addEventListener('storyNavigation', function(event) {
+      var subStoryIndex = Number(event.detail.pageId?.split('-')?.[1] || 0);
+      storyDetailJavascriptInterface.storyNavigation({{selectedPosition}}, subStoryIndex);
+    });
+    function onPlayerReady() {
+      console.log('onStoryReady Player is ready!');
+      player.go({{selectedPosition}});
+    }
+    if (player.isReady) {
+      onPlayerReady();
+    } else {
+      player.addEventListener('ready', function(event) {
+        onPlayerReady();
+      });
+    }
+    playerEl.addEventListener('navigation', function(event) {
+      storyDetailJavascriptInterface.navigation(event.detail.index);
+    });
+    window.addEventListener('message', function(event) {
+      try {
+        if (typeof event.data === 'object') {
+          if (event.data.name === 'storyContentLoaded') {
+            storyDetailJavascriptInterface.ready();
+          }
+        } else {
+          var data = JSON.parse(event.data);
+          if (data.type === 'storyButtonCallback') {
+            window.storyDetailJavascriptInterface.storyButtonCallbackUrl(JSON.stringify(data));
+          }
+        }
+      } catch (ignored) {}
+    });
+  });
+</script>
+</body>
+</html>
