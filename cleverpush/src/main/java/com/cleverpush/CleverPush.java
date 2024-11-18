@@ -567,7 +567,7 @@ public class CleverPush {
           if (subscriptionCreatedAt == 0) {
             installationDate = new SimpleDateFormat(DATE_FORMAT_ISO, Locale.getDefault()).format(new Date());
           } else {
-            long timestampInMillis = subscriptionCreatedAt * 1000;
+            long timestampInMillis = subscriptionCreatedAt * 1000L;
 
             Date date = new Date(timestampInMillis);
             SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_ISO, Locale.getDefault());
