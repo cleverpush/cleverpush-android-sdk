@@ -977,7 +977,7 @@ public class AppBannerModule {
     return false;
   }
 
-  private boolean CheckEvery_X_DaysBannerFrequency(Banner banner) {
+  private boolean checkEveryXDaysBannerFrequency(Banner banner) {
     try {
       String bannerIntervalDateJson = sharedPreferences.getString(CleverPushPreferences.BANNER_DISPLAY_INTERVAL_DATE, "");
       Map<String, String> intervalDateMap = new HashMap<>();
@@ -1040,7 +1040,7 @@ public class AppBannerModule {
         Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Frequency");
         continue;
       } else if (banner.getFrequency() == BannerFrequency.Every_X_Days) {
-        boolean check = CheckEvery_X_DaysBannerFrequency(banner);
+        boolean check = checkEveryXDaysBannerFrequency(banner);
         if (!check) {
           Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Every_X_Days Frequency");
           continue;
