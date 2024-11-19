@@ -495,23 +495,18 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       }
 
       int borderVisibility = typedArray.getInt(R.styleable.StoryView_border_visibility, View.VISIBLE);
-      if (borderVisibility == 0) {
-        if (stories.get(position).isOpened()) {
-          border.setColor(storyViewBackgroundColor); // Transparent background
-          border.setStroke(borderWidth, storyViewBackgroundColor); // Transparent stroke
-        } else {
-          border.setColor(0xFFFFFFFF); // White background
-          int borderColor = 0;
-          if (isDarkModeEnabled) {
-            borderColor = typedArray.getColor(R.styleable.StoryView_border_color_dark_mode, DEFAULT_BORDER_COLOR);
-          } else {
-            borderColor = typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
-          }
-          border.setStroke(borderWidth, borderColor); // Black or desired border color
-        }
-      } else {
+      if (stories.get(position).isOpened() || borderVisibility != 0) {
         border.setColor(storyViewBackgroundColor); // Transparent background
         border.setStroke(borderWidth, storyViewBackgroundColor); // Transparent stroke
+      } else {
+        border.setColor(0xFFFFFFFF); // White background
+        int borderColor = 0;
+        if (isDarkModeEnabled) {
+          borderColor = typedArray.getColor(R.styleable.StoryView_border_color_dark_mode, DEFAULT_BORDER_COLOR);
+        } else {
+          borderColor = typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
+        }
+        border.setStroke(borderWidth, borderColor); // Black or desired border color
       }
 
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
