@@ -1,7 +1,12 @@
 # Changelog
 
+## 1.34.14 (19.11.2024)
+* Optimized the loading animation in `StoryView`, with the border visibility set to gone.
+* Added a new trigger for `AppBanner`: Days since installation.
+* Added a feature in `AppBanner` to set the frequency for displaying the banner every X days.
+
 ## 1.34.13 (14.11.2024)
-* Optimized loading animation for `StoryView`.
+* Optimized loading animation for `StoryView`(border_color_loading, border_color_loading_dark_mode).
 
 ## 1.34.12 (31.10.2024)
 * Made the `context` getter public for `NotificationReceivedEvent` in `NotificationServiceExtension`.
