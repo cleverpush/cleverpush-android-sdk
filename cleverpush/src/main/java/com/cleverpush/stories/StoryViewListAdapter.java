@@ -445,7 +445,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         parentLayout.setLayoutParams(parentLayoutParams);
       }
 
-      applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor, isDarkModeEnabled);
+      applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor, isDarkModeEnabled, borderVisibility);
 
       int finalStoryViewBackgroundColor = storyViewBackgroundColor;
       image.setOnClickListener(new View.OnClickListener() {
@@ -481,7 +481,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   }
 
   public void applyIconBorder(int position, LinearLayout borderLayout, float cornerRadius, int borderWidth, float borderMargin,
-                              LinearLayout imageLayout, int storyViewBackgroundColor, boolean isDarkModeEnabled) {
+                              LinearLayout imageLayout, int storyViewBackgroundColor, boolean isDarkModeEnabled, int borderVisibility) {
     try {
       GradientDrawable border = new GradientDrawable();
 
@@ -494,7 +494,6 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         border.setCornerRadius(cornerRadius + 5);
       }
 
-      int borderVisibility = typedArray.getInt(R.styleable.StoryView_border_visibility, View.VISIBLE);
       if (stories.get(position).isOpened() || borderVisibility != 0) {
         border.setColor(storyViewBackgroundColor); // Transparent background
         border.setStroke(borderWidth, storyViewBackgroundColor); // Transparent stroke
