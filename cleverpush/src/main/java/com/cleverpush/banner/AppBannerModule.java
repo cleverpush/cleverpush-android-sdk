@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class AppBannerModule {
 
@@ -953,11 +954,97 @@ public class AppBannerModule {
     return false;
   }
 
+  private boolean checkDaysSinceInstallationTriggerCondition(BannerTriggerCondition condition) {
+    try {
+      int days = condition.getDays();
+
+      String appInstallationDate = sharedPreferences.getString(CleverPushPreferences.APP_INSTALLATION_DATE, "");
+      if (appInstallationDate.isEmpty()) {
+        return false;
+      }
+
+      SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+      Date installationDate = dateFormat.parse(appInstallationDate);
+      Date currentDate = dateFormat.parse(dateFormat.format(new Date()));
+
+      long differenceInMillis = currentDate.getTime() - installationDate.getTime();
+      long differenceInDays = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
+      Logger.i(TAG, "days differenceInDays: " + differenceInDays);
+      return differenceInDays >= days;
+    } catch (Exception e) {
+      Logger.e(TAG, "Unexpected error while checking days since installation trigger: " + e.getLocalizedMessage(), e);
+    }
+    return false;
+  }
+
+  private boolean checkEveryXDaysBannerFrequency(Banner banner) {
+    try {
+      String bannerIntervalDateJson = sharedPreferences.getString(CleverPushPreferences.BANNER_DISPLAY_INTERVAL_DATE, "");
+      Map<String, String> intervalDateMap = new HashMap<>();
+
+      if (bannerIntervalDateJson.isEmpty()) {
+        return initializeBannerInterval(banner.getId(), intervalDateMap);
+      }
+
+      Gson gson = new Gson();
+      Type type = new TypeToken<Map<String, String>>() {
+      }.getType();
+
+      intervalDateMap = gson.fromJson(bannerIntervalDateJson, type);
+      if (intervalDateMap == null) intervalDateMap = new HashMap<>();
+
+      String intervalDateStr = "";
+      if (intervalDateMap.containsKey(banner.getId())) {
+        intervalDateStr = intervalDateMap.get(banner.getId());
+      }
+
+      if (intervalDateStr == null || intervalDateStr.isEmpty()) {
+        return initializeBannerInterval(banner.getId(), intervalDateMap);
+      }
+
+      int xDays = banner.getEveryXDays();
+      SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+      Date lastDisplayDate = dateFormat.parse(intervalDateStr);
+      Date currentDate = dateFormat.parse(dateFormat.format(new Date()));
+
+      long differenceInMillis = currentDate.getTime() - lastDisplayDate.getTime();
+      long differenceInDays = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
+
+      if (differenceInDays >= xDays) {
+        updateBannerDisplayDate(banner.getId(), intervalDateMap);
+        return true;
+      }
+      return false;
+    } catch (Exception e) {
+      Logger.e(TAG, "Unexpected error while checking Every_X_Days Frequency: " + e.getLocalizedMessage(), e);
+    }
+    return false;
+  }
+
+  private boolean initializeBannerInterval(String bannerId, Map<String, String> intervalDateMap) {
+    String currentDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault()).format(new Date());
+    intervalDateMap.put(bannerId, currentDate);
+    sharedPreferences.edit().putString(CleverPushPreferences.BANNER_DISPLAY_INTERVAL_DATE, new Gson().toJson(intervalDateMap)).apply();
+    return false;
+  }
+
+  private void updateBannerDisplayDate(String bannerId, Map<String, String> intervalDateMap) {
+    String currentDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault()).format(new Date());
+    intervalDateMap.put(bannerId, currentDate);
+    sharedPreferences.edit().putString(CleverPushPreferences.BANNER_DISPLAY_INTERVAL_DATE, new Gson().toJson(intervalDateMap)).apply();
+  }
+
   private void createBanners(Collection<Banner> banners) {
     for (Banner banner : banners) {
       if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
         Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Frequency");
         continue;
+      } else if (banner.getFrequency() == BannerFrequency.Every_X_Days) {
+        boolean check = checkEveryXDaysBannerFrequency(banner);
+        if (!check) {
+          Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Every_X_Days Frequency");
+          continue;
+        }
       }
 
       boolean triggers = false, isTriggerCondition = false, isTargetEvent = false;
@@ -981,6 +1068,8 @@ public class AppBannerModule {
                 conditionTrue = this.checkEventTriggerCondition(condition);
               } else if (condition.getType().equals(BannerTriggerConditionType.Deeplink)) {
                 conditionTrue = this.checkDeeplinkTriggerCondition(condition);
+              }  else if (condition.getType().equals(BannerTriggerConditionType.DaysSinceInstallation)) {
+                conditionTrue = this.checkDaysSinceInstallationTriggerCondition(condition);
               } else {
                 conditionTrue = false;
               }

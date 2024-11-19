@@ -460,12 +460,14 @@ public class CleverPush {
 
     // Check if CleverPush SharedPreferences is created and contains the key channelId
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
-    boolean containsChannelId = sharedPreferences.contains("channelId");
+    boolean containsChannelId = sharedPreferences.contains(CleverPushPreferences.CHANNEL_ID);
 
     // If CleverPush SharedPreferences is not created or does not contain the key channelId, call migrateSharedPreferences
     if (!containsChannelId) {
       SharedPreferencesManager.migrateSharedPreferences(context);
     }
+
+    setAppInstallationDate(sharedPreferences);
 
     if (notificationReceivedListener != null) {
       this.setNotificationReceivedListener(notificationReceivedListener);
@@ -550,6 +552,42 @@ public class CleverPush {
     setUpNotificationCategoryGroups();
 
     deleteDataBasedOnRetentionDays();
+  }
+
+  private void setAppInstallationDate(SharedPreferences sharedPreferences) {
+    try {
+      boolean containsAppInstallationDate = sharedPreferences.contains(CleverPushPreferences.APP_INSTALLATION_DATE);
+      boolean containsSubscriptionCreatedAt = sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
+
+      if (!containsAppInstallationDate) {
+        String installationDate;
+
+        if (containsSubscriptionCreatedAt) {
+          long subscriptionCreatedAt = sharedPreferences.getLong(CleverPushPreferences.SUBSCRIPTION_CREATED_AT, 0);
+          if (subscriptionCreatedAt == 0) {
+            installationDate = new SimpleDateFormat(DATE_FORMAT_ISO, Locale.getDefault()).format(new Date());
+          } else {
+            long timestampInMillis = subscriptionCreatedAt * 1000L;
+
+            Date date = new Date(timestampInMillis);
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_ISO, Locale.getDefault());
+            String subscriptionCreatedAtStr = dateFormat.format(date);
+
+            installationDate = subscriptionCreatedAtStr.isEmpty()
+                ? new SimpleDateFormat(DATE_FORMAT_ISO, Locale.getDefault()).format(new Date())
+                : subscriptionCreatedAtStr;
+          }
+        } else {
+          installationDate = new SimpleDateFormat(DATE_FORMAT_ISO, Locale.getDefault()).format(new Date());
+        }
+
+        sharedPreferences.edit()
+            .putString(CleverPushPreferences.APP_INSTALLATION_DATE, installationDate)
+            .apply();
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Failed to set APP_INSTALLATION_DATE in SharedPreferences: " + e.getLocalizedMessage(), e);
+    }
   }
 
   public SessionListener initSessionListener() {
