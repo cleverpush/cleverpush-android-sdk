@@ -122,7 +122,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       int iconWidth = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
       boolean iconShadow = typedArray.getBoolean(R.styleable.StoryView_story_icon_shadow, false);
       int borderVisibility = typedArray.getInt(R.styleable.StoryView_border_visibility, View.VISIBLE);
-      float borderMargin = typedArray.getDimension(R.styleable.StoryView_border_margin, 5.0F);
+      float borderMargin = typedArray.getDimension(R.styleable.StoryView_border_margin, 13.0F);
       int borderWidth = (int) typedArray.getDimension(R.styleable.StoryView_border_width, 5);
       float cornerRadius = typedArray.getDimension(R.styleable.StoryView_story_icon_corner_radius, -1);
       int subStoryUnreadCount = typedArray.getInt(R.styleable.StoryView_sub_story_unread_count_visibility, View.GONE);
@@ -445,9 +445,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         parentLayout.setLayoutParams(parentLayoutParams);
       }
 
-      if (borderVisibility == 0) {
-        applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor, isDarkModeEnabled);
-      }
+      applyIconBorder(position, borderLayout, cornerRadius, borderWidth, borderMargin, imageLayout, storyViewBackgroundColor, isDarkModeEnabled);
 
       int finalStoryViewBackgroundColor = storyViewBackgroundColor;
       image.setOnClickListener(new View.OnClickListener() {
@@ -496,18 +494,24 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         border.setCornerRadius(cornerRadius + 5);
       }
 
-      if (stories.get(position).isOpened()) {
+      int borderVisibility = typedArray.getInt(R.styleable.StoryView_border_visibility, View.VISIBLE);
+      if (borderVisibility == 0) {
+        if (stories.get(position).isOpened()) {
+          border.setColor(storyViewBackgroundColor); // Transparent background
+          border.setStroke(borderWidth, storyViewBackgroundColor); // Transparent stroke
+        } else {
+          border.setColor(0xFFFFFFFF); // White background
+          int borderColor = 0;
+          if (isDarkModeEnabled) {
+            borderColor = typedArray.getColor(R.styleable.StoryView_border_color_dark_mode, DEFAULT_BORDER_COLOR);
+          } else {
+            borderColor = typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
+          }
+          border.setStroke(borderWidth, borderColor); // Black or desired border color
+        }
+      } else {
         border.setColor(storyViewBackgroundColor); // Transparent background
         border.setStroke(borderWidth, storyViewBackgroundColor); // Transparent stroke
-      } else {
-        border.setColor(0xFFFFFFFF); // White background
-        int borderColor = 0;
-        if (isDarkModeEnabled) {
-          borderColor = typedArray.getColor(R.styleable.StoryView_border_color_dark_mode, DEFAULT_BORDER_COLOR);
-        } else {
-          borderColor = typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
-        }
-        border.setStroke(borderWidth, borderColor); // Black or desired border color
       }
 
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
