@@ -509,7 +509,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
   private float getPXScale() {
     int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
-
     return Math.max(Math.min(screenWidth / 400.0f, 10f), 1.0f);
   }
 
@@ -654,6 +653,17 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     @JavascriptInterface
     public void setSubscriptionAttribute(String attributeID, String value) {
       CleverPush.getInstance(CleverPush.context).setSubscriptionAttribute(attributeID, value);
+    }
+
+    @JavascriptInterface
+    public String getSubscriptionAttribute(String attributeID) {
+      try {
+        Object attributeValue = CleverPush.getInstance(CleverPush.context).getSubscriptionAttribute(attributeID);
+        return new Gson().toJson(attributeValue);
+      } catch (Exception ex) {
+        Logger.e(TAG, "Error while retrieving subscription attribute.", ex);
+        return null;
+      }
     }
 
     @JavascriptInterface
