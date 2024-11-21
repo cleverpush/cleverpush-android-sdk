@@ -662,7 +662,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         return new Gson().toJson(attributeValue);
       } catch (Exception ex) {
         Logger.e(TAG, "Error while retrieving subscription attribute.", ex);
-        return null;
+        return "";
       }
     }
 
