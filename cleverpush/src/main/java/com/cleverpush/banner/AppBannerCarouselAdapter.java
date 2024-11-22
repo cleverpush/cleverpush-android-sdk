@@ -2,6 +2,9 @@ package com.cleverpush.banner;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -724,6 +727,15 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       activity.runOnUiThread(() -> {
         appBannerPopup.moveToPreviousScreen();
       });
+    }
+  }
+
+  @JavascriptInterface
+  public void copyToClipboard(String text) {
+    ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
+    if (clipboard != null) {
+      ClipData clip = ClipData.newPlainText("label", text);
+      clipboard.setPrimaryClip(clip);
     }
   }
 
