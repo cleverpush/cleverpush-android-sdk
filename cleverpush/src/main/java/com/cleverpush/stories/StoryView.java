@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.net.Uri;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -61,6 +61,7 @@ public class StoryView extends LinearLayout {
   public StoryViewOpenedListener storyViewOpenedListener;
   private int sortToLastIndex = 0;
   private boolean isDarkModeEnabled = false;
+  private boolean hasTrackedStoryShown = false;
 
   public String getWidgetId() {
     return widgetId;
@@ -159,7 +160,8 @@ public class StoryView extends LinearLayout {
                 stories.get(i).setSubStoryCount(stories.get(i).getContent().getPages().size());
               }
               if (!preferencesString.isEmpty()) {
-                Type type = new TypeToken<Map<String, Integer>>() {}.getType();
+                Type type = new TypeToken<Map<String, Integer>>() {
+                }.getType();
                 Map<String, Integer> existingMap = gson.fromJson(preferencesString, type);
                 String storyId = stories.get(i).getId();
 
@@ -212,18 +214,48 @@ public class StoryView extends LinearLayout {
         loading = false;
         if (throwable != null) {
           Logger.e(TAG, "Something went wrong when loading stories." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response +
-                  "\nError: " + throwable.getMessage()
+              "\nStatus code: " + statusCode +
+              "\nResponse: " + response +
+              "\nError: " + throwable.getMessage()
           );
         } else {
           Logger.e(TAG, "Something went wrong when loading stories." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response
+              "\nStatus code: " + statusCode +
+              "\nResponse: " + response
           );
         }
       }
     };
+  }
+
+  @Override
+  protected void onAttachedToWindow() {
+    super.onAttachedToWindow();
+    getViewTreeObserver().addOnScrollChangedListener(() -> {
+      if (!hasTrackedStoryShown && isViewVisibleOnScreen(StoryView.this)) {
+        hasTrackedStoryShown = true;
+        getViewTreeObserver().removeOnScrollChangedListener(this::onAttachedToWindow);
+        trackStoryShown();
+      }
+    });
+  }
+
+  /**
+   * Checks if the view is visible on the screen (at least 1 pixel).
+   *
+   * @param view The view to check.
+   * @return true if the view is visible on the screen.
+   */
+  private boolean isViewVisibleOnScreen(View view) {
+    if (view == null || !view.isShown()) {
+      return false;
+    }
+
+    Rect rect = new Rect();
+    boolean isVisible = view.getGlobalVisibleRect(rect);
+
+    // Check if at least one pixel is visible
+    return isVisible && rect.height() > 0 && rect.width() > 0;
   }
 
   private void displayStoryHead(ArrayList<Story> stories) {
@@ -234,7 +266,7 @@ public class StoryView extends LinearLayout {
       RecyclerView recyclerView = view.findViewById(R.id.rvStories);
 
       relativeLayout.setBackgroundColor(
-              attrArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR));
+          attrArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR));
       ViewGroup.LayoutParams params = relativeLayout.getLayoutParams();
       params.height = getDimensionOrEnum(attrArray, R.styleable.StoryView_story_view_height);
       params.width = getDimensionOrEnum(attrArray, R.styleable.StoryView_story_view_width);
@@ -255,11 +287,9 @@ public class StoryView extends LinearLayout {
           LinearLayoutManager linearLayoutManager =
               new LinearLayoutManager(ActivityLifecycleListener.currentActivity, LinearLayoutManager.HORIZONTAL, false);
           storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, attrArray,
-              getOnItemClickListener(stories, recyclerView),recyclerViewWidth, widget.isGroupStoryCategories(), isDarkModeEnabled);
+              getOnItemClickListener(stories, recyclerView), recyclerViewWidth, widget.isGroupStoryCategories(), isDarkModeEnabled);
           recyclerView.setLayoutManager(linearLayoutManager);
           recyclerView.setAdapter(storyViewListAdapter);
-
-          trackStoryShown();
         }
       });
     } catch (Exception e) {
