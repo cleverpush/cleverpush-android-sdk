@@ -659,7 +659,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     public String getSubscriptionAttribute(String attributeID) {
       try {
         Object attributeValue = CleverPush.getInstance(CleverPush.context).getSubscriptionAttribute(attributeID);
-        return new Gson().toJson(attributeValue);
+        return attributeValue != null ? attributeValue.toString() : "";
       } catch (Exception ex) {
         Logger.e(TAG, "Error while retrieving subscription attribute.", ex);
         return "";
