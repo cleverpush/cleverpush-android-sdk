@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.15 (22.11.2024)
+* Optimized trackStoryShown for `StoryView` statistics
+* Added support for `getSubscriptionAttribute` in `AppBanner's HTML block`.
+
 ## 1.34.14 (19.11.2024)
 * Optimized the loading animation in `StoryView`, with the border visibility set to gone.
 * Added a new trigger for `AppBanner`: Days since installation.
