@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.16 (22.11.2024)
+* Added `copyToClipboard` method to HTML app banners
+
 ## 1.34.15 (22.11.2024)
 * Optimized trackStoryShown for `StoryView` statistics
 * Added support for `getSubscriptionAttribute` in `AppBanner's HTML block`.
