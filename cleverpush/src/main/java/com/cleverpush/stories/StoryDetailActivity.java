@@ -68,6 +68,7 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
   int measuredWidth = 0;
   int measuredHeight = 0;
   boolean isHideStoryShareButton = false;
+  private boolean hasTrackOpenedCalled = false;
 
   public static void launch(Activity activity, ArrayList<Story> stories, int selectedPosition, StoryViewListAdapter storyViewListAdapter,
                             int closeButtonPosition, int subStoryPosition, String widgetId, int sortToLastIndex, StoryView storyView) {
@@ -199,9 +200,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         storyView = StoryView.getStoryView();
         storyViewOpenedListener = storyView.storyViewOpenedListener;
         widget = storyView.getWidget();
-        if (selectedPosition == 0) {
-          trackStoryOpened();
-        }
         if (extras.containsKey("stories")) {
           stories = (ArrayList<Story>) extras.getSerializable("stories");
           loadStoryDetails();
@@ -339,6 +337,12 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
         parentLayout.animate().alpha(1.0f).setDuration(500).start();
         webView.animate().alpha(1.0f).setDuration(500).start();
+
+        if (!hasTrackOpenedCalled) {
+          trackStoryOpened();
+        }
+        hasTrackOpenedCalled = true;
+
       });
     } catch (Exception ignored) {
     }
@@ -517,19 +521,19 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     try {
       SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
       SharedPreferences.Editor editor = sharedPreferences.edit();
+      String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+
+      if (preferencesString.isEmpty()) {
+        editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
+      } else {
+        if (!preferencesString.contains(storyId)) {
+          editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
+        }
+      }
+      editor.apply();
       if (widget != null && widget.isGroupStoryCategories()) {
         setOpenedForGroupStories();
       } else {
-        String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
-
-        if (preferencesString.isEmpty()) {
-          editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
-        } else {
-          if (!preferencesString.contains(storyId)) {
-            editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
-          }
-        }
-        editor.apply();
         String storyIds = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
         for (int i = 0; i < stories.size(); i++) {
           stories.get(i).setOpened(storyIds.contains(stories.get(i).getId()));
