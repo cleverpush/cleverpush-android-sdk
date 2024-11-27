@@ -300,40 +300,44 @@ public class StoryView extends LinearLayout {
   private OnItemClickListener getOnItemClickListener(ArrayList<Story> stories, RecyclerView recyclerView) {
     return position -> {
       try {
-        ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
-          @Override
-          public void run() {
-            SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+        if (ActivityLifecycleListener.currentActivity != null) {
+          ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+              SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+              SharedPreferences.Editor editor = sharedPreferences.edit();
+              String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
 
-            if (sortToLastIndex == 1) {
-              ArrayList<Story> categorizeStories = categorizeStories(stories);
-              stories.clear();
-              stories.addAll(categorizeStories);
-            }
-
-            String storyId = stories.get(position).getId();
-            if (preferencesString.isEmpty()) {
-              editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
-            } else {
-              if (!preferencesString.contains(storyId)) {
-                editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
+              if (sortToLastIndex == 1) {
+                ArrayList<Story> categorizeStories = categorizeStories(stories);
+                stories.clear();
+                stories.addAll(categorizeStories);
               }
+
+              String storyId = stories.get(position).getId();
+              if (preferencesString.isEmpty()) {
+                editor.putString(CleverPushPreferences.APP_OPENED_STORIES, storyId).apply();
+              } else {
+                if (!preferencesString.contains(storyId)) {
+                  editor.putString(CleverPushPreferences.APP_OPENED_STORIES, preferencesString + "," + storyId).apply();
+                }
+              }
+
+              int subStoryIndex = calculateSubStoryIndex(sharedPreferences, stories.get(position));
+
+              int closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, 0);
+
+              if (widget != null && !widget.isGroupStoryCategories()) {
+                stories.get(position).setOpened(true);
+              }
+              StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewListAdapter,
+                  closeButtonPosition, subStoryIndex, widgetId, sortToLastIndex, StoryView.this);
+              recyclerView.smoothScrollToPosition(position);
             }
-
-            int subStoryIndex = calculateSubStoryIndex(sharedPreferences, stories.get(position));
-
-            int closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, 0);
-
-            if (widget != null && !widget.isGroupStoryCategories()) {
-              stories.get(position).setOpened(true);
-            }
-            StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewListAdapter,
-                closeButtonPosition, subStoryIndex, widgetId, sortToLastIndex, StoryView.this);
-            recyclerView.smoothScrollToPosition(position);
-          }
-        });
+          });
+        } else {
+          Logger.i(TAG, "getOnItemClickListener: ActivityLifecycleListener.currentActivity is null");
+        }
       } catch (Exception e) {
         Logger.e(TAG, "Error getOnItemClickListener of StoryView.", e);
       }

@@ -606,42 +606,46 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
 
   private void loadImage(int position, ImageView image, boolean isDarkModeEnabled) {
     try {
-      ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          String widgetUrl = "";
-          if (isDarkModeEnabled) {
-            widgetUrl = stories.get(position).getContent().getPreview().getWidgetDarkSrc();
-          } else {
-            widgetUrl = stories.get(position).getContent().getPreview().getWidgetSrc();
-          }
-          String posterPortraitUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
+      if (ActivityLifecycleListener.currentActivity != null) {
+        ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            String widgetUrl = "";
+            if (isDarkModeEnabled) {
+              widgetUrl = stories.get(position).getContent().getPreview().getWidgetDarkSrc();
+            } else {
+              widgetUrl = stories.get(position).getContent().getPreview().getWidgetSrc();
+            }
+            String posterPortraitUrl = stories.get(position).getContent().getPreview().getPosterPortraitSrc();
 
-          RequestOptions options = new RequestOptions()
-              .fitCenter()
-              .placeholder(R.drawable.ic_story_placeholder)
-              .error(R.drawable.ic_story_placeholder)
-              .priority(Priority.HIGH);
+            RequestOptions options = new RequestOptions()
+                .fitCenter()
+                .placeholder(R.drawable.ic_story_placeholder)
+                .error(R.drawable.ic_story_placeholder)
+                .priority(Priority.HIGH);
 
-          if (widgetUrl != null && !widgetUrl.isEmpty()) {
-            Glide.with(context)
-                .load(widgetUrl)
-                .apply(options)
-                .error(
-                    Glide.with(context)
-                        .load(posterPortraitUrl) // Fallback to posterPortraitUrl if widgetUrl fails
-                        .apply(options)
-                        .error(R.drawable.ic_story_placeholder) // Final fallback placeholder
-                )
-                .into(image);
-          } else {
-            Glide.with(context)
-                .load(posterPortraitUrl)
-                .apply(options)
-                .into(image);
+            if (widgetUrl != null && !widgetUrl.isEmpty()) {
+              Glide.with(context)
+                  .load(widgetUrl)
+                  .apply(options)
+                  .error(
+                      Glide.with(context)
+                          .load(posterPortraitUrl) // Fallback to posterPortraitUrl if widgetUrl fails
+                          .apply(options)
+                          .error(R.drawable.ic_story_placeholder) // Final fallback placeholder
+                  )
+                  .into(image);
+            } else {
+              Glide.with(context)
+                  .load(posterPortraitUrl)
+                  .apply(options)
+                  .into(image);
+            }
           }
-        }
-      });
+        });
+      } else {
+        Logger.i(TAG, "loadImage: ActivityLifecycleListener.currentActivity is null");
+      }
     } catch (Exception exception) {
       Logger.e(TAG, "Error while loading image in StoryViewListAdapter", exception);
     }
