@@ -343,6 +343,14 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
         }
         hasTrackOpenedCalled = true;
 
+        runOnUiThread(() -> {
+          if (storyView != null) {
+            storyView.updateStories(stories);
+          }
+          if (storyViewListAdapter != null) {
+            storyViewListAdapter.updateStories(stories);
+          }
+        });
       });
     } catch (Exception ignored) {
     }
@@ -406,7 +414,6 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
     selectedPosition = position;
     String storyId = stories.get(position).getId();
     setStoryOpened(storyId);
-    trackStoryOpened();
   }
 
   private void updateStoryPreferences(String unreadCountMap, String subStoryPositionMap, int unreadCount, SharedPreferences sharedPreferences) {
@@ -603,12 +610,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
 
     String storyPath = "/story-widget/" + widgetId + "/track-opened";
 
-    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(getApplicationContext());
-    String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
+    String storyId = stories.get(selectedPosition).getId();
 
     ArrayList<String> storyIds = new ArrayList<>();
-    if (!preferencesString.isEmpty()) {
-      storyIds = new ArrayList<>(Arrays.asList(preferencesString.split(",")));
+    if (!storyId.isEmpty()) {
+      storyIds = new ArrayList<>(Arrays.asList(storyId.split(",")));
     }
 
     JSONObject jsonBody = new JSONObject();
