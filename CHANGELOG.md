@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.17 (28.11.2024)
+* Optimized trackStoryOpened for `StoryView` statistics
+
 ## 1.34.16 (22.11.2024)
 * Added `copyToClipboard` method to HTML app banners
 
