@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.18 (17.12.2024)
+* Added support for Firebase Messing Version 24.
+* Optimized `notificationOpenedCallback` for notifications by adding the `setCustomNotificationActivityEnabled` method, allowing to launch a custom activity through `notificationOpenedCallback` by setting `setCustomNotificationActivityEnabled(true)`
+
 ## 1.34.17 (28.11.2024)
 * Optimized trackStoryOpened for `StoryView` statistics
 
