@@ -56,7 +56,7 @@ public class NotificationOpenedProcessor {
       cleverPush.fireNotificationOpenedListener(result);
 
       if (notification.getAppBanner() != null && notification.getAppBanner().length() > 0
-              && notification.getVoucherCode() != null && notification.getVoucherCode().length() > 0) {
+          && notification.getVoucherCode() != null && notification.getVoucherCode().length() > 0) {
         HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
 
         if (cleverPush.getAppBannerModule().getCurrentVoucherCodePlaceholder() != null) {
@@ -71,11 +71,26 @@ public class NotificationOpenedProcessor {
       boolean shouldStartActivity = cleverPush.notificationOpenShouldStartActivity();
       Logger.d(LOG_TAG, "NotificationOpenedProcessor shouldStartActivity: " + shouldStartActivity);
 
+      boolean appInBackground = false, appInForeground = false, customNotificationActivityEnabled = false;
+      customNotificationActivityEnabled = cleverPush.isCustomNotificationActivityEnabled();
+      if (ActivityLifecycleListener.getInstance() != null) {
+        appInBackground = ActivityLifecycleListener.getInstance().isAppInBackground();
+        appInForeground = ActivityLifecycleListener.getInstance().isAppOpen();
+      }
+
       if (shouldStartActivity) {
-        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-        if (launchIntent != null) {
-          launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-          context.startActivity(launchIntent);
+        if (!customNotificationActivityEnabled) {
+          Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+          if (launchIntent != null) {
+            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            context.startActivity(launchIntent);
+          }
+        } else if (!appInForeground && !appInBackground) {
+          Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+          if (launchIntent != null) {
+            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            context.startActivity(launchIntent);
+          }
         }
       }
 

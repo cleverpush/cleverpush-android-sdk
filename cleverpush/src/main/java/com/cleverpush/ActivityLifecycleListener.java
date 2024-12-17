@@ -3,6 +3,7 @@ package com.cleverpush;
 import static com.cleverpush.Constants.IABTCF_VendorConsents;
 import static com.cleverpush.Constants.LOG_TAG;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
@@ -10,11 +11,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
-
-import com.cleverpush.util.Logger;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,6 +20,7 @@ import androidx.annotation.Nullable;
 import com.cleverpush.listener.ActivityInitializedListener;
 import com.cleverpush.listener.SessionListener;
 import com.cleverpush.service.CleanUpService;
+import com.cleverpush.util.Logger;
 import com.cleverpush.util.SharedPreferencesManager;
 
 import java.util.ArrayList;
@@ -35,6 +34,9 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
   private static SessionListener sessionListener;
   private static ArrayList<ActivityInitializedListener> activityInitializedListeners = new ArrayList<>();
   private Handler mainHandler = new Handler(Looper.getMainLooper());
+  private int activityCount = 0;
+  private boolean isInBackground = false;
+
 
   public ActivityLifecycleListener(SessionListener sessionListener) {
     this.sessionListener = sessionListener;
@@ -64,7 +66,8 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
   @Override
   public void onActivityStarted(Activity activity) {
-
+    activityCount++;
+    isInBackground = false;
   }
 
   @Override
@@ -93,7 +96,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
       }
     } catch (Exception error) {
       Logger.e(LOG_TAG, "Error handling activityInitializedListeners - "
-              + "activityInitializedListeners != null " + (activityInitializedListeners != null), error);
+          + "activityInitializedListeners != null " + (activityInitializedListeners != null), error);
     }
 
     counter++;
@@ -145,6 +148,10 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
   @Override
   public void onActivityStopped(Activity activity) {
+    activityCount--;
+    if (activityCount == 0) {
+      isInBackground = true;
+    }
     if (activity == currentActivity) {
       currentActivity = null;
     }
@@ -205,4 +212,13 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
       }
     });
   }
+
+  public boolean isAppInBackground() {
+    return isInBackground;
+  }
+
+  public boolean isAppOpen() {
+    return activityCount > 0 && !isInBackground;
+  }
+
 }

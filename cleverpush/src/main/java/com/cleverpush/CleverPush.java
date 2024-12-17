@@ -225,6 +225,7 @@ public class CleverPush {
   private boolean autoResubscribe = false;
   private boolean autoRequestNotificationPermission = true;
   private boolean isSessionStartCalled = false;
+  private boolean customNotificationActivityEnabled = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -4056,5 +4057,13 @@ public class CleverPush {
       Logger.e(LOG_TAG, "Error parsing date", e);
       return false;
     }
+  }
+
+  public boolean isCustomNotificationActivityEnabled() {
+    return customNotificationActivityEnabled;
+  }
+
+  public void setCustomNotificationActivityEnabled(boolean customNotificationActivityEnabled) {
+    this.customNotificationActivityEnabled = customNotificationActivityEnabled;
   }
 }
