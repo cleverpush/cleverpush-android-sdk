@@ -15,6 +15,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -126,21 +127,33 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
         composeHtmlBanner(body, data.getContent());
       } else {
-        for (BannerBlock bannerBlock : data.getScreens().get(position).getBlocks()) {
+        List<BannerBlock> bannerBlocks = data.getScreens().get(position).getBlocks();
+        final int[] pendingBlocks = {bannerBlocks.size()}; // Track pending blocks
+
+        for (BannerBlock bannerBlock : bannerBlocks) {
           activity.runOnUiThread(() -> {
-            switch (bannerBlock.getType()) {
-              case Text:
-                composeTextBlock(body, (BannerTextBlock) bannerBlock, position);
-                break;
-              case Image:
-                composeImageBlock(body, (BannerImageBlock) bannerBlock, position);
-                break;
-              case Button:
-                composeButtonBlock(body, (BannerButtonBlock) bannerBlock, position);
-                break;
-              case HTML:
-                composeHtmlBLock(body, (BannerHTMLBlock) bannerBlock);
-                break;
+            try {
+              switch (bannerBlock.getType()) {
+                case Text:
+                  composeTextBlock(body, (BannerTextBlock) bannerBlock, position);
+                  break;
+                case Image:
+                  composeImageBlock(body, (BannerImageBlock) bannerBlock, position);
+                  break;
+                case Button:
+                  composeButtonBlock(body, (BannerButtonBlock) bannerBlock, position);
+                  break;
+                case HTML:
+                  composeHtmlBLock(body, (BannerHTMLBlock) bannerBlock);
+                  break;
+              }
+            } finally {
+              synchronized (pendingBlocks) {
+                pendingBlocks[0]--;
+                if (pendingBlocks[0] == 0) {
+                  activity.runOnUiThread(this::onBlocksComposed);
+                }
+              }
             }
           });
         }
@@ -148,20 +161,21 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     } catch (Exception e) {
       Logger.e(TAG, "Error in AppBanner onBindViewHolder.", e);
     }
+  }
 
+  private void onBlocksComposed() {
     try {
-      new Handler().postDelayed(new Runnable() {
-        @Override
-        public void run() {
-          if (!isBannerPositionFull()) {
-            appBannerPopup.getViewPager2().setPageTransformer((page, position1) -> {
-              appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
-            });
-          }
+      new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (!isBannerPositionFull() && !appBannerPopup.isHTMLBanner()) {
+          appBannerPopup.getViewPager2().setPageTransformer((page, position) -> {
+            appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
+
+            appBannerPopup.parent.animate().alpha(1.0f).setDuration(500).start();
+          });
         }
       }, 1000);
     } catch (Exception e) {
-      Logger.e(TAG, "Error while updating child height in AppBannerCarouselAdapter onBindViewHolder. " + e.getLocalizedMessage(), e);
+      Logger.e(TAG, "Error while updating child height in AppBannerCarouselAdapter onBlocksComposed. " + e.getLocalizedMessage(), e);
     }
   }
 

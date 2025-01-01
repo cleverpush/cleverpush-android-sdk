@@ -68,7 +68,9 @@ public class AppBannerPopup {
   private PopupWindow popup;
   private View popupRoot;
   private ViewPager2 viewPager2;
-  private LinearLayout body;
+  public LinearLayout body;
+  public FrameLayout frameLayout;
+  public  ConstraintLayout parent;
   private ImageView bannerBackGroundImage;
   private int currentStatusBarColor;
   private int currentNavigationBarColor;
@@ -132,7 +134,8 @@ public class AppBannerPopup {
     if (popupRoot == null) {
       return;
     }
-
+    parent = popupRoot.findViewById(R.id.parent);
+    frameLayout = popupRoot.findViewById(R.id.frameLayout);
     body = popupRoot.findViewById(R.id.bannerBody);
     bannerBackGroundImage = popupRoot.findViewById(R.id.bannerBackgroundImage);
 
@@ -146,14 +149,16 @@ public class AppBannerPopup {
 
     if (isHTMLBanner()) {
       setNotchColor(false);
-      FrameLayout frameLayout = popupRoot.findViewById(R.id.frameLayout);
-      ConstraintLayout parent = popupRoot.findViewById(R.id.parent);
 
       parent.setBackgroundColor(Color.TRANSPARENT);
       frameLayout.setBackgroundColor(Color.TRANSPARENT);
       body.setBackgroundColor(Color.TRANSPARENT);
       bannerBackGroundImage.setVisibility(View.GONE);
     } else {
+      if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+        parent.setAlpha(0.0f);
+      }
+
       bannerBackGroundImage.setVisibility(View.VISIBLE);
       composeBackground(bannerBackGroundImage, body, data.getBackground());
     }
