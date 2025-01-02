@@ -19,6 +19,7 @@ reviewers:
     rotating-reviewers:
       - amitsingh8899
       - cp-akshay-jadhav
+      - harkeshkumar196
     email:
       - iboruch
       - anilprajapati1006
@@ -51,6 +52,8 @@ reviewers:
     followupJourneyBuilder:
       - anilprajapati1006
       - namdev-jagtap
+    surveys:
+      - Resvan-cleverpush
     statsworker:
       - paavan-cleverpush
       - anilprajapati1006
@@ -125,6 +128,9 @@ files:
     - email
 
   # Important: Do not copy this part into other Repositories
-  '**':
+  '/cleverpush':
+    - mobile
+    - Android
+  '/cleverpush-example':
     - mobile
     - Android
