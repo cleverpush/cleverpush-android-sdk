@@ -61,6 +61,9 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -190,9 +193,29 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     }
   }
 
+  private boolean isOpenUrlAction(BannerAction action) {
+    return action.getType() != null && action.getType().equalsIgnoreCase("url");
+  }
+
   private void onClickListener(BannerAction action, List<BannerAction> actions) {
     try {
       if (actions != null && actions.size() > 0) {
+        List<BannerAction> sortedActions = new ArrayList<>(actions);
+        Collections.sort(sortedActions, new Comparator<BannerAction>() {
+          @Override
+          public int compare(BannerAction a, BannerAction b) {
+            boolean aIsOpenUrl = isOpenUrlAction(a);
+            boolean bIsOpenUrl = isOpenUrlAction(b);
+
+            if (aIsOpenUrl && !bIsOpenUrl) {
+              return 1;
+            } else if (!aIsOpenUrl && bIsOpenUrl) {
+              return -1;
+            }
+            return 0;
+          }
+        });
+
         for (int i = 0; i < actions.size(); i++) {
           boolean isLastElement = (i == actions.size() - 1);
           actions.get(i).setBlockId(action.getBlockId());
