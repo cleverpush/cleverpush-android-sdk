@@ -85,6 +85,7 @@ reviewers:
       - unnaticleverpush
       - gbhrdt
       - cp-akshay-jadhav
+      - cpKevinrodriguesnobre
     IOS:
       - cpandya25
       - gbhrdt
@@ -128,9 +129,9 @@ files:
     - email
 
   # Important: Do not copy this part into other Repositories
-  '/cleverpush':
+  'cleverpush/*':
     - mobile
     - Android
-  '/cleverpush-example':
+  'cleverpush-example/*':
     - mobile
     - Android
