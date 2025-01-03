@@ -123,9 +123,6 @@ files:
     - email
 
   # Important: Do not copy this part into other Repositories
-  '*cleverpush/*':
-    - mobile
-    - Android
-  '*cleverpush-example/*':
+  '**':
     - mobile
     - Android
