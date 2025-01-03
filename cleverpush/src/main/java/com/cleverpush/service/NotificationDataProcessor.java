@@ -15,6 +15,7 @@ import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.NotificationReceivedEvent;
 import com.cleverpush.NotificationServiceExtension;
 import com.cleverpush.Subscription;
+import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.util.LifecycleUtils;
 import com.cleverpush.util.LimitedSizeQueue;
 import com.cleverpush.util.Logger;
@@ -29,7 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,8 +38,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import java.util.Map;
 
 public class NotificationDataProcessor {
   public static int maximumNotifications = 100;
@@ -94,7 +93,7 @@ public class NotificationDataProcessor {
     if (notification.isSilent()) {
       dontShowNotification = true;
 
-      handleSilentNotificationBanner(notification, sharedPreferences, editor);
+      handleSilentNotificationBanner(notification, sharedPreferences, editor, context, cleverPush);
     }
 
     boolean hasExtenderService = startExtenderService(context, notification, subscription);
@@ -164,8 +163,8 @@ public class NotificationDataProcessor {
     }
 
     Logger.w(LOG_TAG, "NotificationExtenderService is deprecated. Please migrate to NotificationServiceExtension. " +
-            "\nRefer to the documentation for more information: " +
-            "https://developers.cleverpush.com/docs/sdks/android/extension");
+        "\nRefer to the documentation for more information: " +
+        "https://developers.cleverpush.com/docs/sdks/android/extension");
 
     intent.putExtra("notification", notification);
     intent.putExtra("subscription", subscription);
@@ -235,23 +234,29 @@ public class NotificationDataProcessor {
     return true;
   }
 
-  private static void handleSilentNotificationBanner(Notification notification, SharedPreferences sharedPreferences, SharedPreferences.Editor editor) {
+  private static void handleSilentNotificationBanner(Notification notification, SharedPreferences sharedPreferences,
+                                                     SharedPreferences.Editor editor, Context context, CleverPush cleverPush) {
     if (notification.getAppBanner() != null && !notification.getAppBanner().isEmpty()) {
-      String silentPushBanners = sharedPreferences.getString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, null);
-      Map<String, String> silentPushBannersMap;
-
-      if (silentPushBanners != null) {
-        Type type = new TypeToken<Map<String, String>>() {
-        }.getType();
-        silentPushBannersMap = new Gson().fromJson(silentPushBanners, type);
+      if (LifecycleUtils.applicationInForeground(context)) {
+        AppBannerModule appBannerModule = cleverPush.getAppBannerModule();
+        appBannerModule.showBanner(notification.getAppBanner(), notification.getId());
       } else {
-        silentPushBannersMap = new HashMap<>();
-      }
+        String silentPushBanners = sharedPreferences.getString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, null);
+        Map<String, String> silentPushBannersMap;
 
-      if (!silentPushBannersMap.containsKey(notification.getId())) {
-        silentPushBannersMap.put(notification.getId(), notification.getAppBanner());
-        editor.putString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, new Gson().toJson(silentPushBannersMap));
-        editor.apply();
+        if (silentPushBanners != null) {
+          Type type = new TypeToken<Map<String, String>>() {
+          }.getType();
+          silentPushBannersMap = new Gson().fromJson(silentPushBanners, type);
+        } else {
+          silentPushBannersMap = new HashMap<>();
+        }
+
+        if (!silentPushBannersMap.containsKey(notification.getId())) {
+          silentPushBannersMap.put(notification.getId(), notification.getAppBanner());
+          editor.putString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, new Gson().toJson(silentPushBannersMap));
+          editor.apply();
+        }
       }
     }
   }
