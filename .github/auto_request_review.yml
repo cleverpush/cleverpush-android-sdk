@@ -121,8 +121,6 @@ files:
     - repository-owners
   '.github/**':
     - gbhrdt
-  '**':
-    - rotating-reviewers
   'redis':
     - redis
   'email':
