@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.34.19 (07.01.2025)
+* Fixed an issue in `AppBanner` where banners with images were laggy when displayed.
+* Ensured that the `Open URL` action in `AppBanner` is always executed as the last action.
+* Added a feature to display `AppBanner` while the app is in the foreground upon receiving a `silent push notification`.
+
 ## 1.34.18 (17.12.2024)
 * Added support for Firebase Messing Version 24.
 * Optimized `notificationOpenedCallback` for notifications by adding the `setCustomNotificationActivityEnabled` method, allowing to launch a custom activity through `notificationOpenedCallback` by setting `setCustomNotificationActivityEnabled(true)`
