@@ -121,9 +121,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.Timer;
@@ -226,6 +228,8 @@ public class CleverPush {
   private boolean autoRequestNotificationPermission = true;
   private boolean isSessionStartCalled = false;
   private boolean customNotificationActivityEnabled = false;
+  private Queue<SubscriptionAttributeRequest> requestQueue = new LinkedList<>();
+  private boolean isProcessingQueue = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -2424,16 +2428,74 @@ public class CleverPush {
     }).start();
   }
 
-  public void setSubscriptionAttribute(String attributeId, String value) {
-    setSubscriptionAttribute(attributeId, value, new SetSubscriptionAttributeResponseHandler());
+  // Inner class to hold request data
+  private static class SubscriptionAttributeRequest {
+    private String attributeId;
+    private String value;
+    private String[] values;
+
+    public SubscriptionAttributeRequest(String attributeId, String value) {
+      this.attributeId = attributeId;
+      this.value = value;
+    }
+
+    public SubscriptionAttributeRequest(String attributeId, String[] values) {
+      this.attributeId = attributeId;
+      this.values = values;
+    }
+
+    public String getAttributeId() {
+      return attributeId;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String[] getValues() {
+      return values;
+    }
+  }
+
+  private synchronized void processAttributeQueue() {
+    if (requestQueue.isEmpty()) {
+      isProcessingQueue = false; // No more requests to process
+      return;
+    }
+
+    isProcessingQueue = true;
+
+    SubscriptionAttributeRequest request = requestQueue.poll();
+
+    if (request != null && request.getValue() != null) {
+      this.setSubscriptionAttributeObject(request.getAttributeId(), request.getValue(), new SetSubscriptionAttributeResponseHandler(() -> {
+        processAttributeQueue();
+      }));
+    } else if (request != null && request.getValues() != null) {
+      this.setSubscriptionAttributeObject(request.getAttributeId(), request.getValues(), new SetSubscriptionAttributeResponseHandler(() -> {
+        processAttributeQueue();
+      }));
+    }
+  }
+
+  public synchronized void setSubscriptionAttribute(String attributeId, String value) {
+    requestQueue.add(new SubscriptionAttributeRequest(attributeId, value));
+
+    if (!isProcessingQueue) {
+      processAttributeQueue();
+    }
   }
 
   public void setSubscriptionAttribute(String attributeId, String value, SetSubscriptionAttributeResponseHandler responseHandler) {
     this.setSubscriptionAttributeObject(attributeId, value, responseHandler);
   }
 
-  public void setSubscriptionAttribute(String attributeId, String[] values) {
-    setSubscriptionAttribute(attributeId, values, new SetSubscriptionAttributeResponseHandler());
+  public synchronized void setSubscriptionAttribute(String attributeId, String[] values) {
+    requestQueue.add(new SubscriptionAttributeRequest(attributeId, values));
+
+    if (!isProcessingQueue) {
+      processAttributeQueue();
+    }
   }
 
   public void setSubscriptionAttribute(String attributeId, String[] values, SetSubscriptionAttributeResponseHandler responseHandler) {
