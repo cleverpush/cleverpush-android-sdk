@@ -121,9 +121,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.Timer;
@@ -226,6 +228,12 @@ public class CleverPush {
   private boolean autoRequestNotificationPermission = true;
   private boolean isSessionStartCalled = false;
   private boolean customNotificationActivityEnabled = false;
+  private Queue<SubscriptionAttributeTagRequest> requestAttributeQueue = new LinkedList<>();
+  private boolean isProcessingAttributeQueue = false;
+  private Queue<SubscriptionAttributeTagRequest> requestAddTagQueue = new LinkedList<>();
+  private boolean isProcessingAddTagQueue = false;
+  private Queue<SubscriptionAttributeTagRequest> requestRemoveTagQueue = new LinkedList<>();
+  private boolean isProcessingRemoveTagQueue = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -2179,10 +2187,6 @@ public class CleverPush {
     return topics;
   }
 
-  public void addSubscriptionTags(String[] tagIds) {
-    addSubscriptionTagTrackingConsent(null, tagIds);
-  }
-
   public void addSubscriptionTopic(String topicId) {
     addSubscriptionTopic(topicId, (CompletionListener) null);
   }
@@ -2293,8 +2297,56 @@ public class CleverPush {
     });
   }
 
-  public void addSubscriptionTag(String tagId) {
-    addSubscriptionTagTrackingConsent(null, tagId);
+  private synchronized void processAddTagQueue() {
+    if (requestAddTagQueue.isEmpty()) {
+      isProcessingAddTagQueue = false;
+      return;
+    }
+
+    isProcessingAddTagQueue = true;
+    SubscriptionAttributeTagRequest request = requestAddTagQueue.poll();
+
+    if (request != null) {
+      if (request.getTagId() != null) {
+        addSubscriptionTagTrackingConsent(new CompletionFailureListener() {
+          @Override
+          public void onComplete() {
+            processAddTagQueue();
+          }
+
+          @Override
+          public void onFailure(Exception exception) {
+            processAddTagQueue();
+          }
+        }, request.getTagId());
+      } else if (request.getTagIds() != null) {
+        addSubscriptionTagTrackingConsent(new CompletionFailureListener() {
+          @Override
+          public void onComplete() {
+            processAddTagQueue();
+          }
+
+          @Override
+          public void onFailure(Exception exception) {
+            processAddTagQueue();
+          }
+        }, request.getTagIds());
+      }
+    }
+  }
+
+  public synchronized void addSubscriptionTags(String[] tagIds) {
+    requestAddTagQueue.add(new SubscriptionAttributeTagRequest(tagIds));
+    if (!isProcessingAddTagQueue) {
+      processAddTagQueue();
+    }
+  }
+
+  public synchronized void addSubscriptionTag(String tagId) {
+    requestAddTagQueue.add(new SubscriptionAttributeTagRequest(tagId));
+    if (!isProcessingAddTagQueue) {
+      processAddTagQueue();
+    }
   }
 
   public void addSubscriptionTag(String tagId, CompletionFailureListener listener) {
@@ -2319,12 +2371,58 @@ public class CleverPush {
     };
   }
 
+  private synchronized void processRemoveTagQueue() {
+    if (requestRemoveTagQueue.isEmpty()) {
+      isProcessingRemoveTagQueue = false;
+      return;
+    }
+
+    isProcessingRemoveTagQueue = true;
+    SubscriptionAttributeTagRequest request = requestRemoveTagQueue.poll();
+
+    if (request != null) {
+      if (request.getTagId() != null) {
+        removeSubscriptionTagTrackingConsent(new CompletionFailureListener() {
+          @Override
+          public void onComplete() {
+            processRemoveTagQueue();
+          }
+
+          @Override
+          public void onFailure(Exception exception) {
+            processRemoveTagQueue();
+          }
+        }, request.getTagId());
+      } else if (request.getTagIds() != null) {
+        removeSubscriptionTagTrackingConsent(new CompletionFailureListener() {
+          @Override
+          public void onComplete() {
+            processRemoveTagQueue();
+          }
+
+          @Override
+          public void onFailure(Exception exception) {
+            processRemoveTagQueue();
+          }
+        }, request.getTagIds());
+      }
+    }
+  }
+
   public void removeSubscriptionTags(String[] tagIds) {
-    removeSubscriptionTagTrackingConsent(null, tagIds);
+    requestRemoveTagQueue.add(new SubscriptionAttributeTagRequest(tagIds));
+
+    if (!isProcessingRemoveTagQueue) {
+      processRemoveTagQueue();
+    }
   }
 
   public void removeSubscriptionTag(String tagId) {
-    removeSubscriptionTagTrackingConsent(null, tagId);
+    requestRemoveTagQueue.add(new SubscriptionAttributeTagRequest(tagId));
+
+    if (!isProcessingRemoveTagQueue) {
+      processRemoveTagQueue();
+    }
   }
 
   public void removeSubscriptionTag(String tagId, CompletionFailureListener listener) {
@@ -2424,16 +2522,43 @@ public class CleverPush {
     }).start();
   }
 
-  public void setSubscriptionAttribute(String attributeId, String value) {
-    setSubscriptionAttribute(attributeId, value, new SetSubscriptionAttributeResponseHandler());
+  private synchronized void processAttributeQueue() {
+    if (requestAttributeQueue.isEmpty()) {
+      isProcessingAttributeQueue = false; // No more requests to process
+      return;
+    }
+
+    isProcessingAttributeQueue = true;
+
+    SubscriptionAttributeTagRequest request = requestAttributeQueue.poll();
+
+    if (request != null) {
+      if (request.getValue() != null) {
+        setSubscriptionAttributeObject(request.getAttributeId(), request.getValue(),
+                new SetSubscriptionAttributeResponseHandler(this::processAttributeQueue));
+      } else if (request.getValues() != null) {
+        setSubscriptionAttributeObject(request.getAttributeId(), request.getValues(),
+                new SetSubscriptionAttributeResponseHandler(this::processAttributeQueue));
+      }
+    }
+  }
+
+  public synchronized void setSubscriptionAttribute(String attributeId, String value) {
+    requestAttributeQueue.add(new SubscriptionAttributeTagRequest(attributeId, value));
+    if (!isProcessingAttributeQueue) {
+      processAttributeQueue();
+    }
   }
 
   public void setSubscriptionAttribute(String attributeId, String value, SetSubscriptionAttributeResponseHandler responseHandler) {
     this.setSubscriptionAttributeObject(attributeId, value, responseHandler);
   }
 
-  public void setSubscriptionAttribute(String attributeId, String[] values) {
-    setSubscriptionAttribute(attributeId, values, new SetSubscriptionAttributeResponseHandler());
+  public synchronized void setSubscriptionAttribute(String attributeId, String[] values) {
+    requestAttributeQueue.add(new SubscriptionAttributeTagRequest(attributeId, values));
+    if (!isProcessingAttributeQueue) {
+      processAttributeQueue();
+    }
   }
 
   public void setSubscriptionAttribute(String attributeId, String[] values, SetSubscriptionAttributeResponseHandler responseHandler) {
@@ -2990,7 +3115,7 @@ public class CleverPush {
   public void showTopicsDialog(Activity dialogActivity, TopicsDialogListener topicsDialogListener) {
     try {
       if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-        showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
+        showTopicsDialog(dialogActivity, topicsDialogListener, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert);
       } else {
         if (DarkModeHelper.isDarkModeEnabled(context)) {
           showTopicsDialog(dialogActivity, topicsDialogListener, android.R.style.Theme_Material_Dialog_Alert);
@@ -2999,7 +3124,7 @@ public class CleverPush {
         }
       }
     } catch (IllegalStateException ex) {
-      showTopicsDialog(dialogActivity, topicsDialogListener, R.style.Theme_AppCompat_Dialog_Alert);
+      showTopicsDialog(dialogActivity, topicsDialogListener, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert);
     }
   }
 
