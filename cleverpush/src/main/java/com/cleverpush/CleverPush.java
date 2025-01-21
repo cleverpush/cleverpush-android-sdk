@@ -2299,43 +2299,44 @@ public class CleverPush {
 
   private synchronized void processAddTagQueue() {
     if (requestAddTagQueue.isEmpty()) {
-      isProcessingAddTagQueue = false; // No more requests to process
+      isProcessingAddTagQueue = false;
       return;
     }
 
     isProcessingAddTagQueue = true;
     SubscriptionAttributeTagRequest request = requestAddTagQueue.poll();
 
-    if (request != null && request.getTagId() != null) {
-      addSubscriptionTagTrackingConsent(new CompletionFailureListener() {
-        @Override
-        public void onComplete() {
-          processAddTagQueue();
-        }
+    if (request != null) {
+      if (request.getTagId() != null) {
+        addSubscriptionTagTrackingConsent(new CompletionFailureListener() {
+          @Override
+          public void onComplete() {
+            processAddTagQueue();
+          }
 
-        @Override
-        public void onFailure(Exception exception) {
-          processAddTagQueue();
-        }
-      }, request.getTagId());
-    } else if (request != null && request.getTagIds() != null) {
-      addSubscriptionTagTrackingConsent(new CompletionFailureListener() {
-        @Override
-        public void onComplete() {
-          processAddTagQueue();
-        }
+          @Override
+          public void onFailure(Exception exception) {
+            processAddTagQueue();
+          }
+        }, request.getTagId());
+      } else if (request.getTagIds() != null) {
+        addSubscriptionTagTrackingConsent(new CompletionFailureListener() {
+          @Override
+          public void onComplete() {
+            processAddTagQueue();
+          }
 
-        @Override
-        public void onFailure(Exception exception) {
-          processAddTagQueue();
-        }
-      }, request.getTagIds());
+          @Override
+          public void onFailure(Exception exception) {
+            processAddTagQueue();
+          }
+        }, request.getTagIds());
+      }
     }
   }
 
   public synchronized void addSubscriptionTags(String[] tagIds) {
     requestAddTagQueue.add(new SubscriptionAttributeTagRequest(tagIds));
-
     if (!isProcessingAddTagQueue) {
       processAddTagQueue();
     }
@@ -2343,7 +2344,6 @@ public class CleverPush {
 
   public synchronized void addSubscriptionTag(String tagId) {
     requestAddTagQueue.add(new SubscriptionAttributeTagRequest(tagId));
-
     if (!isProcessingAddTagQueue) {
       processAddTagQueue();
     }
@@ -2373,37 +2373,39 @@ public class CleverPush {
 
   private synchronized void processRemoveTagQueue() {
     if (requestRemoveTagQueue.isEmpty()) {
-      isProcessingRemoveTagQueue = false; // No more requests to process
+      isProcessingRemoveTagQueue = false;
       return;
     }
 
     isProcessingRemoveTagQueue = true;
     SubscriptionAttributeTagRequest request = requestRemoveTagQueue.poll();
 
-    if (request != null && request.getTagId() != null) {
-      removeSubscriptionTagTrackingConsent(new CompletionFailureListener() {
-        @Override
-        public void onComplete() {
-          processRemoveTagQueue();
-        }
+    if (request != null) {
+      if (request.getTagId() != null) {
+        removeSubscriptionTagTrackingConsent(new CompletionFailureListener() {
+          @Override
+          public void onComplete() {
+            processRemoveTagQueue();
+          }
 
-        @Override
-        public void onFailure(Exception exception) {
-          processRemoveTagQueue();
-        }
-      }, request.getTagId());
-    } else if (request != null && request.getTagIds() != null) {
-      removeSubscriptionTagTrackingConsent(new CompletionFailureListener() {
-        @Override
-        public void onComplete() {
-          processRemoveTagQueue();
-        }
+          @Override
+          public void onFailure(Exception exception) {
+            processRemoveTagQueue();
+          }
+        }, request.getTagId());
+      } else if (request.getTagIds() != null) {
+        removeSubscriptionTagTrackingConsent(new CompletionFailureListener() {
+          @Override
+          public void onComplete() {
+            processRemoveTagQueue();
+          }
 
-        @Override
-        public void onFailure(Exception exception) {
-          processRemoveTagQueue();
-        }
-      }, request.getTagIds());
+          @Override
+          public void onFailure(Exception exception) {
+            processRemoveTagQueue();
+          }
+        }, request.getTagIds());
+      }
     }
   }
 
@@ -2530,20 +2532,19 @@ public class CleverPush {
 
     SubscriptionAttributeTagRequest request = requestAttributeQueue.poll();
 
-    if (request != null && request.getValue() != null) {
-      this.setSubscriptionAttributeObject(request.getAttributeId(), request.getValue(), new SetSubscriptionAttributeResponseHandler(() -> {
-        processAttributeQueue();
-      }));
-    } else if (request != null && request.getValues() != null) {
-      this.setSubscriptionAttributeObject(request.getAttributeId(), request.getValues(), new SetSubscriptionAttributeResponseHandler(() -> {
-        processAttributeQueue();
-      }));
+    if (request != null) {
+      if (request.getValue() != null) {
+        setSubscriptionAttributeObject(request.getAttributeId(), request.getValue(),
+                new SetSubscriptionAttributeResponseHandler(this::processAttributeQueue));
+      } else if (request.getValues() != null) {
+        setSubscriptionAttributeObject(request.getAttributeId(), request.getValues(),
+                new SetSubscriptionAttributeResponseHandler(this::processAttributeQueue));
+      }
     }
   }
 
   public synchronized void setSubscriptionAttribute(String attributeId, String value) {
     requestAttributeQueue.add(new SubscriptionAttributeTagRequest(attributeId, value));
-
     if (!isProcessingAttributeQueue) {
       processAttributeQueue();
     }
@@ -2555,7 +2556,6 @@ public class CleverPush {
 
   public synchronized void setSubscriptionAttribute(String attributeId, String[] values) {
     requestAttributeQueue.add(new SubscriptionAttributeTagRequest(attributeId, values));
-
     if (!isProcessingAttributeQueue) {
       processAttributeQueue();
     }
