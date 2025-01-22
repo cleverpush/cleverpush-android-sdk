@@ -2550,6 +2550,12 @@ public class CleverPush {
     }
   }
 
+  public synchronized void setSubscriptionAttributes(Map<String, String> attributes) {
+    for (Map.Entry<String, String> entry : attributes.entrySet()) {
+      setSubscriptionAttribute(entry.getKey(), entry.getValue());
+    }
+  }
+
   public void setSubscriptionAttribute(String attributeId, String value, SetSubscriptionAttributeResponseHandler responseHandler) {
     this.setSubscriptionAttributeObject(attributeId, value, responseHandler);
   }
