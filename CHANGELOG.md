@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.20 (22.01.2025)
+* `setSubscriptionAttribute`, `addSubscriptionTag/Tags`, and `removeSubscriptionTag/Tags` are now synchronized to ensure thread-safe operations and consistent updates.
+* Added the `setSubscriptionAttributes` method to allow setting multiple key-value pairs in a single request for improved efficiency.
+
 ## 1.34.19 (07.01.2025)
 * Fixed an issue in `AppBanner` where banners with images were laggy when displayed.
 * Ensured that the `Open URL` action in `AppBanner` is always executed as the last action.
