@@ -589,29 +589,52 @@ public class AppBannerModule {
     }
 
     if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
-      if (!getCleverPushInstance().isSubscribed()) {
-        return false;
-      }
-
-      for (HashMap<String, String> attribute : banner.getAttributes()) {
-        String attributeId = attribute.get("id");
-        String compareAttributeValue = attribute.get("value") != null ? attribute.get("value") : "";
-        String fromValue = attribute.get("fromValue") != null ? attribute.get("fromValue") : "";
-        String toValue = attribute.get("toValue") != null ? attribute.get("toValue") : "";
-        String relationString = attribute.get("relation");
-        if (relationString == null) {
-          relationString = "equals";
-        }
-        String attributeValue = (String) getCleverPushInstance().getSubscriptionAttribute(attributeId);
-        if (attributeValue == null) {
+      try {
+        if (!getCleverPushInstance().isSubscribed()) {
           return false;
         }
 
-        if (!this.checkRelationFilter(allowed, CheckFilterRelation.fromString(relationString), attributeValue,
-            compareAttributeValue, fromValue, toValue)) {
-          allowed = false;
-          break;
+        for (HashMap<String, String> attribute : banner.getAttributes()) {
+          String attributeId = attribute.get("id");
+          String compareAttributeValue = attribute.get("value") != null ? attribute.get("value") : "";
+          String fromValue = attribute.get("fromValue") != null ? attribute.get("fromValue") : "";
+          String toValue = attribute.get("toValue") != null ? attribute.get("toValue") : "";
+          String relationString = attribute.get("relation");
+          if (relationString == null) {
+            relationString = "equals";
+          }
+          Object attributeValueObj = getCleverPushInstance().getSubscriptionAttribute(attributeId);
+          String attributeValue = null;
+
+          if (attributeValueObj instanceof String) {
+            attributeValue = (String) attributeValueObj;
+          } else if (attributeValueObj instanceof JSONArray) {
+            JSONArray jsonArray = (JSONArray) attributeValueObj;
+            for (int i = 0; i < jsonArray.length(); i++) {
+              try {
+                String arrayItem = jsonArray.getString(i);
+                if (arrayItem.equals(compareAttributeValue)) {
+                  attributeValue = arrayItem;
+                  break;
+                }
+              } catch (JSONException e) {
+                Logger.e(TAG, "isBannerTargetingAllowed: Error parsing JSON array: " + e.getLocalizedMessage(), e);
+              }
+            }
+          }
+
+          if (attributeValue == null) {
+            return false;
+          }
+
+          if (!this.checkRelationFilter(allowed, CheckFilterRelation.fromString(relationString), attributeValue,
+                  compareAttributeValue, fromValue, toValue)) {
+            allowed = false;
+            break;
+          }
         }
+      } catch (Exception e) {
+        Logger.e(TAG, "isBannerTargetingAllowed: Error while checking target. " + e.getLocalizedMessage(), e);
       }
     }
 
