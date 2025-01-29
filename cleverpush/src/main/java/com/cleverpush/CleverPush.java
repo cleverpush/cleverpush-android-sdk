@@ -2623,8 +2623,10 @@ public class CleverPush {
         ArrayList<String> arrayList = new ArrayList<>();
         try {
           JSONArray arrayValue = (JSONArray) subscriptionAttributes.get(attributeId);
-          Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
-          arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
+          if (arrayValue != null) {
+            Mapper<JSONArray, Collection<String>> jsonArrayToListMapper = new SubscriptionToListMapper();
+            arrayList.addAll(jsonArrayToListMapper.toValue(arrayValue));
+          }
         } catch (Exception ex) {
           Logger.e(LOG_TAG, "pushSubscriptionAttributeValue: Error processing attribute values", ex);
         }
