@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.21 (29.01.2025)
+* Resolved a crash issue in `AppBanner` when targeting an attribute whose value is an array type while performing `pushSubscriptionAttributeValue` or `setSubscriptionAttribute`.
+
 ## 1.34.20 (22.01.2025)
 * `setSubscriptionAttribute`, `addSubscriptionTag/Tags`, and `removeSubscriptionTag/Tags` are now synchronized to ensure thread-safe operations and consistent updates.
 * Added the `setSubscriptionAttributes` method to allow setting multiple key-value pairs in a single request for improved efficiency.
