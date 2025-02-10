@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.22 (10.02.2025)
+* Resolved a bug in `AppBanner for Push Notification` where the banner sometimes displayed multiple times.
+
 ## 1.34.21 (29.01.2025)
 * Resolved a crash issue in `AppBanner` when targeting an attribute whose value is an array type while performing `pushSubscriptionAttributeValue` or `setSubscriptionAttribute`.
 
