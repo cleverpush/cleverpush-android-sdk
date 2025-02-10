@@ -86,7 +86,8 @@ public class AppBannerModule {
   private Collection<AppBannerPopup> filteredBanners = new ArrayList<>();
   private Collection<AppBannerPopup> pendingBanners = new ArrayList<>();
   private LinkedList<AppBannerPopup> pendingFilteredBanners = new LinkedList<>();
-  private Collection<Banner> allBanners = null;
+  private Collection<Banner> allBanners = new LinkedList<>();
+  private Collection<Banner> allNotificationBanners = new LinkedList<>();
   private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
   private boolean trackingEnabled = true;
   HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
@@ -98,6 +99,7 @@ public class AppBannerModule {
   private Set<String> bannerDeliveredList = new HashSet<>();
   public String currentEventId = null;
   Set<String> currentNotificationDeeplink = new HashSet<>();
+  boolean isBannerFromNotification = false;
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -182,7 +184,7 @@ public class AppBannerModule {
     };
   }
 
-  void loadBanners(String notificationId, String channelId) {
+  synchronized void loadBanners(String notificationId, String channelId) {
     if (isLoading()) {
       if (notificationId != null) {
         pendingBannerAPI.add(notificationId);
@@ -195,15 +197,20 @@ public class AppBannerModule {
     if (getCleverPushInstance().isDevelopmentModeEnabled()) {
       bannersPath += "&t=" + System.currentTimeMillis();
     }
+    boolean FromNotification = false;
     if (notificationId != null && !notificationId.isEmpty()) {
+      isBannerFromNotification = true;
+      FromNotification = true;
       bannersPath += "&notificationId=" + notificationId;
     }
     Logger.d(TAG, "Loading banners: " + bannersPath);
+    boolean finalFromNotification = FromNotification;
     CleverPushHttpClient.getWithRetry(bannersPath, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
         setLoading(false);
         allBanners = new LinkedList<>();
+        allNotificationBanners = new LinkedList<>();
         try {
           JSONObject responseJson = new JSONObject(response);
           JSONArray rawBanners = responseJson.getJSONArray("banners");
@@ -211,10 +218,25 @@ public class AppBannerModule {
           for (int i = 0; i < rawBanners.length(); ++i) {
             JSONObject rawBanner = rawBanners.getJSONObject(i);
             Banner banner = Banner.create(rawBanner);
-            allBanners.add(banner);
+            if (finalFromNotification) {
+              if (allNotificationBanners == null) {
+                allNotificationBanners = new LinkedList<>();
+              }
+              allNotificationBanners.add(banner);
+            } else {
+              if (allBanners == null) {
+                allBanners = new LinkedList<>();
+              }
+              allBanners.add(banner);
+            }
           }
 
-          List<Banner> bannerList = new ArrayList<>(allBanners);
+          List<Banner> bannerList;
+          if (finalFromNotification) {
+            bannerList = new ArrayList<>(allNotificationBanners);
+          } else {
+            bannerList = new ArrayList<>(allBanners);
+          }
           Collections.sort(bannerList, new Comparator<Banner>() {
             @Override
             public int compare(Banner banner1, Banner banner2) {
@@ -242,11 +264,20 @@ public class AppBannerModule {
             }
           });
 
-          allBanners.clear();
-          allBanners.addAll(bannerList);
+          if (finalFromNotification) {
+            allNotificationBanners.clear();
+            allNotificationBanners.addAll(bannerList);
+          } else {
+            allBanners.clear();
+            allBanners.addAll(bannerList);
+          }
 
           for (AppBannersListener listener : getBannersListeners()) {
-            listener.ready(allBanners);
+            if (finalFromNotification) {
+              listener.ready(allNotificationBanners);
+            } else {
+              listener.ready(allBanners);
+            }
           }
 
           bannersListeners = new ArrayList<>();
@@ -412,6 +443,7 @@ public class AppBannerModule {
 
     this.saveSessions();
     allBanners = null;
+    allNotificationBanners = null;
     handler.post(this::loadBanners);
 
     this.startup();
@@ -477,11 +509,11 @@ public class AppBannerModule {
     getBannerList(filteringListener, channelId);
   }
 
-  public void getBanners(AppBannersListener listener) {
+  public synchronized void getBanners(AppBannersListener listener) {
     this.getBanners(listener, null);
   }
 
-  public void getBanners(AppBannersListener listener, String notificationId) {
+  public synchronized void getBanners(AppBannersListener listener, String notificationId) {
     if (listener == null) {
       return;
     }
@@ -499,7 +531,7 @@ public class AppBannerModule {
     }
   }
 
-  void startup() {
+  synchronized void startup() {
     Logger.d(TAG, "startup");
 
     this.getBanners(banners -> {
@@ -1057,7 +1089,7 @@ public class AppBannerModule {
     sharedPreferences.edit().putString(CleverPushPreferences.BANNER_DISPLAY_INTERVAL_DATE, new Gson().toJson(intervalDateMap)).apply();
   }
 
-  private void createBanners(Collection<Banner> banners) {
+  private synchronized void createBanners(Collection<Banner> banners) {
     for (Banner banner : banners) {
       if (banner.getFrequency() == BannerFrequency.Once && isBannerShown(banner.getId())) {
         Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Frequency");
@@ -1179,7 +1211,14 @@ public class AppBannerModule {
 
       if (!contains) {
         getActivityLifecycleListener().setActivityInitializedListener(
-            () -> filteredBanners.add(new AppBannerPopup(getCurrentActivity(), banner)));
+            () -> {
+              if (isBannerFromNotification) {
+                isBannerFromNotification = false;
+              } else {
+                Logger.i(TAG, "TrgiuqNCbtevi3zGk before filteredBanners.add: " + filteredBanners.size());
+                filteredBanners.add(new AppBannerPopup(getCurrentActivity(), banner));
+              }
+            });
       }
     }
   }

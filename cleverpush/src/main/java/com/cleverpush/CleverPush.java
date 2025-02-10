@@ -234,6 +234,7 @@ public class CleverPush {
   private boolean isProcessingAddTagQueue = false;
   private Queue<SubscriptionAttributeTagRequest> requestRemoveTagQueue = new LinkedList<>();
   private boolean isProcessingRemoveTagQueue = false;
+  public Map<String, String> proccessedNotificationBannersMap = new HashMap<>();
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -1861,8 +1862,14 @@ public class CleverPush {
       getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
         @Override
         public void initialized() {
-          showAppBanner(openedResult.getNotification().getAppBanner(),
-              openedResult.getNotification().getId());
+          String notificationId = openedResult.getNotification().getId();
+          String appBanner = openedResult.getNotification().getAppBanner();
+
+          if (!proccessedNotificationBannersMap.containsKey(notificationId) ||
+                  !proccessedNotificationBannersMap.containsValue(appBanner)) {
+            showAppBanner(appBanner, notificationId);
+            proccessedNotificationBannersMap.put(notificationId, appBanner);
+          }
         }
       });
     }
@@ -3048,9 +3055,7 @@ public class CleverPush {
 
   public void showAppBanner(String bannerId, String notificationId, boolean force) {
     if (appBannerModule == null) {
-      pendingShowAppBannerId = bannerId;
-      pendingShowAppBannerNotificationId = notificationId;
-      return;
+      appBannerModule = getAppBannerModule();
     }
     appBannerModule.showBanner(bannerId, notificationId, force);
   }
