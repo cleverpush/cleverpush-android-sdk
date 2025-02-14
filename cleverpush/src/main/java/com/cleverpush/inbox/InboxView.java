@@ -2,6 +2,8 @@ package com.cleverpush.inbox;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -74,12 +76,7 @@ public class InboxView extends LinearLayout {
         @Override
         public void ready(Set<Notification> notifications) {
           notificationArrayList.addAll(notifications);
-          getCleverPushInstance().getCurrentActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-              setupInboxView(notificationArrayList);
-            }
-          });
+          new Handler(Looper.getMainLooper()).post(() -> setupInboxView(notificationArrayList));
         }
       });
     } catch (Exception e) {

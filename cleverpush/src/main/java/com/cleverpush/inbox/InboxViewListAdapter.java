@@ -66,45 +66,49 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
   @SuppressLint("ResourceType")
   @Override
   public void onBindViewHolder(InboxViewHolder holder, int position) {
-    LinearLayout linearLayout = (LinearLayout) holder.itemView.findViewById(R.id.llItemViewInBox);
-    TextView titleTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
-    TextView dateTextView = (TextView) holder.itemView.findViewById(R.id.tvDate);
-    View view = (View) holder.itemView.findViewById(R.id.divider);
-    ImageView imageView = (ImageView) holder.itemView.findViewById(R.id.image);
+    try {
+      LinearLayout linearLayout = (LinearLayout) holder.itemView.findViewById(R.id.llItemViewInBox);
+      TextView titleTextView = (TextView) holder.itemView.findViewById(R.id.tvTitle);
+      TextView dateTextView = (TextView) holder.itemView.findViewById(R.id.tvDate);
+      View view = (View) holder.itemView.findViewById(R.id.divider);
+      ImageView imageView = (ImageView) holder.itemView.findViewById(R.id.image);
 
-    loadImage(position, imageView);
+      loadImage(position, imageView);
 
-    int notificationTextSize = typedArray.getDimensionPixelSize(R.styleable.InboxView_notification_text_size, 16);
-    titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, notificationTextSize);
+      int notificationTextSize = typedArray.getDimensionPixelSize(R.styleable.InboxView_notification_text_size, 16);
+      titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, notificationTextSize);
 
-    int dateTextSize = typedArray.getDimensionPixelSize(R.styleable.InboxView_date_text_size, 12);
-    dateTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, dateTextSize);
+      int dateTextSize = typedArray.getDimensionPixelSize(R.styleable.InboxView_date_text_size, 12);
+      dateTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, dateTextSize);
 
-    view.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_divider_colour, DEFAULT_COLOR));
+      view.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_divider_colour, DEFAULT_COLOR));
 
-    titleTextView.setText(notificationArrayList.get(position).getTitle());
-    titleTextView.setTextColor(typedArray.getColor(R.styleable.InboxView_notification_text_color, DEFAULT_COLOR));
-    applyFont(titleTextView, typedArray, false);
+      titleTextView.setText(notificationArrayList.get(position).getTitle());
+      titleTextView.setTextColor(typedArray.getColor(R.styleable.InboxView_notification_text_color, DEFAULT_COLOR));
+      applyFont(titleTextView, typedArray, false);
 
-    dateTextView.setText(formatDate(notificationArrayList.get(position).getCreatedAt()));
-    dateTextView.setTextColor(typedArray.getColor(R.styleable.InboxView_date_text_color, DEFAULT_COLOR));
-    dateTextView.setTextColor(typedArray.getColor(R.styleable.InboxView_date_text_color, DEFAULT_COLOR));
-    applyFont(dateTextView, typedArray, true);
+      dateTextView.setText(formatDate(notificationArrayList.get(position).getCreatedAt()));
+      dateTextView.setTextColor(typedArray.getColor(R.styleable.InboxView_date_text_color, DEFAULT_COLOR));
+      dateTextView.setTextColor(typedArray.getColor(R.styleable.InboxView_date_text_color, DEFAULT_COLOR));
+      applyFont(dateTextView, typedArray, true);
 
-    if (notificationArrayList.get(position).getRead()) {
-      linearLayout.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_read_color, DEFAULT_BACKGROUND_COLOR));
-      titleTextView.setTypeface(Typeface.create(titleTextView.getTypeface(), Typeface.NORMAL));
-    } else {
-      linearLayout.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_unread_color, DEFAULT_BACKGROUND_COLOR));
-      titleTextView.setTypeface(titleTextView.getTypeface(), Typeface.BOLD);
-    }
-
-    linearLayout.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        onItemClickListener.onClicked(position);
+      if (notificationArrayList.get(position).getRead()) {
+        linearLayout.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_read_color, DEFAULT_BACKGROUND_COLOR));
+        titleTextView.setTypeface(Typeface.create(titleTextView.getTypeface(), Typeface.NORMAL));
+      } else {
+        linearLayout.setBackgroundColor(typedArray.getColor(R.styleable.InboxView_unread_color, DEFAULT_BACKGROUND_COLOR));
+        titleTextView.setTypeface(titleTextView.getTypeface(), Typeface.BOLD);
       }
-    });
+
+      linearLayout.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+          onItemClickListener.onClicked(position);
+        }
+      });
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in onBindViewHolder of InboxViewListAdapter", e);
+    }
   }
 
   @Override
@@ -117,22 +121,27 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
    *
    * @param textView   TextView when the font should apply
    * @param typedArray Attributes that contain the "fontPath" attribute with the path to the font file in the assets folder
+   * @param isDate     If true, applies the font from "date_text_font_family"; otherwise, applies the font from "notification_text_font_family".
    */
   public void applyFont(TextView textView, TypedArray typedArray, boolean isDate) {
-    if (typedArray != null) {
-      Context context = textView.getContext();
-      String fontPath;
-      if (isDate) {
-        fontPath = typedArray.getString(R.styleable.InboxView_date_text_font_family);
-      } else {
-        fontPath = typedArray.getString(R.styleable.InboxView_notification_text_font_family);
-      }
-      if (!TextUtils.isEmpty(fontPath)) {
-        Typeface typeface = getTypeface(context, fontPath);
-        if (typeface != null) {
-          textView.setTypeface(typeface);
+    try {
+      if (typedArray != null) {
+        Context context = textView.getContext();
+        String fontPath;
+        if (isDate) {
+          fontPath = typedArray.getString(R.styleable.InboxView_date_text_font_family);
+        } else {
+          fontPath = typedArray.getString(R.styleable.InboxView_notification_text_font_family);
+        }
+        if (!TextUtils.isEmpty(fontPath)) {
+          Typeface typeface = getTypeface(context, fontPath);
+          if (typeface != null) {
+            textView.setTypeface(typeface);
+          }
         }
       }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while applying font family in InboxView. " + e.getLocalizedMessage(), e);
     }
   }
 
