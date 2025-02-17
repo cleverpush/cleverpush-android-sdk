@@ -42,47 +42,23 @@ public class TrackSessionStartResponseHandler {
             dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 
             if (sdkForceSyncAfter != null && !sdkForceSyncAfter.isEmpty()) {
-
               try {
                 forceSyncAfter = dateFormatter.parse(sdkForceSyncAfter);
               } catch (Exception e) {
                 Logger.e(LOG_TAG, "Failed to parse sdkForceSyncAfter.", e);
+                return;
+              }
+
+              SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+              int lastSync = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0);
+
+              if (lastSync > 0) {
+                Date lastSyncDate = new Date(lastSync * 1000L);
+                if (forceSyncAfter.after(lastSyncDate)) {
+                  cleverPush.subscribe();
+                }
               }
             }
-
-            SharedPreferences sharedPreferences = getSharedPreferences(getContext());
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-
-            String subscriptionTopicLastUpdatedDateStr = sharedPreferences.getString(
-                    CleverPushPreferences.SUBSCRIPTION_TOPICS_LAST_UPDATED_DATE, null);
-
-            Date subscriptionTopicLastUpdatedDate = null;
-            if (subscriptionTopicLastUpdatedDateStr != null) {
-              try {
-                subscriptionTopicLastUpdatedDate = dateFormatter.parse(subscriptionTopicLastUpdatedDateStr);
-              } catch (Exception e) {
-                Logger.e(LOG_TAG, "Failed to parse subscriptionTopicLastUpdatedDate.", e);
-              }
-            }
-
-            // If no previous update date exists, use the current date
-            Date currentDate = new Date();
-            if (subscriptionTopicLastUpdatedDate == null) {
-              subscriptionTopicLastUpdatedDate = currentDate;
-            }
-
-            // Compare dates and call checkChangedPushToken if needed
-            if (forceSyncAfter != null && forceSyncAfter.after(subscriptionTopicLastUpdatedDate)) {
-              cleverPush.subscribe();
-
-              // Store the **current date and time** in SharedPreferences
-              String currentDateTimeStr = dateFormatter.format(currentDate);
-              editor.putString(CleverPushPreferences.SUBSCRIPTION_TOPICS_LAST_UPDATED_DATE, currentDateTimeStr);
-              editor.apply();
-            } else {
-              Logger.d(LOG_TAG, "No need to check push token. sdkForceSyncAfter is not later than subscriptionTopicLastUpdatedDate.");
-            }
-
           } catch (Exception e) {
             Logger.e(LOG_TAG, "TrackSessionStartResponseHandler: Failed to parse sdkForceSyncAfter.", e);
           }

@@ -39,6 +39,5 @@ public class CleverPushPreferences {
   public static final String SILENT_PUSH_APP_BANNER = "CleverPush_SILENT_PUSH_APP_BANNER";
   public static final String APP_INSTALLATION_DATE = "CleverPush_APP_INSTALLATION_DATE";
   public static final String BANNER_DISPLAY_INTERVAL_DATE = "CleverPush_BANNER_DISPLAY_INTERVAL_DATE";
-  public static final String SUBSCRIPTION_TOPICS_LAST_UPDATED_DATE = "CleverPush_SUBSCRIPTION_TOPICS_LAST_UPDATED_DATE";
 
 }
