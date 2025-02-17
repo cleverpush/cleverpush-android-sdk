@@ -1348,6 +1348,7 @@ public class CleverPush {
 
   public void updateServerSessionStart() {
     isSessionStartCalled = true;
+    CleverPush instance = this;
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
     String lastNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_NOTIFICATION_ID, null);
@@ -1363,7 +1364,7 @@ public class CleverPush {
     }
 
     CleverPushHttpClient.postWithRetry("/subscription/session/start", jsonBody,
-        new TrackSessionStartResponseHandler().getResponseHandler());
+        new TrackSessionStartResponseHandler(instance).getResponseHandler());
   }
 
   public void increaseSessionVisits() {
