@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.23 (17.02.2025)
+* Added a feature to retrieve updated subscribed topics from the dashboard.
+* Resolved a bug in `InboxView` where setting a custom font family caused an error and prevented the inbox view list from displaying.
+
 ## 1.34.22 (10.02.2025)
 * Resolved a bug in `AppBanner for Push Notification` where the banner sometimes displayed multiple times.
 
