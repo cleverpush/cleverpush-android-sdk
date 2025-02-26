@@ -237,7 +237,6 @@ public class AppBannerPopup {
     View layout = null;
     try {
       layout = activity.getLayoutInflater().inflate(layoutId, null);
-      layout.setOnClickListener(view -> dismiss());
       return layout;
     } catch (InflateException inflateException) {
       try {
@@ -246,7 +245,6 @@ public class AppBannerPopup {
 
         LayoutInflater inflater = LayoutInflater.from(contextThemeWrapper);
         layout = inflater.inflate(layoutId, null);
-        layout.setOnClickListener(view -> dismiss());
         return layout;
       } catch (Exception exception) {
         Logger.e(TAG, "Error in App banner createLayout with theme cleverpush_app_banner_theme.", exception);
