@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.24 (26.02.2025)
+* Resolved a bug in `AppBanner` where the banner would close if clicked anywhere outside of it. 
+* Fixed a potential crash when receiving a push notification with AppBanner.
+
 ## 1.34.23 (17.02.2025)
 * Added a feature to retrieve updated subscribed topics from the dashboard.
 * Resolved a bug in `InboxView` where setting a custom font family caused an error and prevented the inbox view list from displaying.
