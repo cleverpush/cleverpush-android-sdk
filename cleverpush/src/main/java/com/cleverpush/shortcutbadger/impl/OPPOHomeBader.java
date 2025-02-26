@@ -67,7 +67,7 @@ public class OPPOHomeBader implements Badger {
           extras.putInt(INTENT_EXTRA_BADGEUPGRADE_COUNT, badgeCount);
           context.getContentResolver().call(Uri.parse(PROVIDER_CONTENT_URI), "setAppBadgeCount", null, extras);
         } catch (Throwable th) {
-          throw new ShortcutBadgeException("unable to resolve intent: " + intent.toString());
+          throw new ShortcutBadgeException("OPPOHomeBader: unable to resolve intent: " + intent.toString());
         }
       }
     }

@@ -33,7 +33,7 @@ public class ApexHomeBadger implements Badger {
     if (BroadcastHelper.canResolveBroadcast(context, intent)) {
       context.sendBroadcast(intent);
     } else {
-      throw new ShortcutBadgeException("unable to resolve intent: " + intent.toString());
+      throw new ShortcutBadgeException("ApexHomeBadger: unable to resolve intent: " + intent.toString());
     }
   }
 

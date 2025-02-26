@@ -74,7 +74,7 @@ public final class ShortcutBadger {
       return true;
     } catch (ShortcutBadgeException e) {
       if (Log.isLoggable(LOG_TAG, Log.DEBUG)) {
-        Logger.d(LOG_TAG, "Unable to execute badge", e);
+        Logger.d(LOG_TAG, "applyCount: Unable to execute badge", e);
       }
       return false;
     }
@@ -96,9 +96,17 @@ public final class ShortcutBadger {
     }
 
     try {
+      if (sComponentName == null) {
+        Logger.w(LOG_TAG, "ShortcutBadger: Component name is null, unable to apply badge.");
+        return;
+      }
+      if (context == null) {
+        Logger.w(LOG_TAG, "ShortcutBadger: Context is null, unable to apply badge.");
+        return;
+      }
       sShortcutBadger.executeBadge(context, sComponentName, badgeCount);
     } catch (Exception e) {
-      throw new ShortcutBadgeException("Unable to execute badge", e);
+      throw new ShortcutBadgeException("applyCountOrThrow: Unable to execute badge", e);
     }
   }
 
@@ -179,7 +187,7 @@ public final class ShortcutBadger {
         method.invoke(extraNotification, badgeCount);
       } catch (Exception e) {
         if (Log.isLoggable(LOG_TAG, Log.DEBUG)) {
-          Logger.d(LOG_TAG, "Unable to execute badge", e);
+          Logger.d(LOG_TAG, "applyNotification: Unable to execute badge", e);
         }
       }
     }

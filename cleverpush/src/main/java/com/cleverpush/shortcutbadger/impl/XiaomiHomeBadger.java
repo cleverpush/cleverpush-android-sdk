@@ -83,7 +83,7 @@ public class XiaomiHomeBadger implements Badger {
         method.invoke(extraNotification, badgeCount);
         mNotificationManager.notify(0, notification);
       } catch (Exception e) {
-        throw new ShortcutBadgeException("not able to set badge", e);
+        throw new ShortcutBadgeException("XiaomiHomeBadger: not able to set badge", e);
       }
     }
   }
