@@ -32,7 +32,7 @@ public class DefaultBadger implements Badger {
     if (BroadcastHelper.canResolveBroadcast(context, intent)) {
       context.sendBroadcast(intent);
     } else {
-      Logger.i("CleverPush", "unable to resolve intent: " + intent.toString());
+      Logger.i("CleverPush", "DefaultBadger: unable to resolve intent: " + intent.toString());
     }
   }
 

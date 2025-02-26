@@ -40,7 +40,7 @@ public class NewHtcHomeBadger implements Badger {
       context.sendBroadcast(intent1);
       context.sendBroadcast(intent);
     } else {
-      throw new ShortcutBadgeException("unable to resolve intent: " + intent.toString());
+      throw new ShortcutBadgeException("NewHtcHomeBadger: unable to resolve intent: " + intent.toString());
     }
   }
 
