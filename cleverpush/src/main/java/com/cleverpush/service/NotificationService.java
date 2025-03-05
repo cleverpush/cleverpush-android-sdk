@@ -14,6 +14,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -26,6 +27,7 @@ import android.widget.RemoteViews;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 
 import com.cleverpush.BadgeHelper;
 import com.cleverpush.CleverPush;
@@ -92,7 +94,19 @@ public class NotificationService {
     if (id != 0) {
       return id;
     }
+    int iconResId = CleverPush.getInstance(context).getDefaultNotificationIcon();
+    if (iconResId != 0) {
+      return iconResId;
+    }
     return getDrawableId(context, "default_notification_icon");
+  }
+
+  private int getColor(Context context) {
+    int colorResId = CleverPush.getInstance(context).getDefaultNotificationColor();
+    if (colorResId != 0) {
+      return ContextCompat.getColor(context, colorResId);
+    }
+    return 0;
   }
 
   private Bitmap getBitmapFromUrl(String strURL) {
@@ -159,6 +173,18 @@ public class NotificationService {
 
     Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+    if (notification.getSoundFilename() != null && !notification.getSoundFilename().isEmpty()) {
+      Resources resources = context.getResources();
+      String packageName = context.getPackageName();
+      int soundId = resources.getIdentifier(notification.getSoundFilename(), "raw", packageName);
+      if (soundId != 0) {
+        Uri trySoundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + soundId);
+        if (trySoundUri != null) {
+          soundUri = trySoundUri;
+        }
+      }
+    }
+
     NotificationCompat.Builder notificationBuilder;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       if (notification.getCategory() != null) {
@@ -176,6 +202,11 @@ public class NotificationService {
           int parsedForegroundColor = NotificationCategorySetUp.parseColor(foregroundColor);
           if (parsedForegroundColor != 0) {
             notificationBuilder.setColor(parsedForegroundColor);
+          } else {
+            int colorResId = getColor(context);
+            if (colorResId != 0) {
+              notificationBuilder.setColor(colorResId);
+            }
           }
         }
 
@@ -189,25 +220,33 @@ public class NotificationService {
         }
 
         channel.setDescription(channel.getName().toString());
+
+        try {
+          AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                  .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                  .setUsage(AudioAttributes.USAGE_ALARM)
+                  .build();
+          channel.setSound(soundUri, audioAttributes);
+        } catch (Exception e) {
+          Logger.e("CleverPush", "NotificationService: Error while setting custom sound for push. " + e.getLocalizedMessage(), e);
+        }
+
         NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
 
         notificationBuilder = new NotificationCompat.Builder(context, channel.getId());
+        int colorResId = CleverPush.getInstance(context).getDefaultNotificationColor();
+        if (colorResId != 0) {
+          int color = ContextCompat.getColor(context, colorResId);
+          notificationBuilder.setColor(color);
+        }
       }
 
     } else {
       notificationBuilder = new NotificationCompat.Builder(context);
-    }
-
-    if (notification.getSoundFilename() != null && !notification.getSoundFilename().isEmpty()) {
-      Resources resources = context.getResources();
-      String packageName = context.getPackageName();
-      int soundId = resources.getIdentifier(notification.getSoundFilename(), "raw", packageName);
-      if (soundId != 0) {
-        Uri trySoundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + soundId);
-        if (trySoundUri != null) {
-          soundUri = trySoundUri;
-        }
+      int colorResId = getColor(context);
+      if (colorResId != 0) {
+        notificationBuilder.setColor(colorResId);
       }
     }
 

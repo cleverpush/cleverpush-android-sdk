@@ -3659,6 +3659,14 @@ public class CleverPush {
     return !MetaDataUtils.getManifestMetaBoolean(getContext(), "com.cleverpush.notification_open_activity_disabled");
   }
 
+  public int getDefaultNotificationIcon() {
+    return MetaDataUtils.getManifestMetaResourceId(getContext(), "com.cleverpush.default_notification_icon");
+  }
+
+  public int getDefaultNotificationColor() {
+    return MetaDataUtils.getManifestMetaResourceId(getContext(), "com.cleverpush.default_notification_color");
+  }
+
   public void setIgnoreDisabledNotificationPermission(boolean ignore) {
     this.ignoreDisabledNotificationPermission = ignore;
   }

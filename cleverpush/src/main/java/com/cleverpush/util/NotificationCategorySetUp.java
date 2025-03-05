@@ -3,8 +3,13 @@ package com.cleverpush.util;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 
 import com.cleverpush.NotificationCategory;
@@ -39,6 +44,30 @@ public class NotificationCategorySetUp {
       String description = category.getDescription();
       if (description != null) {
         channel.setDescription(description);
+      }
+
+      try {
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        if (category.getSoundFilename() != null && !category.getSoundFilename().isEmpty()) {
+          Resources resources = context.getResources();
+          String packageName = context.getPackageName();
+          int soundId = resources.getIdentifier(category.getSoundFilename(), "raw", packageName);
+          if (soundId != 0) {
+            Uri trySoundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + soundId);
+            if (trySoundUri != null) {
+              soundUri = trySoundUri;
+            }
+          }
+        }
+
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .build();
+        channel.setSound(soundUri, audioAttributes);
+      } catch (Exception e) {
+        Logger.e("CleverPush", "Error while setting custom sound for push. " + e.getLocalizedMessage(), e);
       }
 
       String importance = category.getImportance();
