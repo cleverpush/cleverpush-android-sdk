@@ -35,6 +35,14 @@ public class MetaDataUtils {
     return null;
   }
 
+  public static int getManifestMetaResourceId(Context context, String metaName) {
+    Bundle bundle = getManifestMetaBundle(context);
+    if (bundle != null) {
+      return bundle.getInt(metaName, 0);
+    }
+    return 0;
+  }
+
   public static String getChannelId(Context paramContext) {
     ApplicationInfo localApplicationInfo;
     try {
