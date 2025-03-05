@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.26 (05.03.2025)
+* Fixed an edge case with App Banners in landscape mode on tablets (image too large)
+
 ## 1.34.25 (05.03.2025)
 * Added a feature to open the App Settings in `ChatView`. If notification permission was previously denied, clicking the `Enable Chat Now` button will redirect users to the `App Settings`.
 * Fixed a bug in `push notifications` where a custom notification sound can now be set through the `notification category`.
