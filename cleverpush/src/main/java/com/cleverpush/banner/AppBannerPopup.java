@@ -2,6 +2,7 @@ package com.cleverpush.banner;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,6 +11,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.provider.Settings;
 
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
@@ -505,10 +507,41 @@ public class AppBannerPopup {
       int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
       LinearLayout.LayoutParams layoutParams;
       view.measure(wMeasureSpec, hMeasureSpec);
+      
+      // Check if device is a tablet in landscape mode
+      boolean isTablet = (activity.getResources().getConfiguration().screenLayout & 
+                         Configuration.SCREENLAYOUT_SIZE_MASK) >= 
+                         Configuration.SCREENLAYOUT_SIZE_LARGE;
+      boolean isLandscape = activity.getResources().getConfiguration().orientation == 
+                           Configuration.ORIENTATION_LANDSCAPE;
+      
       if (popupRoot.getMeasuredHeight() > view.getMeasuredHeight() + TAB_LAYOUT_DEFAULT_HEIGHT + MAIN_LAYOUT_PADDING) {
         layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, view.getMeasuredHeight());
       } else {
-        int height = (int) (activity.getResources().getDisplayMetrics().heightPixels * 0.77);
+        // For tablets in landscape mode, limit height to 70% of screen height
+        float heightPercentage = 0.77f;
+        if (isTablet && isLandscape) {
+          // Count the number of image and button blocks to determine if we need special handling
+          int imageCount = 0;
+          int buttonCount = 0;
+          
+          for (BannerScreens screen : data.getScreens()) {
+            for (BannerBlock block : screen.getBlocks()) {
+              if (block.getType() == BannerBlock.Type.Image) {
+                imageCount++;
+              } else if (block.getType() == BannerBlock.Type.Button) {
+                buttonCount++;
+              }
+            }
+          }
+          
+          // If we have both images and buttons, use 70% of screen height
+          if (imageCount > 0 && buttonCount > 0) {
+            heightPercentage = 0.7f;
+          }
+        }
+        
+        int height = (int) (activity.getResources().getDisplayMetrics().heightPixels * heightPercentage);
         layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height);
       }
 
