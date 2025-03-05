@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.34.25 (05.03.2025)
+* Added a feature to open the App Settings in `ChatView`. If notification permission was previously denied, clicking the `Enable Chat Now` button will redirect users to the `App Settings`.
+* Fixed a bug in `push notifications` where a custom notification sound can now be set through the `notification category`.
+* Implemented a meta-data entry to set the default notification icon: `<meta-data android:name="com.cleverpush.default_notification_icon" android:resource="@drawable/push_icon" /> `
+* Implemented a meta-data entry to set a custom notification color: `<meta-data android:name="com.cleverpush.default_notification_color" android:resource="@color/teal" /> `
+
 ## 1.34.24 (26.02.2025)
 * Resolved a bug in `AppBanner` where the banner would close if clicked anywhere outside of it. 
 * Fixed a potential crash when receiving a push notification with AppBanner.
