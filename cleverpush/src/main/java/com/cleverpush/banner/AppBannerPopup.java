@@ -553,9 +553,9 @@ public class AppBannerPopup {
           
           for (BannerScreens screen : data.getScreens()) {
             for (BannerBlock block : screen.getBlocks()) {
-              if (block.getType() == BannerBlock.Type.Image) {
+              if (block.getType() == BannerBlockType.Image) {
                 imageCount++;
-              } else if (block.getType() == BannerBlock.Type.Button) {
+              } else if (block.getType() == BannerBlockType.Button) {
                 buttonCount++;
               }
             }
