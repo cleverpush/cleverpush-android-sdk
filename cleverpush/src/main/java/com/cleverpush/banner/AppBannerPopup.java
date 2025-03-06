@@ -36,6 +36,8 @@ import androidx.dynamicanimation.animation.SpringForce;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.cleverpush.ActivityLifecycleListener;
+import com.cleverpush.banner.models.blocks.BannerBlock;
+import com.cleverpush.banner.models.blocks.BannerBlockType;
 import com.cleverpush.util.Logger;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
@@ -527,9 +529,9 @@ public class AppBannerPopup {
           
           for (BannerScreens screen : data.getScreens()) {
             for (BannerBlock block : screen.getBlocks()) {
-              if (block.getType() == BannerBlock.Type.Image) {
+              if (block.getType() == BannerBlockType.Image) {
                 imageCount++;
-              } else if (block.getType() == BannerBlock.Type.Button) {
+              } else if (block.getType() == BannerBlockType.Button) {
                 buttonCount++;
               }
             }
