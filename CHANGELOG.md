@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.27 (06.03.2025)
+* Fixed an edge case with App Banners in landscape mode on tablets (image too large)
+
 ## 1.34.26 (05.03.2025)
 * Fixed an edge case with App Banners in landscape mode on tablets (image too large)
 
