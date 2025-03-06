@@ -372,16 +372,33 @@ public class AppBannerPopup {
     }
     setUpBannerBlocks();
 
+    // Check if device is a tablet in landscape mode
+    boolean isTablet = (activity.getResources().getConfiguration().screenLayout & 
+                      Configuration.SCREENLAYOUT_SIZE_MASK) >= 
+                      Configuration.SCREENLAYOUT_SIZE_LARGE;
+    boolean isLandscape = activity.getResources().getConfiguration().orientation == 
+                        Configuration.ORIENTATION_LANDSCAPE;
+
     if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
       ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
       ConstraintSet mConstraintSet = new ConstraintSet();
       mConstraintSet.clone(mConstraintLayout);
 
       if (data.isMarginEnabled()) {
-        mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.9f);
+        // For tablets in landscape, use smaller width to create a wrapped appearance
+        if (isTablet && isLandscape) {
+          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.7f); // 70% width
+        } else {
+          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.9f); // 90% width
+        }
         mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.9f);
       } else {
-        mConstraintSet.constrainPercentWidth(R.id.frameLayout, 1.0f);
+        // For tablets in landscape, use smaller width to create a wrapped appearance
+        if (isTablet && isLandscape) {
+          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.8f); // 80% width
+        } else {
+          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 1.0f); // 100% width
+        }
         mConstraintSet.constrainPercentHeight(R.id.frameLayout, 1.0f);
       }
 
@@ -397,6 +414,13 @@ public class AppBannerPopup {
 
       ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
       ConstraintSet mConstraintSet = new ConstraintSet();
+
+      // For tablets in landscape, limit the width of non-full banners
+      if (isTablet && isLandscape) {
+        mConstraintSet.clone(mConstraintLayout);
+        mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.7f); // 70% width
+        mConstraintSet.applyTo(mConstraintLayout);
+      }
 
       switch (data.getPositionType()) {
         case POSITION_TYPE_TOP:
