@@ -276,16 +276,91 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     ProgressBar progressBar = imageLayout.findViewById(R.id.progressBar);
     progressBar.setVisibility(View.VISIBLE);
 
+    ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) img.getLayoutParams();
+
+    img.setLayoutParams(layoutParams);
+
     ConstraintSet imgConstraints = new ConstraintSet();
     imgConstraints.clone(imageLayout);
 
     float widthPercentage = Math.min(100, Math.max(0, block.getScale())) / 100.0f;
+    
+    // Check if device is a tablet in landscape mode
+    boolean isTablet = (activity.getResources().getConfiguration().screenLayout & 
+                        Configuration.SCREENLAYOUT_SIZE_MASK) >= 
+                        Configuration.SCREENLAYOUT_SIZE_LARGE;
+    boolean isLandscape = activity.getResources().getConfiguration().orientation == 
+                          Configuration.ORIENTATION_LANDSCAPE;
+    
+    // Apply special scaling for tablets in landscape mode
+    if (isTablet && isLandscape) {
+        // Use a higher scaling factor for tablets in landscape mode (80% instead of 60%)
+        float scaleFactor = 0.8f;
+        widthPercentage = widthPercentage * scaleFactor;
+        
+        // Get screen dimensions
+        int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
+        int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+        
+        // Calculate available height (80% of screen height)
+        float availableHeight = screenHeight * 0.8f;
+        
+        // Get image dimensions if available
+        float imageWidth = block.getImageWidth();
+        float imageHeight = block.getImageHeight();
+        
+        // Calculate aspect ratio
+        float aspectRatio = 1.0f;
+        if (imageWidth > 0 && imageHeight > 0) {
+            aspectRatio = imageWidth / imageHeight;
+        }
+        
+        // Calculate estimated image height
+        float estimatedImageHeight = (screenWidth * widthPercentage) / aspectRatio;
+        
+        // If image is too tall, scale it down further to fit
+        if (estimatedImageHeight > availableHeight * 0.7f) {
+            float heightScaleFactor = (availableHeight * 0.7f) / estimatedImageHeight;
+            widthPercentage *= heightScaleFactor;
+        }
+        
+        // Limit maximum width to 70% of screen width for better appearance
+        float maxWidthPercentage = 0.7f;
+        if (widthPercentage > maxWidthPercentage) {
+            widthPercentage = maxWidthPercentage;
+        }
+        
+        // Center the image in the layout
+        imgConstraints.clear(img.getId(), ConstraintSet.START);
+        imgConstraints.clear(img.getId(), ConstraintSet.END);
+        imgConstraints.connect(img.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+        imgConstraints.connect(img.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+    }
+    
     imgConstraints.constrainPercentWidth(img.getId(), widthPercentage);
     float aspectRatio = 1.0f;
+    
+    // Use actual image dimensions for aspect ratio if available
+    if (block.getImageWidth() > 0 && block.getImageHeight() > 0) {
+        aspectRatio = (float) block.getImageWidth() / (float) block.getImageHeight();
+    }
+    
     float height = widthPercentage / aspectRatio * 100;
     imgConstraints.constrainPercentHeight(img.getId(), height);
 
     imgConstraints.applyTo(imageLayout);
+    
+    // Create layout parameters for the image layout
+    LinearLayout.LayoutParams bodyParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+    );
+    
+    // For tablets in landscape, add horizontal margins to center the content
+    if (isTablet && isLandscape) {
+        int horizontalMargin = (int) (Resources.getSystem().getDisplayMetrics().widthPixels * 0.15f);
+        bodyParams.setMargins(horizontalMargin, 0, horizontalMargin, 0);
+    }
 
     new Thread(() -> {
       HttpURLConnection connection = null;
@@ -348,7 +423,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
       }
     }).start();
 
-    body.addView(imageLayout);
+    body.addView(imageLayout, bodyParams);
 
     if (block.getAction() != null) {
       img.setOnClickListener(view -> this.onClickListener(block.getAction()));

@@ -425,8 +425,10 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     
     // Apply special scaling for tablets in landscape mode
     if (isTablet && isLandscape) {
-        // Apply 60% scaling factor for tablets in landscape mode
-        widthPercentage = widthPercentage * 0.6f;
+        // Use a higher scaling factor for tablets in landscape mode (80% instead of 60%)
+        // This makes the image larger, similar to iPad implementation
+        float scaleFactor = 0.8f;
+        widthPercentage = widthPercentage * scaleFactor;
         
         // Get screen dimensions
         int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
@@ -453,6 +455,18 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             float heightScaleFactor = (availableHeight * 0.7f) / estimatedImageHeight;
             widthPercentage *= heightScaleFactor;
         }
+        
+        // Limit maximum width to 70% of screen width for better appearance
+        float maxWidthPercentage = 0.7f;
+        if (widthPercentage > maxWidthPercentage) {
+            widthPercentage = maxWidthPercentage;
+        }
+        
+        // Center the image in the layout
+        imgConstraints.clear(img.getId(), ConstraintSet.START);
+        imgConstraints.clear(img.getId(), ConstraintSet.END);
+        imgConstraints.connect(img.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+        imgConstraints.connect(img.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
     }
     
     imgConstraints.constrainPercentWidth(img.getId(), widthPercentage);
@@ -468,6 +482,19 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     imgConstraints.applyTo(imageLayout);
 
+    // Create layout parameters for the image layout
+    LinearLayout.LayoutParams bodyParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+    );
+    
+    // For tablets in landscape, add horizontal margins to center the content
+    // This creates a wrapped appearance similar to the iPad implementation
+    if (isTablet && isLandscape && !isBannerPositionFull()) {
+        int horizontalMargin = (int) (Resources.getSystem().getDisplayMetrics().widthPixels * 0.15f);
+        bodyParams.setMargins(horizontalMargin, 0, horizontalMargin, 0);
+    }
+    
     new Thread(() -> {
       HttpURLConnection connection = null;
       InputStream in = null;
@@ -544,7 +571,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       }
     }).start();
 
-    body.addView(imageLayout);
+    body.addView(imageLayout, bodyParams);
 
     if (block.getAction() != null) {
       BannerAction action = block.getAction();
