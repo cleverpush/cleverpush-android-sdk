@@ -36,6 +36,8 @@ import androidx.dynamicanimation.animation.SpringForce;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.cleverpush.ActivityLifecycleListener;
+import com.cleverpush.banner.models.blocks.BannerBlock;
+import com.cleverpush.banner.models.blocks.BannerBlockType;
 import com.cleverpush.util.Logger;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
