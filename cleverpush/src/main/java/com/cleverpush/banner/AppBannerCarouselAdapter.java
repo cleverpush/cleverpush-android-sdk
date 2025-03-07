@@ -423,19 +423,23 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     boolean isLandscape = activity.getResources().getConfiguration().orientation == 
                           Configuration.ORIENTATION_LANDSCAPE;
     
-    // Apply special scaling for tablets in landscape mode
+    // Apply special handling for tablets in landscape mode
     if (isTablet && isLandscape) {
-        // Use a higher scaling factor for tablets in landscape mode (80% instead of 60%)
-        // This makes the image larger, similar to iPad implementation
-        float scaleFactor = 0.8f;
-        widthPercentage = widthPercentage * scaleFactor;
+        // For tablets in landscape, we need to ensure the image is properly sized
+        // similar to the iPad example
         
         // Get screen dimensions
         int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
         int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
         
-        // Calculate available height (80% of screen height)
-        float availableHeight = screenHeight * 0.8f;
+        // For full-screen banners, use a different approach
+        if (isBannerPositionFull()) {
+            // Use a higher scaling factor for full-screen banners - INCREASED SIZE
+            widthPercentage = Math.min(0.95f, widthPercentage * 1.5f);
+        } else {
+            // For non-full-screen banners, use a higher scaling - INCREASED SIZE
+            widthPercentage = Math.min(0.95f, widthPercentage * 1.4f);
+        }
         
         // Get image dimensions if available
         float imageWidth = block.getImageWidth();
@@ -447,19 +451,13 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             aspectRatio = imageWidth / imageHeight;
         }
         
-        // Calculate estimated image height
+        // Ensure the image isn't too tall for the screen
         float estimatedImageHeight = (screenWidth * widthPercentage) / aspectRatio;
+        float maxHeight = screenHeight * 0.8f; // Max 80% of screen height - INCREASED FROM 70%
         
-        // If image is too tall, scale it down further to fit
-        if (estimatedImageHeight > availableHeight * 0.7f) {
-            float heightScaleFactor = (availableHeight * 0.7f) / estimatedImageHeight;
-            widthPercentage *= heightScaleFactor;
-        }
-        
-        // Limit maximum width to 70% of screen width for better appearance
-        float maxWidthPercentage = 0.7f;
-        if (widthPercentage > maxWidthPercentage) {
-            widthPercentage = maxWidthPercentage;
+        if (estimatedImageHeight > maxHeight) {
+            // Scale down to fit height
+            widthPercentage = (maxHeight * aspectRatio) / screenWidth;
         }
         
         // Center the image in the layout
@@ -470,15 +468,22 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     }
     
     imgConstraints.constrainPercentWidth(img.getId(), widthPercentage);
-    float aspectRatio = 1.0f;
     
-    // Use actual image dimensions for aspect ratio if available
+    // Calculate aspect ratio
+    float aspectRatio = 1.0f;
     if (block.getImageWidth() > 0 && block.getImageHeight() > 0) {
         aspectRatio = (float) block.getImageWidth() / (float) block.getImageHeight();
     }
     
-    float height = widthPercentage / aspectRatio * 100;
-    imgConstraints.constrainPercentHeight(img.getId(), height);
+    // For tablets in landscape, ensure the aspect ratio is maintained properly
+    if (isTablet && isLandscape) {
+        // Adjust the constraint to maintain proper aspect ratio
+        imgConstraints.setDimensionRatio(img.getId(), "W," + aspectRatio);
+    } else {
+        // For other devices, use the standard approach
+        float height = widthPercentage / aspectRatio;
+        imgConstraints.constrainPercentHeight(img.getId(), height);
+    }
 
     imgConstraints.applyTo(imageLayout);
 
@@ -488,13 +493,31 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             LinearLayout.LayoutParams.WRAP_CONTENT
     );
     
-    // For tablets in landscape, add horizontal margins to center the content
-    // This creates a wrapped appearance similar to the iPad implementation
-    if (isTablet && isLandscape && !isBannerPositionFull()) {
-        int horizontalMargin = (int) (Resources.getSystem().getDisplayMetrics().widthPixels * 0.15f);
-        bodyParams.setMargins(horizontalMargin, 0, horizontalMargin, 0);
+    // Add appropriate margins
+    int marginTop = (int) (15 * getPXScale());
+    int marginBottom = (int) (15 * getPXScale());
+    
+    // For tablets in landscape, adjust margins to create a better layout
+    if (isTablet && isLandscape) {
+        int horizontalMargin = 0;
+        
+        // For non-full banners, add horizontal margins to center content
+        if (!isBannerPositionFull()) {
+            horizontalMargin = (int) (Resources.getSystem().getDisplayMetrics().widthPixels * 0.05f);
+        }
+        
+        // Add extra vertical spacing for better appearance
+        marginTop = (int) (25 * getPXScale());
+        marginBottom = (int) (25 * getPXScale());
+        
+        bodyParams.setMargins(horizontalMargin, marginTop, horizontalMargin, marginBottom);
+    } else {
+        bodyParams.setMargins(0, marginTop, 0, marginBottom);
     }
     
+    imageLayout.setLayoutParams(bodyParams);
+    body.addView(imageLayout);
+
     new Thread(() -> {
       HttpURLConnection connection = null;
       InputStream in = null;
@@ -571,8 +594,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       }
     }).start();
 
-    body.addView(imageLayout, bodyParams);
-
     if (block.getAction() != null) {
       BannerAction action = block.getAction();
       List<BannerAction> actions = block.getActions();
@@ -644,8 +665,70 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   @SuppressLint("SetJavaScriptEnabled")
   private void composeHtmlBanner(LinearLayout body, String htmlContent) {
     try {
+      @SuppressLint("InflateParams") ConstraintLayout webLayout =
+              (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
+      WebView webView = webLayout.findViewById(R.id.webView);
+      webView.setBackgroundColor(Color.TRANSPARENT);
+      webView.getSettings().setJavaScriptEnabled(true);
+      webView.getSettings().setLoadsImagesAutomatically(true);
+      webView.getSettings().setDomStorageEnabled(true);
+      webView.getSettings().setAllowFileAccess(true);
+      webView.getSettings().setAllowContentAccess(true);
+      webView.getSettings().setAllowFileAccessFromFileURLs(true);
+      webView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+      webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
+      webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+      webView.setWebViewClient(new AppBannerWebViewClient());
+
+      // Ensure WebView is scrollable
+      webView.setOnTouchListener((v, event) -> {
+        if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
+          v.getParent().requestDisallowInterceptTouchEvent(true);
+        }
+        return false;
+      });
+
+      // Check if device is a tablet in landscape mode
+      boolean isTablet = (activity.getResources().getConfiguration().screenLayout & 
+                        Configuration.SCREENLAYOUT_SIZE_MASK) >= 
+                        Configuration.SCREENLAYOUT_SIZE_LARGE;
+      boolean isLandscape = activity.getResources().getConfiguration().orientation == 
+                          Configuration.ORIENTATION_LANDSCAPE;
+      
+      // For tablets in landscape mode, adjust the WebView layout
+      if (isTablet && isLandscape) {
+        // Set appropriate width and height for the WebView in landscape mode
+        ConstraintLayout.LayoutParams webViewParams = (ConstraintLayout.LayoutParams) webView.getLayoutParams();
+        
+        // For full-screen banners, use a different approach
+        if (isBannerPositionFull()) {
+          // Use a higher width percentage for better visibility
+          webViewParams.matchConstraintPercentWidth = 0.9f;
+          
+          // Set a fixed height or use a percentage of the screen height
+          int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+          webViewParams.height = (int)(screenHeight * 0.8f);
+        } else {
+          // For non-full-screen banners, use a moderate width
+          webViewParams.matchConstraintPercentWidth = 0.85f;
+        }
+        
+        webView.setLayoutParams(webViewParams);
+      }
+
+      fixFullscreenHtmlBannerUI(body, webLayout, webView);
+
       activity.runOnUiThread(() -> {
         String html = VoucherCodeUtils.replaceVoucherCodeString(htmlContent, voucherCode);
+        
+        // Add viewport meta tag for better scaling on tablets
+        if (isTablet && isLandscape) {
+          if (!html.contains("<meta name=\"viewport\"")) {
+            html = html.replace("<head>", 
+                  "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">");
+          }
+        }
+        
         String htmlWithJs = html.replace("</body>", "" +
                 "<script type=\"text/javascript\">\n" +
                 "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n"
@@ -669,23 +752,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                 "};\n" +
                 "</script>\n" +
                 "</body>");
-        ConstraintLayout webLayout =
-                (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
-        WebView webView = webLayout.findViewById(R.id.webView);
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setLoadsImagesAutomatically(true);
-        webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
-        webView.setWebViewClient(new AppBannerWebViewClient());
-
-        // Ensure WebView is scrollable
-        webView.setOnTouchListener((v, event) -> {
-          if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
-            v.getParent().requestDisallowInterceptTouchEvent(true);
-          }
-          return false;
-        });
-
-        fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
         String encodedHtml = null;
         try {
@@ -693,11 +759,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         } catch (UnsupportedEncodingException e) {
           Logger.e(TAG, "composeHtmlBanner AppBanner UnsupportedEncodingException.", e);
         }
-        webView.setBackgroundColor(Color.TRANSPARENT);
+        
         webView.loadData(encodedHtml, "text/html; charset=utf-8", "base64");
-
-        body.addView(webLayout);
       });
+
+      body.addView(webLayout);
     } catch (Exception e) {
       Logger.e(TAG, "Error in AppBanner composeHtmlBanner.", e);
     }

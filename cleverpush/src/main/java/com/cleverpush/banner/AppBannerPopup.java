@@ -265,9 +265,12 @@ public class AppBannerPopup {
     observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
       @Override
       public void onGlobalLayout() {
+        // Make the image fill the entire frame with proper scaling
         FrameLayout.LayoutParams layoutParams =
-            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, body.getHeight());
+            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         bannerBackground.setLayoutParams(layoutParams);
+        // Set scale type to ensure the image fills the space properly
+        bannerBackground.setScaleType(ImageView.ScaleType.CENTER_CROP);
         if (observer.isAlive()) {
           observer.removeGlobalOnLayoutListener(this);
         }
@@ -325,7 +328,12 @@ public class AppBannerPopup {
           InputStream in = new URL(imageUrl).openStream();
           Bitmap bitmap = BitmapFactory.decodeStream(in);
           if (bitmap != null) {
-            bannerBackground.setImageBitmap(bitmap);
+            // Set the image with proper scaling
+            activity.runOnUiThread(() -> {
+              bannerBackground.setImageBitmap(bitmap);
+              bannerBackground.setScaleType(ImageView.ScaleType.CENTER_CROP);
+              bannerBackground.setAdjustViewBounds(true);
+            });
           }
         } catch (Exception ex) {
           Logger.e(TAG, "Error at setting background image in app banner.", ex);
@@ -387,26 +395,29 @@ public class AppBannerPopup {
       mConstraintSet.clone(mConstraintLayout);
 
       if (data.isMarginEnabled()) {
-        // For tablets in landscape, use smaller width to create a wrapped appearance
+        // For tablets in landscape, use optimal width and height to match iPad example
         if (isTablet && isLandscape) {
-          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.7f); // 70% width
+          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.7f); // Increased from 0.6f to 0.7f for bigger image
+          mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.9f); // 90% height for better proportion
         } else {
-          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.9f); // 90% width
+          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.95f); // Increased from 0.9f to 0.95f for bigger image
+          mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.95f); // Increased from 0.9f to 0.95f for bigger image
         }
-        mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.9f);
       } else {
-        // For tablets in landscape, use smaller width to create a wrapped appearance
+        // For tablets in landscape, use optimal width to match iPad example
         if (isTablet && isLandscape) {
-          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.8f); // 80% width
+          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.8f); // Increased from 0.7f to 0.8f for bigger image
+          mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.95f); // Increased from 0.9f to 0.95f for bigger image
         } else {
           mConstraintSet.constrainPercentWidth(R.id.frameLayout, 1.0f); // 100% width
+          mConstraintSet.constrainPercentHeight(R.id.frameLayout, 1.0f); // 100% height
         }
-        mConstraintSet.constrainPercentHeight(R.id.frameLayout, 1.0f);
       }
 
       mConstraintSet.constrainHeight(R.id.frameLayout, ConstraintSet.MATCH_CONSTRAINT);
       mConstraintSet.applyTo(mConstraintLayout);
 
+      // Ensure the body fills the entire frame for proper image display
       body.setLayoutParams(
           new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
       runInMain(() -> popup.showAtLocation(popupRoot, Gravity.TOP, 0, 0));
@@ -416,11 +427,11 @@ public class AppBannerPopup {
 
       ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
       ConstraintSet mConstraintSet = new ConstraintSet();
+      mConstraintSet.clone(mConstraintLayout);
 
-      // For tablets in landscape, limit the width of non-full banners
+      // For tablets in landscape, optimize the width of non-full banners
       if (isTablet && isLandscape) {
-        mConstraintSet.clone(mConstraintLayout);
-        mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.7f); // 70% width
+        mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.6f); // 60% width for better proportion
         mConstraintSet.applyTo(mConstraintLayout);
       }
 
