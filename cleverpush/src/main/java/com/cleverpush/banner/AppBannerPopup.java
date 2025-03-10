@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
+import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -635,17 +636,17 @@ public class AppBannerPopup {
           ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-              if (!isFinish) {
-                isNotchColorChange = true;
-                currentStatusBarColor = window.getStatusBarColor();
-                currentNavigationBarColor = window.getNavigationBarColor();
-                window.setStatusBarColor(Color.parseColor(notchColor));
-                window.setNavigationBarColor(Color.parseColor(notchColor));
-              } else {
-                isNotchColorChange = false;
-                window.setStatusBarColor(currentStatusBarColor);
-                window.setNavigationBarColor(currentNavigationBarColor);
-              }
+              window.getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
+                int statusBarInsetTop = 0;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                  statusBarInsetTop = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                }
+                view.setBackgroundColor(Color.parseColor(notchColor));
+
+                // Adjust padding to avoid overlap
+                view.setPadding(0, statusBarInsetTop, 0, 0);
+                return insets;
+              });
             }
           });
         }
