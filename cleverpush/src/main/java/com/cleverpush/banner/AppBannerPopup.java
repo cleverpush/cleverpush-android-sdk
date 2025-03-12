@@ -2,7 +2,6 @@ package com.cleverpush.banner;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,17 +10,19 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
-import android.provider.Settings;
 
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -33,11 +34,10 @@ import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.cleverpush.ActivityLifecycleListener;
-import com.cleverpush.banner.models.blocks.BannerBlock;
-import com.cleverpush.banner.models.blocks.BannerBlockType;
 import com.cleverpush.util.Logger;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
@@ -53,6 +53,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -265,12 +266,9 @@ public class AppBannerPopup {
     observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
       @Override
       public void onGlobalLayout() {
-        // Make the image fill the entire frame with proper scaling
         FrameLayout.LayoutParams layoutParams =
-            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, body.getHeight());
         bannerBackground.setLayoutParams(layoutParams);
-        // Set scale type to ensure the image fills the space properly
-        bannerBackground.setScaleType(ImageView.ScaleType.CENTER_CROP);
         if (observer.isAlive()) {
           observer.removeGlobalOnLayoutListener(this);
         }
@@ -328,12 +326,7 @@ public class AppBannerPopup {
           InputStream in = new URL(imageUrl).openStream();
           Bitmap bitmap = BitmapFactory.decodeStream(in);
           if (bitmap != null) {
-            // Set the image with proper scaling
-            activity.runOnUiThread(() -> {
-              bannerBackground.setImageBitmap(bitmap);
-              bannerBackground.setScaleType(ImageView.ScaleType.CENTER_CROP);
-              bannerBackground.setAdjustViewBounds(true);
-            });
+            bannerBackground.setImageBitmap(bitmap);
           }
         } catch (Exception ex) {
           Logger.e(TAG, "Error at setting background image in app banner.", ex);
@@ -382,42 +375,22 @@ public class AppBannerPopup {
     }
     setUpBannerBlocks();
 
-    // Check if device is a tablet in landscape mode
-    boolean isTablet = (activity.getResources().getConfiguration().screenLayout & 
-                      Configuration.SCREENLAYOUT_SIZE_MASK) >= 
-                      Configuration.SCREENLAYOUT_SIZE_LARGE;
-    boolean isLandscape = activity.getResources().getConfiguration().orientation == 
-                        Configuration.ORIENTATION_LANDSCAPE;
-
     if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
       ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
       ConstraintSet mConstraintSet = new ConstraintSet();
       mConstraintSet.clone(mConstraintLayout);
 
       if (data.isMarginEnabled()) {
-        // For tablets in landscape, use optimal width and height to match iPad example
-        if (isTablet && isLandscape) {
-          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.7f); // Increased from 0.6f to 0.7f for bigger image
-          mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.9f); // 90% height for better proportion
-        } else {
-          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.95f); // Increased from 0.9f to 0.95f for bigger image
-          mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.95f); // Increased from 0.9f to 0.95f for bigger image
-        }
+        mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.9f);
+        mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.9f);
       } else {
-        // For tablets in landscape, use optimal width to match iPad example
-        if (isTablet && isLandscape) {
-          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.8f); // Increased from 0.7f to 0.8f for bigger image
-          mConstraintSet.constrainPercentHeight(R.id.frameLayout, 0.95f); // Increased from 0.9f to 0.95f for bigger image
-        } else {
-          mConstraintSet.constrainPercentWidth(R.id.frameLayout, 1.0f); // 100% width
-          mConstraintSet.constrainPercentHeight(R.id.frameLayout, 1.0f); // 100% height
-        }
+        mConstraintSet.constrainPercentWidth(R.id.frameLayout, 1.0f);
+        mConstraintSet.constrainPercentHeight(R.id.frameLayout, 1.0f);
       }
 
       mConstraintSet.constrainHeight(R.id.frameLayout, ConstraintSet.MATCH_CONSTRAINT);
       mConstraintSet.applyTo(mConstraintLayout);
 
-      // Ensure the body fills the entire frame for proper image display
       body.setLayoutParams(
           new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
       runInMain(() -> popup.showAtLocation(popupRoot, Gravity.TOP, 0, 0));
@@ -427,13 +400,6 @@ public class AppBannerPopup {
 
       ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
       ConstraintSet mConstraintSet = new ConstraintSet();
-      mConstraintSet.clone(mConstraintLayout);
-
-      // For tablets in landscape, optimize the width of non-full banners
-      if (isTablet && isLandscape) {
-        mConstraintSet.constrainPercentWidth(R.id.frameLayout, 0.6f); // 60% width for better proportion
-        mConstraintSet.applyTo(mConstraintLayout);
-      }
 
       switch (data.getPositionType()) {
         case POSITION_TYPE_TOP:
@@ -456,6 +422,18 @@ public class AppBannerPopup {
           runInMain(() -> popup.showAtLocation(popupRoot, Gravity.BOTTOM, 0, 0));
           break;
         default:
+          popup.setFocusable(true);
+          popup.setOutsideTouchable(false);
+          popup.setTouchable(true);
+          popup.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+          popup.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+          popup.setTouchInterceptor((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+              v.performClick();
+            }
+            return false;  // Ensures touch events propagate to child views
+          });
           runInMain(() -> popup.showAtLocation(popupRoot, Gravity.CENTER, 0, 0));
           break;
       }
@@ -465,6 +443,15 @@ public class AppBannerPopup {
   private void setUpBannerBlocks() {
     viewPager2 = popupRoot.findViewById(R.id.carousel_pager);
     TabLayout tabLayout = popupRoot.findViewById(R.id.carousel_pager_tab_layout);
+
+    if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        viewPager2.setNestedScrollingEnabled(true);
+      }
+      viewPager2.getChildAt(0).setOverScrollMode(View.OVER_SCROLL_NEVER);
+      viewPager2.setUserInputEnabled(true);
+      viewPager2.requestDisallowInterceptTouchEvent(false);
+    }
 
     if (data.isCloseButtonEnabled()) {
       ImageButton buttonClose;
@@ -481,6 +468,22 @@ public class AppBannerPopup {
       }
       buttonClose.setVisibility(View.VISIBLE);
       buttonClose.setOnClickListener(view -> dismiss());
+    }
+
+    viewPager2.setUserInputEnabled(true);
+
+    if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+      try {
+        Field recyclerViewField = ViewPager2.class.getDeclaredField("mRecyclerView");
+        recyclerViewField.setAccessible(true);
+        RecyclerView recyclerView = (RecyclerView) recyclerViewField.get(viewPager2);
+        Field touchSlopField = RecyclerView.class.getDeclaredField("mTouchSlop");
+        touchSlopField.setAccessible(true);
+        int touchSlop = (int) touchSlopField.get(recyclerView);
+        touchSlopField.set(recyclerView, touchSlop * 2);
+      } catch (Exception e) {
+        Logger.e(TAG, "Error adjusting ViewPager2 touch sensitivity", e);
+      }
     }
 
     if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
@@ -544,41 +547,10 @@ public class AppBannerPopup {
       int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
       LinearLayout.LayoutParams layoutParams;
       view.measure(wMeasureSpec, hMeasureSpec);
-      
-      // Check if device is a tablet in landscape mode
-      boolean isTablet = (activity.getResources().getConfiguration().screenLayout & 
-                         Configuration.SCREENLAYOUT_SIZE_MASK) >= 
-                         Configuration.SCREENLAYOUT_SIZE_LARGE;
-      boolean isLandscape = activity.getResources().getConfiguration().orientation == 
-                           Configuration.ORIENTATION_LANDSCAPE;
-      
       if (popupRoot.getMeasuredHeight() > view.getMeasuredHeight() + TAB_LAYOUT_DEFAULT_HEIGHT + MAIN_LAYOUT_PADDING) {
         layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, view.getMeasuredHeight());
       } else {
-        // For tablets in landscape mode, limit height to 70% of screen height
-        float heightPercentage = 0.77f;
-        if (isTablet && isLandscape) {
-          // Count the number of image and button blocks to determine if we need special handling
-          int imageCount = 0;
-          int buttonCount = 0;
-          
-          for (BannerScreens screen : data.getScreens()) {
-            for (BannerBlock block : screen.getBlocks()) {
-              if (block.getType() == BannerBlockType.Image) {
-                imageCount++;
-              } else if (block.getType() == BannerBlockType.Button) {
-                buttonCount++;
-              }
-            }
-          }
-          
-          // If we have both images and buttons, use 70% of screen height
-          if (imageCount > 0 && buttonCount > 0) {
-            heightPercentage = 0.7f;
-          }
-        }
-        
-        int height = (int) (activity.getResources().getDisplayMetrics().heightPixels * heightPercentage);
+        int height = (int) (activity.getResources().getDisplayMetrics().heightPixels * 0.77);
         layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height);
       }
 
@@ -635,17 +607,17 @@ public class AppBannerPopup {
           ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-              if (!isFinish) {
-                isNotchColorChange = true;
-                currentStatusBarColor = window.getStatusBarColor();
-                currentNavigationBarColor = window.getNavigationBarColor();
-                window.setStatusBarColor(Color.parseColor(notchColor));
-                window.setNavigationBarColor(Color.parseColor(notchColor));
-              } else {
-                isNotchColorChange = false;
-                window.setStatusBarColor(currentStatusBarColor);
-                window.setNavigationBarColor(currentNavigationBarColor);
-              }
+              window.getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
+                int statusBarInsetTop = 0;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                  statusBarInsetTop = insets.getInsets(WindowInsets.Type.statusBars()).top;
+                }
+                view.setBackgroundColor(Color.parseColor(notchColor));
+
+                // Adjust padding to avoid overlap
+                view.setPadding(0, statusBarInsetTop, 0, 0);
+                return insets;
+              });
             }
           });
         }
