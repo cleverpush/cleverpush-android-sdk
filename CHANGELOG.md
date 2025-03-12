@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.30 (12.03.2025)
+* Further improvements for App Banners in landscape mode on tablets
+
 ## 1.34.29 (10.03.2025)
 * Further improvements for App Banners in landscape mode on tablets
 
