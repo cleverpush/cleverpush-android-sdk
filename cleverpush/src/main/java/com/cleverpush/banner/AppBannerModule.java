@@ -65,6 +65,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class AppBannerModule {
 
@@ -100,6 +101,7 @@ public class AppBannerModule {
   public String currentEventId = null;
   Set<String> currentNotificationDeeplink = new HashSet<>();
   boolean isBannerFromNotification = false;
+  private TriggeredEvent currentEvent = null;
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -461,6 +463,7 @@ public class AppBannerModule {
   public void triggerEvent(TriggeredEvent event) {
     events.add(event);
     currentEventId = event.getId();
+    currentEvent = event;
     this.startup();
   }
 
@@ -534,6 +537,7 @@ public class AppBannerModule {
   synchronized void startup() {
     Logger.d(TAG, "startup");
 
+    filteredBanners.clear();
     this.getBanners(banners -> {
       createBanners(banners);
       scheduleFilteredBanners();
@@ -804,7 +808,21 @@ public class AppBannerModule {
     return allowed;
   }
 
-  private boolean checkEventTriggerCondition(BannerTriggerCondition condition) {
+  private boolean checkEventTriggerCondition(BannerTriggerCondition condition, boolean isMultipleEvent, List<BannerTriggerCondition> triggers) {
+    if (currentEvent == null) {
+      return false;
+    }
+
+    boolean currentEventMatches = isCurrentEventMatching(triggers);
+
+    if (!currentEventMatches) {
+      return false;
+    }
+
+    if (!isMultipleEvent) {
+      return currentEventMatches;
+    }
+
     for (TriggeredEvent triggeredEvent : events) {
       if (triggeredEvent.getId() == null || !triggeredEvent.getId().equals(condition.getEvent())) {
         continue;
@@ -817,16 +835,7 @@ public class AppBannerModule {
       boolean conditionTrue = true;
 
       for (BannerTriggerConditionEventProperty eventProperty : condition.getEventProperties()) {
-        String propertyValue = String.valueOf(triggeredEvent.getProperties().get(eventProperty.getProperty()));
-        String comparePropertyValue = eventProperty.getValue();
-
-        boolean eventPropertiesMatching = this.checkRelationFilter(true,
-            CheckFilterRelation.fromString(eventProperty.getRelation()),
-            propertyValue,
-            comparePropertyValue,
-            comparePropertyValue,
-            comparePropertyValue);
-
+        boolean eventPropertiesMatching = isEventPropertyMatching(triggeredEvent, eventProperty);
         if (!eventPropertiesMatching) {
           conditionTrue = false;
           break;
@@ -839,6 +848,43 @@ public class AppBannerModule {
     }
 
     return false;
+  }
+
+  private boolean isCurrentEventMatching(List<BannerTriggerCondition> triggers) {
+    boolean currentEventMatches = false;
+
+    for (BannerTriggerCondition triggerCondition : triggers) {
+      if (currentEvent.getId() != null && currentEvent.getId().equals(triggerCondition.getEvent())) {
+        if (triggerCondition.getEventProperties() == null || triggerCondition.getEventProperties().isEmpty()) {
+          currentEventMatches = true;
+          break;
+        } else {
+          boolean conditionTrue = true;
+
+          for (BannerTriggerConditionEventProperty eventProperty : triggerCondition.getEventProperties()) {
+            boolean eventPropertiesMatching = isEventPropertyMatching(currentEvent, eventProperty);
+            if (!eventPropertiesMatching) {
+              conditionTrue = false;
+              break;
+            }
+          }
+          currentEventMatches = conditionTrue;
+        }
+      }
+    }
+    return currentEventMatches;
+  }
+
+  private boolean isEventPropertyMatching(TriggeredEvent event, BannerTriggerConditionEventProperty eventProperty) {
+    String propertyValue = String.valueOf(event.getProperties().get(eventProperty.getProperty()));
+    String comparePropertyValue = eventProperty.getValue();
+
+    return this.checkRelationFilter(true,
+            CheckFilterRelation.fromString(eventProperty.getRelation()),
+            propertyValue,
+            comparePropertyValue,
+            comparePropertyValue,
+            comparePropertyValue);
   }
 
   private boolean checkTargetEventRelationFilter(CheckFilterRelation relation, String compareValue,
@@ -1120,10 +1166,27 @@ public class AppBannerModule {
                   conditionTrue = sessions > condition.getSessions();
                 }
               } else if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
-                conditionTrue = this.checkEventTriggerCondition(condition);
+                long eventConditionCount = 1;
+                List<BannerTriggerCondition> eventTriggers = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                  eventTriggers = trigger.getConditions().stream()
+                          .filter(c -> c.getType() == BannerTriggerConditionType.Event)
+                          .collect(Collectors.toList());
+                  eventConditionCount = eventTriggers.size();
+                } else {
+                  for (BannerTriggerCondition c : trigger.getConditions()) {
+                    if (c.getType() == BannerTriggerConditionType.Event) {
+                      eventTriggers.add(c);
+                    }
+                  }
+                  eventConditionCount = eventTriggers.size();
+                }
+
+                boolean isMultipleEvent = eventConditionCount > 1;
+                conditionTrue = this.checkEventTriggerCondition(condition, isMultipleEvent, eventTriggers);
               } else if (condition.getType().equals(BannerTriggerConditionType.Deeplink)) {
                 conditionTrue = this.checkDeeplinkTriggerCondition(condition);
-              }  else if (condition.getType().equals(BannerTriggerConditionType.DaysSinceInstallation)) {
+              } else if (condition.getType().equals(BannerTriggerConditionType.DaysSinceInstallation)) {
                 conditionTrue = this.checkDaysSinceInstallationTriggerCondition(condition);
               } else {
                 conditionTrue = false;
@@ -1215,7 +1278,6 @@ public class AppBannerModule {
               if (isBannerFromNotification) {
                 isBannerFromNotification = false;
               } else {
-                Logger.i(TAG, "TrgiuqNCbtevi3zGk before filteredBanners.add: " + filteredBanners.size());
                 filteredBanners.add(new AppBannerPopup(getCurrentActivity(), banner));
               }
             });
@@ -1296,6 +1358,10 @@ public class AppBannerModule {
 
     if (currentEventId != null) {
       currentEventId = null;
+    }
+
+    if (currentEvent != null) {
+      currentEvent = null;
     }
   }
 
