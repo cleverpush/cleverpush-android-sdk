@@ -24,7 +24,7 @@ public class CleverPushHttpClient {
     void onFailure(int statusCode, String response, Throwable throwable);
   }
 
-  public static String BASE_URL = "https://api.cleverpush.com";
+  public static String BASE_URL = "https://api-mobile.cleverpush.com";
   private static final int TIMEOUT = 120_000;
   private static final int MAX_RETRIES = 3;
   private static final int INITIAL_RETRY_DELAY = 1000;
