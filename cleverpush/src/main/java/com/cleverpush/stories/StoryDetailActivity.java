@@ -257,11 +257,11 @@ public class StoryDetailActivity extends Activity implements StoryChangeListener
       int subStoryIndex = getSubStoryPosition(i);
 
       if (stories.get(i).getContent().getPages() != null && stories.get(i).getContent().getPages().size() > 1) {
-        storyURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
+        storyURL = "https://api-mobile.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
             + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId
             + "&#page=page-" + subStoryIndex;
       } else {
-        storyURL = "https://api.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
+        storyURL = "https://api-mobile.cleverpush.com/channel/" + stories.get(i).getChannel() + "/story/" + storyId
             + "/html?hideStoryShareButton=" + isHideStoryShareButton + "&widgetId=" + widgetId;
       }
 
