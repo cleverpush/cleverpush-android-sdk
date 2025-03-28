@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.34.31 (28.03.2025)
+* Migrated deprecated edge-to-edge display APIs for Android 15
+* Fixed bug in `AppBanner`, where event trigger not working correctly. 
+* Changed the default SDK endpoint to a new subdomain for API requests.
+
 ## 1.34.30 (12.03.2025)
 * Further improvements for App Banners in landscape mode on tablets
 
