@@ -426,7 +426,7 @@ public class NotificationService {
         .createBasicNotification(context, notificationStr, subscriptionStr, notification, requestId);
 
     android.app.Notification summaryNotification = NotificationService.getInstance()
-            .createsummaryNotification (context, notificationStr, subscriptionStr, notification, requestId);
+            .createSummaryNotification (context, notificationStr, subscriptionStr, notification, requestId);
 
     if (notificationBuilder != null) {
       NotificationManagerCompat.from(context).notify(notification.getTag(), requestId, notificationBuilder.build());
@@ -435,7 +435,7 @@ public class NotificationService {
     return requestId;
   }
 
-  private android.app.Notification createsummaryNotification(Context context, String notificationStr,
+  private android.app.Notification createSummaryNotification(Context context, String notificationStr,
                                                              String subscriptionStr, Notification notification, int requestId) {
     Intent targetIntent = this.getTargetIntent(context);
     targetIntent.putExtra("notification", notificationStr);
