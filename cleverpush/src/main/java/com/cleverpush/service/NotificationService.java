@@ -63,6 +63,8 @@ public class NotificationService {
   private static NotificationService sInstance;
 
   private final int GET_BITMAP_TIMEOUT = 20 * 1000;
+  private final String  GROUPLESS_SUMMARY_KEY = "cleverpush_group_undefined";
+  private final int GROUPLESS_SUMMARY_ID = 0;
 
   private NotificationService() {
 
@@ -107,6 +109,27 @@ public class NotificationService {
       return ContextCompat.getColor(context, colorResId);
     }
     return 0;
+  }
+
+  private Uri getSoundUri(Context context, Notification notification) {
+    Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+    try {
+      if (notification.getSoundFilename() != null && !notification.getSoundFilename().isEmpty()) {
+        Resources resources = context.getResources();
+        String packageName = context.getPackageName();
+        int soundId = resources.getIdentifier(notification.getSoundFilename(), "raw", packageName);
+        if (soundId != 0) {
+          Uri trySoundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + soundId);
+          if (trySoundUri != null) {
+            soundUri = trySoundUri;
+          }
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while fetching soundUri for push. " + e.getMessage(), e);
+    }
+
+    return soundUri;
   }
 
   private Bitmap getBitmapFromUrl(String strURL) {
@@ -171,19 +194,7 @@ public class NotificationService {
 
     NotificationStyle notificationStyle = getNotificationStyle(context);
 
-    Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
-    if (notification.getSoundFilename() != null && !notification.getSoundFilename().isEmpty()) {
-      Resources resources = context.getResources();
-      String packageName = context.getPackageName();
-      int soundId = resources.getIdentifier(notification.getSoundFilename(), "raw", packageName);
-      if (soundId != 0) {
-        Uri trySoundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + soundId);
-        if (trySoundUri != null) {
-          soundUri = trySoundUri;
-        }
-      }
-    }
+    Uri soundUri = getSoundUri(context, notification);
 
     NotificationCompat.Builder notificationBuilder;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -257,6 +268,7 @@ public class NotificationService {
         .setContentText(text)
         .setSmallIcon(getSmallIcon(context))
         .setAutoCancel(true)
+        .setGroup(GROUPLESS_SUMMARY_KEY)
         .setSound(soundUri);
 
     if (notification.getActions() != null && notification.getActions().length > 0) {
@@ -407,10 +419,46 @@ public class NotificationService {
     int requestId = getRequestId(context, notification);
     NotificationCompat.Builder notificationBuilder = NotificationService.getInstance()
         .createBasicNotification(context, notificationStr, subscriptionStr, notification, requestId);
+
+    android.app.Notification summaryNotification = NotificationService.getInstance()
+            .createsummaryNotification (context, notificationStr, subscriptionStr, notification, requestId);
+
     if (notificationBuilder != null) {
       NotificationManagerCompat.from(context).notify(notification.getTag(), requestId, notificationBuilder.build());
+      NotificationManagerCompat.from(context).notify(GROUPLESS_SUMMARY_ID, summaryNotification);
     }
     return requestId;
+  }
+
+  private android.app.Notification createsummaryNotification(Context context, String notificationStr,
+                                                             String subscriptionStr, Notification notification, int requestId) {
+    Intent targetIntent = this.getTargetIntent(context);
+    targetIntent.putExtra("notification", notificationStr);
+    targetIntent.putExtra("subscription", subscriptionStr);
+
+    PendingIntent contentIntent =
+            PendingIntent.getActivity(context, requestId, targetIntent, this.getPendingIntentFlags());
+
+    String voucherCode = notification.getVoucherCode();
+    String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
+    String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
+
+    android.app.Notification summaryNotification =
+            new NotificationCompat.Builder(context, "default")
+                    .setContentIntent(contentIntent)
+                    .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
+                    .setContentTitle(title)
+                    .setContentText(text)
+                    .setSmallIcon(getSmallIcon(context))
+                    .setAutoCancel(true)
+                    .setStyle(new NotificationCompat.InboxStyle()
+                            .addLine(title)
+                            .addLine(text))
+                    .setGroup(GROUPLESS_SUMMARY_KEY)
+                    .setGroupSummary(true)
+                    .setSound(getSoundUri(context, notification))
+                    .build();
+      return summaryNotification;
   }
 
   int createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr) {
