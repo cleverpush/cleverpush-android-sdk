@@ -219,6 +219,11 @@ public class NotificationService {
               notificationBuilder.setColor(colorResId);
             }
           }
+        } else {
+          int colorResId = getColor(context);
+          if (colorResId != 0) {
+            notificationBuilder.setColor(colorResId);
+          }
         }
 
       } else {
