@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -651,12 +652,24 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   }
 
   private void fixFullscreenHtmlBannerUI(LinearLayout body, ConstraintLayout webLayout, WebView webView) {
+    DisplayMetrics displayMetrics = new DisplayMetrics();
+    activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+    int screenWidth = displayMetrics.widthPixels;
+    int screenHeight = displayMetrics.heightPixels;
+
     ConstraintSet constraintSet = new ConstraintSet();
-    constraintSet.constrainMinHeight(R.id.webView, Resources.getSystem().getDisplayMetrics().heightPixels);
+    constraintSet.clone(webLayout);
+    constraintSet.constrainMinHeight(R.id.webView, screenHeight);
     constraintSet.applyTo(webLayout);
+
     body.setPadding(0, 0, 0, 0);
+
     ViewGroup.LayoutParams layoutParams = webView.getLayoutParams();
-    layoutParams.width = Resources.getSystem().getDisplayMetrics().widthPixels;
+    layoutParams.width = screenWidth;
+    layoutParams.height = screenHeight;
+    webView.setLayoutParams(layoutParams);
+
     appBannerPopup.getViewPager2().getChildAt(0).setOverScrollMode(View.OVER_SCROLL_NEVER);
   }
 
@@ -702,6 +715,15 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         webView.getSettings().setLoadsImagesAutomatically(true);
         webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
         webView.setWebViewClient(new AppBannerWebViewClient());
+
+        webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+          ViewGroup.LayoutParams params = webView.getLayoutParams();
+          params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+          params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+          webView.setLayoutParams(params);
+          webView.requestLayout();
+          fixFullscreenHtmlBannerUI(body, webLayout, webView);
+        });
 
         // Ensure WebView is scrollable
         webView.setOnTouchListener((v, event) -> {
