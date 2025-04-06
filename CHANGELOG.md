@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.32 (06.04.2025)
+* Fixed a bug in the `HTML AppBanner` where the banner was not resizing when rotating the device.
+* Added a feature to open the latest notification when clicking on a group of notifications.
+
 ## 1.34.31 (28.03.2025)
 * Migrated deprecated edge-to-edge display APIs for Android 15
 * Fixed bug in `AppBanner`, where event trigger not working correctly. 
