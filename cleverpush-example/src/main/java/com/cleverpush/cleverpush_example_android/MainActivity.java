@@ -10,6 +10,7 @@ import androidx.databinding.DataBindingUtil;
 
 import com.cleverpush.CleverPush;
 import com.cleverpush.banner.WebViewActivity;
+import com.cleverpush.listener.AppBannerClosedListener;
 import com.cleverpush.listener.NotificationOpenedListener;
 import com.cleverpush.listener.NotificationReceivedListener;
 import com.cleverpush.util.Logger;
@@ -79,6 +80,15 @@ public class MainActivity extends AppCompatActivity {
             Map<String, Object> map = bannerAction.getCustomData();
             if (map != null) {
                 Logger.d(LOG_TAG, "AppBannerOpened " + map.keySet());
+            }
+        });
+
+        CleverPush.getInstance(this).setAppBannerClosedListener(new AppBannerClosedListener() {
+            @Override
+            public void closed(boolean isClosed) {
+                if (isClosed) {
+                    Logger.d(LOG_TAG, "AppBanner is closed");
+                }
             }
         });
     }

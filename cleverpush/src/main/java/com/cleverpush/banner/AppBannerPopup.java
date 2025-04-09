@@ -202,6 +202,9 @@ public class AppBannerPopup {
     runInMain(() -> animateBody(0f, getRoot().getHeight()));
     runInMain(() -> {
       popup.dismiss();
+      if (CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener() != null) {
+        CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener().closed(true);
+      }
       if (isHTMLBanner() && isNotchColorChange) {
         setNotchColor(true);
       }
