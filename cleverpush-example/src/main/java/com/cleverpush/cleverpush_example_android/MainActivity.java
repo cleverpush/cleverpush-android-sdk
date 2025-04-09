@@ -85,10 +85,8 @@ public class MainActivity extends AppCompatActivity {
 
         CleverPush.getInstance(this).setAppBannerClosedListener(new AppBannerClosedListener() {
             @Override
-            public void closed(boolean isClosed) {
-                if (isClosed) {
-                    Logger.d(LOG_TAG, "AppBanner is closed");
-                }
+            public void closed() {
+                Logger.d(LOG_TAG, "AppBanner is closed");
             }
         });
     }

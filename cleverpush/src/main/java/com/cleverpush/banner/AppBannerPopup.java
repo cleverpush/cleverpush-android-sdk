@@ -203,7 +203,7 @@ public class AppBannerPopup {
     runInMain(() -> {
       popup.dismiss();
       if (CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener() != null) {
-        CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener().closed(true);
+        CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener().closed();
       }
       if (isHTMLBanner() && isNotchColorChange) {
         setNotchColor(true);
