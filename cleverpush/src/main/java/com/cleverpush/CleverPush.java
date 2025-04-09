@@ -39,6 +39,7 @@ import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.database.DatabaseClient;
 import com.cleverpush.database.TableBannerTrackEvent;
 import com.cleverpush.listener.ActivityInitializedListener;
+import com.cleverpush.listener.AppBannerClosedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannerShownListener;
 import com.cleverpush.listener.AppBannersListener;
@@ -148,6 +149,7 @@ public class CleverPush {
   private TopicsChangedListener topicsChangedListener;
   private AppBannerShownListener appBannerShownListener;
   private AppBannerOpenedListener appBannerOpenedListener;
+  private AppBannerClosedListener appBannerClosedListener;
   private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
   private static Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
   private final Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
@@ -3629,6 +3631,14 @@ public class CleverPush {
 
   public AppBannerOpenedListener getAppBannerOpenedListener() {
     return appBannerOpenedListener;
+  }
+
+  public AppBannerClosedListener getAppBannerClosedListener() {
+    return appBannerClosedListener;
+  }
+
+  public void setAppBannerClosedListener(AppBannerClosedListener appBannerClosedListener) {
+    this.appBannerClosedListener = appBannerClosedListener;
   }
 
   public TopicsChangedListener getTopicsChangedListener() {
