@@ -105,6 +105,10 @@ public class AppBannerModule {
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
+    if (channel == null) {
+      Logger.e(TAG, "Channel ID not found. Please initialize the SDK first.");
+    }
+
     this.channel = channel;
     this.showDrafts = showDrafts;
     this.sharedPreferences = sharedPreferences;
