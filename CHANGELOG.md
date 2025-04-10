@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.33 (10.04.2025)
+* Implemented `setAppBannerClosedListener` for `AppBanner`
+
 ## 1.34.32 (06.04.2025)
 * Fixed a bug in the `HTML AppBanner` where the banner was not resizing when rotating the device.
 * Added a feature to open the latest notification when clicking on a group of notifications.
