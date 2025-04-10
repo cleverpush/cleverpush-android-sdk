@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.34 (10.04.2025)
+* App Banners: Make sure Channel ID is always available, even when app banners are shown before the SDK was fully initialized.
+
 ## 1.34.33 (10.04.2025)
 * Implemented `setAppBannerClosedListener` for `AppBanner`
 
