@@ -35,6 +35,10 @@ public class ChannelConfigFromChannelIdResponseHandler {
           JSONObject responseJson = new JSONObject(response);
           cleverPush.setChannelConfig(responseJson);
 
+          String channelId = responseJson.optString("channelId", null);
+          SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+          sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, channelId).apply();
+
           boolean isChannelIdChanged = cleverPush.isChannelIdChanged(storedChannelId, storedSubscriptionId);
           cleverPush.subscribeOrSync(
               autoRegister || isChannelIdChanged, isChannelIdChanged);

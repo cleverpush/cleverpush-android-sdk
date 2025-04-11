@@ -3834,7 +3834,7 @@ public class CleverPush {
   public AppBannerModule getAppBannerModule() {
     String channelId = this.channelId;
     if (channelId == null) {
-      channelId = MetaDataUtils.getChannelId(CleverPush.context);
+      channelId = getSharedPreferences(getContext()).getString(CleverPushPreferences.CHANNEL_ID, null);
     }
 
     return AppBannerModule.init(channelId, this.isShowDraft, getSharedPreferences(getContext()),
