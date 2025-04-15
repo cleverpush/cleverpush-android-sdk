@@ -36,6 +36,7 @@ import com.cleverpush.banner.models.VersionComparison;
 import com.cleverpush.database.DatabaseClient;
 import com.cleverpush.database.TableBannerTrackEvent;
 import com.cleverpush.listener.ActivityInitializedListener;
+import com.cleverpush.listener.AppBannerClosedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 import com.cleverpush.util.Logger;
@@ -102,6 +103,7 @@ public class AppBannerModule {
   Set<String> currentNotificationDeeplink = new HashSet<>();
   boolean isBannerFromNotification = false;
   private TriggeredEvent currentEvent = null;
+  private AppBannerClosedListener appBannerClosedListener;
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -1435,10 +1437,10 @@ public class AppBannerModule {
   }
 
   public void showBanner(String bannerId, String notificationId) {
-    showBanner(bannerId, notificationId, false);
+    showBanner(bannerId, notificationId, false, null);
   }
 
-  public void showBanner(String bannerId, String notificationId, boolean force) {
+  public void showBanner(String bannerId, String notificationId, boolean force, AppBannerClosedListener appBannerClosedListener) {
     getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
       @Override
       public void initialized() {
@@ -1456,7 +1458,7 @@ public class AppBannerModule {
                 pendingBanners.add(popup);
                 break;
               }
-              getHandler().post(() -> showBanner(popup, force));
+              getHandler().post(() -> showBanner(popup, force, appBannerClosedListener));
               break;
             }
           }
@@ -1469,9 +1471,10 @@ public class AppBannerModule {
     return new AppBannerPopup(getCurrentActivity(), banner);
   }
 
-  void showBanner(AppBannerPopup bannerPopup, boolean force) {
+  void showBanner(AppBannerPopup bannerPopup, boolean force, AppBannerClosedListener appBannerClosedListener) {
     try {
       Banner banner = bannerPopup.getData();
+      setAppBannerClosedListener(appBannerClosedListener);
       if (!force) {
         if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
           pendingFilteredBanners.add(bannerPopup);
@@ -1607,7 +1610,7 @@ public class AppBannerModule {
 
   void showBanner(AppBannerPopup bannerPopup) {
     try {
-      showBanner(bannerPopup, false);
+      showBanner(bannerPopup, false, null);
     } catch (Exception ex) {
       Logger.e(TAG, ex.getMessage(), ex);
     }
@@ -1836,5 +1839,13 @@ public class AppBannerModule {
 
   public void setCurrentNotificationDeeplink(Set<String> currentNotificationDeeplink) {
     this.currentNotificationDeeplink = currentNotificationDeeplink;
+  }
+
+  public AppBannerClosedListener getAppBannerClosedListener() {
+    return appBannerClosedListener;
+  }
+
+  public void setAppBannerClosedListener(AppBannerClosedListener appBannerClosedListener) {
+    this.appBannerClosedListener = appBannerClosedListener;
   }
 }

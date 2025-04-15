@@ -82,13 +82,6 @@ public class MainActivity extends AppCompatActivity {
                 Logger.d(LOG_TAG, "AppBannerOpened " + map.keySet());
             }
         });
-
-        CleverPush.getInstance(this).setAppBannerClosedListener(new AppBannerClosedListener() {
-            @Override
-            public void closed() {
-                Logger.d(LOG_TAG, "AppBanner is closed");
-            }
-        });
     }
 
     void miscFunctions() {
