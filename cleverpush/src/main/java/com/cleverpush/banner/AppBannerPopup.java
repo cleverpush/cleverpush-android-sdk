@@ -205,6 +205,9 @@ public class AppBannerPopup {
       if (CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener() != null) {
         CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener().closed();
       }
+      if (CleverPush.getInstance(CleverPush.context).getAppBannerModule().getAppBannerClosedListener() != null) {
+        CleverPush.getInstance(CleverPush.context).getAppBannerModule().getAppBannerClosedListener().closed();
+      }
       if (isHTMLBanner() && isNotchColorChange) {
         setNotchColor(true);
       }

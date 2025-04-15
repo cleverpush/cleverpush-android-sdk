@@ -3053,18 +3053,22 @@ public class CleverPush {
   }
 
   public void showAppBanner(String bannerId) {
-    showAppBanner(bannerId, null, true);
+    showAppBanner(bannerId, null, true, null);
   }
 
-  public void showAppBanner(String bannerId, String notificationId, boolean force) {
+  public void showAppBanner(String bannerId, AppBannerClosedListener appBannerClosedListener) {
+    showAppBanner(bannerId, null, true, appBannerClosedListener);
+  }
+
+  public void showAppBanner(String bannerId, String notificationId, boolean force, AppBannerClosedListener appBannerClosedListener) {
     if (appBannerModule == null) {
       appBannerModule = getAppBannerModule();
     }
-    appBannerModule.showBanner(bannerId, notificationId, force);
+    appBannerModule.showBanner(bannerId, notificationId, force, appBannerClosedListener);
   }
 
   public void showAppBanner(String bannerId, String notificationId) {
-    showAppBanner(bannerId, notificationId, false);
+    showAppBanner(bannerId, notificationId, false, null);
   }
 
   /**
