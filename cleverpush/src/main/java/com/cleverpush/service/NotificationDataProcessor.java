@@ -101,7 +101,7 @@ public class NotificationDataProcessor {
       dontShowNotification = true;
     }
 
-    boolean hasServiceExtension = startServiceExtension(context, notification, subscription);
+    boolean hasServiceExtension = startServiceExtension(context, notification, subscription, dontShowNotification);
     if (hasServiceExtension) {
       dontShowNotification = true;
     }
@@ -202,7 +202,7 @@ public class NotificationDataProcessor {
     }
   }
 
-  private static boolean startServiceExtension(Context context, Notification notification, Subscription subscription) {
+  private static boolean startServiceExtension(Context context, Notification notification, Subscription subscription, boolean dontShowNotification) {
     NotificationDataProcessor.setupNotificationServiceExtension(context);
     if (extension == null) {
       Logger.d(LOG_TAG, "startServiceExtension: Extension is NULL. returning");
@@ -227,8 +227,10 @@ public class NotificationDataProcessor {
       future.cancel(true);
     }
 
-    if (wantsToDisplay.get() && !notification.isSilent()) {
-      NotificationService.getInstance().showNotification(context, notification, subscription);
+    if (!dontShowNotification) {
+      if (wantsToDisplay.get() && !notification.isSilent()) {
+        NotificationService.getInstance().showNotification(context, notification, subscription);
+      }
     }
 
     return true;
