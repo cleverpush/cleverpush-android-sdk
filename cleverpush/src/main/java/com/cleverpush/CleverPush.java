@@ -149,7 +149,6 @@ public class CleverPush {
   private TopicsChangedListener topicsChangedListener;
   private AppBannerShownListener appBannerShownListener;
   private AppBannerOpenedListener appBannerOpenedListener;
-  private AppBannerClosedListener appBannerClosedListener;
   private Collection<SubscribedListener> getSubscriptionIdListeners = new ArrayList<>();
   private static Collection<ChannelConfigListener> getChannelConfigListeners = new ArrayList<>();
   private final Collection<NotificationOpenedResult> unprocessedOpenedNotifications = new ArrayList<>();
@@ -3060,14 +3059,14 @@ public class CleverPush {
     showAppBanner(bannerId, null, true, appBannerClosedListener);
   }
 
-  public void showAppBanner(String bannerId, String notificationId, boolean force, AppBannerClosedListener appBannerClosedListener) {
+  private void showAppBanner(String bannerId, String notificationId, boolean force, AppBannerClosedListener appBannerClosedListener) {
     if (appBannerModule == null) {
       appBannerModule = getAppBannerModule();
     }
     appBannerModule.showBanner(bannerId, notificationId, force, appBannerClosedListener);
   }
 
-  public void showAppBanner(String bannerId, String notificationId) {
+  private void showAppBanner(String bannerId, String notificationId) {
     showAppBanner(bannerId, notificationId, false, null);
   }
 
@@ -3637,14 +3636,6 @@ public class CleverPush {
     return appBannerOpenedListener;
   }
 
-  public AppBannerClosedListener getAppBannerClosedListener() {
-    return appBannerClosedListener;
-  }
-
-  public void setAppBannerClosedListener(AppBannerClosedListener appBannerClosedListener) {
-    this.appBannerClosedListener = appBannerClosedListener;
-  }
-
   public TopicsChangedListener getTopicsChangedListener() {
     return topicsChangedListener;
   }
@@ -3941,7 +3932,7 @@ public class CleverPush {
     return new Handler();
   }
 
-  public String getPendingShowAppBannerId() {
+  private String getPendingShowAppBannerId() {
     return pendingShowAppBannerId;
   }
 

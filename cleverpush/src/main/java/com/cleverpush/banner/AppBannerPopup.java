@@ -202,9 +202,6 @@ public class AppBannerPopup {
     runInMain(() -> animateBody(0f, getRoot().getHeight()));
     runInMain(() -> {
       popup.dismiss();
-      if (CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener() != null) {
-        CleverPush.getInstance(CleverPush.context).getAppBannerClosedListener().closed();
-      }
       if (CleverPush.getInstance(CleverPush.context).getAppBannerModule().getAppBannerClosedListener() != null) {
         CleverPush.getInstance(CleverPush.context).getAppBannerModule().getAppBannerClosedListener().closed();
       }
