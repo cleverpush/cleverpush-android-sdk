@@ -215,7 +215,9 @@ public class NotificationDataProcessor {
 
     Future<?> future = executor.submit(() -> {
       extension.onNotificationReceived(notificationReceivedEvent);
-
+      if (dontShowNotification) {
+        notificationReceivedEvent.preventDefault();
+      }
       if (notificationReceivedEvent.isPreventDefault()) {
         wantsToDisplay.set(false);
       }
@@ -227,10 +229,8 @@ public class NotificationDataProcessor {
       future.cancel(true);
     }
 
-    if (!dontShowNotification) {
-      if (wantsToDisplay.get() && !notification.isSilent()) {
-        NotificationService.getInstance().showNotification(context, notification, subscription);
-      }
+    if (wantsToDisplay.get() && !notification.isSilent()) {
+      NotificationService.getInstance().showNotification(context, notification, subscription);
     }
 
     return true;
