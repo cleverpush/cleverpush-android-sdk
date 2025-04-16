@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.36 (16.04.2025)
+* Created a new method `showAppBanner` with `AppBannerClosedListener`.
+* Optimized `NotificationReceivedCallbackListener`. 
+
 ## 1.34.35 (11.04.2025)
 * App Banners: Make sure Channel ID is always available, even when app banners are shown before the SDK was fully initialized.
 
@@ -7,7 +11,7 @@
 * App Banners: Make sure Channel ID is always available, even when app banners are shown before the SDK was fully initialized.
 
 ## 1.34.33 (10.04.2025)
-* Implemented `setAppBannerClosedListener` for `AppBanner`
+* Implemented `setAppBannerClosedListener` for `showAppBanner`
 
 ## 1.34.32 (06.04.2025)
 * Fixed a bug in the `HTML AppBanner` where the banner was not resizing when rotating the device.
