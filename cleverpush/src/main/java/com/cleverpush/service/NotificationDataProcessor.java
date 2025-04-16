@@ -61,6 +61,7 @@ public class NotificationDataProcessor {
     cleverPush.trackNotificationDelivered(notificationId, subscriptionId);
 
     boolean dontShowNotification = false;
+    boolean callbackReceivedListener = false;
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
 
@@ -69,7 +70,7 @@ public class NotificationDataProcessor {
     // - use NotificationReceivedCallbackListener and return false
     // - use NotificationExtenderService (here you can also modify the NotificationBuilder)
     try {
-      boolean callbackReceivedListener = cleverPush.isNotificationReceivedListenerCallback();
+      callbackReceivedListener = cleverPush.isNotificationReceivedListenerCallback();
 
       NotificationOpenedResult result = new NotificationOpenedResult();
       result.setNotification(notification);
@@ -101,7 +102,7 @@ public class NotificationDataProcessor {
       dontShowNotification = true;
     }
 
-    boolean hasServiceExtension = startServiceExtension(context, notification, subscription, dontShowNotification);
+    boolean hasServiceExtension = startServiceExtension(context, notification, subscription, callbackReceivedListener, dontShowNotification);
     if (hasServiceExtension) {
       dontShowNotification = true;
     }
@@ -202,7 +203,7 @@ public class NotificationDataProcessor {
     }
   }
 
-  private static boolean startServiceExtension(Context context, Notification notification, Subscription subscription, boolean dontShowNotification) {
+  private static boolean startServiceExtension(Context context, Notification notification, Subscription subscription, boolean callbackReceivedListener, boolean dontShowNotification) {
     NotificationDataProcessor.setupNotificationServiceExtension(context);
     if (extension == null) {
       Logger.d(LOG_TAG, "startServiceExtension: Extension is NULL. returning");
@@ -215,7 +216,7 @@ public class NotificationDataProcessor {
 
     Future<?> future = executor.submit(() -> {
       extension.onNotificationReceived(notificationReceivedEvent);
-      if (dontShowNotification) {
+      if (callbackReceivedListener && dontShowNotification) {
         notificationReceivedEvent.preventDefault();
       }
       if (notificationReceivedEvent.isPreventDefault()) {
