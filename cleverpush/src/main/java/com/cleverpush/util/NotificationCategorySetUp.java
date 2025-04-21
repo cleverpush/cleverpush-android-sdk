@@ -38,8 +38,11 @@ public class NotificationCategorySetUp {
         continue;
       }
 
+      deleteNotificationChannelIfExists(context, category.getId(), category.getName());
+
+      String channelId = category.getId() + "V2";
       NotificationChannel channel =
-          new NotificationChannel(category.getId(), category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
+          new NotificationChannel(channelId, category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
 
       String description = category.getDescription();
       if (description != null) {
@@ -176,5 +179,16 @@ public class NotificationCategorySetUp {
     }
 
     return Color.parseColor(hexStr);
+  }
+
+  public static void deleteNotificationChannelIfExists(Context context, String channelId, String channelName) {
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+      NotificationChannel existingChannel = notificationManager.getNotificationChannel(channelId);
+
+      if (existingChannel != null && existingChannel.getName().equals(channelName)) {
+        notificationManager.deleteNotificationChannel(channelId);
+      }
+    }
   }
 }

@@ -206,7 +206,7 @@ public class NotificationService {
 
         NotificationCategorySetUp.setNotificationCategory(context, notificationCategories);
 
-        notificationBuilder = new NotificationCompat.Builder(context, category.getId());
+        notificationBuilder = new NotificationCompat.Builder(context, category.getId() + "V2");
 
         String foregroundColor = category.getForegroundColor();
         if (foregroundColor != null) {
@@ -231,8 +231,10 @@ public class NotificationService {
         if (notification.notificationChannel != null) {
           channel = (NotificationChannel) notification.notificationChannel;
         } else {
+          NotificationCategorySetUp.deleteNotificationChannelIfExists(context, "default", "Default");
+
           int importance = NotificationManager.IMPORTANCE_DEFAULT;
-          channel = new NotificationChannel("default", "Default", importance);
+          channel = new NotificationChannel("defaultV2", "Default", importance);
         }
 
         channel.setDescription(channel.getName().toString());
@@ -449,7 +451,7 @@ public class NotificationService {
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
     android.app.Notification summaryNotification =
-            new NotificationCompat.Builder(context, "default")
+            new NotificationCompat.Builder(context, "defaultV2")
                     .setContentIntent(contentIntent)
                     .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
                     .setContentTitle(title)
