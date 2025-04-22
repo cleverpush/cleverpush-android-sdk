@@ -45,19 +45,26 @@ import com.cleverpush.util.NotificationCategorySetUp;
 import com.cleverpush.util.SharedPreferencesManager;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 
 public class NotificationService {
   private static NotificationService sInstance;
@@ -206,7 +213,14 @@ public class NotificationService {
 
         NotificationCategorySetUp.setNotificationCategory(context, notificationCategories);
 
-        notificationBuilder = new NotificationCompat.Builder(context, category.getId());
+        String updatedAt = category.getUpdatedAt();
+        if (updatedAt != null && !updatedAt.isEmpty()) {
+          String sanitizedUpdatedAt = updatedAt.replaceAll("[^a-zA-Z0-9]", "_");
+          String channelId = category.getId() + "_" + sanitizedUpdatedAt;
+          notificationBuilder = new NotificationCompat.Builder(context, channelId);
+        } else {
+          notificationBuilder = new NotificationCompat.Builder(context, category.getId());
+        }
 
         String foregroundColor = category.getForegroundColor();
         if (foregroundColor != null) {
@@ -231,8 +245,10 @@ public class NotificationService {
         if (notification.notificationChannel != null) {
           channel = (NotificationChannel) notification.notificationChannel;
         } else {
+          NotificationCategorySetUp.deleteNotificationChannelIfExists(context, "default", "Default");
+
           int importance = NotificationManager.IMPORTANCE_DEFAULT;
-          channel = new NotificationChannel("default", "Default", importance);
+          channel = new NotificationChannel(getDefaultChannelId(context), "Default", importance);
         }
 
         channel.setDescription(channel.getName().toString());
@@ -449,7 +465,7 @@ public class NotificationService {
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
     android.app.Notification summaryNotification =
-            new NotificationCompat.Builder(context, "default")
+            new NotificationCompat.Builder(context, getDefaultChannelId(context))
                     .setContentIntent(contentIntent)
                     .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
                     .setContentTitle(title)
@@ -725,4 +741,44 @@ public class NotificationService {
 
     return PendingIntent.getActivity(context, requestCode, actionIntent, this.getPendingIntentFlags());
   }
+
+  private String getDefaultChannelId(Context context) {
+    String channelId = "default";
+    try {
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+      String notificationChannelUpdatedAt = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, null);
+
+      Map<String, String> notificationChannelUpdatedAtMap;
+      if (notificationChannelUpdatedAt != null) {
+        Type type = new TypeToken<Map<String, String>>() {}.getType();
+        notificationChannelUpdatedAtMap = new Gson().fromJson(notificationChannelUpdatedAt, type);
+      } else {
+        notificationChannelUpdatedAtMap = new HashMap<>();
+      }
+
+      String existingUpdatedAt = notificationChannelUpdatedAtMap.get("default");
+
+      if (existingUpdatedAt == null) {
+        SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        String currentIsoDate = isoFormat.format(new Date());
+        notificationChannelUpdatedAtMap.put("default", currentIsoDate);
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, new Gson().toJson(notificationChannelUpdatedAtMap));
+        editor.apply();
+
+        existingUpdatedAt = currentIsoDate;
+      }
+
+      String sanitizedUpdatedAt = existingUpdatedAt.replaceAll("[^a-zA-Z0-9]", "_");
+      channelId = "default_" + sanitizedUpdatedAt;
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while getting default channelId. " + e.getMessage(), e);
+    }
+
+    return channelId;
+  }
+
 }
