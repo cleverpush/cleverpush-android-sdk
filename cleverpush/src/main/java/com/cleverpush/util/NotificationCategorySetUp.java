@@ -1,10 +1,13 @@
 package com.cleverpush.util;
 
+import static com.cleverpush.Constants.LOG_TAG;
+
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.media.AudioAttributes;
@@ -12,14 +15,24 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 
+import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.NotificationCategory;
 import com.cleverpush.NotificationCategoryGroup;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,11 +51,65 @@ public class NotificationCategorySetUp {
         continue;
       }
 
-      deleteNotificationChannelIfExists(context, category.getId(), category.getName());
+      String updatedAt = category.getUpdatedAt();
+      String categoryId = category.getId();
 
-      String channelId = category.getId() + "V2";
-      NotificationChannel channel =
-          new NotificationChannel(channelId, category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
+      if (updatedAt != null && !updatedAt.isEmpty()) {
+        SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        boolean containsRecreateNotificationChannel = sharedPreferences.contains(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT);
+
+        if (!containsRecreateNotificationChannel) {
+          deleteNotificationChannelIfExists(context, category.getId(), category.getName());
+
+          Map<String, String> notificationChannelUpdatedAtMap = new HashMap<>();
+          notificationChannelUpdatedAtMap.put(category.getId(), updatedAt);
+          editor.putString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, new Gson().toJson(notificationChannelUpdatedAtMap));
+          editor.apply();
+
+        } else {
+          String notificationChannelUpdatedAt = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, null);
+          Map<String, String> notificationChannelUpdatedAtMap;
+
+          if (notificationChannelUpdatedAt != null) {
+            Type type = new TypeToken<Map<String, String>>() {
+            }.getType();
+            notificationChannelUpdatedAtMap = new Gson().fromJson(notificationChannelUpdatedAt, type);
+          } else {
+            notificationChannelUpdatedAtMap = new HashMap<>();
+          }
+
+          String existingUpdatedAt = notificationChannelUpdatedAtMap.get(category.getId());
+
+          SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+          isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+          long updatedAtMillis = 0;
+          long existingUpdatedAtMillis = 0;
+
+          try {
+              Date updatedDate = isoFormat.parse(updatedAt);
+              updatedAtMillis = updatedDate != null ? updatedDate.getTime() : 0;
+
+              if (existingUpdatedAt != null && !existingUpdatedAt.isEmpty()) {
+              Date existingDate = isoFormat.parse(existingUpdatedAt);
+              existingUpdatedAtMillis = existingDate != null ? existingDate.getTime() : 0;
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+
+          if (existingUpdatedAt == null || updatedAtMillis > existingUpdatedAtMillis) {
+            deleteNotificationChannelIfExists(context, category.getId(), category.getName());
+            notificationChannelUpdatedAtMap.put(category.getId(), updatedAt);
+            editor.putString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, new Gson().toJson(notificationChannelUpdatedAtMap));
+            editor.apply();
+          }
+        }
+      }
+
+      NotificationChannel channel
+              = new NotificationChannel(geCategoryChannelId(categoryId, updatedAt), category.getName(), NotificationManager.IMPORTANCE_DEFAULT);
 
       String description = category.getDescription();
       if (description != null) {
@@ -150,6 +217,7 @@ public class NotificationCategorySetUp {
           notificationCategory.setBadgeDisabled(notificationCategoryJSONObject.optBoolean("badgeDisabled"));
           notificationCategory.setBackgroundColor(notificationCategoryJSONObject.optString("backgroundColor"));
           notificationCategory.setForegroundColor(notificationCategoryJSONObject.optString("foregroundColor"));
+          notificationCategory.setUpdatedAt(notificationCategoryJSONObject.optString("updatedAt"));
 
           notificationCategories.add(notificationCategory);
         }
@@ -190,5 +258,18 @@ public class NotificationCategorySetUp {
         notificationManager.deleteNotificationChannel(channelId);
       }
     }
+  }
+
+  private static String geCategoryChannelId(String categoryId, String updatedAt) {
+    String channelId =  categoryId;
+    try {
+      if (updatedAt != null && !updatedAt.isEmpty()) {
+        String sanitizedUpdatedAt = updatedAt.replaceAll("[^a-zA-Z0-9]", "_");
+        channelId = categoryId + "_" + sanitizedUpdatedAt;
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while getting category channelId. " + e.getMessage(), e);
+    }
+    return channelId;
   }
 }

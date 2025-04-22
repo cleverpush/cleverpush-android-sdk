@@ -54,10 +54,14 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
+import java.util.TimeZone;
 
 public class NotificationService {
   private static NotificationService sInstance;
@@ -206,7 +210,14 @@ public class NotificationService {
 
         NotificationCategorySetUp.setNotificationCategory(context, notificationCategories);
 
-        notificationBuilder = new NotificationCompat.Builder(context, category.getId() + "V2");
+        String updatedAt = category.getUpdatedAt();
+        if (updatedAt != null && !updatedAt.isEmpty()) {
+          String sanitizedUpdatedAt = updatedAt.replaceAll("[^a-zA-Z0-9]", "_");
+          String channelId = category.getId() + "_" + sanitizedUpdatedAt;
+          notificationBuilder = new NotificationCompat.Builder(context, channelId);
+        } else {
+          notificationBuilder = new NotificationCompat.Builder(context, category.getId());
+        }
 
         String foregroundColor = category.getForegroundColor();
         if (foregroundColor != null) {
@@ -234,7 +245,7 @@ public class NotificationService {
           NotificationCategorySetUp.deleteNotificationChannelIfExists(context, "default", "Default");
 
           int importance = NotificationManager.IMPORTANCE_DEFAULT;
-          channel = new NotificationChannel("defaultV2", "Default", importance);
+          channel = new NotificationChannel(getDefaultChannelId(), "Default", importance);
         }
 
         channel.setDescription(channel.getName().toString());
@@ -451,7 +462,7 @@ public class NotificationService {
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
     android.app.Notification summaryNotification =
-            new NotificationCompat.Builder(context, "defaultV2")
+            new NotificationCompat.Builder(context, getDefaultChannelId())
                     .setContentIntent(contentIntent)
                     .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
                     .setContentTitle(title)
@@ -726,5 +737,21 @@ public class NotificationService {
     int requestCode = generateRequestCode();
 
     return PendingIntent.getActivity(context, requestCode, actionIntent, this.getPendingIntentFlags());
+  }
+
+  private String getDefaultChannelId() {
+    String channelId =  "default";
+    try {
+      SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+      isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+      String currentIsoDate = isoFormat.format(new Date());
+
+      String sanitizedUpdatedAt = currentIsoDate.replaceAll("[^a-zA-Z0-9]", "_");
+      channelId =  "default_" + sanitizedUpdatedAt;
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while getting default channelId. " + e.getMessage(), e);
+    }
+    return channelId;
   }
 }

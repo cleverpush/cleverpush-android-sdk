@@ -35,6 +35,8 @@ public class NotificationCategory implements Serializable {
   String backgroundColor;
   @SerializedName("foregroundColor")
   String foregroundColor;
+  @SerializedName("updatedAt")
+  String updatedAt;
 
   public String getId() {
     return id;
@@ -166,5 +168,13 @@ public class NotificationCategory implements Serializable {
 
   public void setForegroundColor(String foregroundColor) {
     this.foregroundColor = foregroundColor;
+  }
+
+  public String getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(String updatedAt) {
+    this.updatedAt = updatedAt;
   }
 }
