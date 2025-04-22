@@ -57,54 +57,43 @@ public class NotificationCategorySetUp {
       if (updatedAt != null && !updatedAt.isEmpty()) {
         SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        boolean containsRecreateNotificationChannel = sharedPreferences.contains(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT);
 
-        if (!containsRecreateNotificationChannel) {
+        String notificationChannelUpdatedAt = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, null);
+        Map<String, String> notificationChannelUpdatedAtMap;
+
+        if (notificationChannelUpdatedAt != null) {
+          Type type = new TypeToken<Map<String, String>>() {
+          }.getType();
+          notificationChannelUpdatedAtMap = new Gson().fromJson(notificationChannelUpdatedAt, type);
+        } else {
+          notificationChannelUpdatedAtMap = new HashMap<>();
+        }
+
+        String existingUpdatedAt = notificationChannelUpdatedAtMap.get(category.getId());
+
+        SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        long updatedAtMillis = 0;
+        long existingUpdatedAtMillis = 0;
+
+        try {
+          if (existingUpdatedAt != null && !existingUpdatedAt.isEmpty()) {
+            Date updatedDate = isoFormat.parse(updatedAt);
+            updatedAtMillis = updatedDate != null ? updatedDate.getTime() : 0;
+
+            Date existingDate = isoFormat.parse(existingUpdatedAt);
+            existingUpdatedAtMillis = existingDate != null ? existingDate.getTime() : 0;
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+
+        if (existingUpdatedAt == null || updatedAtMillis > existingUpdatedAtMillis) {
           deleteNotificationChannelIfExists(context, category.getId(), category.getName());
-
-          Map<String, String> notificationChannelUpdatedAtMap = new HashMap<>();
           notificationChannelUpdatedAtMap.put(category.getId(), updatedAt);
           editor.putString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, new Gson().toJson(notificationChannelUpdatedAtMap));
           editor.apply();
-
-        } else {
-          String notificationChannelUpdatedAt = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, null);
-          Map<String, String> notificationChannelUpdatedAtMap;
-
-          if (notificationChannelUpdatedAt != null) {
-            Type type = new TypeToken<Map<String, String>>() {
-            }.getType();
-            notificationChannelUpdatedAtMap = new Gson().fromJson(notificationChannelUpdatedAt, type);
-          } else {
-            notificationChannelUpdatedAtMap = new HashMap<>();
-          }
-
-          String existingUpdatedAt = notificationChannelUpdatedAtMap.get(category.getId());
-
-          SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-          isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-          long updatedAtMillis = 0;
-          long existingUpdatedAtMillis = 0;
-
-          try {
-              Date updatedDate = isoFormat.parse(updatedAt);
-              updatedAtMillis = updatedDate != null ? updatedDate.getTime() : 0;
-
-              if (existingUpdatedAt != null && !existingUpdatedAt.isEmpty()) {
-              Date existingDate = isoFormat.parse(existingUpdatedAt);
-              existingUpdatedAtMillis = existingDate != null ? existingDate.getTime() : 0;
-            }
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
-
-          if (existingUpdatedAt == null || updatedAtMillis > existingUpdatedAtMillis) {
-            deleteNotificationChannelIfExists(context, category.getId(), category.getName());
-            notificationChannelUpdatedAtMap.put(category.getId(), updatedAt);
-            editor.putString(CleverPushPreferences.NOTIFICATION_CHANNEL_UPDATED_AT, new Gson().toJson(notificationChannelUpdatedAtMap));
-            editor.apply();
-          }
         }
       }
 
