@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.38 (22.04.2025)
+* Fixed a bug where notification sounds would still play even when the device was on silent or vibrate mode.
+
 ## 1.34.37 (17.04.2025)
 * Fixed a bug where notification sounds would still play even when the device was on silent or vibrate mode.
 
