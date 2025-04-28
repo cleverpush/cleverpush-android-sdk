@@ -190,7 +190,6 @@ public class CleverPush {
   private boolean hasSubscribeConsentCalled = false;
   private Collection<SubscribeConsentListener> subscribeConsentListeners = new ArrayList<>();
 
-  private boolean incrementBadge = false;
   private boolean autoClearBadge = false;
   public boolean isShowDraft = false;
   private boolean ignoreDisabledNotificationPermission = false;
@@ -3653,11 +3652,14 @@ public class CleverPush {
   }
 
   public void setIncrementBadge(boolean incrementBadge) {
-    this.incrementBadge = incrementBadge;
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    sharedPreferences.edit().putBoolean(CleverPushPreferences.INCREMENT_BADGE, incrementBadge).apply();
   }
 
   public boolean getIncrementBadge() {
-    return this.incrementBadge;
+    if (getContext() == null) return false;
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    return sharedPreferences.getBoolean(CleverPushPreferences.INCREMENT_BADGE, false);
   }
 
   public boolean notificationOpenShouldStartActivity() {
