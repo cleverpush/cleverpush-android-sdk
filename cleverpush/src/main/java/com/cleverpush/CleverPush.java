@@ -235,6 +235,8 @@ public class CleverPush {
   private Queue<SubscriptionAttributeTagRequest> requestRemoveTagQueue = new LinkedList<>();
   private boolean isProcessingRemoveTagQueue = false;
   public Map<String, String> proccessedNotificationBannersMap = new HashMap<>();
+  public boolean isTopicDialogHasToShow = false;
+  public boolean isTopicDialogAPICalled = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -1511,7 +1513,6 @@ public class CleverPush {
             self.subscriptionInProgress = false;
             Logger.d(LOG_TAG, "subscribed with ID: " + newSubscriptionId);
 
-            self.fireSubscribedListener(newSubscriptionId);
             self.setSubscriptionId(newSubscriptionId);
 
             if (!isSessionStartCalled) {
@@ -1531,10 +1532,15 @@ public class CleverPush {
                     if (topics == null || topics.size() == 0) {
                       self.setSubscriptionTopics(setUpSelectedTopicIds(channelTopics).toArray(new String[0]));
                     }
+                    isTopicDialogHasToShow = true;
                     updatePendingTopicsDialog(true);
                   }
                 }
               }
+            }
+
+            if (!isTopicDialogHasToShow) {
+              self.fireSubscribedListener(newSubscriptionId);
             }
 
             if (isSubscriptionChanged() && !isConfirmAlertShown()) {
@@ -3114,6 +3120,16 @@ public class CleverPush {
                 }
               }, topicsDialogSeconds * MILLISECONDS_PER_SECOND);
             });
+          } else {
+            if (isTopicDialogHasToShow) {
+              isTopicDialogHasToShow = false;
+              fireSubscribedListener(getSubscriptionId(CleverPush.context));
+            }
+          }
+        } else {
+          if (isTopicDialogHasToShow) {
+            isTopicDialogHasToShow = false;
+            fireSubscribedListener(getSubscriptionId(CleverPush.context));
           }
         }
       } catch (Exception ex) {
@@ -3272,6 +3288,11 @@ public class CleverPush {
           if (topicsDialogListener != null) {
             topicsDialogListener.callback(false);
           }
+
+          if (isTopicDialogHasToShow) {
+            isTopicDialogHasToShow = false;
+            fireSubscribedListener(getSubscriptionId(CleverPush.context));
+          }
           showingTopicsDialog = false;
         });
 
@@ -3299,6 +3320,7 @@ public class CleverPush {
           this.subscribe(true);
         }
 
+        isTopicDialogAPICalled = true;
         CleverPush.getInstance(CleverPush.context).setSubscriptionTopics(selectedTopics.toArray(new String[0]));
       }
 
