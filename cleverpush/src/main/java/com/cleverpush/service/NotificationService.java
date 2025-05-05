@@ -60,6 +60,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -68,6 +69,13 @@ import java.util.TimeZone;
 
 public class NotificationService {
   private static NotificationService sInstance;
+  private static final int MAX_ICON_CACHE_SIZE = 10;
+  private final Map<String, Integer> iconCache = new LinkedHashMap<String, Integer>(MAX_ICON_CACHE_SIZE, 0.75f, true) {
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
+      return size() > MAX_ICON_CACHE_SIZE;
+    }
+  };
 
   private final int GET_BITMAP_TIMEOUT = 20 * 1000;
   private final String  GROUPLESS_SUMMARY_KEY = "cleverpush_group_undefined";
@@ -99,15 +107,27 @@ public class NotificationService {
   }
 
   private int getSmallIcon(Context context) {
+    String cacheKey = "cleverpush_small_icon";
+
+    if (iconCache.containsKey(cacheKey)) {
+      return iconCache.get(cacheKey);
+    }
+    
     int id = getDrawableId(context, "cleverpush_notification_icon");
     if (id != 0) {
+      iconCache.put(cacheKey, id);
       return id;
     }
+
     int iconResId = CleverPush.getInstance(context).getDefaultNotificationIcon();
     if (iconResId != 0) {
+      iconCache.put(cacheKey, iconResId);
       return iconResId;
     }
-    return getDrawableId(context, "default_notification_icon");
+    
+    int defaultIcon = getDrawableId(context, "default_notification_icon");
+    iconCache.put(cacheKey, defaultIcon);
+    return defaultIcon;
   }
 
   private int getColor(Context context) {
