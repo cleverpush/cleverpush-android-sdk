@@ -44,6 +44,12 @@ public class SetSubscriptionTopicsResponseHandler {
           editor.putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion);
           editor.apply();
         }
+
+        if (cleverPush.isTopicDialogHasToShow && cleverPush.isTopicDialogAPICalled) {
+          cleverPush.isTopicDialogHasToShow = false;
+          cleverPush.isTopicDialogAPICalled = false;
+          cleverPush.fireSubscribedListener(cleverPush.getSubscriptionId(CleverPush.context));
+        }
       }
 
       @Override
@@ -69,6 +75,11 @@ public class SetSubscriptionTopicsResponseHandler {
                 "\nResponse: " + response);
             completionListener.onFailure(genericException);
           }
+        }
+        if (cleverPush.isTopicDialogHasToShow && cleverPush.isTopicDialogAPICalled) {
+          cleverPush.isTopicDialogHasToShow = false;
+          cleverPush.isTopicDialogAPICalled = false;
+          cleverPush.fireSubscribedListener(cleverPush.getSubscriptionId(CleverPush.context));
         }
       }
     };
