@@ -36,6 +36,7 @@ import com.cleverpush.Notification;
 import com.cleverpush.NotificationAction;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
+import com.cleverpush.NotificationIconCacheManager;
 import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationStyle;
 import com.cleverpush.R;
@@ -60,7 +61,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -69,13 +69,6 @@ import java.util.TimeZone;
 
 public class NotificationService {
   private static NotificationService sInstance;
-  private static final int MAX_ICON_CACHE_SIZE = 10;
-  private final Map<String, Integer> iconCache = new LinkedHashMap<String, Integer>(MAX_ICON_CACHE_SIZE, 0.75f, true) {
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
-      return size() > MAX_ICON_CACHE_SIZE;
-    }
-  };
 
   private final int GET_BITMAP_TIMEOUT = 20 * 1000;
   private final String  GROUPLESS_SUMMARY_KEY = "cleverpush_group_undefined";
@@ -107,27 +100,19 @@ public class NotificationService {
   }
 
   private int getSmallIcon(Context context) {
-    String cacheKey = "cleverpush_small_icon";
+    NotificationIconCacheManager.init(context);
 
-    if (iconCache.containsKey(cacheKey)) {
-      return iconCache.get(cacheKey);
-    }
-    
     int id = getDrawableId(context, "cleverpush_notification_icon");
     if (id != 0) {
-      iconCache.put(cacheKey, id);
       return id;
     }
 
     int iconResId = CleverPush.getInstance(context).getDefaultNotificationIcon();
     if (iconResId != 0) {
-      iconCache.put(cacheKey, iconResId);
       return iconResId;
     }
-    
-    int defaultIcon = getDrawableId(context, "default_notification_icon");
-    iconCache.put(cacheKey, defaultIcon);
-    return defaultIcon;
+
+    return getDrawableId(context, "default_notification_icon");
   }
 
   private int getColor(Context context) {
@@ -169,6 +154,33 @@ public class NotificationService {
       connection.connect();
       InputStream input = connection.getInputStream();
       return BitmapFactory.decodeStream(input);
+    } catch (Exception exception) {
+      Logger.d(LOG_TAG, "NotificationService: Exception while loading image", exception);
+      return null;
+    }
+  }
+
+  private Bitmap getLargeIconBitmapFromUrl(String strURL) {
+    try {
+      Bitmap cachedIcon = NotificationIconCacheManager.getIcon(CleverPush.context, strURL);
+      if (cachedIcon != null) {
+        return cachedIcon;
+      }
+
+      URL url = new URL(strURL);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setConnectTimeout(GET_BITMAP_TIMEOUT);
+      connection.setReadTimeout(GET_BITMAP_TIMEOUT);
+      connection.setDoInput(true);
+      connection.connect();
+      InputStream input = connection.getInputStream();
+      Bitmap bitmap = BitmapFactory.decodeStream(input);
+
+      if (bitmap != null) {
+        NotificationIconCacheManager.cacheIcon(CleverPush.context, strURL, bitmap);
+      }
+
+      return bitmap;
     } catch (Exception exception) {
       Logger.d(LOG_TAG, "NotificationService: Exception while loading image", exception);
       return null;
@@ -335,7 +347,7 @@ public class NotificationService {
 
     if (iconUrl != null && !iconUrl.isEmpty()) {
       try {
-        Bitmap icon = getBitmapFromUrl(iconUrl);
+        Bitmap icon = getLargeIconBitmapFromUrl(iconUrl);
         if (icon != null) {
           notificationBuilder = notificationBuilder.setLargeIcon(icon);
         }
