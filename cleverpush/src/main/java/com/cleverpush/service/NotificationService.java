@@ -36,6 +36,7 @@ import com.cleverpush.Notification;
 import com.cleverpush.NotificationAction;
 import com.cleverpush.NotificationCarouselItem;
 import com.cleverpush.NotificationCategory;
+import com.cleverpush.NotificationIconCacheManager;
 import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationStyle;
 import com.cleverpush.R;
@@ -99,14 +100,18 @@ public class NotificationService {
   }
 
   private int getSmallIcon(Context context) {
+    NotificationIconCacheManager.init(context);
+
     int id = getDrawableId(context, "cleverpush_notification_icon");
     if (id != 0) {
       return id;
     }
+
     int iconResId = CleverPush.getInstance(context).getDefaultNotificationIcon();
     if (iconResId != 0) {
       return iconResId;
     }
+
     return getDrawableId(context, "default_notification_icon");
   }
 
@@ -149,6 +154,33 @@ public class NotificationService {
       connection.connect();
       InputStream input = connection.getInputStream();
       return BitmapFactory.decodeStream(input);
+    } catch (Exception exception) {
+      Logger.d(LOG_TAG, "NotificationService: Exception while loading image", exception);
+      return null;
+    }
+  }
+
+  private Bitmap getLargeIconBitmapFromUrl(String strURL) {
+    try {
+      Bitmap cachedIcon = NotificationIconCacheManager.getIcon(CleverPush.context, strURL);
+      if (cachedIcon != null) {
+        return cachedIcon;
+      }
+
+      URL url = new URL(strURL);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setConnectTimeout(GET_BITMAP_TIMEOUT);
+      connection.setReadTimeout(GET_BITMAP_TIMEOUT);
+      connection.setDoInput(true);
+      connection.connect();
+      InputStream input = connection.getInputStream();
+      Bitmap bitmap = BitmapFactory.decodeStream(input);
+
+      if (bitmap != null) {
+        NotificationIconCacheManager.cacheIcon(CleverPush.context, strURL, bitmap);
+      }
+
+      return bitmap;
     } catch (Exception exception) {
       Logger.d(LOG_TAG, "NotificationService: Exception while loading image", exception);
       return null;
@@ -315,7 +347,7 @@ public class NotificationService {
 
     if (iconUrl != null && !iconUrl.isEmpty()) {
       try {
-        Bitmap icon = getBitmapFromUrl(iconUrl);
+        Bitmap icon = getLargeIconBitmapFromUrl(iconUrl);
         if (icon != null) {
           notificationBuilder = notificationBuilder.setLargeIcon(icon);
         }
