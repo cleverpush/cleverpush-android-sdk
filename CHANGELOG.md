@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.34.39 (07.05.2025)
+* Optimise `showTopicsDialogue` functionality with subscription flow.
+* Implemented caching for notification icons with a limit to prevent missing icons in grouped notifications.
+* Fixed badge count issue on Android where `setIncrementBadge(true)` always showed 1 when app was killed.
+
 ## 1.34.38 (22.04.2025)
 * Fixed a bug where notification sounds would still play even when the device was on silent or vibrate mode.
 
