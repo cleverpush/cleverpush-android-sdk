@@ -73,6 +73,7 @@ public class NotificationDataProcessor {
       callbackReceivedListener = cleverPush.isNotificationReceivedListenerCallback();
 
       NotificationOpenedResult result = new NotificationOpenedResult();
+      notification.setRequestId(NotificationService.getRequestId(context, notification));
       result.setNotification(notification);
       result.setSubscription(subscription);
 

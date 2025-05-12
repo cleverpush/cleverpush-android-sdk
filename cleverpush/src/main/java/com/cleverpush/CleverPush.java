@@ -7,6 +7,7 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -2851,16 +2852,38 @@ public class CleverPush {
   }
 
   public void removeNotification(String notificationId) {
+    removeNotification(notificationId, false);
+  }
+
+  public void removeNotification(String notificationId, boolean removeFromNotificationCenter) {
     List<Notification> notifications = new ArrayList<Notification>(
-        StoredNotificationsService.getNotificationsFromLocal(getSharedPreferences(getContext())));
+            StoredNotificationsService.getNotificationsFromLocal(getSharedPreferences(getContext())));
+    int requestId = 0;
+    String tag = "";
+
     for (int i = 0; i < notifications.size(); i++) {
       if (notificationId.equalsIgnoreCase(notifications.get(i).id)) {
+        requestId = notifications.get(i).getRequestId();
+        tag = notifications.get(i).getTag();
         notifications.remove(i);
       }
     }
     getSharedPreferences(getContext()).edit().putString(CleverPushPreferences.NOTIFICATIONS_JSON,
-        new Gson().toJson(notifications, new TypeToken<List<Notification>>() {
-        }.getType())).apply();
+            new Gson().toJson(notifications, new TypeToken<List<Notification>>() {
+            }.getType())).apply();
+
+    if (removeFromNotificationCenter) {
+      try {
+        if (requestId != 0) {
+          NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+          if (notificationManager != null) {
+            notificationManager.cancel(tag, requestId);
+          }
+        }
+      } catch (Exception e) {
+        Logger.e(LOG_TAG, "Error while removing notification from notification center. " + e.getLocalizedMessage(), e);
+      }
+    }
   }
 
   public void trackEvent(String eventName) {
