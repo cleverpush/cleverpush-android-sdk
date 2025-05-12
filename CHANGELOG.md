@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.40 (12.05.2025)
+* Added optional `removeFromNotificationCenter` parameter to `removeNotification()` to also remove notifications from the system notification center.
+
 ## 1.34.39 (07.05.2025)
 * Optimise `showTopicsDialogue` functionality with subscription flow.
 * Implemented caching for notification icons with a limit to prevent missing icons in grouped notifications.
