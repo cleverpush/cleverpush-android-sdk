@@ -380,7 +380,7 @@ public class NotificationService {
     return expandedView;
   }
 
-  int getRequestId(Context context, Notification notification) {
+  public static int getRequestId(Context context, Notification notification) {
     // check for existing notifications which have the same tag and should be replaced. If found, use their request code.
     try {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -437,7 +437,12 @@ public class NotificationService {
   }
 
   int sendNotification(Context context, Notification notification, String notificationStr, String subscriptionStr) {
-    int requestId = getRequestId(context, notification);
+    int requestId;
+    if (notification.getRequestId() != 0) {
+      requestId = notification.getRequestId();
+    } else {
+      requestId = getRequestId(context, notification);
+    }
     NotificationCompat.Builder notificationBuilder = NotificationService.getInstance()
         .createBasicNotification(context, notificationStr, subscriptionStr, notification, requestId);
 
@@ -483,7 +488,12 @@ public class NotificationService {
   }
 
   int createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr) {
-    int requestId = getRequestId(context, message);
+    int requestId;
+    if (message.getRequestId() != 0) {
+      requestId = message.getRequestId();
+    } else {
+      requestId = getRequestId(context, message);
+    }
     createAndShowCarousel(context, message, notificationStr, subscriptionStr, 0, requestId);
     return requestId;
   }

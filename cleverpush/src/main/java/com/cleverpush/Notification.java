@@ -60,6 +60,7 @@ public class Notification implements Serializable {
 
   transient NotificationCompat.Extender extender;
   String rawPayload;
+  int requestId;
 
   @RequiresApi(api = Build.VERSION_CODES.O)
   transient public Object notificationChannel;
@@ -288,6 +289,14 @@ public class Notification implements Serializable {
     return "";
   }
 
+  public int getRequestId() {
+    return requestId;
+  }
+
+  public void setRequestId(int requestId) {
+    this.requestId = requestId;
+  }
+
   // To avoid modifying the original data, create a copy of the notification object and use that copy to make changes
   public Notification copy() {
     Notification copiedNotification = new Notification();
@@ -315,6 +324,7 @@ public class Notification implements Serializable {
     copiedNotification.fromApi = this.fromApi;
     copiedNotification.extender = this.extender;
     copiedNotification.rawPayload = this.rawPayload;
+    copiedNotification.requestId = this.requestId;
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
       copiedNotification.notificationChannel = this.notificationChannel;
     }
