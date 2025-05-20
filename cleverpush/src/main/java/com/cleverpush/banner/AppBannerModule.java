@@ -567,8 +567,14 @@ public class AppBannerModule {
 
     boolean allowed = true;
 
-    if (banner.getLanguages() != null && banner.getLanguages().size() > 0 && !banner.getLanguages()
-        .contains(Locale.getDefault().getLanguage())) {
+    String currentLanguage = this.sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_LANGUAGE, null);
+    if (getCleverPushInstance().isSubscribed() && currentLanguage != null && !currentLanguage.isEmpty()) {
+      if (banner.getLanguages() != null && !banner.getLanguages().isEmpty() &&
+              !banner.getLanguages().contains(currentLanguage)) {
+        allowed = false;
+      }
+    } else if (banner.getLanguages() != null && !banner.getLanguages().isEmpty() &&
+            !banner.getLanguages().contains(Locale.getDefault().getLanguage())) {
       allowed = false;
     }
 
