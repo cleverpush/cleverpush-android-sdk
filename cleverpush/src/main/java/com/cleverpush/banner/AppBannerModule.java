@@ -573,7 +573,7 @@ public class AppBannerModule {
               !banner.getLanguages().contains(currentLanguage)) {
         allowed = false;
       }
-    } else if (banner.getLanguages() != null && banner.getLanguages().size() > 0 &&
+    } else if (banner.getLanguages() != null && !banner.getLanguages().isEmpty() &&
             !banner.getLanguages().contains(Locale.getDefault().getLanguage())) {
       allowed = false;
     }
