@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.41 (23.05.2025)
+* Fixed a bug in `AppBanner`, where the banner targeting with language not working properly
+
 ## 1.34.40 (12.05.2025)
 * Added optional `removeFromNotificationCenter` parameter to `removeNotification()` to also remove notifications from the system notification center.
 
