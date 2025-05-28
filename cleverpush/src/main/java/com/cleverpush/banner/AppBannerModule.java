@@ -672,7 +672,11 @@ public class AppBannerModule {
           }
 
           if (attributeValue == null) {
-            return false;
+            if (CheckFilterRelation.fromString(relationString).equals(CheckFilterRelation.NotContains)) {
+              attributeValue = "";
+            } else {
+              return false;
+            }
           }
 
           if (!this.checkRelationFilter(allowed, CheckFilterRelation.fromString(relationString), attributeValue,
