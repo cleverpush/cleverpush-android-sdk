@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.42 (30.05.2025)
+* Fixed a bug in `AppBanner`, where the banner targeting with attribute-not contain is not working properly
+
 ## 1.34.41 (23.05.2025)
 * Fixed a bug in `AppBanner`, where the banner targeting with language not working properly
 
