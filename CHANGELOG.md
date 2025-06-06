@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.43 (06.06.2025)
+* Fixed an issue in `setMaximumNotificationCount` where the value was ignored when the app was killed. 
+* Fixed a bug in `AppBanner` where images were not loading correctly in the WebView when using `Open URL in WebView` action.
+
 ## 1.34.42 (30.05.2025)
 * Fixed a bug in `AppBanner`, where the banner targeting with attribute-not contain is not working properly
 
