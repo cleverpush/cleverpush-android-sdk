@@ -3,8 +3,10 @@ package com.cleverpush.banner;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
+import android.webkit.CookieManager;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ImageView;
 
@@ -50,7 +52,19 @@ public class WebViewActivity extends Activity {
         return;
       }
 
-      webView.getSettings().setJavaScriptEnabled(true);
+      WebSettings settings = webView.getSettings();
+      settings.setJavaScriptEnabled(true);
+      settings.setLoadsImagesAutomatically(true);
+      settings.setDomStorageEnabled(true);
+      settings.setAllowFileAccess(true);
+
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+      }
+
+      CookieManager.getInstance().setAcceptCookie(true);
+
       webView.loadUrl(url);
 
       if (closeButton == null) {
@@ -58,12 +72,7 @@ public class WebViewActivity extends Activity {
         return;
       }
 
-      closeButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-          finish();
-        }
-      });
+      closeButton.setOnClickListener(view -> finish());
     } catch (Exception e) {
       Logger.e("CleverPush", "Error while setting webView. " + e.getLocalizedMessage(), e);
     }
