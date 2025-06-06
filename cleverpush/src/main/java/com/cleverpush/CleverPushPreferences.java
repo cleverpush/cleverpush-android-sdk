@@ -41,5 +41,6 @@ public class CleverPushPreferences {
   public static final String BANNER_DISPLAY_INTERVAL_DATE = "CleverPush_BANNER_DISPLAY_INTERVAL_DATE";
   public static final String NOTIFICATION_CHANNEL_UPDATED_AT = "CleverPush_NOTIFICATION_CHANNEL_UPDATED_AT";
   public static final String INCREMENT_BADGE = "CleverPush_INCREMENT_BADGE";
+  public static final String MAXIMUM_NOTIFICATION_COUNT = "CleverPush_MAXIMUM_NOTIFICATION_COUNT";
 
 }

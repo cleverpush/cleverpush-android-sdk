@@ -113,6 +113,7 @@ public class NotificationDataProcessor {
     }
 
     try {
+      maximumNotifications = sharedPreferences.getInt(CleverPushPreferences.MAXIMUM_NOTIFICATION_COUNT, 100);
       if (maximumNotifications <= 0) {
         return;
       }

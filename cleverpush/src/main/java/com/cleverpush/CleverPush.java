@@ -2838,7 +2838,8 @@ public class CleverPush {
   }
 
   public void setMaximumNotificationCount(int limit) {
-    NotificationDataProcessor.maximumNotifications = limit;
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    sharedPreferences.edit().putInt(CleverPushPreferences.MAXIMUM_NOTIFICATION_COUNT, limit).apply();
   }
 
   public void getNotifications(@Deprecated boolean combineWithApi,
