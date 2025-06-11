@@ -696,7 +696,7 @@ public class AppBannerModule {
                 break;
               }
             } catch (JSONException e) {
-              Logger.e(TAG, "isBannerTargetingAllowed: Error parsing JSON array: " + e.getLocalizedMessage(), e);
+              Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing JSON array: " + e.getLocalizedMessage(), e);
             }
           }
         }
@@ -721,7 +721,7 @@ public class AppBannerModule {
       }
       return allowed;
     } catch (Exception e) {
-      Logger.e(TAG, "isBannerTargetingAllowed: Error while checking target. " + e.getLocalizedMessage(), e);
+      Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error while checking target. " + e.getLocalizedMessage(), e);
       return false;
     }
   }
