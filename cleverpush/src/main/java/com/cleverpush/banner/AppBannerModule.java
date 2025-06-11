@@ -17,6 +17,7 @@ import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.TriggeredEvent;
 import com.cleverpush.banner.models.Banner;
+import com.cleverpush.banner.models.BannerAttributesLogicType;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
 import com.cleverpush.banner.models.BannerStatus;
@@ -637,57 +638,7 @@ public class AppBannerModule {
     }
 
     if (allowed && banner.getAttributes() != null && banner.getAttributes().size() > 0) {
-      try {
-        if (!getCleverPushInstance().isSubscribed()) {
-          return false;
-        }
-
-        for (HashMap<String, String> attribute : banner.getAttributes()) {
-          String attributeId = attribute.get("id");
-          String compareAttributeValue = attribute.get("value") != null ? attribute.get("value") : "";
-          String fromValue = attribute.get("fromValue") != null ? attribute.get("fromValue") : "";
-          String toValue = attribute.get("toValue") != null ? attribute.get("toValue") : "";
-          String relationString = attribute.get("relation");
-          if (relationString == null) {
-            relationString = "equals";
-          }
-          Object attributeValueObj = getCleverPushInstance().getSubscriptionAttribute(attributeId);
-          String attributeValue = null;
-
-          if (attributeValueObj instanceof String) {
-            attributeValue = (String) attributeValueObj;
-          } else if (attributeValueObj instanceof JSONArray) {
-            JSONArray jsonArray = (JSONArray) attributeValueObj;
-            for (int i = 0; i < jsonArray.length(); i++) {
-              try {
-                String arrayItem = jsonArray.getString(i);
-                if (arrayItem.equals(compareAttributeValue)) {
-                  attributeValue = arrayItem;
-                  break;
-                }
-              } catch (JSONException e) {
-                Logger.e(TAG, "isBannerTargetingAllowed: Error parsing JSON array: " + e.getLocalizedMessage(), e);
-              }
-            }
-          }
-
-          if (attributeValue == null) {
-            if (CheckFilterRelation.fromString(relationString).equals(CheckFilterRelation.NotContains)) {
-              attributeValue = "";
-            } else {
-              return false;
-            }
-          }
-
-          if (!this.checkRelationFilter(allowed, CheckFilterRelation.fromString(relationString), attributeValue,
-                  compareAttributeValue, fromValue, toValue)) {
-            allowed = false;
-            break;
-          }
-        }
-      } catch (Exception e) {
-        Logger.e(TAG, "isBannerTargetingAllowed: Error while checking target. " + e.getLocalizedMessage(), e);
-      }
+      allowed = isBannerAttributeTargetingAllowed(allowed, banner);
     }
 
     if (allowed) {
@@ -695,6 +646,84 @@ public class AppBannerModule {
     }
 
     return allowed;
+  }
+
+  /**
+   * Checks whether the banner's subscription attributes match the targeting rules.
+   *
+   * <p>This method evaluates each attribute-based targeting condition configured in the banner.
+   * It supports both "AND" (all conditions must match) and "OR" (at least one condition must match) logic.
+   *
+   * <p>The method compares subscription attributes against expected values using the specified filter relations
+   * (e.g., equals, contains, between, etc.). It handles both single string values and JSONArray-based attributes.
+   *
+   * <p>If the user is not subscribed, attribute targeting is considered failed.
+   *
+   * @param allowed The current allowed state, used as the initial condition.
+   * @param banner The banner whose attribute-based targeting rules are to be evaluated.
+   * @return {@code true} if the subscription attributes meet the banner's targeting criteria;
+   *         {@code false} otherwise.
+   */
+  private boolean isBannerAttributeTargetingAllowed(boolean allowed, Banner banner) {
+    try {
+      if (!getCleverPushInstance().isSubscribed()) {
+        return false;
+      }
+
+      boolean isAttributesLogicOr = banner.getAttributesLogic() == BannerAttributesLogicType.Or;
+
+      for (HashMap<String, String> attribute : banner.getAttributes()) {
+        String attributeId = attribute.get("id");
+        String compareAttributeValue = attribute.get("value") != null ? attribute.get("value") : "";
+        String fromValue = attribute.get("fromValue") != null ? attribute.get("fromValue") : "";
+        String toValue = attribute.get("toValue") != null ? attribute.get("toValue") : "";
+        String relationString = attribute.get("relation");
+        if (relationString == null) {
+          relationString = "equals";
+        }
+        Object attributeValueObj = getCleverPushInstance().getSubscriptionAttribute(attributeId);
+        String attributeValue = null;
+
+        if (attributeValueObj instanceof String) {
+          attributeValue = (String) attributeValueObj;
+        } else if (attributeValueObj instanceof JSONArray) {
+          JSONArray jsonArray = (JSONArray) attributeValueObj;
+          for (int i = 0; i < jsonArray.length(); i++) {
+            try {
+              String arrayItem = jsonArray.getString(i);
+              if (arrayItem.equals(compareAttributeValue)) {
+                attributeValue = arrayItem;
+                break;
+              }
+            } catch (JSONException e) {
+              Logger.e(TAG, "isBannerTargetingAllowed: Error parsing JSON array: " + e.getLocalizedMessage(), e);
+            }
+          }
+        }
+
+        if (attributeValue == null) {
+          if (CheckFilterRelation.fromString(relationString).equals(CheckFilterRelation.NotContains)
+                  || isAttributesLogicOr) {
+            attributeValue = "";
+          } else {
+            return false;
+          }
+        }
+
+        boolean checkRelationFilter = this.checkRelationFilter(allowed, CheckFilterRelation.fromString(relationString), attributeValue,
+                compareAttributeValue, fromValue, toValue);
+        if (isAttributesLogicOr && checkRelationFilter) {
+          break;
+        } else if (!checkRelationFilter) {
+          allowed = false;
+          break;
+        }
+      }
+      return allowed;
+    } catch (Exception e) {
+      Logger.e(TAG, "isBannerTargetingAllowed: Error while checking target. " + e.getLocalizedMessage(), e);
+      return false;
+    }
   }
 
   /**

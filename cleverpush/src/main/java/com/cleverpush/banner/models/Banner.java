@@ -72,6 +72,7 @@ public class Banner {
   private List<BannerTargetEvent> eventFilters;
   private NotificationPermission notificationPermission;
   private int everyXDays;
+  private BannerAttributesLogicType attributesLogic = BannerAttributesLogicType.And;
 
   private Banner() {
   }
@@ -296,6 +297,10 @@ public class Banner {
     return everyXDays;
   }
 
+  public BannerAttributesLogicType getAttributesLogic() {
+    return attributesLogic;
+  }
+
   public static Banner create(JSONObject json) throws JSONException {
     Banner banner = new Banner();
 
@@ -516,6 +521,10 @@ public class Banner {
     }
 
     banner.everyXDays = json.optInt("everyXDays");
+
+    if (json.has("attributesLogic")) {
+      banner.attributesLogic = BannerAttributesLogicType.fromString(json.optString("attributesLogic"));
+    }
 
     return banner;
   }
