@@ -238,8 +238,8 @@ public class CleverPush {
   public Map<String, String> proccessedNotificationBannersMap = new HashMap<>();
   public boolean isTopicDialogHasToShow = false;
   public boolean isTopicDialogAPICalled = false;
-  int appBannerPerDayValue;
-  int appBannerPerEachSessionValue;
+  int appBannerPerDay;
+  int appBannerPerSession;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -4274,20 +4274,20 @@ public class CleverPush {
     this.customNotificationActivityEnabled = customNotificationActivityEnabled;
   }
 
-  public int getAppBannerPerDayValue() {
-    return appBannerPerDayValue;
+  public int getAppBannerPerDay() {
+    return appBannerPerDay;
   }
 
-  public void setAppBannerPerDayValue(int appBannerPerDayValue) {
-    this.appBannerPerDayValue = appBannerPerDayValue;
+  public void setAppBannerPerDay(int appBannerPerDay) {
+    this.appBannerPerDay = appBannerPerDay;
   }
 
-  public int getAppBannerPerEachSessionValue() {
-    return appBannerPerEachSessionValue;
+  public int getAppBannerPerSession() {
+    return appBannerPerSession;
   }
 
-  public void setAppBannerPerEachSessionValue(int appBannerPerEachSessionValue) {
-    this.appBannerPerEachSessionValue = appBannerPerEachSessionValue;
+  public void setAppBannerPerSession(int appBannerPerSession) {
+    this.appBannerPerSession = appBannerPerSession;
   }
 
 }

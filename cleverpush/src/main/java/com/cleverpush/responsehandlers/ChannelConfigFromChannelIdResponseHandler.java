@@ -41,8 +41,8 @@ public class ChannelConfigFromChannelIdResponseHandler {
 
           int inAppBannerPerDayValue = responseJson.optInt("inAppBannerPerDayValue", -1);
           int inAppBannerPerEachSessionValue = responseJson.optInt("inAppBannerPerEachSessionValue", -1);
-          cleverPush.setAppBannerPerDayValue(inAppBannerPerDayValue);
-          cleverPush.setAppBannerPerEachSessionValue(inAppBannerPerEachSessionValue);
+          cleverPush.setAppBannerPerDay(inAppBannerPerDayValue);
+          cleverPush.setAppBannerPerSession(inAppBannerPerEachSessionValue);
 
           boolean isChannelIdChanged = cleverPush.isChannelIdChanged(storedChannelId, storedSubscriptionId);
           cleverPush.subscribeOrSync(

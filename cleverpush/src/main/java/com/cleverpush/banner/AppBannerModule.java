@@ -1174,7 +1174,7 @@ public class AppBannerModule {
    */
   private boolean isBannerPerDayAllowed() {
     try {
-      int appBannerPerDayValue = getCleverPushInstance().getAppBannerPerDayValue();
+      int appBannerPerDayValue = getCleverPushInstance().getAppBannerPerDay();
 
       if (appBannerPerDayValue > 0) {
         String appBannerPerDay = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_DAY, "");
@@ -1205,7 +1205,7 @@ public class AppBannerModule {
    */
   private boolean isBannerPerEachSessionAllowed() {
     try {
-      int appBannerPerEachSessionValue = getCleverPushInstance().getAppBannerPerEachSessionValue();
+      int appBannerPerEachSessionValue = getCleverPushInstance().getAppBannerPerSession();
 
       if (appBannerPerEachSessionValue > 0) {
         String appBannerPerEachSession = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_SESSION, "");
