@@ -39,6 +39,11 @@ public class ChannelConfigFromChannelIdResponseHandler {
           SharedPreferences sharedPreferences = getSharedPreferences(getContext());
           sharedPreferences.edit().putString(CleverPushPreferences.CHANNEL_ID, channelId).apply();
 
+          int inAppBannerPerDayValue = responseJson.optInt("inAppBannerPerDayValue", -1);
+          int inAppBannerPerEachSessionValue = responseJson.optInt("inAppBannerPerEachSessionValue", -1);
+          cleverPush.setAppBannerPerDay(inAppBannerPerDayValue);
+          cleverPush.setAppBannerPerSession(inAppBannerPerEachSessionValue);
+
           boolean isChannelIdChanged = cleverPush.isChannelIdChanged(storedChannelId, storedSubscriptionId);
           cleverPush.subscribeOrSync(
               autoRegister || isChannelIdChanged, isChannelIdChanged);
