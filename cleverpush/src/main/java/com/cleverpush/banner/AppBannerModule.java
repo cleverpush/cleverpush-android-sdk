@@ -1208,7 +1208,7 @@ public class AppBannerModule {
       int appBannerPerEachSessionValue = getCleverPushInstance().getAppBannerPerEachSessionValue();
 
       if (appBannerPerEachSessionValue > 0) {
-        String appBannerPerEachSession = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_EACH_SESSION, "");
+        String appBannerPerEachSession = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_SESSION, "");
         if (appBannerPerEachSession.isEmpty()) return true;
 
         Gson gson = new Gson();
@@ -1257,7 +1257,7 @@ public class AppBannerModule {
   }
 
   private void incrementBannerPerSessionCount() {
-    String appBannerPerEachSession = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_EACH_SESSION, "");
+    String appBannerPerEachSession = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_SESSION, "");
 
     Map<Integer, Integer> appBannerPerEachSessionMap = new HashMap<>();
 
@@ -1281,7 +1281,7 @@ public class AppBannerModule {
     }
 
     sharedPreferences.edit()
-            .putString(CleverPushPreferences.APP_BANNER_PER_EACH_SESSION, new Gson().toJson(appBannerPerEachSessionMap))
+            .putString(CleverPushPreferences.APP_BANNER_PER_SESSION, new Gson().toJson(appBannerPerEachSessionMap))
             .apply();
   }
 
