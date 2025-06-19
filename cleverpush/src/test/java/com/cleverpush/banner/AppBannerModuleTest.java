@@ -800,7 +800,7 @@ class AppBannerModuleTest {
             doReturn(handler).when(appBannerModule).getHandler();
             doReturn(appBannerPopup).when(appBannerModule).getAppBannerPopup(banner);
             doReturn("channelId").when(appBannerModule).getChannel();
-            doNothing().when(appBannerModule).showBanner(appBannerPopup, true, null);
+            doNothing().when(appBannerModule).showBanner(appBannerPopup, true, null, null);
 
             Answer<Void> appBannersListenerAnswer = new Answer<Void>() {
                 public Void answer(InvocationOnMock invocation) {
@@ -828,7 +828,7 @@ class AppBannerModuleTest {
 
             appBannerModule.showBanner("xuMpMKmoKhAZ8XRKr", null);
 
-            verify(appBannerModule).showBanner(appBannerPopup, true, null);
+            verify(appBannerModule).showBanner(appBannerPopup, true, null, null);
         } catch (JSONException exception) {
             exception.printStackTrace();
         }

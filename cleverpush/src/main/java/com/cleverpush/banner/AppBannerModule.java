@@ -1167,6 +1167,124 @@ public class AppBannerModule {
     return false;
   }
 
+  /**
+   * Checks whether a banner is allowed to be shown based on the per-day banner display limit.
+   *
+   * @return true if the banner can be shown today, false if the daily limit is reached.
+   */
+  private boolean isBannerPerDayAllowed() {
+    try {
+      int appBannerPerDayValue = getCleverPushInstance().getAppBannerPerDayValue();
+
+      if (appBannerPerDayValue > 0) {
+        String appBannerPerDay = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_DAY, "");
+        if (appBannerPerDay.isEmpty()) return true;
+
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<Long, Integer>>() {}.getType();
+        Map<Long, Integer> appBannerPerDayMap = gson.fromJson(appBannerPerDay, type);
+
+        Map.Entry<Long, Integer> entry = appBannerPerDayMap.entrySet().iterator().next();
+        long savedDay = entry.getKey();
+        int savedDayCount = entry.getValue();
+        long currentDay = System.currentTimeMillis() / (1000 * 60 * 60 * 24);
+
+        return savedDay < currentDay || savedDayCount < appBannerPerDayValue;
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while checking banner per-day limit: " + e.getMessage(), e);
+    }
+    return true;
+  }
+
+
+  /**
+   * Checks whether a banner is allowed to be shown based on the per-session banner display limit.
+   *
+   * @return true if the banner can be shown in the current session, false if the session limit is reached.
+   */
+  private boolean isBannerPerEachSessionAllowed() {
+    try {
+      int appBannerPerEachSessionValue = getCleverPushInstance().getAppBannerPerEachSessionValue();
+
+      if (appBannerPerEachSessionValue > 0) {
+        String appBannerPerEachSession = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_EACH_SESSION, "");
+        if (appBannerPerEachSession.isEmpty()) return true;
+
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<Integer, Integer>>() {}.getType();
+        Map<Integer, Integer> appBannerPerEachSessionMap = gson.fromJson(appBannerPerEachSession, type);
+
+        Map.Entry<Integer, Integer> entry = appBannerPerEachSessionMap.entrySet().iterator().next();
+        int savedSession = entry.getKey();
+        int savedSessionCount = entry.getValue();
+
+        return savedSession != sessions || savedSessionCount < appBannerPerEachSessionValue;
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "Error while checking banner per-session limit: " + e.getMessage(), e);
+    }
+    return true;
+  }
+
+  private void incrementBannerPerDayCount() {
+    long currentDay = System.currentTimeMillis() / (1000 * 60 * 60 * 24);
+    String appBannerPerDay = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_DAY, "");
+    Map<Long, Integer> appBannerPerDayMap = new HashMap<>();
+
+    if (!appBannerPerDay.isEmpty()) {
+      Gson gson = new Gson();
+      Type type = new TypeToken<Map<Long, Integer>>() {}.getType();
+      appBannerPerDayMap = gson.fromJson(appBannerPerDay, type);
+
+      Map.Entry<Long, Integer> entry = appBannerPerDayMap.entrySet().iterator().next();
+      long savedDay = entry.getKey();
+      int savedDayCount = entry.getValue();
+
+      if (savedDay == currentDay) {
+        appBannerPerDayMap.put(currentDay, savedDayCount + 1);
+      } else {
+        appBannerPerDayMap.clear();
+        appBannerPerDayMap.put(currentDay, 1);
+      }
+    } else {
+      appBannerPerDayMap.put(currentDay, 1);
+    }
+
+    sharedPreferences.edit()
+            .putString(CleverPushPreferences.APP_BANNER_PER_DAY, new Gson().toJson(appBannerPerDayMap))
+            .apply();
+  }
+
+  private void incrementBannerPerSessionCount() {
+    String appBannerPerEachSession = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_PER_EACH_SESSION, "");
+
+    Map<Integer, Integer> appBannerPerEachSessionMap = new HashMap<>();
+
+    if (!appBannerPerEachSession.isEmpty()) {
+      Gson gson = new Gson();
+      Type type = new TypeToken<Map<Integer, Integer>>() {}.getType();
+      appBannerPerEachSessionMap = gson.fromJson(appBannerPerEachSession, type);
+
+      Map.Entry<Integer, Integer> entry = appBannerPerEachSessionMap.entrySet().iterator().next();
+      int savedSession = entry.getKey();
+      int savedSessionCount = entry.getValue();
+
+      if (savedSession == sessions) {
+        appBannerPerEachSessionMap.put(sessions, savedSessionCount + 1);
+      } else {
+        appBannerPerEachSessionMap.clear();
+        appBannerPerEachSessionMap.put(sessions, 1);
+      }
+    } else {
+      appBannerPerEachSessionMap.put(sessions, 1);
+    }
+
+    sharedPreferences.edit()
+            .putString(CleverPushPreferences.APP_BANNER_PER_EACH_SESSION, new Gson().toJson(appBannerPerEachSessionMap))
+            .apply();
+  }
+
   private boolean initializeBannerInterval(String bannerId, Map<String, String> intervalDateMap) {
     String currentDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault()).format(new Date());
     intervalDateMap.put(bannerId, currentDate);
@@ -1497,7 +1615,7 @@ public class AppBannerModule {
                 pendingBanners.add(popup);
                 break;
               }
-              getHandler().post(() -> showBanner(popup, force, appBannerClosedListener));
+              getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId));
               break;
             }
           }
@@ -1510,7 +1628,7 @@ public class AppBannerModule {
     return new AppBannerPopup(getCurrentActivity(), banner);
   }
 
-  void showBanner(AppBannerPopup bannerPopup, boolean force, AppBannerClosedListener appBannerClosedListener) {
+  void showBanner(AppBannerPopup bannerPopup, boolean force, AppBannerClosedListener appBannerClosedListener, String notificationId) {
     try {
       Banner banner = bannerPopup.getData();
       setAppBannerClosedListener(appBannerClosedListener);
@@ -1534,6 +1652,24 @@ public class AppBannerModule {
         if (!isBannerTargetingAllowed(banner)) {
           Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting not allowed");
           return;
+        }
+
+        if (notificationId == null || notificationId.isEmpty()) {
+          boolean perDayAllowed = isBannerPerDayAllowed();
+          boolean perSessionAllowed = isBannerPerEachSessionAllowed();
+
+          if (!perDayAllowed) {
+            Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: AppBannerPerDay limit reached");
+            return;
+          }
+
+          if (!perSessionAllowed) {
+            Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: AppBannerPerEachSession limit reached");
+            return;
+          }
+
+          incrementBannerPerDayCount();
+          incrementBannerPerSessionCount();
         }
       }
 
@@ -1643,13 +1779,13 @@ public class AppBannerModule {
         getCleverPushInstance().getAppBannerShownListener().shown(banner);
       }
     } catch (Exception ex) {
-      Logger.e(TAG, "Error in showBanner. " + ex.getMessage());
+      Logger.e(TAG, "Error in showBanner. " + ex.getMessage(), ex);
     }
   }
 
   void showBanner(AppBannerPopup bannerPopup) {
     try {
-      showBanner(bannerPopup, false, null);
+      showBanner(bannerPopup, false, null, null);
     } catch (Exception ex) {
       Logger.e(TAG, ex.getMessage(), ex);
     }
