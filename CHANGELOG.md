@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.0 (19.06.2025)
+* Implemented In-App-Banner Attribute OR-Logic for Targeting
+* Implemented In-App-Banner Display Limit per Day and/or Session
+
 ## 1.34.43 (06.06.2025)
 * Fixed an issue in `setMaximumNotificationCount` where the value was ignored when the app was killed. 
 * Fixed a bug in `AppBanner` where images were not loading correctly in the WebView when using `Open URL in WebView` action.
