@@ -1349,7 +1349,7 @@ public class AppBannerModule {
                 conditionTrue = this.checkEventTriggerCondition(condition, isMultipleEvent, eventTriggers);
               } else if (condition.getType().equals(BannerTriggerConditionType.Deeplink)) {
                 conditionTrue = this.checkDeeplinkTriggerCondition(condition);
-              } else if (condition.getType().equals(BannerTriggerConditionType.DaysSinceInstallation)) {
+              } else if (condition.getType().equals(BannerTriggerConditionType.DaysSinceInitialization)) {
                 conditionTrue = this.checkDaysSinceInstallationTriggerCondition(condition);
               } else {
                 conditionTrue = false;
