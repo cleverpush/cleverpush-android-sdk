@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.1 (29.06.2025)
+* Fixed a bug in `AppBanner` where trigger `DaysSinceInitialization` was not working correctly
+
 ## 1.35.0 (19.06.2025)
 * Implemented In-App-Banner Attribute OR-Logic for Targeting
 * Implemented In-App-Banner Display Limit per Day and/or Session
