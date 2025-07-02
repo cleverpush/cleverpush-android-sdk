@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.2 (02.07.2025)
+* Added a new Attribute condition type in Targeting for `AppBanner`: Contains Substring
+
 ## 1.35.1 (29.06.2025)
 * Fixed a bug in `AppBanner` where trigger `DaysSinceInitialization` was not working correctly
 
