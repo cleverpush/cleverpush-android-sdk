@@ -3,11 +3,12 @@ buildscript {
         buildVersions = [
                 compileSdkVersion: 33,
         ]
-        androidGradlePluginVersion = '7.3.0'
+        androidGradlePluginVersion = '8.1.4'
         googleServicesGradlePluginVersion = '4.3.3'
         huaweiAgconnectVersion = '1.2.1.301'
         huaweiHmsPushVersion = '4.0.3.301'
         kotlinVersion = '1.5.20'
+        jacocoVersion = '0.8.10'
     }
 
     repositories {
@@ -23,8 +24,9 @@ buildscript {
         classpath "com.google.gms:google-services:$googleServicesGradlePluginVersion"
         classpath "com.huawei.agconnect:agcp:$huaweiAgconnectVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.5'
+
         classpath 'com.vanniktech:gradle-maven-publish-plugin:0.30.0'
+        classpath "org.jacoco:org.jacoco.core:$jacocoVersion"
     }
 
     ext {

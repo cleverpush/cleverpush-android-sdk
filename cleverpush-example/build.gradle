@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    namespace 'com.cleverpush.cleverpush_example_android'
     compileSdkVersion 33
 
     defaultConfig {

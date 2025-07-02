@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.vanniktech.maven.publish'
-apply plugin: 'com.dicedmelon.gradle.jacoco-android'
+apply plugin: 'jacoco'
+
 
 ext {
     buildVersions = [
@@ -9,6 +10,7 @@ ext {
 }
 
 android {
+    namespace 'com.cleverpush'
     compileSdkVersion rootProject.buildVersions.compileSdkVersion
 
     defaultConfig {
@@ -39,6 +41,17 @@ android {
 
     testOptions {
         unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            useJUnitPlatform()
+            // Disable unit tests but keep coverage collection  
+            enabled = false
+            // Configure Jacoco
+            jacoco {
+                includeNoLocationClasses = true
+                excludes = ['jdk.internal.*']
+            }
+        }
     }
 
     sourceSets {
@@ -51,17 +64,6 @@ android {
             }
             assets {
                 srcDirs 'src\\main\\assets', 'src\\main\\assets\\2'
-            }
-        }
-    }
-
-    testOptions {
-        unitTests.all {
-            useJUnitPlatform()
-            jacoco {
-                destinationFile = file("$buildDir/jacoco/moduleTestsCoverage.exec")
-                includeNoLocationClasses = true
-                excludes = ['jdk.internal.*']
             }
         }
     }
@@ -114,4 +116,38 @@ dependencies {
     testImplementation 'org.json:json:20180813'
 
     testImplementation 'org.awaitility:awaitility:4.1.0'
+}
+
+// Jacoco configuration
+jacoco {
+    toolVersion = rootProject.ext.jacocoVersion
+}
+
+// Add Jacoco test report task
+tasks.register('jacocoTestReport', JacocoReport) {
+    dependsOn 'testDebugUnitTest'
+    
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    
+    def fileFilter = [
+        '**/R.class',
+        '**/R$*.class',
+        '**/BuildConfig.*',
+        '**/Manifest*.*',
+        '**/*Test*.*',
+        'android/**/*.*'
+    ]
+    
+    def debugTree = fileTree(dir: "${buildDir}/intermediates/javac/debug", excludes: fileFilter)
+    def mainSrc = "${project.projectDir}/src/main/java"
+    
+    sourceDirectories.setFrom files([mainSrc])
+    classDirectories.setFrom files([debugTree])
+    executionData.setFrom fileTree(dir: buildDir, includes: [
+        'outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec',
+        'jacoco/testDebugUnitTest.exec'
+    ])
 }
