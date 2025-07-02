@@ -10,7 +10,8 @@ public enum CheckFilterRelation {
   Between,
   NotEqual,
   Contains,
-  NotContains;
+  NotContains,
+  ContainsSubstring;
 
   private static final Map<String, CheckFilterRelation> relations = new HashMap<>();
 
@@ -22,6 +23,7 @@ public enum CheckFilterRelation {
     relations.put("notEquals", CheckFilterRelation.NotEqual);
     relations.put("contains", CheckFilterRelation.Contains);
     relations.put("notContains", CheckFilterRelation.NotContains);
+    relations.put("containsSubstring", CheckFilterRelation.ContainsSubstring);
   }
 
   public static CheckFilterRelation fromString(String raw) {
