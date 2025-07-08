@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.3 (08.07.2025)
+* Fixed an issue where notifications were not grouped correctly
+
 ## 1.35.2 (02.07.2025)
 * Added a new Attribute condition type in Targeting for `AppBanner`: Contains Substring
 
