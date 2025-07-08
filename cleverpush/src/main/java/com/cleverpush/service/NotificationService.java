@@ -73,6 +73,7 @@ public class NotificationService {
   private final int GET_BITMAP_TIMEOUT = 20 * 1000;
   private final String  GROUPLESS_SUMMARY_KEY = "cleverpush_group_undefined";
   private final int GROUPLESS_SUMMARY_ID = 0;
+  private String summaryNotificationId;
 
   private NotificationService() {
 
@@ -249,8 +250,10 @@ public class NotificationService {
         if (updatedAt != null && !updatedAt.isEmpty()) {
           String sanitizedUpdatedAt = updatedAt.replaceAll("[^a-zA-Z0-9]", "_");
           String channelId = category.getId() + "_" + sanitizedUpdatedAt;
+          summaryNotificationId = channelId;
           notificationBuilder = new NotificationCompat.Builder(context, channelId);
         } else {
+          summaryNotificationId = category.getId();
           notificationBuilder = new NotificationCompat.Builder(context, category.getId());
         }
 
@@ -276,10 +279,12 @@ public class NotificationService {
         NotificationChannel channel;
         if (notification.notificationChannel != null) {
           channel = (NotificationChannel) notification.notificationChannel;
+          summaryNotificationId = channel.getId();
         } else {
           NotificationCategorySetUp.deleteNotificationChannelIfExists(context, "default", "Default");
 
           int importance = NotificationManager.IMPORTANCE_DEFAULT;
+          summaryNotificationId = getDefaultChannelId(context);
           channel = new NotificationChannel(getDefaultChannelId(context), "Default", importance);
         }
 
@@ -501,8 +506,13 @@ public class NotificationService {
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
+    boolean isNotificationChannelExists = isNotificationChannelExists(context, getDefaultChannelId(context));
+
+    if (isNotificationChannelExists) {
+      summaryNotificationId = getDefaultChannelId(context);
+    }
     android.app.Notification summaryNotification =
-            new NotificationCompat.Builder(context, getDefaultChannelId(context))
+            new NotificationCompat.Builder(context, summaryNotificationId)
                     .setContentIntent(contentIntent)
                     .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
                     .setContentTitle(title)
@@ -628,7 +638,7 @@ public class NotificationService {
         contentView.setOnClickPendingIntent(
             R.id.prev_button,
             getNavigationPendingIntent(context, message, notificationStr, subscriptionStr,
-                message.getPreviousCarouselIndex(currentIndex), requestId)
+                 message.getPreviousCarouselIndex(currentIndex), requestId)
         );
       }
     }
@@ -821,6 +831,15 @@ public class NotificationService {
     }
 
     return channelId;
+  }
+
+  public static boolean isNotificationChannelExists(Context context, String channelId) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+      NotificationChannel channel = notificationManager.getNotificationChannel(channelId);
+      return channel != null;
+    }
+    return true;
   }
 
 }
