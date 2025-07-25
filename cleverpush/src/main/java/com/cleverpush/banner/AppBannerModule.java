@@ -810,29 +810,33 @@ public class AppBannerModule {
   private boolean osTargetFilter(boolean allowed, Banner banner) {
     try {
       if (banner.getOsTarget() != null && banner.getOsTarget().size() > 0) {
+        boolean hasAndroidTargets = false;
+        boolean anyAndroidTargetMatches = false;
+        
         for (BannerOSTarget bannerOSTarget : banner.getOsTarget()) {
           String platformString = bannerOSTarget.getPlatform() != null ? bannerOSTarget.getPlatform() : "android";
           PlatformType platformType = PlatformType.fromString(platformString);
           if (platformType == PlatformType.Android) {
+            hasAndroidTargets = true;
             String operatorString = bannerOSTarget.getOperator();
             String targetString = bannerOSTarget.getTarget();
             String fromValueString = bannerOSTarget.getFrom();
             String toValueString = bannerOSTarget.getTo();
 
             if (operatorString == null || operatorString.isEmpty()) {
-              return allowed;
+              continue;
             }
 
             CheckFilterRelation operator = CheckFilterRelation.fromString(operatorString);
             if (operator == null) {
-              return allowed;
+              continue;
             }
 
             double targetOS = 0, fromValue = 0, toValue = 0;
             if (operator == CheckFilterRelation.Between) {
               if (fromValueString == null || fromValueString.isEmpty()
                       || toValueString == null || toValueString.isEmpty()) {
-                return false;
+                continue;
               }
 
               int fromApi = getApiLevelFromAndroidVersion(fromValueString);
@@ -847,7 +851,7 @@ public class AppBannerModule {
               }
             } else {
               if (targetString == null || targetString.isEmpty()) {
-                return false;
+                continue;
               }
               int targetApi = getApiLevelFromAndroidVersion(targetString);
               if (targetApi != -1) {
@@ -859,9 +863,17 @@ public class AppBannerModule {
 
             double deviceOS = Build.VERSION.SDK_INT;
 
-            return this.checkAppVersionRelationFilter(allowed, operator, String.valueOf(deviceOS),
+            boolean currentTargetMatches = this.checkAppVersionRelationFilter(allowed, operator, String.valueOf(deviceOS),
                     String.valueOf(targetOS), String.valueOf(fromValue), String.valueOf(toValue));
+            
+            if (currentTargetMatches) {
+              anyAndroidTargetMatches = true;
+            }
           }
+        }
+
+        if (hasAndroidTargets) {
+          return anyAndroidTargetMatches;
         }
       }
     } catch (Exception e) {
