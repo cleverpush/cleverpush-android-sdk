@@ -20,6 +20,7 @@ import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAttributesLogicType;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
+import com.cleverpush.banner.models.BannerOSTarget;
 import com.cleverpush.banner.models.BannerStatus;
 import com.cleverpush.banner.models.BannerStopAtType;
 import com.cleverpush.banner.models.BannerSubscribedType;
@@ -33,6 +34,7 @@ import com.cleverpush.banner.models.BannerTriggerConditionEventProperty;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.banner.models.CheckFilterRelation;
+import com.cleverpush.banner.models.PlatformType;
 import com.cleverpush.banner.models.VersionComparison;
 import com.cleverpush.database.DatabaseClient;
 import com.cleverpush.database.TableBannerTrackEvent;
@@ -642,6 +644,10 @@ public class AppBannerModule {
     }
 
     if (allowed) {
+      allowed = osTargetFilter(true, banner);
+    }
+
+    if (allowed) {
       allowed = appVersionFilter(true, banner);
     }
 
@@ -765,6 +771,106 @@ public class AppBannerModule {
     return allowed;
   }
 
+  /**
+   * Converts Android version number to corresponding API level
+   * @param androidVersion Android version number (e.g., "14", "13")
+   * @return Corresponding API level, or -1 if unknown
+   */
+  private int getApiLevelFromAndroidVersion(String androidVersion) {
+    if (androidVersion == null || androidVersion.isEmpty()) {
+      return -1;
+    }
+    
+    try {
+      int version = (int) Double.parseDouble(androidVersion);
+      switch (version) {
+        case 15: return 35;
+        case 14: return 34;
+        case 13: return 33;
+        case 12: return 31;
+        case 11: return 30;
+        case 10: return 29;
+        case 9: return 28;
+        case 8: return 26;
+        case 7: return 24;
+        case 6: return 23;
+        case 5: return 21;
+        default:
+          if (version >= 15) {
+            return version;
+          }
+          return -1;
+      }
+    } catch (NumberFormatException e) {
+      Logger.e(TAG, "Invalid Android version format: " + androidVersion, e);
+      return -1;
+    }
+  }
+
+  private boolean osTargetFilter(boolean allowed, Banner banner) {
+    try {
+      if (banner.getOsTarget() != null && banner.getOsTarget().size() > 0) {
+        for (BannerOSTarget bannerOSTarget : banner.getOsTarget()) {
+          String platformString = bannerOSTarget.getPlatform() != null ? bannerOSTarget.getPlatform() : "android";
+          PlatformType platformType = PlatformType.fromString(platformString);
+          if (platformType == PlatformType.Android) {
+            String operatorString = bannerOSTarget.getOperator();
+            String targetString = bannerOSTarget.getTarget();
+            String fromValueString = bannerOSTarget.getFrom();
+            String toValueString = bannerOSTarget.getTo();
+
+            if (operatorString == null || operatorString.isEmpty()) {
+              return allowed;
+            }
+
+            CheckFilterRelation operator = CheckFilterRelation.fromString(operatorString);
+            if (operator == null) {
+              return allowed;
+            }
+
+            double targetOS = 0, fromValue = 0, toValue = 0;
+            if (operator == CheckFilterRelation.Between) {
+              if (fromValueString == null || fromValueString.isEmpty()
+                      || toValueString == null || toValueString.isEmpty()) {
+                return false;
+              }
+
+              int fromApi = getApiLevelFromAndroidVersion(fromValueString);
+              int toApi = getApiLevelFromAndroidVersion(toValueString);
+              
+              if (fromApi != -1 && toApi != -1) {
+                fromValue = fromApi;
+                toValue = toApi;
+              } else {
+                fromValue = Double.parseDouble(fromValueString);
+                toValue = Double.parseDouble(toValueString);
+              }
+            } else {
+              if (targetString == null || targetString.isEmpty()) {
+                return false;
+              }
+              int targetApi = getApiLevelFromAndroidVersion(targetString);
+              if (targetApi != -1) {
+                targetOS = targetApi;
+              } else {
+                targetOS = Double.parseDouble(targetString);
+              }
+            }
+
+            double deviceOS = Build.VERSION.SDK_INT;
+
+            return this.checkAppVersionRelationFilter(allowed, operator, String.valueOf(deviceOS),
+                    String.valueOf(targetOS), String.valueOf(fromValue), String.valueOf(toValue));
+          }
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "osTargetFilter: Error in AppBanner checking OS target filter", e);
+    }
+
+    return allowed;
+  }
+
   private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String compareValue,
                                       String attributeValue, String fromValue, String toValue) {
     if (relation == null) {
@@ -803,6 +909,13 @@ public class AppBannerModule {
 
       if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
         if (compareValue.contains(attributeValue)) {
+          allowed = false;
+        }
+      }
+
+      if (allowed && relation.equals(CheckFilterRelation.Between)) {
+        if (Double.parseDouble(compareValue)  < Double.parseDouble(fromValue)
+                || Double.parseDouble(compareValue)  > Double.parseDouble(toValue) ) {
           allowed = false;
         }
       }
