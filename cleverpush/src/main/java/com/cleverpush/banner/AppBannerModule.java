@@ -796,9 +796,6 @@ public class AppBannerModule {
         case 6: return 23;
         case 5: return 21;
         default:
-          if (version >= 15) {
-            return version;
-          }
           return -1;
       }
     } catch (NumberFormatException e) {
