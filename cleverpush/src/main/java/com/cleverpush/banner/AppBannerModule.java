@@ -655,6 +655,43 @@ public class AppBannerModule {
   }
 
   /**
+   * Filters a banner based on the device's OS version and the banner's specified OS targeting rules.
+   *
+   * <p>This method checks if the banner contains OS targeting conditions (defined in {@link BannerOSTarget}).
+   * If such conditions exist and match the current device's platform and OS version, the method evaluates
+   * them against the provided filter logic using the specified comparison operator.</p>
+   *
+   * @param allowed A boolean flag indicating whether filtering is allowed before this check.
+   * @param banner The {@link Banner} object containing potential OS target configurations.
+   * @return {@code true} if the OS targeting conditions are met or none exist;
+   *         {@code false} if the conditions do not match.
+   */
+  private boolean osTargetFilter(boolean allowed, Banner banner) {
+    try {
+      if (banner.getOsTarget() != null && banner.getOsTarget().size() > 0) {
+        for (BannerOSTarget bannerOSTarget : banner.getOsTarget()) {
+          String platformString = bannerOSTarget.getPlatform();
+          PlatformType platformType = PlatformType.fromString(platformString);
+          if (platformType == PlatformType.Android) {
+            String deviceOSVersion = Build.VERSION.RELEASE;
+            String compareTargetValue =  bannerOSTarget.getTarget() != null ? bannerOSTarget.getTarget() : "";
+            String fromValue = bannerOSTarget.getFrom() != null ? bannerOSTarget.getFrom() : "";
+            String toValue = bannerOSTarget.getTo() != null ? bannerOSTarget.getTo() : "";
+            String relationString =  bannerOSTarget.getOperator() != null ?  bannerOSTarget.getOperator() : "equals";
+            CheckFilterRelation relation = CheckFilterRelation.fromString(relationString);
+
+            return this.checkAppVersionRelationFilter(allowed, relation, deviceOSVersion,
+                    compareTargetValue, fromValue, toValue);
+          }
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "osTargetFilter: Error in AppBanner checking OS target filter", e);
+    }
+    return allowed;
+  }
+
+  /**
    * Checks whether the banner's subscription attributes match the targeting rules.
    *
    * <p>This method evaluates each attribute-based targeting condition configured in the banner.
@@ -771,115 +808,6 @@ public class AppBannerModule {
     return allowed;
   }
 
-  /**
-   * Converts Android version number to corresponding API level
-   * @param androidVersion Android version number (e.g., "14", "13")
-   * @return Corresponding API level, or -1 if unknown
-   */
-  private int getApiLevelFromAndroidVersion(String androidVersion) {
-    if (androidVersion == null || androidVersion.isEmpty()) {
-      return -1;
-    }
-    
-    try {
-      int version = (int) Double.parseDouble(androidVersion);
-      switch (version) {
-        case 15: return 35;
-        case 14: return 34;
-        case 13: return 33;
-        case 12: return 31;
-        case 11: return 30;
-        case 10: return 29;
-        case 9: return 28;
-        case 8: return 26;
-        case 7: return 24;
-        case 6: return 23;
-        case 5: return 21;
-        default:
-          return -1;
-      }
-    } catch (NumberFormatException e) {
-      Logger.e(TAG, "Invalid Android version format: " + androidVersion, e);
-      return -1;
-    }
-  }
-
-  private boolean osTargetFilter(boolean allowed, Banner banner) {
-    try {
-      if (banner.getOsTarget() != null && banner.getOsTarget().size() > 0) {
-        boolean hasAndroidTargets = false;
-        boolean anyAndroidTargetMatches = false;
-        
-        for (BannerOSTarget bannerOSTarget : banner.getOsTarget()) {
-          String platformString = bannerOSTarget.getPlatform() != null ? bannerOSTarget.getPlatform() : "android";
-          PlatformType platformType = PlatformType.fromString(platformString);
-          if (platformType == PlatformType.Android) {
-            hasAndroidTargets = true;
-            String operatorString = bannerOSTarget.getOperator();
-            String targetString = bannerOSTarget.getTarget();
-            String fromValueString = bannerOSTarget.getFrom();
-            String toValueString = bannerOSTarget.getTo();
-
-            if (operatorString == null || operatorString.isEmpty()) {
-              continue;
-            }
-
-            CheckFilterRelation operator = CheckFilterRelation.fromString(operatorString);
-            if (operator == null) {
-              continue;
-            }
-
-            double targetOS = 0, fromValue = 0, toValue = 0;
-            if (operator == CheckFilterRelation.Between) {
-              if (fromValueString == null || fromValueString.isEmpty()
-                      || toValueString == null || toValueString.isEmpty()) {
-                continue;
-              }
-
-              int fromApi = getApiLevelFromAndroidVersion(fromValueString);
-              int toApi = getApiLevelFromAndroidVersion(toValueString);
-              
-              if (fromApi != -1 && toApi != -1) {
-                fromValue = fromApi;
-                toValue = toApi;
-              } else {
-                fromValue = Double.parseDouble(fromValueString);
-                toValue = Double.parseDouble(toValueString);
-              }
-            } else {
-              if (targetString == null || targetString.isEmpty()) {
-                continue;
-              }
-              int targetApi = getApiLevelFromAndroidVersion(targetString);
-              if (targetApi != -1) {
-                targetOS = targetApi;
-              } else {
-                targetOS = Double.parseDouble(targetString);
-              }
-            }
-
-            double deviceOS = Build.VERSION.SDK_INT;
-
-            boolean currentTargetMatches = this.checkAppVersionRelationFilter(allowed, operator, String.valueOf(deviceOS),
-                    String.valueOf(targetOS), String.valueOf(fromValue), String.valueOf(toValue));
-            
-            if (currentTargetMatches) {
-              anyAndroidTargetMatches = true;
-            }
-          }
-        }
-
-        if (hasAndroidTargets) {
-          return anyAndroidTargetMatches;
-        }
-      }
-    } catch (Exception e) {
-      Logger.e(TAG, "osTargetFilter: Error in AppBanner checking OS target filter", e);
-    }
-
-    return allowed;
-  }
-
   private boolean checkRelationFilter(boolean allowed, CheckFilterRelation relation, String compareValue,
                                       String attributeValue, String fromValue, String toValue) {
     if (relation == null) {
@@ -986,6 +914,13 @@ public class AppBannerModule {
 
       if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
         if (appVersion.contains(compareValue)) {
+          allowed = false;
+        }
+      }
+
+      if (allowed && relation.equals(CheckFilterRelation.Between)) {
+        if (Double.parseDouble(compareValue)  < Double.parseDouble(fromVersion)
+                || Double.parseDouble(compareValue)  > Double.parseDouble(toVersion) ) {
           allowed = false;
         }
       }
