@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.35.4 (29.07.2025)
+* Fixed an issue where notifications opened from the `InboxView` were not being marked as read.
+* Added API call to track notification clicks in the `InboxView`.
+* Added Android OS version targeting support for `AppBanner`.
+
 ## 1.35.3 (08.07.2025)
 * Fixed an issue where notifications were not grouped correctly
 
