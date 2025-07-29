@@ -148,7 +148,7 @@ public class InboxView extends LinearLayout {
   private void trackInboxNotificationClick(String notificationId) {
     String channelId = getCleverPushInstance().getChannelId(context);
     if (channelId == null) {
-      Logger.w(LOG_TAG, "Channel ID is null. Skipping inbox notification click tracking.");
+      Logger.w(LOG_TAG, "Channel ID is null. Skipping InboxView notification click tracking.");
       return;
     }
 
@@ -157,7 +157,7 @@ public class InboxView extends LinearLayout {
       jsonBody.put("channelId", channelId);
       jsonBody.put("notificationId", notificationId);
     } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error creating JSON for inbox notification click tracking request.", e);
+      Logger.e(LOG_TAG, "Error creating JSON for InboxView notification click tracking request.", e);
       return;
     }
 
@@ -165,12 +165,12 @@ public class InboxView extends LinearLayout {
     CleverPushHttpClient.postWithRetry(inboxViewClickPath, jsonBody, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
-        Logger.d(LOG_TAG, "Successfully tracked inbox notification click");
+        Logger.d(LOG_TAG, "Successfully tracked InboxView notification click");
       }
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e(LOG_TAG, "Failed to track inbox notification click." +
+        Logger.e(LOG_TAG, "Failed to track InboxView notification click." +
                 "\nStatus code: " + statusCode +
                 "\nResponse: " + response +
                 (throwable != null ? ("\nError: " + throwable.getMessage()) : ""));
