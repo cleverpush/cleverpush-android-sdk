@@ -73,6 +73,7 @@ public class Banner {
   private NotificationPermission notificationPermission;
   private int everyXDays;
   private BannerAttributesLogicType attributesLogic = BannerAttributesLogicType.And;
+  private List<BannerOSTarget> osTarget;
 
   private Banner() {
   }
@@ -301,6 +302,10 @@ public class Banner {
     return attributesLogic;
   }
 
+  public List<BannerOSTarget> getOsTarget() {
+    return osTarget;
+  }
+
   public static Banner create(JSONObject json) throws JSONException {
     Banner banner = new Banner();
 
@@ -318,6 +323,7 @@ public class Banner {
     banner.blocks = new LinkedList<>();
     banner.screens = new LinkedList<>();
     banner.eventFilters = new LinkedList<>();
+    banner.osTarget = new LinkedList<>();
     banner.content = json.optString("content");
     banner.contentType = json.optString("contentType");
 
@@ -524,6 +530,13 @@ public class Banner {
 
     if (json.has("attributesLogic")) {
       banner.attributesLogic = BannerAttributesLogicType.fromString(json.optString("attributesLogic"));
+    }
+
+    if (json.has("osTarget")) {
+      JSONArray osTarget = json.getJSONArray("osTarget");
+      for (int i = 0; i < osTarget.length(); ++i) {
+        banner.osTarget.add(BannerOSTarget.create(osTarget.getJSONObject(i)));
+      }
     }
 
     return banner;

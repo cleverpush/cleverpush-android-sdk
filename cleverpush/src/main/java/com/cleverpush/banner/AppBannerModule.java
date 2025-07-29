@@ -20,6 +20,7 @@ import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAttributesLogicType;
 import com.cleverpush.banner.models.BannerDismissType;
 import com.cleverpush.banner.models.BannerFrequency;
+import com.cleverpush.banner.models.BannerOSTarget;
 import com.cleverpush.banner.models.BannerStatus;
 import com.cleverpush.banner.models.BannerStopAtType;
 import com.cleverpush.banner.models.BannerSubscribedType;
@@ -33,6 +34,7 @@ import com.cleverpush.banner.models.BannerTriggerConditionEventProperty;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.banner.models.CheckFilterRelation;
+import com.cleverpush.banner.models.PlatformType;
 import com.cleverpush.banner.models.VersionComparison;
 import com.cleverpush.database.DatabaseClient;
 import com.cleverpush.database.TableBannerTrackEvent;
@@ -642,9 +644,50 @@ public class AppBannerModule {
     }
 
     if (allowed) {
+      allowed = osTargetFilter(true, banner);
+    }
+
+    if (allowed) {
       allowed = appVersionFilter(true, banner);
     }
 
+    return allowed;
+  }
+
+  /**
+   * Filters a banner based on the device's OS version and the banner's specified OS targeting rules.
+   *
+   * <p>This method checks if the banner contains OS targeting conditions (defined in {@link BannerOSTarget}).
+   * If such conditions exist and match the current device's platform and OS version, the method evaluates
+   * them against the provided filter logic using the specified comparison operator.</p>
+   *
+   * @param allowed A boolean flag indicating whether filtering is allowed before this check.
+   * @param banner The {@link Banner} object containing potential OS target configurations.
+   * @return {@code true} if the OS targeting conditions are met or none exist;
+   *         {@code false} if the conditions do not match.
+   */
+  private boolean osTargetFilter(boolean allowed, Banner banner) {
+    try {
+      if (banner.getOsTarget() != null && banner.getOsTarget().size() > 0) {
+        for (BannerOSTarget bannerOSTarget : banner.getOsTarget()) {
+          String platformString = bannerOSTarget.getPlatform();
+          PlatformType platformType = PlatformType.fromString(platformString);
+          if (platformType == PlatformType.Android) {
+            String deviceOSVersion = Build.VERSION.RELEASE;
+            String compareTargetValue =  bannerOSTarget.getTarget() != null ? bannerOSTarget.getTarget() : "";
+            String fromValue = bannerOSTarget.getFrom() != null ? bannerOSTarget.getFrom() : "";
+            String toValue = bannerOSTarget.getTo() != null ? bannerOSTarget.getTo() : "";
+            String relationString =  bannerOSTarget.getOperator() != null ?  bannerOSTarget.getOperator() : "equals";
+            CheckFilterRelation relation = CheckFilterRelation.fromString(relationString);
+
+            return this.checkAppVersionRelationFilter(allowed, relation, deviceOSVersion,
+                    compareTargetValue, fromValue, toValue);
+          }
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(TAG, "osTargetFilter: Error in AppBanner checking OS target filter", e);
+    }
     return allowed;
   }
 
@@ -806,6 +849,13 @@ public class AppBannerModule {
           allowed = false;
         }
       }
+
+      if (allowed && relation.equals(CheckFilterRelation.Between)) {
+        if (Double.parseDouble(compareValue)  < Double.parseDouble(fromValue)
+                || Double.parseDouble(compareValue)  > Double.parseDouble(toValue) ) {
+          allowed = false;
+        }
+      }
     } catch (Exception e) {
       Logger.e(TAG, "Error in AppBanner checking relation filter", e);
     }
@@ -864,6 +914,13 @@ public class AppBannerModule {
 
       if (allowed && relation.equals(CheckFilterRelation.NotContains)) {
         if (appVersion.contains(compareValue)) {
+          allowed = false;
+        }
+      }
+
+      if (allowed && relation.equals(CheckFilterRelation.Between)) {
+        if (Double.parseDouble(compareValue)  < Double.parseDouble(fromVersion)
+                || Double.parseDouble(compareValue)  > Double.parseDouble(toVersion) ) {
           allowed = false;
         }
       }
