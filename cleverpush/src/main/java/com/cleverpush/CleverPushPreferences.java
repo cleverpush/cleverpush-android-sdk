@@ -44,5 +44,6 @@ public class CleverPushPreferences {
   public static final String MAXIMUM_NOTIFICATION_COUNT = "CleverPush_MAXIMUM_NOTIFICATION_COUNT";
   public static final String APP_BANNER_PER_DAY = "CleverPush_APP_BANNER_PER_DAY";
   public static final String APP_BANNER_PER_SESSION = "CleverPush_APP_BANNER_PER_SESSION";
+  public static final String INBOX_VIEW_NOTIFICATION_OPENED = "CleverPush_INBOX_VIEW_NOTIFICATION_OPENED";
 
 }

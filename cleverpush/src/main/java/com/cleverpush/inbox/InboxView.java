@@ -3,6 +3,7 @@ package com.cleverpush.inbox;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
+import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationOpenedResult;
 import com.cleverpush.R;
@@ -28,6 +30,7 @@ import com.cleverpush.listener.InitializeListener;
 import com.cleverpush.listener.NotificationClickListener;
 import com.cleverpush.listener.NotificationsCallbackListener;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,6 +97,20 @@ public class InboxView extends LinearLayout {
     View view = LayoutInflater.from(context).inflate(R.layout.inbox_view, this, true);
     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
     recyclerView = view.findViewById(R.id.rvNotifications);
+
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+    String openStoriesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
+
+    if (!openStoriesString.isEmpty()) {
+      for (int i = 0; i < notifications.size(); i++) {
+        if (openStoriesString.contains(notifications.get(i).getId())) {
+          notifications.get(i).setRead(true);
+        } else {
+          notifications.get(i).setRead(false);
+        }
+      }
+    }
+
     inboxViewListAdapter = new InboxViewListAdapter(context, notifications, typedArray, getOnItemClickListener(notificationArrayList, recyclerView));
     recyclerView.setLayoutManager(linearLayoutManager);
     recyclerView.setAdapter(inboxViewListAdapter);
@@ -122,22 +139,34 @@ public class InboxView extends LinearLayout {
   private OnItemClickListener getOnItemClickListener(ArrayList<Notification> notificationArrayList, RecyclerView recyclerView) {
     return position -> {
       try {
+        Notification clickedNotification = notificationArrayList.get(position);
         if (notificationClickListener != null) {
-          Notification clickedNotification = notificationArrayList.get(position);
 
           if (clickedNotification.getInboxAppBanner() != null) {
             InboxDetailActivity.launch(ActivityLifecycleListener.currentActivity, notificationArrayList, position);
           }
-          notificationClickListener.onClicked(notificationArrayList.get(position));
+          notificationClickListener.onClicked(clickedNotification);
         } else if (getCleverPushInstance().getNotificationOpenedListener() != null) {
           NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
-          notificationOpenedResult.setNotification(notificationArrayList.get(position));
+          notificationOpenedResult.setNotification(clickedNotification);
           getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult);
         }
 
-        trackInboxNotificationClick(notificationArrayList.get(position).getId());
+        SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        String preferencesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
+
+        if (preferencesString.isEmpty()) {
+          editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, clickedNotification.getId()).apply();
+        } else {
+          if (!preferencesString.contains(clickedNotification.getId())) {
+            editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, preferencesString + "," + clickedNotification.getId()).apply();
+          }
+        }
+
+        trackInboxNotificationClick(clickedNotification.getId());
         notificationArrayList.get(position).setRead(true);
-        inboxViewListAdapter.notifyItemChanged(position, notificationArrayList.get(position));
+        inboxViewListAdapter.notifyItemChanged(position, clickedNotification);
         recyclerView.smoothScrollToPosition(position);
       } catch (Exception e) {
         Logger.e(TAG, "Error in InboxView's OnItemClickListener.", e);
@@ -147,7 +176,7 @@ public class InboxView extends LinearLayout {
 
   private void trackInboxNotificationClick(String notificationId) {
     String channelId = getCleverPushInstance().getChannelId(context);
-    if (channelId == null) {
+    if (channelId == null || channelId.isEmpty()) {
       Logger.w(LOG_TAG, "Channel ID is null. Skipping InboxView notification click tracking.");
       return;
     }
