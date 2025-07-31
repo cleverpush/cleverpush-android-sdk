@@ -164,7 +164,7 @@ public class InboxView extends LinearLayout {
           }
         }
 
-        trackInboxNotificationClick(clickedNotification.getId());
+        getCleverPushInstance().trackInboxNotificationClick(clickedNotification.getId());
         notificationArrayList.get(position).setRead(true);
         inboxViewListAdapter.notifyItemChanged(position, clickedNotification);
         recyclerView.smoothScrollToPosition(position);
@@ -172,38 +172,5 @@ public class InboxView extends LinearLayout {
         Logger.e(TAG, "Error in InboxView's OnItemClickListener.", e);
       }
     };
-  }
-
-  private void trackInboxNotificationClick(String notificationId) {
-    String channelId = getCleverPushInstance().getChannelId(context);
-    if (channelId == null || channelId.isEmpty()) {
-      Logger.w(LOG_TAG, "Channel ID is null. Skipping InboxView notification click tracking.");
-      return;
-    }
-
-    JSONObject jsonBody = new JSONObject();
-    try {
-      jsonBody.put("channelId", channelId);
-      jsonBody.put("notificationId", notificationId);
-    } catch (JSONException e) {
-      Logger.e(LOG_TAG, "Error creating JSON for InboxView notification click tracking request.", e);
-      return;
-    }
-
-    String inboxViewClickPath = "/channel/" + channelId + "/panel/clicked";
-    CleverPushHttpClient.postWithRetry(inboxViewClickPath, jsonBody, new CleverPushHttpClient.ResponseHandler() {
-      @Override
-      public void onSuccess(String response) {
-        Logger.d(LOG_TAG, "Successfully tracked InboxView notification click");
-      }
-
-      @Override
-      public void onFailure(int statusCode, String response, Throwable throwable) {
-        Logger.e(LOG_TAG, "Failed to track InboxView notification click." +
-                "\nStatus code: " + statusCode +
-                "\nResponse: " + response +
-                (throwable != null ? ("\nError: " + throwable.getMessage()) : ""));
-      }
-    });
   }
 }

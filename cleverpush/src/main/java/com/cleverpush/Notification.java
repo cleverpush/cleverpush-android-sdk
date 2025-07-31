@@ -297,6 +297,10 @@ public class Notification implements Serializable {
     this.requestId = requestId;
   }
 
+  public void trackInboxClicked() {
+    CleverPush.getInstance(CleverPush.context).trackInboxNotificationClick(this.id);
+  }
+
   // To avoid modifying the original data, create a copy of the notification object and use that copy to make changes
   public Notification copy() {
     Notification copiedNotification = new Notification();
