@@ -4297,6 +4297,11 @@ public class CleverPush {
       return;
     }
 
+    if (notificationId == null || notificationId.isEmpty()) {
+      Logger.w(LOG_TAG, "notificationId ID is null. Skipping InboxView notification click tracking.");
+      return;
+    }
+
     JSONObject jsonBody = new JSONObject();
     try {
       jsonBody.put("channelId", channelId);
