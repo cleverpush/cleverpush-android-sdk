@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.5 (29.07.2025)
+* Implemented a new method, `trackInboxClicked`, in Notification class to enable tracking of notification clicks.
+
 ## 1.35.4 (29.07.2025)
 * Fixed an issue where notifications opened from the `InboxView` were not being marked as read.
 * Added API call to track notification clicks in the `InboxView`.
