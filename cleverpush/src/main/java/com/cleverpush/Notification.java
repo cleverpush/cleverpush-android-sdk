@@ -1,10 +1,12 @@
 package com.cleverpush;
 
+import android.content.SharedPreferences;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
@@ -247,11 +249,35 @@ public class Notification implements Serializable {
   }
 
   public Boolean getRead() {
-    return read;
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
+    String openStoriesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
+
+    if (!openStoriesString.isEmpty()) {
+      if (openStoriesString.contains(this.id)) {
+        return true;
+      } else {
+        return read;
+      }
+    } else {
+      return read;
+    }
   }
 
   public void setRead(Boolean read) {
     this.read = read;
+    if (read) {
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      String preferencesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
+
+      if (preferencesString.isEmpty()) {
+        editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, this.id).apply();
+      } else {
+        if (!preferencesString.contains(this.id)) {
+          editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, preferencesString + "," + this.id).apply();
+        }
+      }
+    }
   }
 
   public Boolean getFromApi() {

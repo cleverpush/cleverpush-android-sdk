@@ -152,18 +152,6 @@ public class InboxView extends LinearLayout {
           getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult);
         }
 
-        SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        String preferencesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
-
-        if (preferencesString.isEmpty()) {
-          editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, clickedNotification.getId()).apply();
-        } else {
-          if (!preferencesString.contains(clickedNotification.getId())) {
-            editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, preferencesString + "," + clickedNotification.getId()).apply();
-          }
-        }
-
         getCleverPushInstance().trackInboxNotificationClick(clickedNotification.getId());
         notificationArrayList.get(position).setRead(true);
         inboxViewListAdapter.notifyItemChanged(position, clickedNotification);
