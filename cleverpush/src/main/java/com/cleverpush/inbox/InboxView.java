@@ -70,11 +70,8 @@ public class InboxView extends LinearLayout {
     getCleverPushInstance().setInitializeListener(new InitializeListener() {
       @Override
       public void onInitialized() {
-        if (getTypedArray().getBoolean(R.styleable.InboxView_combine_with_api, false)) {
-          getNotifications(true);
-        } else {
-          getNotifications(false);
-        }
+        boolean combineWithApi = getTypedArray().getBoolean(R.styleable.InboxView_combine_with_api, false);
+        getNotifications(combineWithApi);
       }
     });
   }
