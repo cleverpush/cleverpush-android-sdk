@@ -70,11 +70,8 @@ public class InboxView extends LinearLayout {
     getCleverPushInstance().setInitializeListener(new InitializeListener() {
       @Override
       public void onInitialized() {
-        if (getTypedArray().getBoolean(R.styleable.InboxView_combine_with_api, false)) {
-          getNotifications(true);
-        } else {
-          getNotifications(false);
-        }
+        boolean combineWithApi = getTypedArray().getBoolean(R.styleable.InboxView_combine_with_api, false);
+        getNotifications(combineWithApi);
       }
     });
   }
@@ -150,18 +147,6 @@ public class InboxView extends LinearLayout {
           NotificationOpenedResult notificationOpenedResult = new NotificationOpenedResult();
           notificationOpenedResult.setNotification(clickedNotification);
           getCleverPushInstance().getNotificationOpenedListener().notificationOpened(notificationOpenedResult);
-        }
-
-        SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        String preferencesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
-
-        if (preferencesString.isEmpty()) {
-          editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, clickedNotification.getId()).apply();
-        } else {
-          if (!preferencesString.contains(clickedNotification.getId())) {
-            editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, preferencesString + "," + clickedNotification.getId()).apply();
-          }
         }
 
         getCleverPushInstance().trackInboxNotificationClick(clickedNotification.getId());
