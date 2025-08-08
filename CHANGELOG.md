@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.6 (08.08.2025)
+* Added support for persisting `setRead(true)` updates in local storage. Notifications marked as read or unread using `setRead()` are now correctly reflected in the `InboxView`.
+
 ## 1.35.5 (29.07.2025)
 * Implemented a new method, `trackInboxClicked`, in Notification class to enable tracking of notification clicks.
 
