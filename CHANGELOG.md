@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.7 (08.08.2025)
+* Optimized the handling of notifications marked as read or unread using `setRead()`
+
 ## 1.35.6 (08.08.2025)
 * Added support for persisting `setRead(true)` updates in local storage. Notifications marked as read or unread using `setRead()` are now correctly reflected in the `InboxView`.
 
