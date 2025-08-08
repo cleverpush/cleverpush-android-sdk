@@ -4327,4 +4327,38 @@ public class CleverPush {
       }
     });
   }
+
+  public void setNotificationRead(Boolean read, String notificationId) {
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    String preferencesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
+
+    if (read) {
+      if (preferencesString.isEmpty()) {
+        editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, notificationId).apply();
+      } else {
+        if (!preferencesString.contains(notificationId)) {
+          editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, preferencesString + "," + notificationId).apply();
+        }
+      }
+    } else {
+      if (!preferencesString.isEmpty() && preferencesString.contains(notificationId)) {
+        List<String> ids = new ArrayList<>(Arrays.asList(preferencesString.split(",")));
+        ids.remove(notificationId);
+        String updatedString = String.join(",", ids);
+        editor.putString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, updatedString).apply();
+      }
+    }
+  }
+
+  public Boolean getNotificationRead(String notificationId) {
+    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
+    String openStoriesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
+
+    if (!openStoriesString.isEmpty()) {
+      return openStoriesString.contains(notificationId);
+    } else {
+      return false;
+    }
+  }
 }
