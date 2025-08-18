@@ -3,6 +3,8 @@ package com.cleverpush;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NotificationCategory implements Serializable {
   @SerializedName("_id")
@@ -37,6 +39,8 @@ public class NotificationCategory implements Serializable {
   String foregroundColor;
   @SerializedName("updatedAt")
   String updatedAt;
+  @SerializedName("topics")
+  List<String> topics;
 
   public String getId() {
     return id;
@@ -110,6 +114,10 @@ public class NotificationCategory implements Serializable {
     return foregroundColor;
   }
 
+  public List<String> getTopics() {
+    return topics != null ? topics : new ArrayList<>();
+  }
+
   public void setId(String id) {
     this.id = id;
   }
@@ -176,5 +184,9 @@ public class NotificationCategory implements Serializable {
 
   public void setUpdatedAt(String updatedAt) {
     this.updatedAt = updatedAt;
+  }
+
+  public void setTopics(List<String> topics) {
+    this.topics = topics;
   }
 }

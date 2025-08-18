@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -190,7 +191,7 @@ public class NotificationCategorySetUp {
       notificationManager.createNotificationChannel(channel);
 
       processCategoryTopics(context, geCategoryChannelId(category.getId(), category.getUpdatedAt()),
-              category.getId(), category.getName(), topicsToAdd, topicsToRemove);
+              category.getId(), topicsToAdd, topicsToRemove, category.getTopics());
     }
 
     updateSubscriptionTopics(context, subscribedTopicIds, topicsToAdd, topicsToRemove);
@@ -227,6 +228,15 @@ public class NotificationCategorySetUp {
           notificationCategory.setBackgroundColor(notificationCategoryJSONObject.optString("backgroundColor"));
           notificationCategory.setForegroundColor(notificationCategoryJSONObject.optString("foregroundColor"));
           notificationCategory.setUpdatedAt(notificationCategoryJSONObject.optString("updatedAt"));
+
+          JSONArray topicsArray = notificationCategoryJSONObject.optJSONArray("topics");
+          if (topicsArray != null) {
+            List<String> topics = new ArrayList<>();
+            for (int k = 0; k < topicsArray.length(); k++) {
+              topics.add(topicsArray.optString(k));
+            }
+            notificationCategory.setTopics(topics);
+          }
 
           notificationCategories.add(notificationCategory);
         }
@@ -282,34 +292,18 @@ public class NotificationCategorySetUp {
     return channelId;
   }
 
-  private static void processCategoryTopics(Context context, String channelId, String notificationCategoryId,
-                                            String channelName, Set<String> topicsToAdd, Set<String> topicsToRemove) {
+  private static void processCategoryTopics(Context context, String channelId, String channelName,
+                                            Set<String> topicsToAdd, Set<String> topicsToRemove, List<String> topics) {
     try {
-      CleverPush.getChannelConfig(config -> {
-        if (config == null) {
-          return;
-        }
-
-        JSONArray channelTopics = config.optJSONArray("channelTopics");
-        Set<String> categoryTopics = new HashSet<>();
-        for (int k = 0; k < channelTopics.length(); k++) {
-          JSONObject channelTopic = channelTopics.optJSONObject(k);
-          String topicNotificationCategoryId = channelTopic.optString("notificationCategory");
-
-          if (topicNotificationCategoryId.equalsIgnoreCase(notificationCategoryId)) {
-            String topicId = channelTopic.optString("_id");
-            categoryTopics.add(topicId);
+        if (topics.size() > 0) {
+          boolean isChannelEnabled = isNotificationChannelEnabled(context, channelId);
+          if (isChannelEnabled) {
+            topicsToAdd.addAll(topics);
+          } else {
+            Logger.i("CleverPush", "Notification channel '" + channelName + "' disabled by the user.");
+            topicsToRemove.addAll(topics);
           }
         }
-
-        boolean isChannelEnabled = isNotificationChannelEnabled(context, channelId);
-        if (isChannelEnabled) {
-          topicsToAdd.addAll(categoryTopics);
-        } else {
-          Logger.i("CleverPush", "Notification channel '" + channelName + "' disabled by the user.");
-          topicsToRemove.addAll(categoryTopics);
-        }
-      });
     } catch (Exception e) {
       Logger.e("CleverPush", "NotificationCategorySetUp: Error in processCategoryTopics: " + e.getMessage(), e);
     }
