@@ -191,7 +191,7 @@ public class NotificationCategorySetUp {
       notificationManager.createNotificationChannel(channel);
 
       processCategoryTopics(context, geCategoryChannelId(category.getId(), category.getUpdatedAt()),
-              category.getId(), topicsToAdd, topicsToRemove, category.getTopics());
+              category.getName(), topicsToAdd, topicsToRemove, category.getTopics());
     }
 
     updateSubscriptionTopics(context, subscribedTopicIds, topicsToAdd, topicsToRemove);

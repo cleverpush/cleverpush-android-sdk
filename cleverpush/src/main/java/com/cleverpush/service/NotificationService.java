@@ -506,11 +506,6 @@ public class NotificationService {
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
 
-    boolean isNotificationChannelExists = isNotificationChannelExists(context, getDefaultChannelId(context));
-
-    if (isNotificationChannelExists) {
-      summaryNotificationId = getDefaultChannelId(context);
-    }
     android.app.Notification summaryNotification =
             new NotificationCompat.Builder(context, summaryNotificationId)
                     .setContentIntent(contentIntent)
