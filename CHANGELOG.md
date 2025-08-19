@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.8 (19.08.2025)
+* Added feature to sync channel topics with notification categories, automatically subscribing or unsubscribing from topics based on the notification channel status.
+* Added support for syncing subscription tags from the backend to local.
+
 ## 1.35.7 (08.08.2025)
 * Optimized the handling of notifications marked as read or unread using `setRead()`
 
