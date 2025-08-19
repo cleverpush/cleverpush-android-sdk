@@ -174,6 +174,22 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
               }
             }
           }
+
+          if (responseJson.has("tags")) {
+            JSONArray tagsArray = responseJson.getJSONArray("tags");
+            List<String> tagIds = new ArrayList<>();
+            if (tagsArray != null) {
+              for (int i = 0; i < tagsArray.length(); i++) {
+                String tagId = tagsArray.getString(i);
+                if (tagId != null) {
+                  tagIds.add(tagId);
+                }
+              }
+            }
+
+            sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>(tagIds))
+                    .apply();
+          }
         } catch (Throwable throwable) {
           Logger.e(LOG_TAG, "Error in syncSubscription request's onSuccess.", throwable);
         }
