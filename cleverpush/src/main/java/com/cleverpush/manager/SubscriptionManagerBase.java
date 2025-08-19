@@ -70,6 +70,11 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       topics = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, null);
     }
 
+    Set<String> tags = null;
+    if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TAGS)) {
+      tags = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, null);
+    }
+
     int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
 
     String appVersion = "";
@@ -118,6 +123,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       if (topics != null) {
         jsonBody.put("topics", new JSONArray(topics));
         jsonBody.put("topicsVersion", topicsVersion);
+      }
+      if (tags != null) {
+        jsonBody.put("tags", new JSONArray(tags));
       }
       jsonBody.put("hasNotificationPermission", CleverPush.getInstance(CleverPush.context).areNotificationsEnabled());
     } catch (JSONException e) {
