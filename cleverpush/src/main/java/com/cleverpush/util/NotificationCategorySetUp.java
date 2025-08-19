@@ -15,6 +15,9 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 
+import androidx.core.app.NotificationManagerCompat;
+
+import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.NotificationCategory;
 import com.cleverpush.NotificationCategoryGroup;
@@ -30,17 +33,30 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NotificationCategorySetUp {
 
-  public static void setNotificationCategory(Context context, ArrayList<NotificationCategory> notificationCategories) {
+  public synchronized static void setNotificationCategory(Context context, ArrayList<NotificationCategory> notificationCategories) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
       return;
+    }
+
+    Set<String> topicsToAdd = new HashSet<>();
+    Set<String> topicsToRemove = new HashSet<>();
+
+    Set<String> subscribedTopicIds = CleverPush.getInstance(context).getSubscriptionTopics();
+    if (subscribedTopicIds == null) {
+      subscribedTopicIds = new HashSet<>();
+    } else {
+      subscribedTopicIds = new HashSet<>(subscribedTopicIds);
     }
 
     for (int i = 0; i < notificationCategories.size(); i++) {
@@ -173,10 +189,15 @@ public class NotificationCategorySetUp {
       }
 
       notificationManager.createNotificationChannel(channel);
+
+      processCategoryTopics(context, geCategoryChannelId(category.getId(), category.getUpdatedAt()),
+              category.getName(), topicsToAdd, topicsToRemove, category.getTopics());
     }
+
+    updateSubscriptionTopics(context, subscribedTopicIds, topicsToAdd, topicsToRemove);
   }
 
-  public static void setNotificationCategoryFromChannelConfig(Context context, JSONObject channelConfig) {
+  public synchronized static void setNotificationCategoryFromChannelConfig(Context context, JSONObject channelConfig) {
     try {
       ArrayList<NotificationCategory> notificationCategories = new ArrayList<>();
       JSONArray notificationCategoryGroups = channelConfig.getJSONArray("notificationCategoryGroups");
@@ -207,6 +228,15 @@ public class NotificationCategorySetUp {
           notificationCategory.setBackgroundColor(notificationCategoryJSONObject.optString("backgroundColor"));
           notificationCategory.setForegroundColor(notificationCategoryJSONObject.optString("foregroundColor"));
           notificationCategory.setUpdatedAt(notificationCategoryJSONObject.optString("updatedAt"));
+
+          JSONArray topicsArray = notificationCategoryJSONObject.optJSONArray("topics");
+          if (topicsArray != null) {
+            List<String> topics = new ArrayList<>();
+            for (int k = 0; k < topicsArray.length(); k++) {
+              topics.add(topicsArray.optString(k));
+            }
+            notificationCategory.setTopics(topics);
+          }
 
           notificationCategories.add(notificationCategory);
         }
@@ -261,4 +291,64 @@ public class NotificationCategorySetUp {
     }
     return channelId;
   }
+
+  private static void processCategoryTopics(Context context, String channelId, String channelName,
+                                            Set<String> topicsToAdd, Set<String> topicsToRemove, List<String> topics) {
+    try {
+        if (topics.size() > 0) {
+          boolean isChannelEnabled = isNotificationChannelEnabled(context, channelId);
+          if (isChannelEnabled) {
+            topicsToAdd.addAll(topics);
+          } else {
+            Logger.i("CleverPush", "Notification channel '" + channelName + "' disabled by the user.");
+            topicsToRemove.addAll(topics);
+          }
+        }
+    } catch (Exception e) {
+      Logger.e("CleverPush", "NotificationCategorySetUp: Error in processCategoryTopics: " + e.getMessage(), e);
+    }
+  }
+
+  private synchronized static boolean isNotificationChannelEnabled(Context context, String channelId) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      if (channelId != null && !channelId.isEmpty()) {
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+          NotificationChannel channel = manager.getNotificationChannel(channelId);
+          return channel != null && channel.getImportance() != NotificationManager.IMPORTANCE_NONE;
+        }
+      }
+      return false;
+    } else {
+      return NotificationManagerCompat.from(context).areNotificationsEnabled();
+    }
+  }
+
+  private static void updateSubscriptionTopics(Context context, Set<String> subscribedTopicIds,
+                                               Set<String> topicsToAdd, Set<String> topicsToRemove) {
+    try {
+      boolean changed = false;
+
+      for (String topicId : topicsToAdd) {
+        if (!subscribedTopicIds.contains(topicId)) {
+          subscribedTopicIds.add(topicId);
+          changed = true;
+        }
+      }
+      for (String topicId : topicsToRemove) {
+        if (subscribedTopicIds.contains(topicId)) {
+          subscribedTopicIds.remove(topicId);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        CleverPush.getInstance(context)
+                .setSubscriptionTopics(subscribedTopicIds.toArray(new String[0]));
+      }
+    } catch (Exception e) {
+      Logger.e("CleverPush", "NotificationCategorySetUp: Error updating subscription topics: " + e.getMessage(), e);
+    }
+  }
+
 }
