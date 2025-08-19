@@ -70,11 +70,6 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       topics = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, null);
     }
 
-    Set<String> tags = null;
-    if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TAGS)) {
-      tags = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, null);
-    }
-
     int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
 
     String appVersion = "";
@@ -123,9 +118,6 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       if (topics != null) {
         jsonBody.put("topics", new JSONArray(topics));
         jsonBody.put("topicsVersion", topicsVersion);
-      }
-      if (tags != null) {
-        jsonBody.put("tags", new JSONArray(tags));
       }
       jsonBody.put("hasNotificationPermission", CleverPush.getInstance(CleverPush.context).areNotificationsEnabled());
     } catch (JSONException e) {
@@ -181,6 +173,22 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                     .apply();
               }
             }
+          }
+
+          if (responseJson.has("tags")) {
+            JSONArray tagsArray = responseJson.getJSONArray("tags");
+            List<String> tagIds = new ArrayList<>();
+            if (tagsArray != null) {
+              for (int i = 0; i < tagsArray.length(); i++) {
+                String tagId = tagsArray.getString(i);
+                if (tagId != null) {
+                  tagIds.add(tagId);
+                }
+              }
+            }
+
+            sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>(tagIds))
+                    .apply();
           }
         } catch (Throwable throwable) {
           Logger.e(LOG_TAG, "Error in syncSubscription request's onSuccess.", throwable);
