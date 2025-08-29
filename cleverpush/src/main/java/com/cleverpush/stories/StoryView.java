@@ -49,7 +49,7 @@ public class StoryView extends LinearLayout {
   protected static final int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
   private static final String TAG = "CleverPush/AppStories";
 
-  private TypedArray attrArray;
+  private StoryViewAttributes storyViewAttributes;
   private StoryViewListAdapter storyViewListAdapter;
 
   private Context context;
@@ -59,7 +59,6 @@ public class StoryView extends LinearLayout {
   private String widgetId = null;
   public static StoryView storyView;
   public StoryViewOpenedListener storyViewOpenedListener;
-  private int sortToLastIndex = 0;
   private boolean isDarkModeEnabled = false;
   private boolean hasTrackedStoryShown = false;
 
@@ -73,11 +72,13 @@ public class StoryView extends LinearLayout {
 
   public void setWidgetId(String widgetId) {
     this.widgetId = widgetId;
+    storyViewAttributes.widgetId = widgetId;
     loadStory();
   }
 
   public void setDarkModeEnabled(boolean darkModeEnabled) {
     this.isDarkModeEnabled = darkModeEnabled;
+    storyViewAttributes.darkModeEnabled = darkModeEnabled;
     if (storyViewListAdapter != null) {
       storyViewListAdapter.notifyDataSetChanged();
     }
@@ -90,16 +91,57 @@ public class StoryView extends LinearLayout {
   public StoryView(Context context, AttributeSet attributeSet) {
     super(context, attributeSet);
     this.context = context;
-    attrArray = getContext().obtainStyledAttributes(attributeSet, R.styleable.StoryView);
+    storyViewAttributes = new StoryViewAttributes();
+    TypedArray attrArray = getContext().obtainStyledAttributes(attributeSet, R.styleable.StoryView);
+    initAttributes(attrArray);
     loadStory();
   }
 
+  private void initAttributes(TypedArray attrArray) {
+    storyViewAttributes.backgroundColor = attrArray.getColor(R.styleable.StoryView_background_color, storyViewAttributes.backgroundColor);
+    storyViewAttributes.backgroundColorDarkMode = attrArray.getColor(R.styleable.StoryView_background_color_dark_mode, storyViewAttributes.backgroundColorDarkMode);
+    storyViewAttributes.textColor = attrArray.getColor(R.styleable.StoryView_text_color, storyViewAttributes.textColor);
+    storyViewAttributes.textColorDarkMode = attrArray.getColor(R.styleable.StoryView_text_color_dark_mode, storyViewAttributes.textColorDarkMode);
+    storyViewAttributes.storyViewHeight = getDimensionOrEnum(attrArray, R.styleable.StoryView_story_view_height);
+    storyViewAttributes.storyViewWidth = getDimensionOrEnum(attrArray, R.styleable.StoryView_story_view_width);
+    storyViewAttributes.fontFamily = attrArray.getString(R.styleable.StoryView_font_family);
+    storyViewAttributes.widgetId = attrArray.getString(R.styleable.StoryView_widget_id);
+    storyViewAttributes.titleVisibility = attrArray.getInt(R.styleable.StoryView_title_visibility, storyViewAttributes.titleVisibility);
+    storyViewAttributes.titlePosition = attrArray.getInt(R.styleable.StoryView_title_position, storyViewAttributes.titlePosition);
+    storyViewAttributes.titleTextSize = attrArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, storyViewAttributes.titleTextSize);
+    storyViewAttributes.titleMinTextSize = attrArray.getDimensionPixelSize(R.styleable.StoryView_title_min_text_size, storyViewAttributes.titleMinTextSize);
+    storyViewAttributes.titleMaxTextSize = attrArray.getDimensionPixelSize(R.styleable.StoryView_title_max_text_size, storyViewAttributes.titleMaxTextSize);
+    storyViewAttributes.storyIconHeight = attrArray.getDimensionPixelSize(R.styleable.StoryView_story_icon_height, storyViewAttributes.storyIconHeight);
+    storyViewAttributes.storyIconHeightPercentage = attrArray.getInt(R.styleable.StoryView_story_icon_height_percentage, storyViewAttributes.storyIconHeightPercentage);
+    storyViewAttributes.storyIconWidth = attrArray.getDimensionPixelSize(R.styleable.StoryView_story_icon_width, storyViewAttributes.storyIconWidth);
+    storyViewAttributes.storyIconCornerRadius = attrArray.getDimension(R.styleable.StoryView_story_icon_corner_radius, storyViewAttributes.storyIconCornerRadius);
+    storyViewAttributes.storyIconSpace = attrArray.getDimension(R.styleable.StoryView_story_icon_space, storyViewAttributes.storyIconSpace);
+    storyViewAttributes.storyIconShadow = attrArray.getBoolean(R.styleable.StoryView_story_icon_shadow, storyViewAttributes.storyIconShadow);
+    storyViewAttributes.borderVisibility = attrArray.getInt(R.styleable.StoryView_border_visibility, storyViewAttributes.borderVisibility);
+    storyViewAttributes.borderMargin = attrArray.getDimension(R.styleable.StoryView_border_margin, storyViewAttributes.borderMargin);
+    storyViewAttributes.borderWidth = attrArray.getDimensionPixelSize(R.styleable.StoryView_border_width, storyViewAttributes.borderWidth);
+    storyViewAttributes.borderColor = attrArray.getColor(R.styleable.StoryView_border_color, storyViewAttributes.borderColor);
+    storyViewAttributes.borderColorDarkMode = attrArray.getColor(R.styleable.StoryView_border_color_dark_mode, storyViewAttributes.borderColorDarkMode);
+    storyViewAttributes.borderColorLoading = attrArray.getColor(R.styleable.StoryView_border_color_loading, storyViewAttributes.borderColorLoading);
+    storyViewAttributes.borderColorLoadingDarkMode = attrArray.getColor(R.styleable.StoryView_border_color_loading_dark_mode, storyViewAttributes.borderColorLoadingDarkMode);
+    storyViewAttributes.subStoryUnreadCountVisibility = attrArray.getInt(R.styleable.StoryView_sub_story_unread_count_visibility, storyViewAttributes.subStoryUnreadCountVisibility);
+    storyViewAttributes.subStoryUnreadCountBackgroundColor = attrArray.getColor(R.styleable.StoryView_sub_story_unread_count_background_color, storyViewAttributes.subStoryUnreadCountBackgroundColor);
+    storyViewAttributes.subStoryUnreadCountBackgroundColorDarkMode = attrArray.getColor(R.styleable.StoryView_sub_story_unread_count_background_color_dark_mode, storyViewAttributes.subStoryUnreadCountBackgroundColorDarkMode);
+    storyViewAttributes.subStoryUnreadCountTextColor = attrArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color, storyViewAttributes.subStoryUnreadCountTextColor);
+    storyViewAttributes.subStoryUnreadCountTextColorDarkMode = attrArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color_dark_mode, storyViewAttributes.subStoryUnreadCountTextColorDarkMode);
+    storyViewAttributes.subStoryUnreadCountBadgeHeight = attrArray.getDimensionPixelSize(R.styleable.StoryView_sub_story_unread_count_badge_height, storyViewAttributes.subStoryUnreadCountBadgeHeight);
+    storyViewAttributes.subStoryUnreadCountBadgeWidth = attrArray.getDimensionPixelSize(R.styleable.StoryView_sub_story_unread_count_badge_width, storyViewAttributes.subStoryUnreadCountBadgeWidth);
+    storyViewAttributes.restrictToItems = attrArray.getInt(R.styleable.StoryView_restrict_to_items, storyViewAttributes.restrictToItems);
+    storyViewAttributes.closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, storyViewAttributes.closeButtonPosition);
+    storyViewAttributes.sortToLastIndex = attrArray.getInt(R.styleable.StoryView_sort_to_last_index, storyViewAttributes.sortToLastIndex);
+    attrArray.recycle();
+  }
+
   private void loadStory() {
-    String attrWidgetId = attrArray.getString(R.styleable.StoryView_widget_id);
-    if (attrWidgetId == null || attrWidgetId.equalsIgnoreCase("")) {
+    if (storyViewAttributes.widgetId == null || storyViewAttributes.widgetId.equalsIgnoreCase("")) {
       widgetId = getWidgetId();
     } else {
-      widgetId = attrWidgetId;
+      widgetId = storyViewAttributes.widgetId;
     }
 
     if (widgetId == null || widgetId.length() == 0) {
@@ -191,8 +233,7 @@ public class StoryView extends LinearLayout {
             syncUnreadStoryIds();
           }
 
-          sortToLastIndex = attrArray.getInt(R.styleable.StoryView_sort_to_last_index, 0);
-          if (sortToLastIndex == 1) {
+          if (storyViewAttributes.sortToLastIndex == 1) {
             ArrayList<Story> categorizeStories = categorizeStories(stories);
             stories.clear();
             stories.addAll(categorizeStories);
@@ -265,16 +306,15 @@ public class StoryView extends LinearLayout {
       RelativeLayout relativeLayout = view.findViewById(R.id.rlMain);
       RecyclerView recyclerView = view.findViewById(R.id.rvStories);
 
-      relativeLayout.setBackgroundColor(
-          attrArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR));
+      relativeLayout.setBackgroundColor(isDarkModeEnabled ? storyViewAttributes.backgroundColorDarkMode : storyViewAttributes.backgroundColor);
       ViewGroup.LayoutParams params = relativeLayout.getLayoutParams();
-      params.height = getDimensionOrEnum(attrArray, R.styleable.StoryView_story_view_height);
-      params.width = getDimensionOrEnum(attrArray, R.styleable.StoryView_story_view_width);
+      params.height = storyViewAttributes.storyViewHeight;
+      params.width = storyViewAttributes.storyViewWidth;
       relativeLayout.setLayoutParams(params);
 
       ViewGroup.LayoutParams recyclerViewParams = recyclerView.getLayoutParams();
-      recyclerViewParams.height = getDimensionOrEnum(attrArray, R.styleable.StoryView_story_view_height);
-      recyclerViewParams.width = getDimensionOrEnum(attrArray, R.styleable.StoryView_story_view_width);
+      recyclerViewParams.height = storyViewAttributes.storyViewHeight;
+      recyclerViewParams.width = storyViewAttributes.storyViewWidth;
       recyclerView.setLayoutParams(recyclerViewParams);
 
       recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -286,7 +326,7 @@ public class StoryView extends LinearLayout {
 
           LinearLayoutManager linearLayoutManager =
               new LinearLayoutManager(ActivityLifecycleListener.currentActivity, LinearLayoutManager.HORIZONTAL, false);
-          storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, attrArray,
+          storyViewListAdapter = new StoryViewListAdapter(ActivityLifecycleListener.currentActivity, stories, storyViewAttributes,
               getOnItemClickListener(stories, recyclerView), recyclerViewWidth, widget.isGroupStoryCategories(), isDarkModeEnabled);
           recyclerView.setLayoutManager(linearLayoutManager);
           recyclerView.setAdapter(storyViewListAdapter);
@@ -308,7 +348,7 @@ public class StoryView extends LinearLayout {
               SharedPreferences.Editor editor = sharedPreferences.edit();
               String preferencesString = sharedPreferences.getString(CleverPushPreferences.APP_OPENED_STORIES, "");
 
-              if (sortToLastIndex == 1) {
+              if (storyViewAttributes.sortToLastIndex == 1) {
                 ArrayList<Story> categorizeStories = categorizeStories(stories);
                 stories.clear();
                 stories.addAll(categorizeStories);
@@ -325,13 +365,11 @@ public class StoryView extends LinearLayout {
 
               int subStoryIndex = calculateSubStoryIndex(sharedPreferences, stories.get(position));
 
-              int closeButtonPosition = attrArray.getInt(R.styleable.StoryView_close_button_position, 0);
-
               if (widget != null && !widget.isGroupStoryCategories()) {
                 stories.get(position).setOpened(true);
               }
               StoryDetailActivity.launch(ActivityLifecycleListener.currentActivity, stories, position, storyViewListAdapter,
-                  closeButtonPosition, subStoryIndex, widgetId, sortToLastIndex, StoryView.this);
+                  storyViewAttributes.closeButtonPosition, subStoryIndex, widgetId, storyViewAttributes.sortToLastIndex, StoryView.this);
               recyclerView.smoothScrollToPosition(position);
             }
           });
@@ -397,7 +435,7 @@ public class StoryView extends LinearLayout {
     this.stories.clear();
     this.stories.addAll(stories);
     if (storyViewListAdapter != null) {
-      if (sortToLastIndex == 1) {
+      if (storyViewAttributes.sortToLastIndex == 1) {
         ArrayList<Story> categorizedStories = categorizeStories(this.stories);
         storyViewListAdapter.updateStories(categorizedStories);
       } else {
@@ -551,4 +589,186 @@ public class StoryView extends LinearLayout {
       Logger.e(TAG, "Error while updating unread story IDs. " + e.getLocalizedMessage(), e);
     }
   }
+
+    public void setBackgroundColor(int color) {
+      storyViewAttributes.backgroundColor = color;
+      refreshStoryView();
+    }
+
+    public void setBackgroundColorDarkMode(int color) {
+      storyViewAttributes.backgroundColorDarkMode = color;
+      refreshStoryView();
+    }
+
+    public void setTextColor(int color) {
+      storyViewAttributes.textColor = color;
+      refreshStoryView();
+    }
+
+    public void setTextColorDarkMode(int color) {
+      storyViewAttributes.textColorDarkMode = color;
+      refreshStoryView();
+    }
+
+    public void setStoryViewHeight(int height) {
+      storyViewAttributes.storyViewHeight = height;
+      refreshStoryView();
+    }
+
+    public void setStoryViewWidth(int width) {
+      storyViewAttributes.storyViewWidth = width;
+      refreshStoryView();
+    }
+
+    public void setFontFamily(String fontFamily) {
+      storyViewAttributes.fontFamily = fontFamily;
+      refreshStoryView();
+    }
+
+    public void setTitleVisibility(int visibility) {
+      storyViewAttributes.titleVisibility = visibility;
+      refreshStoryView();
+    }
+
+    public void setTitlePosition(int position) {
+      storyViewAttributes.titlePosition = position;
+      refreshStoryView();
+    }
+
+    public void setTitleTextSize(int size) {
+      storyViewAttributes.titleTextSize = size;
+      refreshStoryView();
+    }
+
+    public void setTitleMinTextSize(int size) {
+      storyViewAttributes.titleMinTextSize = size;
+      refreshStoryView();
+    }
+
+    public void setTitleMaxTextSize(int size) {
+      storyViewAttributes.titleMaxTextSize = size;
+      refreshStoryView();
+    }
+
+    public void setStoryIconHeight(int height) {
+      storyViewAttributes.storyIconHeight = height;
+      refreshStoryView();
+    }
+
+    public void setStoryIconHeightPercentage(int percentage) {
+      storyViewAttributes.storyIconHeightPercentage = percentage;
+      refreshStoryView();
+    }
+
+    public void setStoryIconWidth(int width) {
+      storyViewAttributes.storyIconWidth = width;
+      refreshStoryView();
+    }
+
+    public void setStoryIconCornerRadius(float radius) {
+      storyViewAttributes.storyIconCornerRadius = radius;
+      refreshStoryView();
+    }
+
+    public void setStoryIconSpace(float space) {
+      storyViewAttributes.storyIconSpace = space;
+      refreshStoryView();
+    }
+
+    public void setStoryIconShadow(boolean shadow) {
+      storyViewAttributes.storyIconShadow = shadow;
+      refreshStoryView();
+    }
+
+    public void setBorderVisibility(int visibility) {
+      storyViewAttributes.borderVisibility = visibility;
+      refreshStoryView();
+    }
+
+    public void setBorderMargin(float margin) {
+      storyViewAttributes.borderMargin = margin;
+      refreshStoryView();
+    }
+
+    public void setBorderWidth(int width) {
+      storyViewAttributes.borderWidth = width;
+      refreshStoryView();
+    }
+
+    public void setBorderColor(int color) {
+      storyViewAttributes.borderColor = color;
+      refreshStoryView();
+    }
+
+    public void setBorderColorDarkMode(int color) {
+      storyViewAttributes.borderColorDarkMode = color;
+      refreshStoryView();
+    }
+
+    public void setBorderColorLoading(int color) {
+      storyViewAttributes.borderColorLoading = color;
+      refreshStoryView();
+    }
+
+    public void setBorderColorLoadingDarkMode(int color) {
+      storyViewAttributes.borderColorLoadingDarkMode = color;
+      refreshStoryView();
+    }
+
+    public void setSubStoryUnreadCountVisibility(int visibility) {
+      storyViewAttributes.subStoryUnreadCountVisibility = visibility;
+      refreshStoryView();
+    }
+
+    public void setSubStoryUnreadCountBackgroundColor(int color) {
+      storyViewAttributes.subStoryUnreadCountBackgroundColor = color;
+      refreshStoryView();
+    }
+
+    public void setSubStoryUnreadCountBackgroundColorDarkMode(int color) {
+      storyViewAttributes.subStoryUnreadCountBackgroundColorDarkMode = color;
+      refreshStoryView();
+    }
+
+    public void setSubStoryUnreadCountTextColor(int color) {
+      storyViewAttributes.subStoryUnreadCountTextColor = color;
+      refreshStoryView();
+    }
+
+    public void setSubStoryUnreadCountTextColorDarkMode(int color) {
+      storyViewAttributes.subStoryUnreadCountTextColorDarkMode = color;
+      refreshStoryView();
+    }
+
+    public void setSubStoryUnreadCountBadgeHeight(int height) {
+      storyViewAttributes.subStoryUnreadCountBadgeHeight = height;
+      refreshStoryView();
+    }
+
+    public void setSubStoryUnreadCountBadgeWidth(int width) {
+      storyViewAttributes.subStoryUnreadCountBadgeWidth = width;
+      refreshStoryView();
+    }
+
+    public void setRestrictToItems(int items) {
+      storyViewAttributes.restrictToItems = items;
+      refreshStoryView();
+    }
+
+    public void setCloseButtonPosition(int position) {
+      storyViewAttributes.closeButtonPosition = position;
+      refreshStoryView();
+    }
+
+    public void setSortToLastIndex(int index) {
+      storyViewAttributes.sortToLastIndex = index;
+      refreshStoryView();
+    }
+
+    private void refreshStoryView() {
+      if (storyViewListAdapter != null) {
+        removeAllViews();
+        displayStoryHead(stories);
+      }
+    }
 }
