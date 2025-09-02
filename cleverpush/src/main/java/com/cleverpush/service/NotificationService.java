@@ -161,9 +161,10 @@ public class NotificationService {
     }
   }
 
-  private Bitmap getLargeIconBitmapFromUrl(String strURL) {
+  private Bitmap getLargeIconBitmapFromUrl(Context context, String strURL) {
     try {
-      Bitmap cachedIcon = NotificationIconCacheManager.getIcon(CleverPush.context, strURL);
+      NotificationIconCacheManager.init(context);
+      Bitmap cachedIcon = NotificationIconCacheManager.getIcon(context, strURL);
       if (cachedIcon != null) {
         return cachedIcon;
       }
@@ -178,7 +179,7 @@ public class NotificationService {
       Bitmap bitmap = BitmapFactory.decodeStream(input);
 
       if (bitmap != null) {
-        NotificationIconCacheManager.cacheIcon(CleverPush.context, strURL, bitmap);
+        NotificationIconCacheManager.cacheIcon(context, strURL, bitmap);
       }
 
       return bitmap;
@@ -249,32 +250,13 @@ public class NotificationService {
         String updatedAt = category.getUpdatedAt();
         if (updatedAt != null && !updatedAt.isEmpty()) {
           String sanitizedUpdatedAt = updatedAt.replaceAll("[^a-zA-Z0-9]", "_");
-          String channelId = category.getId() + "_" + sanitizedUpdatedAt;
+          String channelId = notification.getCategory().getId() + "_" + sanitizedUpdatedAt;
           summaryNotificationId = channelId;
           notificationBuilder = new NotificationCompat.Builder(context, channelId);
         } else {
           summaryNotificationId = category.getId();
-          notificationBuilder = new NotificationCompat.Builder(context, category.getId());
+          notificationBuilder = new NotificationCompat.Builder(context, summaryNotificationId);
         }
-
-        String foregroundColor = category.getForegroundColor();
-        if (foregroundColor != null) {
-          int parsedForegroundColor = NotificationCategorySetUp.parseColor(foregroundColor);
-          if (parsedForegroundColor != 0) {
-            notificationBuilder.setColor(parsedForegroundColor);
-          } else {
-            int colorResId = getColor(context);
-            if (colorResId != 0) {
-              notificationBuilder.setColor(colorResId);
-            }
-          }
-        } else {
-          int colorResId = getColor(context);
-          if (colorResId != 0) {
-            notificationBuilder.setColor(colorResId);
-          }
-        }
-
       } else {
         NotificationChannel channel;
         if (notification.notificationChannel != null) {
@@ -285,7 +267,7 @@ public class NotificationService {
 
           int importance = NotificationManager.IMPORTANCE_DEFAULT;
           summaryNotificationId = getDefaultChannelId(context);
-          channel = new NotificationChannel(getDefaultChannelId(context), "Default", importance);
+          channel = new NotificationChannel(summaryNotificationId, "Default", importance);
         }
 
         channel.setDescription(channel.getName().toString());
@@ -304,19 +286,10 @@ public class NotificationService {
         notificationManager.createNotificationChannel(channel);
 
         notificationBuilder = new NotificationCompat.Builder(context, channel.getId());
-        int colorResId = CleverPush.getInstance(context).getDefaultNotificationColor();
-        if (colorResId != 0) {
-          int color = ContextCompat.getColor(context, colorResId);
-          notificationBuilder.setColor(color);
-        }
       }
 
     } else {
       notificationBuilder = new NotificationCompat.Builder(context);
-      int colorResId = getColor(context);
-      if (colorResId != 0) {
-        notificationBuilder.setColor(colorResId);
-      }
     }
 
     notificationBuilder = notificationBuilder
@@ -352,7 +325,7 @@ public class NotificationService {
 
     if (iconUrl != null && !iconUrl.isEmpty()) {
       try {
-        Bitmap icon = getLargeIconBitmapFromUrl(iconUrl);
+        Bitmap icon = getLargeIconBitmapFromUrl(context, iconUrl);
         if (icon != null) {
           notificationBuilder = notificationBuilder.setLargeIcon(icon);
         }
@@ -391,6 +364,20 @@ public class NotificationService {
     // from NotificationExtenderService
     if (notification.getExtender() != null) {
       notificationBuilder.extend(notification.getExtender());
+    }
+
+    int effectiveColor = 0;
+    NotificationCategory notificationCategory = notification.getCategory();
+    if (notificationCategory != null && notificationCategory.getForegroundColor() != null) {
+      int parsed = NotificationCategorySetUp.parseColor(notificationCategory.getForegroundColor());
+      if (parsed != 0) effectiveColor = parsed;
+    }
+    if (effectiveColor == 0) {
+      effectiveColor = getColor(context);
+    }
+
+    if (effectiveColor != 0) {
+      notificationBuilder.setColor(effectiveColor);
     }
 
     return notificationBuilder;
@@ -505,8 +492,7 @@ public class NotificationService {
     String voucherCode = notification.getVoucherCode();
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
-
-    android.app.Notification summaryNotification =
+    NotificationCompat.Builder builder =
             new NotificationCompat.Builder(context, summaryNotificationId)
                     .setContentIntent(contentIntent)
                     .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
@@ -519,9 +505,23 @@ public class NotificationService {
                             .addLine(text))
                     .setGroup(GROUPLESS_SUMMARY_KEY)
                     .setGroupSummary(true)
-                    .setSound(getSoundUri(context, notification))
-                    .build();
-      return summaryNotification;
+                    .setSound(getSoundUri(context, notification));
+
+    int effectiveColor = 0;
+    NotificationCategory notificationCategory = notification.getCategory();
+    if (notificationCategory != null && notificationCategory.getForegroundColor() != null) {
+      int parsed = NotificationCategorySetUp.parseColor(notificationCategory.getForegroundColor());
+      if (parsed != 0) effectiveColor = parsed;
+    }
+    if (effectiveColor == 0) {
+      effectiveColor = getColor(context);
+    }
+
+    if (effectiveColor != 0) {
+      builder.setColor(effectiveColor);
+    }
+
+    return builder.build();
   }
 
   int createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr) {
