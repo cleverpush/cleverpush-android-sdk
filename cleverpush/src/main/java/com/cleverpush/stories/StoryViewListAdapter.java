@@ -5,7 +5,6 @@ import static com.cleverpush.stories.StoryView.DEFAULT_BACKGROUND_COLOR;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -57,7 +56,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   private Context context;
   private ArrayList<Story> stories;
   private OnItemClickListener onItemClickListener;
-  private TypedArray typedArray;
+  private StoryViewAttributes storyViewAttributes;
   public static StoryViewListAdapter storyViewListAdapter;
   private int parentLayoutWidth;
   private boolean isGroupStoryCategories;
@@ -65,7 +64,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
   boolean isDarkModeEnabled;
   boolean updateView = false;
 
-  public StoryViewListAdapter(Context context, ArrayList<Story> stories, TypedArray typedArray, OnItemClickListener onItemClickListener,
+  public StoryViewListAdapter(Context context, ArrayList<Story> stories, StoryViewAttributes storyViewAttributes, OnItemClickListener onItemClickListener,
                               int parentLayoutWidth, boolean isGroupStoryCategories, boolean isDarkModeEnabled) {
     if (context == null) {
       if (CleverPush.getInstance(CleverPush.context).getCurrentContext() != null) {
@@ -75,7 +74,7 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       this.context = context;
     }
     this.stories = stories;
-    this.typedArray = typedArray;
+    this.storyViewAttributes = storyViewAttributes;
     this.onItemClickListener = onItemClickListener;
     this.parentLayoutWidth = parentLayoutWidth;
     this.isGroupStoryCategories = isGroupStoryCategories;
@@ -117,33 +116,33 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
       RelativeLayout titleInsideLayout = (RelativeLayout) holder.itemView.findViewById(R.id.titleInsideLayout);
       TextView tvTitleInside = (TextView) holder.itemView.findViewById(R.id.tvTitleInside);
 
-      int iconHeight = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_height, 206);
-      int iconHeightPercentage = typedArray.getInt(R.styleable.StoryView_story_icon_height_percentage, 0);
-      int iconWidth = (int) typedArray.getDimension(R.styleable.StoryView_story_icon_width, 206);
-      boolean iconShadow = typedArray.getBoolean(R.styleable.StoryView_story_icon_shadow, false);
-      int borderVisibility = typedArray.getInt(R.styleable.StoryView_border_visibility, View.VISIBLE);
-      float borderMargin = typedArray.getDimension(R.styleable.StoryView_border_margin, 13.0F);
-      int borderWidth = (int) typedArray.getDimension(R.styleable.StoryView_border_width, 5);
-      float cornerRadius = typedArray.getDimension(R.styleable.StoryView_story_icon_corner_radius, -1);
-      int subStoryUnreadCount = typedArray.getInt(R.styleable.StoryView_sub_story_unread_count_visibility, View.GONE);
-      int restrictToItems = typedArray.getInt(R.styleable.StoryView_restrict_to_items, 0);
-      float iconSpace = typedArray.getDimension(R.styleable.StoryView_story_icon_space, -1);
-      int titlePosition = typedArray.getInt(R.styleable.StoryView_title_position, 0);
-      int titleVisibility = typedArray.getInt(R.styleable.StoryView_title_visibility, View.VISIBLE);
-      int unreadCountBadgeHeight = (int) typedArray.getDimension(R.styleable.StoryView_sub_story_unread_count_badge_height, 78);
-      int unreadCountBadgeWidth = (int) typedArray.getDimension(R.styleable.StoryView_sub_story_unread_count_badge_width, 78);
+      int iconHeight = storyViewAttributes.storyIconHeight;
+      int iconHeightPercentage = storyViewAttributes.storyIconHeightPercentage;
+      int iconWidth = storyViewAttributes.storyIconWidth;
+      boolean iconShadow = storyViewAttributes.storyIconShadow;
+      int borderVisibility = storyViewAttributes.borderVisibility;
+      float borderMargin = storyViewAttributes.borderMargin;
+      int borderWidth = storyViewAttributes.borderWidth;
+      float cornerRadius = storyViewAttributes.storyIconCornerRadius;
+      int subStoryUnreadCount = storyViewAttributes.subStoryUnreadCountVisibility;
+      int restrictToItems = storyViewAttributes.restrictToItems;
+      float iconSpace = storyViewAttributes.storyIconSpace;
+      int titlePosition = storyViewAttributes.titlePosition;
+      int titleVisibility = storyViewAttributes.titleVisibility;
+      int unreadCountBadgeHeight = storyViewAttributes.subStoryUnreadCountBadgeHeight;
+      int unreadCountBadgeWidth = storyViewAttributes.subStoryUnreadCountBadgeWidth;
 
       int storyViewBackgroundColor = 0;
       if (isDarkModeEnabled) {
-        storyViewBackgroundColor = typedArray.getColor(R.styleable.StoryView_background_color_dark_mode, DEFAULT_BACKGROUND_COLOR);
+        storyViewBackgroundColor = storyViewAttributes.backgroundColorDarkMode;
       } else {
-        storyViewBackgroundColor = typedArray.getColor(R.styleable.StoryView_background_color, DEFAULT_BACKGROUND_COLOR);
+        storyViewBackgroundColor = storyViewAttributes.backgroundColor;
       }
       int textColor = 0;
       if (isDarkModeEnabled) {
-        textColor = typedArray.getColor(R.styleable.StoryView_text_color_dark_mode, DEFAULT_TEXT_COLOR);
+        textColor = storyViewAttributes.textColorDarkMode;
       } else {
-        textColor = typedArray.getColor(R.styleable.StoryView_text_color, DEFAULT_TEXT_COLOR);
+        textColor = storyViewAttributes.textColor;
       }
 
       parentLayout.setBackgroundColor(storyViewBackgroundColor);
@@ -193,9 +192,9 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         }
         int unreadCountTextColor = 0;
         if (isDarkModeEnabled) {
-          unreadCountTextColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color_dark_mode, DEFAULT_UNREAD_COUNT_TEXT_COLOR);
+          unreadCountTextColor = storyViewAttributes.subStoryUnreadCountTextColorDarkMode;
         } else {
-          unreadCountTextColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_text_color, DEFAULT_UNREAD_COUNT_TEXT_COLOR);
+          unreadCountTextColor = storyViewAttributes.subStoryUnreadCountTextColor;
         }
         unreadCountTextView.setTextColor(unreadCountTextColor);
 
@@ -203,9 +202,9 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         circleDrawable.setShape(GradientDrawable.OVAL);
         int backgroundColor = 0;
         if (isDarkModeEnabled) {
-          backgroundColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_background_color_dark_mode, DEFAULT_UNREAD_COUNT_BACKGROUND_COLOR);;
+          backgroundColor = storyViewAttributes.subStoryUnreadCountBackgroundColorDarkMode;
         } else {
-          backgroundColor = typedArray.getColor(R.styleable.StoryView_sub_story_unread_count_background_color, DEFAULT_UNREAD_COUNT_BACKGROUND_COLOR);
+          backgroundColor = storyViewAttributes.subStoryUnreadCountBackgroundColor;
         }
         circleDrawable.setColor(backgroundColor);
         int unreadCountBorderWidth = 3;
@@ -365,26 +364,26 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
           nameTextViewParams.width = iconWidth;
           nameTextView.setLayoutParams(nameTextViewParams);
 
-          int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
+          int titleTextSize = storyViewAttributes.titleTextSize;
           nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
           String titleText = getTitleText(stories, position);
           nameTextView.setText(titleText);
           nameTextView.setTextColor(textColor);
-          applyFont(nameTextView, typedArray);
+          applyFont(nameTextView, storyViewAttributes.fontFamily);
         } else {
           nameTextView.setVisibility(View.GONE);
           titleInsideLayout.setVisibility(View.VISIBLE);
 
-          int titleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_text_size, 32);
-          int minTitleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_min_text_size, 12);
-          int maxTitleTextSize = typedArray.getDimensionPixelSize(R.styleable.StoryView_title_max_text_size, 32);
+          int titleTextSize = storyViewAttributes.titleTextSize;
+          int minTitleTextSize = storyViewAttributes.titleMinTextSize;
+          int maxTitleTextSize = storyViewAttributes.titleMaxTextSize;
 
           tvTitleInside.setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize);
 
           String titleText = getTitleText(stories, position);
           tvTitleInside.setText(titleText);
           tvTitleInside.setTextColor(textColor);
-          applyFont(tvTitleInside, typedArray);
+          applyFont(tvTitleInside, storyViewAttributes.fontFamily);
 
           // Measure the available width for the title
           int availableWidth = holder.itemView.getWidth() - (tvTitleInside.getPaddingLeft() + tvTitleInside.getPaddingRight());
@@ -501,9 +500,9 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
         border.setColor(0xFFFFFFFF); // White background
         int borderColor = 0;
         if (isDarkModeEnabled) {
-          borderColor = typedArray.getColor(R.styleable.StoryView_border_color_dark_mode, DEFAULT_BORDER_COLOR);
+          borderColor = storyViewAttributes.borderColorDarkMode;
         } else {
-          borderColor = typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
+          borderColor = storyViewAttributes.borderColor;
         }
         border.setStroke(borderWidth, borderColor); // Black or desired border color
       }
@@ -527,15 +526,15 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
     try {
       int DEFAULT_ANIM_COLOR;
       if (isDarkModeEnabled) {
-        DEFAULT_ANIM_COLOR = typedArray.getColor(R.styleable.StoryView_border_color_dark_mode, DEFAULT_BORDER_COLOR);
+        DEFAULT_ANIM_COLOR = storyViewAttributes.borderColorDarkMode;
       } else {
-        DEFAULT_ANIM_COLOR = typedArray.getColor(R.styleable.StoryView_border_color, DEFAULT_BORDER_COLOR);
+        DEFAULT_ANIM_COLOR = storyViewAttributes.borderColor;
       }
       int borderAnimColor;
       if (isDarkModeEnabled) {
-        borderAnimColor = typedArray.getColor(R.styleable.StoryView_border_color_loading_dark_mode, DEFAULT_ANIM_COLOR);
+        borderAnimColor = storyViewAttributes.borderColorLoadingDarkMode;
       } else {
-        borderAnimColor = typedArray.getColor(R.styleable.StoryView_border_color_loading, DEFAULT_ANIM_COLOR);
+        borderAnimColor = storyViewAttributes.borderColorLoading;
       }
 
       GradientDrawable gradientBorder = new GradientDrawable(
@@ -684,12 +683,11 @@ public class StoryViewListAdapter extends RecyclerView.Adapter<StoryViewHolder> 
    * Applies a font to a TextView that uses the "fontPath" attribute.
    *
    * @param textView   TextView when the font should apply
-   * @param typedArray Attributes that contain the "fontPath" attribute with the path to the font file in the assets folder
+   * @param fontPath Attributes that contain the "fontPath" attribute with the path to the font file in the assets folder
    */
-  public void applyFont(TextView textView, TypedArray typedArray) {
-    if (typedArray != null) {
+  public void applyFont(TextView textView, String fontPath) {
+    if (fontPath != null) {
       Context context = textView.getContext();
-      String fontPath = typedArray.getString(R.styleable.StoryView_font_family);
       if (!TextUtils.isEmpty(fontPath)) {
         Typeface typeface = getTypeface(context, fontPath);
         if (typeface != null) {

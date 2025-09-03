@@ -96,13 +96,15 @@ public class StoryDetailJavascriptInterface {
           if (url != null && !url.isEmpty()) {
             Uri uri = Uri.parse(url);
             StoryDetailActivity.isOpenFromButton = true;
-            if (storyViewOpenedListener != null) {
-              storyViewOpenedListener.opened(uri);
-            } else {
-              if (uri != null) {
-                activity.startActivity(new Intent(Intent.ACTION_VIEW, uri));
+            activity.runOnUiThread(() -> {
+              if (storyViewOpenedListener != null) {
+                storyViewOpenedListener.opened(uri);
+              } else {
+                if (uri != null) {
+                  activity.startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                }
               }
-            }
+            });
           }
         }
       }
