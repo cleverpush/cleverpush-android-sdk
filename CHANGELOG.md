@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.9 (03.09.2025)
+* Fixed a bug in notifications where the color was not being applied correctly. The color is now applied to both individual and summary notifications.
+
 ## 1.35.8 (19.08.2025)
 * Added feature to sync channel topics with notification categories, automatically subscribing or unsubscribing from topics based on the notification channel status.
 * Added support for syncing subscription tags from the backend to local.
