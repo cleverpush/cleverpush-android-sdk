@@ -399,7 +399,7 @@ public class AppBannerModule {
     sendBannerEvent(event, banner, null, null);
   }
 
-  void sendBannerEvent(String event, Banner banner, String blockId, String screenId) {
+  public void sendBannerEvent(String event, Banner banner, String blockId, String screenId) {
     sendBannerEvent(event, banner, blockId, screenId, false, false);
   }
 

@@ -585,6 +585,14 @@ public class InboxDetailActivity extends AppCompatActivity {
     viewPager2.setCurrentItem(screenPosition, true);
   }
 
+  public void moveToPreviousScreen() {
+    int currentPosition = viewPager2.getCurrentItem();
+    if (currentPosition > 0) {
+      viewPager2.setCurrentItem(currentPosition - 1);
+    }
+  }
+
+
   public Banner getData() {
     return data;
   }
