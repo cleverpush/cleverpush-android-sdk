@@ -885,6 +885,24 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         appBannerPopup.moveToPreviousScreen();
       });
     }
+
+    @JavascriptInterface
+    public void handleLinkBySystem(String mailId) {
+      activity.runOnUiThread(() -> {
+        if (mailId != null && !mailId.trim().isEmpty()) {
+          Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+          emailIntent.setData(Uri.parse("mailto:" + mailId));
+
+          try {
+            activity.startActivity(Intent.createChooser(emailIntent, "Send Email"));
+          } catch (android.content.ActivityNotFoundException ex) {
+            Logger.i(TAG, "App-Banner handleLinkBySystem: No email client found for mailId: " + mailId);
+          }
+        } else {
+          Logger.i(TAG, "App-Banner handleLinkBySystem: Invalid email address (null or empty).");
+        }
+      });
+    }
   }
 
   @JavascriptInterface
