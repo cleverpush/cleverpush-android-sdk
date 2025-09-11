@@ -299,7 +299,7 @@ public class NotificationService {
         .setContentText(text)
         .setSmallIcon(getSmallIcon(context))
         .setAutoCancel(true)
-        .setGroup(GROUPLESS_SUMMARY_KEY)
+        .setGroup(getGroupKeyForCurrentChannel(notification))
         .setSound(soundUri);
 
     if (notification.getActions() != null && notification.getActions().length > 0) {
@@ -475,7 +475,8 @@ public class NotificationService {
 
     if (notificationBuilder != null) {
       NotificationManagerCompat.from(context).notify(notification.getTag(), requestId, notificationBuilder.build());
-      NotificationManagerCompat.from(context).notify(GROUPLESS_SUMMARY_ID, summaryNotification);
+      int perChannelSummaryId = getSummaryIdForCurrentChannel();
+      NotificationManagerCompat.from(context).notify(perChannelSummaryId, summaryNotification);
     }
     return requestId;
   }
@@ -492,6 +493,8 @@ public class NotificationService {
     String voucherCode = notification.getVoucherCode();
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
+    String groupKey = getGroupKeyForCurrentChannel(notification);
+
     NotificationCompat.Builder builder =
             new NotificationCompat.Builder(context, summaryNotificationId)
                     .setContentIntent(contentIntent)
@@ -503,7 +506,7 @@ public class NotificationService {
                     .setStyle(new NotificationCompat.InboxStyle()
                             .addLine(title)
                             .addLine(text))
-                    .setGroup(GROUPLESS_SUMMARY_KEY)
+                    .setGroup(groupKey)
                     .setGroupSummary(true)
                     .setSound(getSoundUri(context, notification));
 
@@ -522,6 +525,34 @@ public class NotificationService {
     }
 
     return builder.build();
+  }
+
+  private int getSummaryIdForCurrentChannel() {
+    String key = summaryNotificationId;
+    if (key == null || key.isEmpty()) {
+      key = "default";
+    }
+    return key.hashCode();
+  }
+
+  private String getGroupKeyForCurrentChannel(Notification notification) {
+    try {
+      String groupId;
+      if (notification.getCategory() != null) {
+        groupId = notification.getCategory().getId();
+      } else {
+        groupId = "default";
+      }
+
+      String groupKey = (groupId != null && !groupId.isEmpty())
+              ? ("cleverpush_group_" + groupId)
+              : GROUPLESS_SUMMARY_KEY;
+
+      return groupKey;
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while fetching group key for push", e);
+      return GROUPLESS_SUMMARY_KEY;
+    }
   }
 
   int createAndShowCarousel(Context context, Notification message, String notificationStr, String subscriptionStr) {
