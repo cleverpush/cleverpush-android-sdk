@@ -891,7 +891,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       activity.runOnUiThread(() -> {
         if (mailId != null && !mailId.trim().isEmpty()) {
           Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-          emailIntent.setData(Uri.parse("mailto:" + mailId));
+          emailIntent.setData(Uri.fromParts("mailto", mailId.trim(), null));
 
           try {
             activity.startActivity(Intent.createChooser(emailIntent, "Send Email"));

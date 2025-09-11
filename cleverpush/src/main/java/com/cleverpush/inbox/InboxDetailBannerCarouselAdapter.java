@@ -612,7 +612,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
       activity.runOnUiThread(() -> {
         if (mailId != null && !mailId.trim().isEmpty()) {
           Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-          emailIntent.setData(Uri.parse("mailto:" + mailId));
+          emailIntent.setData(Uri.fromParts("mailto", mailId.trim(), null));
 
           try {
             activity.startActivity(Intent.createChooser(emailIntent, "Send Email"));
