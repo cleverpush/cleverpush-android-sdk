@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -34,6 +35,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
+import com.cleverpush.banner.AppBannerCarouselAdapter;
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
@@ -365,6 +367,23 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     webView.getSettings().setJavaScriptEnabled(true);
     webView.setVerticalScrollBarEnabled(false);
     webView.setHorizontalScrollBarEnabled(false);
+
+    webView.setWebViewClient(new WebViewClient() {
+      @Override
+      public void onPageFinished(WebView view, String url) {
+        super.onPageFinished(view, url);
+        webView.evaluateJavascript(
+                "CleverPush.trackEvent = function(eventId, properties) {\n" +
+                        "  CleverPush.trackEventStringified(eventId, properties ? JSON.stringify(properties) : null);\n" +
+                        "};\n" +
+                        "CleverPush.trackClick = function(buttonId, customData) {\n" +
+                        "  CleverPush.trackClickStringified(buttonId, customData ? JSON.stringify(customData) : null);\n" +
+                        "};\n",
+                null
+        );
+      }
+    });
+
     webView.loadUrl(block.getUrl());
     webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
 
@@ -474,13 +493,37 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     }
 
     @JavascriptInterface
-    public void trackEvent(String eventID, String propertiesJSON) {
+    public void trackEventStringified(String eventID, String propertiesJSON) {
       try {
-        Map<String, Object> properties = new Gson().fromJson(propertiesJSON, Map.class);
+        Map<String, Object> properties = null;
+        if (propertiesJSON != null) {
+          properties = new Gson().fromJson(propertiesJSON, Map.class);
+        }
         CleverPush.getInstance(CleverPush.context).trackEvent(eventID, properties);
       } catch (Exception ex) {
-        Logger.e(TAG, "Error in InboxView's HTML trackEvent error.", ex);
+        Logger.e(TAG, "Error in AppBanner's HTML trackEvent error.", ex);
       }
+    }
+
+    @JavascriptInterface
+    public void trackClickStringified(String buttonId, String customDataJSON) {
+      CleverPush cleverPush = CleverPush.getInstance(CleverPush.context);
+      try {
+        Map<String, Object> customData = null;
+        if (customDataJSON != null) {
+          customData = new Gson().fromJson(customDataJSON, Map.class);
+        }
+
+        BannerAction bannerAction = BannerAction.create("html", customData);
+        if (cleverPush.getAppBannerOpenedListener() != null) {
+          cleverPush.getAppBannerOpenedListener().opened(bannerAction);
+        }
+      } catch (Exception ex) {
+        Logger.e(TAG, "Error in AppBanner's HTML trackClick error.", ex);
+      }
+
+      cleverPush.getAppBannerModule()
+              .sendBannerEvent("clicked", appBannerPopup.getData(), buttonId, null);
     }
 
     @JavascriptInterface
@@ -491,6 +534,17 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     @JavascriptInterface
     public void setSubscriptionAttribute(String attributeID, String value) {
       CleverPush.getInstance(CleverPush.context).setSubscriptionAttribute(attributeID, value);
+    }
+
+    @JavascriptInterface
+    public String getSubscriptionAttribute(String attributeID) {
+      try {
+        Object attributeValue = CleverPush.getInstance(CleverPush.context).getSubscriptionAttribute(attributeID);
+        return attributeValue != null ? attributeValue.toString() : "";
+      } catch (Exception ex) {
+        Logger.e(TAG, "Error while retrieving subscription attribute.", ex);
+        return "";
+      }
     }
 
     @JavascriptInterface
@@ -521,6 +575,54 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     @JavascriptInterface
     public void showTopicsDialog() {
       CleverPush.getInstance(CleverPush.context).showTopicsDialog();
+    }
+
+    @JavascriptInterface
+    public void goToScreen(String screenId) {
+      try {
+        activity.runOnUiThread(() -> {
+          for (int i = 0; i < screens.size(); i++) {
+            if (screens.get(i).getId() != null && screens.get(i).getId().equals(screenId)) {
+              appBannerPopup.moveToNextScreen(i);
+              break;
+            }
+          }
+        });
+      } catch (Exception e) {
+        Logger.e(TAG, "Error while performing goToScreen in HTML banner. " + e.getLocalizedMessage(), e);
+      }
+    }
+
+    @JavascriptInterface
+    public void nextScreen() {
+      activity.runOnUiThread(() -> {
+        appBannerPopup.moveToNextScreen();
+      });
+    }
+
+    @JavascriptInterface
+    public void previousScreen() {
+      activity.runOnUiThread(() -> {
+        appBannerPopup.moveToPreviousScreen();
+      });
+    }
+
+    @JavascriptInterface
+    public void handleLinkBySystem(String mailId) {
+      activity.runOnUiThread(() -> {
+        if (mailId != null && !mailId.trim().isEmpty()) {
+          Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+          emailIntent.setData(Uri.fromParts("mailto", mailId.trim(), null));
+
+          try {
+            activity.startActivity(Intent.createChooser(emailIntent, "Send Email"));
+          } catch (android.content.ActivityNotFoundException ex) {
+            Logger.i(TAG, "InboxView handleLinkBySystem: No email client found for mailId: " + mailId);
+          }
+        } else {
+          Logger.i(TAG, "InboxView handleLinkBySystem: Invalid email address (null or empty).");
+        }
+      });
     }
   }
 }
