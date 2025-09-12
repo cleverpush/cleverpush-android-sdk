@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.35.10 (12.09.2025)
+* Notifications are now grouped by their respective channels instead of being grouped all together.
+* Added new JS method `handleLinkBySystem` for HTML App Banners that allows composing emails directly using the native Mail app. In an HTML banner, you can now use: `CleverPush.handleLinkBySystem('support@cleverpush.com');`
+* Added runtime setters to StoryView to configure stories without requiring XML
+
 ## 1.35.9 (03.09.2025)
 * Fixed a bug in notifications where the color was not being applied correctly. The color is now applied to both individual and summary notifications.
 
