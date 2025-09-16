@@ -608,19 +608,18 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     }
 
     @JavascriptInterface
-    public void handleLinkBySystem(String mailId) {
+    public void handleLinkBySystem(String link) {
       activity.runOnUiThread(() -> {
-        if (mailId != null && !mailId.trim().isEmpty()) {
-          Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-          emailIntent.setData(Uri.fromParts("mailto", mailId.trim(), null));
-
+        if (link != null && !link.trim().isEmpty()) {
           try {
-            activity.startActivity(Intent.createChooser(emailIntent, "Send Email"));
-          } catch (android.content.ActivityNotFoundException ex) {
-            Logger.i(TAG, "InboxView handleLinkBySystem: No email client found for mailId: " + mailId);
+            Uri uri = Uri.parse(link.trim());
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            activity.startActivity(intent);
+          } catch (Exception e) {
+            Logger.e(TAG, "InboxView handleLinkBySystem: Failed to handle link → " + link, e);
           }
         } else {
-          Logger.i(TAG, "InboxView handleLinkBySystem: Invalid email address (null or empty).");
+          Logger.i(TAG, "InboxView handleLinkBySystem: Invalid link (null or empty).");
         }
       });
     }
