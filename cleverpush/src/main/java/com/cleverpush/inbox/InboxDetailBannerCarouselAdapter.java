@@ -612,7 +612,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
       activity.runOnUiThread(() -> {
         if (link != null && !link.trim().isEmpty()) {
           try {
-            Uri uri = Uri.parse(link);
+            Uri uri = Uri.parse(link.trim());
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             activity.startActivity(intent);
           } catch (Exception e) {
