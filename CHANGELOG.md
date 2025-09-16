@@ -1,8 +1,11 @@
 # Changelog
 
+## 1.35.11 (16.09.2025)
+* Enhanced the App-Banner JS method `handleLinkBySystem` to support multiple link types, including `mailto:`, `tel:`, `market/Play Store`, and standard `http/https` links.
+
 ## 1.35.10 (12.09.2025)
 * Notifications are now grouped by their respective channels instead of being grouped all together.
-* Added new JS method `handleLinkBySystem` for HTML App Banners that allows composing emails directly using the native Mail app. In an HTML banner, you can now use: `CleverPush.handleLinkBySystem('support@cleverpush.com');`
+* Added new JS method `handleLinkBySystem` for HTML App Banners that allows composing emails directly using the native Mail app. In an HTML banner, you can now use: `CleverPush.handleLinkBySystem('mailto:example@email.com');`
 * Added runtime setters to StoryView to configure stories without requiring XML
 
 ## 1.35.9 (03.09.2025)
