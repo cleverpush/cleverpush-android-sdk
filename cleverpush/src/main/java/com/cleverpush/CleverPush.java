@@ -252,7 +252,9 @@ public class CleverPush {
       CleverPush.context = context.getApplicationContext();
     }
 
-    sessionListener = initSessionListener();
+    if (!isSessionStartCalled) {
+      sessionListener = initSessionListener();
+    }
 
     if ((Application) getContext() != null) {
       if (context instanceof Activity) {
@@ -610,6 +612,9 @@ public class CleverPush {
       try {
         this.isAppOpen = open;
         if (open) {
+          if (isSessionStartCalled) {
+            return;
+          }
           this.trackSessionStart();
 
           if (this.pendingRequestLocationPermissionCall) {
@@ -644,6 +649,7 @@ public class CleverPush {
             subscribe();
           }
         } else {
+          isSessionStartCalled = false;
           this.trackSessionEnd();
         }
       } catch (Exception e) {
@@ -1352,6 +1358,9 @@ public class CleverPush {
   }
 
   public void updateServerSessionStart() {
+    if (isSessionStartCalled) {
+      return;
+    }
     isSessionStartCalled = true;
     CleverPush instance = this;
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());

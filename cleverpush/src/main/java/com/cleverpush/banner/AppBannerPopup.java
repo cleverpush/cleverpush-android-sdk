@@ -68,7 +68,7 @@ public class AppBannerPopup {
   private final int TAB_LAYOUT_DEFAULT_HEIGHT = 48;
   private final int MAIN_LAYOUT_PADDING = 15;
   private final Handler mainHandler;
-  private final Activity activity;
+  private Activity activity;
   private final Banner data;
   private PopupWindow popup;
   private View popupRoot;
@@ -103,6 +103,10 @@ public class AppBannerPopup {
   }
 
   private boolean isRootReady() {
+    boolean isShown = activity.getWindow().getDecorView().isShown();
+    if (!isShown && ActivityLifecycleListener.currentActivity != null) {
+      activity = ActivityLifecycleListener.currentActivity;
+    }
     return activity.getWindow().getDecorView().isShown();
   }
 
@@ -132,6 +136,8 @@ public class AppBannerPopup {
     if (isInitialized) {
       return;
     }
+
+    isRootReady();
 
     int layoutId = R.layout.app_banner;
 
