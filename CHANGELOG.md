@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.12 (23.09.2025)
+* Resolved an issue with the `AppBanner` trigger: durations greater than x seconds are now handled correctly.
+* Optimized session increment handling: a session is now increments once per app open.
+
 ## 1.35.11 (16.09.2025)
 * Enhanced the App-Banner JS method `handleLinkBySystem` to support multiple link types, including `mailto:`, `tel:`, `market/Play Store`, and standard `http/https` links.
 
