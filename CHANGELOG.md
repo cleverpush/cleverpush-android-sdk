@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.13 (26.09.2025)
+* Resolved an issue where the `AppBanner` trigger was not being checked when received through push.
+
 ## 1.35.12 (23.09.2025)
 * Resolved an issue with the `AppBanner` trigger: durations greater than x seconds are now handled correctly.
 * Optimized session increment handling: a session is now increments once per app open.
