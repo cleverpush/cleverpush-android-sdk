@@ -1694,13 +1694,149 @@ public class AppBannerModule {
                 pendingBanners.add(popup);
                 break;
               }
-              getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId));
+
+              if (notificationId != null && !notificationId.isEmpty() && banner.getTriggers().size() > 0) {
+                validatePushBannerTrigger(banner, popup, force, appBannerClosedListener, notificationId);
+              } else {
+                getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId));
+              }
               break;
             }
           }
         }, notificationId);
       }
     });
+  }
+
+  private void validatePushBannerTrigger(Banner banner, AppBannerPopup popup, boolean force, AppBannerClosedListener appBannerClosedListener, String notificationId) {
+    boolean triggers = false, isTriggerCondition = false, isTargetEvent = false;
+    int delaySeconds = 0;
+    if (banner.getTriggerType() == BannerTriggerType.Conditions) {
+      isTriggerCondition = true;
+      for (BannerTrigger trigger : banner.getTriggers()) {
+        boolean triggerTrue = true;
+        for (BannerTriggerCondition condition : trigger.getConditions()) {
+          // true by default to make the AND check work
+          boolean conditionTrue = true;
+          if (condition.getType() != null) {
+            if (condition.getType().equals(BannerTriggerConditionType.Duration)) {
+              delaySeconds = condition.getSeconds();
+            } else if (condition.getType().equals(BannerTriggerConditionType.Sessions)) {
+              if (condition.getRelation().equals("lt")) {
+                conditionTrue = sessions < condition.getSessions();
+              } else {
+                conditionTrue = sessions > condition.getSessions();
+              }
+            } else if (condition.getType().equals(BannerTriggerConditionType.Event) && condition.getEvent() != null) {
+              long eventConditionCount = 1;
+              List<BannerTriggerCondition> eventTriggers = null;
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                eventTriggers = trigger.getConditions().stream()
+                        .filter(c -> c.getType() == BannerTriggerConditionType.Event)
+                        .collect(Collectors.toList());
+                eventConditionCount = eventTriggers.size();
+              } else {
+                for (BannerTriggerCondition c : trigger.getConditions()) {
+                  if (c.getType() == BannerTriggerConditionType.Event) {
+                    eventTriggers.add(c);
+                  }
+                }
+                eventConditionCount = eventTriggers.size();
+              }
+
+              boolean isMultipleEvent = eventConditionCount > 1;
+              conditionTrue = this.checkEventTriggerCondition(condition, isMultipleEvent, eventTriggers);
+            } else if (condition.getType().equals(BannerTriggerConditionType.Deeplink)) {
+              conditionTrue = this.checkDeeplinkTriggerCondition(condition);
+            } else if (condition.getType().equals(BannerTriggerConditionType.DaysSinceInitialization)) {
+              conditionTrue = this.checkDaysSinceInstallationTriggerCondition(condition);
+            } else {
+              conditionTrue = false;
+            }
+          }
+          if (!conditionTrue) {
+            triggerTrue = false;
+            break;
+          }
+        }
+        if (triggerTrue) {
+          triggers = true;
+          break;
+        }
+      }
+    }
+
+    boolean targetEvents = true;
+    if (banner.getEventFilters() != null && banner.getEventFilters().size() > 0) {
+      isTargetEvent = true;
+      for (BannerTargetEvent bannerTargetEvent : banner.getEventFilters()) {
+        boolean targetConditionTrue;
+        String event = bannerTargetEvent.getEvent();
+        String property = bannerTargetEvent.getProperty();
+        String relationString = bannerTargetEvent.getRelation();
+        String value = bannerTargetEvent.getValue();
+        String fromValue = bannerTargetEvent.getFromValue();
+        String toValue = bannerTargetEvent.getToValue();
+        List<BannerTriggerConditionEventProperty> eventProperties = bannerTargetEvent.getEventProperties();
+        if (!isValidTargetValues(event, property, relationString, value, fromValue, toValue, banner.getId())) {
+          continue;
+        }
+
+        String relation = String.valueOf(CheckFilterRelation.fromString(relationString));
+
+        if (eventProperties.size() > 0) {
+          for (BannerTriggerConditionEventProperty eventProperty : eventProperties) {
+            handleBannerTrackEvent(banner.getId(), event, property, value, relation, fromValue, toValue,
+                    eventProperty.getRelation(), eventProperty.getProperty(), eventProperty.getValue());
+          }
+        } else {
+          handleBannerTrackEvent(banner.getId(), event, property, value, relation, fromValue, toValue, "", "", "");
+        }
+
+        targetConditionTrue = this.checkTargetEventRelationFilter(CheckFilterRelation.fromString(relationString)
+                , property
+                , value != null ? value : ""
+                , fromValue != null ? fromValue : ""
+                , toValue != null ? toValue : ""
+                , banner.getId()
+                , event
+                , eventProperties);
+
+        if (!targetConditionTrue) {
+          targetEvents = false;
+          break;
+        }
+      }
+    }
+
+    if (isTriggerCondition && isTargetEvent) {
+      if (!targetEvents || !triggers) {
+        Logger.d(TAG, "Skipping Notification Banner " + banner.getId() + " because: Trigger and Target Event not satisfied " + sessions);
+        return;
+      }
+    } else if (isTriggerCondition) {
+      if (!triggers) {
+        Logger.d(TAG, "Skipping Notification Banner " + banner.getId() + " because: Trigger not satisfied " + sessions);
+        return;
+      }
+    } else if (isTargetEvent) {
+      if (!targetEvents) {
+        Logger.d(TAG, "Skipping Notification Banner " + banner.getId() + " because: Target Event not satisfied " + sessions);
+        return;
+      }
+    }
+
+    Date now = new Date();
+    if (banner.getStartAt().before(now)) {
+      if (delaySeconds > 0) {
+        getHandler().postDelayed(() -> getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId)), 1000L * delaySeconds);
+      } else {
+        getHandler().post(() -> getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId)));
+      }
+    } else {
+      long delay = banner.getStartAt().getTime() - now.getTime();
+      getHandler().postDelayed(() -> getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId)), delay + (1000L * delaySeconds));
+    }
   }
 
   public AppBannerPopup getAppBannerPopup(Banner banner) {
