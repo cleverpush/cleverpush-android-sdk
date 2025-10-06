@@ -61,7 +61,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
   @Override
   public void onActivityCreated(Activity activity, Bundle bundle) {
-
+    currentActivity = activity;
   }
 
   @Override
