@@ -103,8 +103,7 @@ public class AppBannerPopup {
   }
 
   private boolean isRootReady() {
-    boolean isShown = activity.getWindow().getDecorView().isShown();
-    if (!isShown && ActivityLifecycleListener.currentActivity != null) {
+    if (ActivityLifecycleListener.currentActivity != null) {
       activity = ActivityLifecycleListener.currentActivity;
     }
     return activity.getWindow().getDecorView().isShown();
