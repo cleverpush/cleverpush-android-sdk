@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.14 (07.10.2025)
+* Fixed an issue with `Disable/Enable AppBanner` where the banner was not displaying after calling `enableAppBanners()`
+
 ## 1.35.13 (26.09.2025)
 * Resolved an issue where the `AppBanner` trigger was not being checked when received through push.
 
