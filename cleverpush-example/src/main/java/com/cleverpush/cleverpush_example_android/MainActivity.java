@@ -27,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
 
         CleverPush.getInstance(this).enableDevelopmentMode();
 //        CleverPush.getInstance(this).setLocalTrackEventRetentionDays(20);
-        CleverPush.getInstance(this).subscribe();
         CleverPush.getInstance(this).init(
                 getString(R.string.channel_id),
                 (NotificationReceivedListener) result -> System.out.println("Received CleverPush Notification: " + result.getNotification().getTitle()),
