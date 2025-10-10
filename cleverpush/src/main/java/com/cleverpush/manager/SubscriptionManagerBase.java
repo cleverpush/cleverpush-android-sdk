@@ -130,8 +130,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
         try {
           Logger.d(LOG_TAG, "sync response: " + response);
           JSONObject responseJson = new JSONObject(response);
+          String newSubscriptionId = null;
           if (responseJson.has("id")) {
-            String newSubscriptionId = responseJson.getString("id");
+            newSubscriptionId = responseJson.getString("id");
             String oldSubscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
             boolean isSubscriptionChanged = !newSubscriptionId.equalsIgnoreCase(oldSubscriptionId);
             CleverPush.getInstance(CleverPush.context).setSubscriptionChanged(isSubscriptionChanged);
@@ -146,7 +147,6 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             sharedPreferences.edit()
                 .putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L))
                 .apply();
-            subscribedListener.onSuccess(newSubscriptionId);
           }
           if (responseJson.has("topics")) {
             JSONArray topicsArray = responseJson.getJSONArray("topics");
@@ -189,6 +189,10 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
             sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, new HashSet<>(tagIds))
                     .apply();
+          }
+
+          if (newSubscriptionId != null) {
+            subscribedListener.onSuccess(newSubscriptionId);
           }
         } catch (Throwable throwable) {
           Logger.e(LOG_TAG, "Error in syncSubscription request's onSuccess.", throwable);
