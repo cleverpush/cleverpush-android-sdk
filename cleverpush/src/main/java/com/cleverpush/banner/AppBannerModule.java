@@ -1368,7 +1368,7 @@ public class AppBannerModule {
     String currentDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault()).format(new Date());
     intervalDateMap.put(bannerId, currentDate);
     sharedPreferences.edit().putString(CleverPushPreferences.BANNER_DISPLAY_INTERVAL_DATE, new Gson().toJson(intervalDateMap)).apply();
-    return false;
+    return true;
   }
 
   private void updateBannerDisplayDate(String bannerId, Map<String, String> intervalDateMap) {
