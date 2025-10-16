@@ -1531,12 +1531,8 @@ public class CleverPush {
               self.trackSessionStart();
             }
 
-            if (subscribedCallbackListener != null) {
-              subscribedCallbackListener.onSuccess(newSubscriptionId);
-            }
-
             if (!isSubscribeForTopicsDialog) {
-              if (newSubscriptionId != null && newSubscription) {
+              if (newSubscriptionId != null && isSubscriptionChanged()) {
                 if (config != null && !config.optBoolean("confirmAlertHideChannelTopics", false)) {
                   JSONArray channelTopics = config.optJSONArray("channelTopics");
                   if (channelTopics != null && channelTopics.length() > 0) {
@@ -1561,6 +1557,10 @@ public class CleverPush {
               // are correct
               self.setConfirmAlertShown();
             }
+
+            if (subscribedCallbackListener != null) {
+              subscribedCallbackListener.onSuccess(newSubscriptionId);
+            }
           }
 
           @Override
@@ -1583,6 +1583,7 @@ public class CleverPush {
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.PENDING_TOPICS_DIALOG, pendingTopicsDialog);
     editor.apply();
+    updateTopicLastCheckedTime();
     CleverPush.instance.showPendingTopicsDialog();
   }
 
@@ -1590,10 +1591,13 @@ public class CleverPush {
     Set<String> selectedTopicIds = new HashSet<>();
     for (int i = 0; i < channelTopics.length(); i++) {
       JSONObject channelTopic = channelTopics.optJSONObject(i);
-      if (channelTopic != null && !channelTopic.optBoolean("defaultUnchecked")) {
-        String id = channelTopic.optString("_id");
-        if (id != null) {
-          selectedTopicIds.add(id);
+      if (channelTopic != null) {
+        boolean defaultUnchecked = channelTopic.optBoolean("defaultUnchecked", false);
+        if (!defaultUnchecked) {
+          String id = channelTopic.optString("_id", "");
+          if (!id.isEmpty()) {
+            selectedTopicIds.add(id);
+          }
         }
       }
     }
