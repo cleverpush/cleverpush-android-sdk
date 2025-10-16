@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.15 (16.10.2025)
+* Fixed an issue in the topic dialog where topics were not preselected during the opt-in process. 
+* Added functionality to `AppBanner's EveryXDays Frequency` to display the banner the first time it’s created, and then reappear only after X days.
+
 ## 1.35.14 (07.10.2025)
 * Fixed an issue with `Disable/Enable AppBanner` where the banner was not displaying after calling `enableAppBanners()`
 
