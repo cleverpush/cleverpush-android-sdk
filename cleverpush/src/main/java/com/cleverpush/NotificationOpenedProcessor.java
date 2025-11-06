@@ -114,7 +114,7 @@ public class NotificationOpenedProcessor {
       if (notificationDeeplinkId != null && !notificationDeeplinkId.isEmpty()) {
         SharedPreferences.Editor editor = getSharedPreferences(context).edit();
         editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_ID, notificationDeeplinkId);
-        editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME, getCurrentDateTime());
+        editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME, cleverPush.getCurrentDateTime());
         editor.apply();
       }
 
@@ -164,14 +164,4 @@ public class NotificationOpenedProcessor {
     return sharedPreferences;
   }
 
-  public static String getCurrentDateTime() {
-    try {
-      Date time = Calendar.getInstance().getTime();
-      SimpleDateFormat outputFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-      return outputFmt.format(time);
-    } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error while getting current date and time", e);
-      return "";
-    }
-  }
 }
