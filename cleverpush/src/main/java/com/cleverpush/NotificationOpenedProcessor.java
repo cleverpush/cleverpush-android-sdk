@@ -5,14 +5,19 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 
 import androidx.core.app.NotificationManagerCompat;
 
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.Gson;
 
 import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -94,6 +99,25 @@ public class NotificationOpenedProcessor {
         }
       }
 
+      String notificationDeeplinkId = null;
+      String notificationUrl = notification.getUrl();
+
+      if (notificationUrl != null && !notificationUrl.isEmpty()) {
+        try {
+          Uri uri = Uri.parse(notificationUrl);
+          notificationDeeplinkId = uri.getQueryParameter("deeplinkId");
+        } catch (Exception e) {
+          Logger.e("CleverPush", "Error parsing deeplinkId from notification URL: " + notificationUrl, e);
+        }
+      }
+
+      if (notificationDeeplinkId != null && !notificationDeeplinkId.isEmpty()) {
+        SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+        editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_ID, notificationDeeplinkId);
+        editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME, getCurrentDateTime());
+        editor.apply();
+      }
+
       try {
         boolean autoHandleDeepLink = notification.isAutoHandleDeepLink();
         String deepLinkURL = result.getNotification().getUrl();
@@ -132,6 +156,22 @@ public class NotificationOpenedProcessor {
       cleverPush.getAppBannerModule().setCurrentNotificationDeeplink(currentDeeplink);
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error while setting notification deep link: " + e.getMessage(), e);
+    }
+  }
+
+  public static SharedPreferences getSharedPreferences(Context context) {
+    SharedPreferences sharedPreferences = context.getSharedPreferences(SharedPreferencesManager.SDK_PREFERENCES_NAME, Context.MODE_PRIVATE);
+    return sharedPreferences;
+  }
+
+  public static String getCurrentDateTime() {
+    try {
+      Date time = Calendar.getInstance().getTime();
+      SimpleDateFormat outputFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      return outputFmt.format(time);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while getting current date and time", e);
+      return "";
     }
   }
 }

@@ -20,6 +20,8 @@ public class CleverPushPreferences {
   public static final String LAST_NOTIFICATION_ID = "CleverPush_LAST_NOTIFICATION_ID";
   public static final String LAST_CLICKED_NOTIFICATION_ID = "CleverPush_LAST_CLICKED_NOTIFICATION_ID";
   public static final String LAST_CLICKED_NOTIFICATION_TIME = "CleverPush_LAST_CLICKED_NOTIFICATION_TIME";
+  public static final String LAST_CLICKED_NOTIFICATION_DEEPLINK_ID = "CleverPush_LAST_CLICKED_NOTIFICATION_DEEPLINK_ID";
+  public static final String LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME = "CleverPush_LLAST_CLICKED_NOTIFICATION_DEEPLINK_TIME";
   public static final String APP_OPENS = "CleverPush_APP_OPENS";
   public static final String APP_REVIEW_SHOWN = "CleverPush_APP_REVIEW_SHOWN";
   public static final String PENDING_TOPICS_DIALOG = "CleverPush_PENDING_TOPICS_DIALOG";
