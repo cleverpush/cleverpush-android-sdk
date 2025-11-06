@@ -15,9 +15,6 @@ import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.Gson;
 
 import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
