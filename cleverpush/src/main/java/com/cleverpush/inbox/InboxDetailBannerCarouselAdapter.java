@@ -10,6 +10,11 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.StrikethroughSpan;
+import android.text.style.StyleSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Base64;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -35,7 +40,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
-import com.cleverpush.banner.AppBannerCarouselAdapter;
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
@@ -46,10 +50,12 @@ import com.cleverpush.banner.models.blocks.BannerButtonBlock;
 import com.cleverpush.banner.models.blocks.BannerHTMLBlock;
 import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
+import com.cleverpush.banner.models.blocks.BannerTextOp;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -57,7 +63,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,6 +74,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   private static final String CONTENT_TYPE_HTML = "html";
   private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
   private static final Map<Alignment, Integer> gravityMap = new HashMap<>();
+  private String voucherCode;
 
   static {
     alignmentMap.put(Alignment.Left, View.TEXT_ALIGNMENT_TEXT_START);
@@ -108,6 +114,11 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   @Override
   public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
     try {
+      HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
+      if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(data.getId())) {
+        voucherCode = currentVoucherCodePlaceholder.get(data.getId());
+      }
+
       LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
       if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
         composeHtmlBanner(body, data.getContent());
@@ -241,8 +252,53 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   }
 
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
-    @SuppressLint("InflateParams") TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
-    textView.setText(block.getText());
+    @SuppressLint("InflateParams") TextView textView =
+            (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
+
+    if (block.getDelta() != null && block.getDelta().getOps() != null && block.getDelta().getOps().size() > 0) {
+      try {
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+        List<BannerTextOp> opsList = block.getDelta().getOps();
+        for (int i = 0; i < opsList.size(); i++) {
+          BannerTextOp op = opsList.get(i);
+          String insertText = op.getInsert() != null ? op.getInsert() : "";
+          insertText = VoucherCodeUtils.replaceVoucherCodeString(insertText, voucherCode);
+
+          int start = builder.length();
+          builder.append(insertText);
+          int end = builder.length();
+
+          if (end > start && op.getAttributes() != null) {
+            boolean isBold = op.getAttributes().isBold();
+            boolean isItalic = op.getAttributes().isItalic();
+            boolean isUnderline = op.getAttributes().isUnderline();
+            boolean isStrike = op.getAttributes().isStrike();
+
+            if (isBold && isItalic) {
+              builder.setSpan(new StyleSpan(Typeface.BOLD_ITALIC), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            } else if (isBold) {
+              builder.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            } else if (isItalic) {
+              builder.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            if (isUnderline) {
+              builder.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            if (isStrike) {
+              builder.setSpan(new StrikethroughSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+          }
+        }
+        textView.setText(builder);
+      } catch (Exception e) {
+        Logger.e(TAG, "Error parsing delta ops in composeTextBlock", e);
+        String fallback = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
+        textView.setText(fallback);
+      }
+    } else {
+      String text = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
+      textView.setText(text);
+    }
     textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
     String textColor;
