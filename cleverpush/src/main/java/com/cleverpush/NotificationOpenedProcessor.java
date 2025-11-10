@@ -113,6 +113,12 @@ public class NotificationOpenedProcessor {
         editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_ID, notificationDeeplinkId);
         editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME, cleverPush.getCurrentDateTime());
         editor.apply();
+      } else {
+        // Clear any previously stored deeplink when current notification has none
+        SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+        editor.remove(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_ID);
+        editor.remove(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME);
+        editor.apply();
       }
 
       try {
