@@ -97,20 +97,21 @@ public class StoredNotificationsService {
       public void onSuccess(String response) {
         if (response != null) {
           Gson gson = new Gson();
+          List<Notification> notifications = new ArrayList<>();
           try {
             JSONObject notificationObject = new JSONObject(response);
-            List<Notification> notifications = gson.fromJson(
+            notifications = gson.fromJson(
                     notificationObject.getJSONArray("notifications").toString(),
                     NotificationList.class
             );
-            if (notificationFromApiCallbackListener != null) {
-              notificationFromApiCallbackListener.ready(notifications);
-            }
-            if (notificationsCallbackListener != null) {
-              notificationsCallbackListener.ready(new LinkedHashSet<>(notifications));
-            }
           } catch (Exception ex) {
             Logger.e(LOG_TAG, "StoredNotificationsService: error while getting stored notifications", ex);
+          }
+          if (notificationFromApiCallbackListener != null) {
+            notificationFromApiCallbackListener.ready(notifications);
+          }
+          if (notificationsCallbackListener != null) {
+            notificationsCallbackListener.ready(new LinkedHashSet<>(notifications));
           }
         }
       }
