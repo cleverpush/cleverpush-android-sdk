@@ -3,7 +3,6 @@ package com.cleverpush.service;
 import static com.cleverpush.Constants.LOG_TAG;
 
 import android.content.SharedPreferences;
-import com.cleverpush.util.Logger;
 
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
@@ -11,6 +10,7 @@ import com.cleverpush.Notification;
 import com.cleverpush.NotificationList;
 import com.cleverpush.listener.NotificationFromApiCallbackListener;
 import com.cleverpush.listener.NotificationsCallbackListener;
+import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
 import org.json.JSONObject;
@@ -34,6 +34,17 @@ public class StoredNotificationsService {
     notificationsCallbackListener.ready(localNotifications);
   }
 
+  public static void getNotifications(boolean combineWithApi, SharedPreferences sharedPreferences,
+                                      NotificationsCallbackListener notificationsCallbackListener, String channelId) {
+    if (combineWithApi) {
+      getReceivedNotificationsFromApi(channelId, sharedPreferences, 50, 0, null, notificationsCallbackListener);
+    } else {
+      Set<Notification> localNotifications = StoredNotificationsService.getNotificationsFromLocal(sharedPreferences);
+
+      notificationsCallbackListener.ready(localNotifications);
+    }
+  }
+
   public static StoredNotificationsCursor getCombinedNotifications(String channelId,
                                                                    SharedPreferences sharedPreferences, int limit) {
     return new StoredNotificationsCursor(channelId, sharedPreferences, limit);
@@ -54,7 +65,7 @@ public class StoredNotificationsService {
 
     // deprecated
     Set<String> encodedNotifications =
-        sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
+            sharedPreferences.getStringSet(CleverPushPreferences.NOTIFICATIONS, new HashSet<>());
     Set<Notification> notifications = new HashSet<>();
     if (encodedNotifications != null) {
       for (String encodedNotification : encodedNotifications) {
@@ -66,13 +77,14 @@ public class StoredNotificationsService {
     return notifications;
   }
 
-  public static void getReceivedNotificationsFromApi(String channelId, SharedPreferences sharedPreferences, int limit,
-                                                     int skip,
-                                                     NotificationFromApiCallbackListener notificationFromApiCallbackListener) {
+  public static void getReceivedNotificationsFromApi(String channelId, SharedPreferences sharedPreferences,
+                                                     int limit, int skip,
+                                                     NotificationFromApiCallbackListener notificationFromApiCallbackListener,
+                                                     NotificationsCallbackListener notificationsCallbackListener) {
     StringBuilder url =
-        new StringBuilder("/channel/" + channelId + "/received-notifications?limit=" + limit + "&skip=" + skip);
+            new StringBuilder("/channel/" + channelId + "/received-notifications?limit=" + limit + "&skip=" + skip);
     ArrayList<String> subscriptionTopics =
-        new ArrayList<String>(StoredNotificationsService.getSubscriptionTopics(sharedPreferences));
+            new ArrayList<String>(StoredNotificationsService.getSubscriptionTopics(sharedPreferences));
 
     Logger.d(LOG_TAG, "getReceivedNotificationsFromApi: " + url);
 
@@ -88,10 +100,15 @@ public class StoredNotificationsService {
           try {
             JSONObject notificationObject = new JSONObject(response);
             List<Notification> notifications = gson.fromJson(
-                notificationObject.getJSONArray("notifications").toString(),
-                NotificationList.class
+                    notificationObject.getJSONArray("notifications").toString(),
+                    NotificationList.class
             );
-            notificationFromApiCallbackListener.ready(notifications);
+            if (notificationFromApiCallbackListener != null) {
+              notificationFromApiCallbackListener.ready(notifications);
+            }
+            if (notificationsCallbackListener != null) {
+              notificationsCallbackListener.ready(new LinkedHashSet<>(notifications));
+            }
           } catch (Exception ex) {
             Logger.e(LOG_TAG, "StoredNotificationsService: error while getting stored notifications", ex);
           }
@@ -100,12 +117,18 @@ public class StoredNotificationsService {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
+        if (notificationFromApiCallbackListener != null) {
+          notificationFromApiCallbackListener.ready(new ArrayList<>());
+        }
+        if (notificationsCallbackListener != null) {
+          notificationsCallbackListener.ready(new LinkedHashSet<>());
+        }
         if (throwable != null) {
           Logger.e(LOG_TAG, "Failed while received-notifications request." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response +
-                  "\nError: " + throwable.getMessage()
-                  , throwable
+                          "\nStatus code: " + statusCode +
+                          "\nResponse: " + response +
+                          "\nError: " + throwable.getMessage()
+                    , throwable
           );
         } else {
           Logger.e(LOG_TAG, "Failed while received-notifications request." +

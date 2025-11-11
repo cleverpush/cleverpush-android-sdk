@@ -31,10 +31,14 @@ public class StoredNotificationsCursor {
   }
 
   public void getNextPage(NotificationsPageCallbackListener notificationsCallbackListener) {
-    StoredNotificationsService.getReceivedNotificationsFromApi(this.channelId, sharedPreferences, limit + localOffset,
-        remoteOffset, (remoteNotifications) -> {
-          this.returnCombinedNotifications(notificationsCallbackListener, localNotifications, remoteNotifications);
-        });
+    try {
+      StoredNotificationsService.getReceivedNotificationsFromApi(this.channelId, sharedPreferences, limit + localOffset,
+              remoteOffset, (remoteNotifications) -> {
+                this.returnCombinedNotifications(notificationsCallbackListener, localNotifications, remoteNotifications);
+              }, null);
+    } catch (Exception e) {
+      Logger.e("CleverPush", "Error while fetching next page of notifications", e);
+    }
   }
 
   public boolean hasNextPage() {

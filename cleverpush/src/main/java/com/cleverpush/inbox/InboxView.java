@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -94,23 +95,28 @@ public class InboxView extends LinearLayout {
     View view = LayoutInflater.from(context).inflate(R.layout.inbox_view, this, true);
     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
     recyclerView = view.findViewById(R.id.rvNotifications);
+    TextView tvNoPushAvailable = view.findViewById(R.id.tvNoPushAvailable);
+    if (notifications.size() > 0) {
+      tvNoPushAvailable.setVisibility(GONE);
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+      String openStoriesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
 
-    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
-    String openStoriesString = sharedPreferences.getString(CleverPushPreferences.INBOX_VIEW_NOTIFICATION_OPENED, "");
-
-    if (!openStoriesString.isEmpty()) {
-      for (int i = 0; i < notifications.size(); i++) {
-        if (openStoriesString.contains(notifications.get(i).getId())) {
-          notifications.get(i).setRead(true);
-        } else {
-          notifications.get(i).setRead(false);
+      if (!openStoriesString.isEmpty()) {
+        for (int i = 0; i < notifications.size(); i++) {
+          if (openStoriesString.contains(notifications.get(i).getId())) {
+            notifications.get(i).setRead(true);
+          } else {
+            notifications.get(i).setRead(false);
+          }
         }
       }
-    }
 
-    inboxViewListAdapter = new InboxViewListAdapter(context, notifications, typedArray, getOnItemClickListener(notificationArrayList, recyclerView));
-    recyclerView.setLayoutManager(linearLayoutManager);
-    recyclerView.setAdapter(inboxViewListAdapter);
+      inboxViewListAdapter = new InboxViewListAdapter(context, notifications, typedArray, getOnItemClickListener(notificationArrayList, recyclerView));
+      recyclerView.setLayoutManager(linearLayoutManager);
+      recyclerView.setAdapter(inboxViewListAdapter);
+    } else {
+      tvNoPushAvailable.setVisibility(VISIBLE);
+    }
     progressBar.setVisibility(GONE);
   }
 

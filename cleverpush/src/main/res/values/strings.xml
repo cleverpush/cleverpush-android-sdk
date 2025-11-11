@@ -12,4 +12,5 @@
     <string name="topics_dialog_title">Subscribed Topics</string>
     <string name="deselect_all">Deselect everything</string>
     <string name="geofence_transition_invalid_type">Invalid geofence</string>
+    <string name="no_notifications_available">No notifications available</string>
 </resources>
