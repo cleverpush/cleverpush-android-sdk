@@ -16,7 +16,7 @@ public final class BannerTextBlock extends BannerBlock {
   private String family = null;
   private String id;
   private List<BannerBlockScreen> blockScreens;
-  private BannerTextDelta delta;
+  private String html;
 
   private BannerTextBlock() {
   }
@@ -53,8 +53,8 @@ public final class BannerTextBlock extends BannerBlock {
     return blockScreens;
   }
 
-  public BannerTextDelta getDelta() {
-    return delta;
+  public String getHtml() {
+    return html;
   }
 
   public static BannerTextBlock createTextBlock(JSONObject json) throws JSONException {
@@ -86,8 +86,8 @@ public final class BannerTextBlock extends BannerBlock {
       textBlock.id = json.optString("id");
     }
 
-    if (json.has("delta")) {
-      textBlock.delta = BannerTextDelta.create(json.optJSONObject("delta"));
+    if (json.has("html")) {
+      textBlock.html = json.optString("html");
     }
 
     return textBlock;

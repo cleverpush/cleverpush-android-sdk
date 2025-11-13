@@ -16,11 +16,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.style.StrikethroughSpan;
-import android.text.style.StyleSpan;
-import android.text.style.UnderlineSpan;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -41,6 +37,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -56,15 +53,12 @@ import com.cleverpush.banner.models.blocks.BannerButtonBlock;
 import com.cleverpush.banner.models.blocks.BannerHTMLBlock;
 import com.cleverpush.banner.models.blocks.BannerImageBlock;
 import com.cleverpush.banner.models.blocks.BannerTextBlock;
-import com.cleverpush.banner.models.blocks.BannerTextOp;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
-
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -386,41 +380,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
 
-    if (block.getDelta() != null && block.getDelta().getOps() != null && block.getDelta().getOps().size() > 0) {
+    if (block.getHtml() != null && !block.getHtml().isEmpty()) {
       try {
-        SpannableStringBuilder builder = new SpannableStringBuilder();
-        List<BannerTextOp> opsList = block.getDelta().getOps();
-        for (int i = 0; i < opsList.size(); i++) {
-          BannerTextOp op = opsList.get(i);
-          String insertText = op.getInsert() != null ? op.getInsert() : "";
-          insertText = VoucherCodeUtils.replaceVoucherCodeString(insertText, voucherCode);
-
-          int start = builder.length();
-          builder.append(insertText);
-          int end = builder.length();
-
-          if (end > start && op.getAttributes() != null) {
-            boolean isBold = op.getAttributes().isBold();
-            boolean isItalic = op.getAttributes().isItalic();
-            boolean isUnderline = op.getAttributes().isUnderline();
-            boolean isStrike = op.getAttributes().isStrike();
-
-            if (isBold && isItalic) {
-              builder.setSpan(new StyleSpan(Typeface.BOLD_ITALIC), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            } else if (isBold) {
-              builder.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            } else if (isItalic) {
-              builder.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-            if (isUnderline) {
-              builder.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-            if (isStrike) {
-              builder.setSpan(new StrikethroughSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-          }
-        }
-        textView.setText(builder);
+        String replacedHtml = VoucherCodeUtils.replaceVoucherCodeString(block.getHtml(), voucherCode);
+        Spanned formattedText = HtmlCompat.fromHtml(replacedHtml, HtmlCompat.FROM_HTML_MODE_LEGACY);
+        textView.setText(formattedText);
       } catch (Exception e) {
         Logger.e(TAG, "Error parsing delta ops in composeTextBlock", e);
         String fallback = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
