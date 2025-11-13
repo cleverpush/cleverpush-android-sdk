@@ -257,7 +257,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         Spanned formattedText = HtmlCompat.fromHtml(replacedHtml, HtmlCompat.FROM_HTML_MODE_LEGACY);
         textView.setText(formattedText);
       } catch (Exception e) {
-        Logger.e(TAG, "Error parsing delta ops in composeTextBlock", e);
+        Logger.e(TAG, "Error parsing HTML in composeTextBlock for inbox view text block", e);
         String fallback = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
         textView.setText(fallback);
       }
