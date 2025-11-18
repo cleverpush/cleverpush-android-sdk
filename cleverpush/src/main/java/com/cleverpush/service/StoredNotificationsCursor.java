@@ -32,9 +32,9 @@ public class StoredNotificationsCursor {
 
   public void getNextPage(NotificationsPageCallbackListener notificationsCallbackListener) {
     StoredNotificationsService.getReceivedNotificationsFromApi(this.channelId, sharedPreferences, limit + localOffset,
-        remoteOffset, (remoteNotifications) -> {
-          this.returnCombinedNotifications(notificationsCallbackListener, localNotifications, remoteNotifications);
-        });
+            remoteOffset, (remoteNotifications) -> {
+              this.returnCombinedNotifications(notificationsCallbackListener, localNotifications, remoteNotifications);
+            }, null);
   }
 
   public boolean hasNextPage() {

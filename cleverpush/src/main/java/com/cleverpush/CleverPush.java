@@ -2857,9 +2857,9 @@ public class CleverPush {
     sharedPreferences.edit().putInt(CleverPushPreferences.MAXIMUM_NOTIFICATION_COUNT, limit).apply();
   }
 
-  public void getNotifications(@Deprecated boolean combineWithApi,
+  public void getNotifications(boolean combineWithApi,
                                NotificationsCallbackListener notificationsCallbackListener) {
-    StoredNotificationsService.getNotifications(getSharedPreferences(getContext()), notificationsCallbackListener);
+    StoredNotificationsService.getNotifications(combineWithApi, getSharedPreferences(getContext()), notificationsCallbackListener, this.channelId);
   }
 
   public StoredNotificationsCursor getCombinedNotifications(int pageSize) {
