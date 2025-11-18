@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.16 (18.11.2025)
+* Implemented rich-text formatting support in app banner text fields, including bold, italic, underline, and strikethrough.
+* Added an option to fetch received notifications from the API via getNotifications(combineWithApi, NotificationsCallbackListener).
+
 ## 1.35.15 (16.10.2025)
 * Fixed an issue in the topic dialog where topics were not preselected during the opt-in process. 
 * Added functionality to `AppBanner's EveryXDays Frequency` to display the banner the first time it’s created, and then reappear only after X days.
