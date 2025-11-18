@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.text.Spanned;
 import android.util.Base64;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -29,13 +30,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
-import com.cleverpush.banner.AppBannerCarouselAdapter;
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
@@ -50,6 +51,7 @@ import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.util.ColorUtils;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -57,7 +59,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,6 +70,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   private static final String CONTENT_TYPE_HTML = "html";
   private static final Map<Alignment, Integer> alignmentMap = new HashMap<>();
   private static final Map<Alignment, Integer> gravityMap = new HashMap<>();
+  private String voucherCode;
 
   static {
     alignmentMap.put(Alignment.Left, View.TEXT_ALIGNMENT_TEXT_START);
@@ -108,6 +110,11 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   @Override
   public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
     try {
+      HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
+      if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(data.getId())) {
+        voucherCode = currentVoucherCodePlaceholder.get(data.getId());
+      }
+
       LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
       if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
         composeHtmlBanner(body, data.getContent());
@@ -241,8 +248,23 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   }
 
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
-    @SuppressLint("InflateParams") TextView textView = (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
-    textView.setText(block.getText());
+    @SuppressLint("InflateParams") TextView textView =
+            (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
+
+    if (block.getHtml() != null && !block.getHtml().isEmpty()) {
+      try {
+        String replacedHtml = VoucherCodeUtils.replaceVoucherCodeString(block.getHtml(), voucherCode);
+        Spanned formattedText = HtmlCompat.fromHtml(replacedHtml, HtmlCompat.FROM_HTML_MODE_LEGACY);
+        textView.setText(formattedText);
+      } catch (Exception e) {
+        Logger.e(TAG, "Error parsing HTML in composeTextBlock for inbox view text block", e);
+        String fallback = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
+        textView.setText(fallback);
+      }
+    } else {
+      String text = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
+      textView.setText(text);
+    }
     textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
     String textColor;

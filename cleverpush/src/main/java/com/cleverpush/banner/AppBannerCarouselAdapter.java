@@ -16,6 +16,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Spanned;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -36,6 +37,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -377,8 +379,21 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
-    String text = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
-    textView.setText(text);
+
+    if (block.getHtml() != null && !block.getHtml().isEmpty()) {
+      try {
+        String replacedHtml = VoucherCodeUtils.replaceVoucherCodeString(block.getHtml(), voucherCode);
+        Spanned formattedText = HtmlCompat.fromHtml(replacedHtml, HtmlCompat.FROM_HTML_MODE_LEGACY);
+        textView.setText(formattedText);
+      } catch (Exception e) {
+        Logger.e(TAG, "Error parsing HTML in composeTextBlock for banner text block", e);
+        String fallback = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
+        textView.setText(fallback);
+      }
+    } else {
+      String text = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
+      textView.setText(text);
+    }
     textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
     String textColor;
