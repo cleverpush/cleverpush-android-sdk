@@ -72,6 +72,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCarouselAdapter.ViewHolder> {
 
@@ -699,7 +700,8 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     try {
       activity.runOnUiThread(() -> {
         String html = VoucherCodeUtils.replaceVoucherCodeString(htmlContent, voucherCode);
-        String htmlWithJs = html.replace("</body>", "" +
+        String lower = html.toLowerCase(Locale.ROOT);
+        String jsToInject = "" +
                 "<script type=\"text/javascript\">\n" +
                 "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n"
                 +
@@ -721,8 +723,16 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                 "CleverPush.trackClick = function(buttonId, customData) {\n" +
                 "  CleverPush.trackClickStringified(buttonId, customData ? JSON.stringify(customData) : null);\n" +
                 "};\n" +
-                "</script>\n" +
-                "</body>");
+                "</script>\n";
+        String htmlWithJs;
+        if (lower.contains("</body>")) {
+          htmlWithJs = html.replace("</body>", jsToInject + "</body>");
+        } else if (lower.contains("<body")) {
+          htmlWithJs = html + jsToInject;
+        } else {
+          htmlWithJs = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>"
+                  + html + jsToInject + "</body></html>";
+        }
         ConstraintLayout webLayout =
                 (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
         WebView webView = webLayout.findViewById(R.id.webView);
