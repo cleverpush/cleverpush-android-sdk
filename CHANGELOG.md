@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.17 (26.11.2025)
+* Fixed an issue in `AppBanner` where scroll-down functionality was not working when the banner position was set to top, bottom, or center. 
+* Fixed a bug in `HTML AppBanner` where event tracking did not work when the HTML content did not include a `<body>` tag.
+
 ## 1.35.16 (18.11.2025)
 * Implemented rich-text formatting support in app banner text fields, including bold, italic, underline, and strikethrough.
 * Added an option to fetch received notifications from the API via getNotifications(combineWithApi, NotificationsCallbackListener).
