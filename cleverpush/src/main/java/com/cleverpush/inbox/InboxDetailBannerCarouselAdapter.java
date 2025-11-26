@@ -37,6 +37,8 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
+import com.cleverpush.banner.AppBannerCarouselAdapter;
+import com.cleverpush.banner.AppBannerWebViewClient;
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerAction;
@@ -63,6 +65,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<InboxDetailBannerCarouselAdapter.ViewHolder> {
 
@@ -445,7 +448,9 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   private void composeHtmlBanner(LinearLayout body, String htmlContent) {
     try {
       activity.runOnUiThread(() -> {
-        String htmlWithJs = htmlContent.replace("</body>", "" +
+        String html = VoucherCodeUtils.replaceVoucherCodeString(htmlContent, voucherCode);
+        String lower = html.toLowerCase(Locale.ROOT);
+        String jsToInject = "" +
                 "<script type=\"text/javascript\">\n" +
                 "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n"
                 +
@@ -467,13 +472,45 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
                 "CleverPush.trackClick = function(buttonId, customData) {\n" +
                 "  CleverPush.trackClickStringified(buttonId, customData ? JSON.stringify(customData) : null);\n" +
                 "};\n" +
-                "</script>\n" +
-                "</body>");
-        ConstraintLayout webLayout = (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
+                "</script>\n";
+        String htmlWithJs;
+        if (lower.contains("</body>")) {
+          htmlWithJs = html.replaceAll("(?i)</body>", jsToInject + "</body>");
+        } else if (lower.contains("<body")) {
+          htmlWithJs = html + jsToInject;
+        } else {
+          htmlWithJs =
+                  "<!DOCTYPE html><html><head>" +
+                          "<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                          "</head><body>" +
+                          html +
+                          jsToInject +
+                          "</body></html>";
+        }
+        ConstraintLayout webLayout =
+                (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
         WebView webView = webLayout.findViewById(R.id.webView);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setLoadsImagesAutomatically(true);
         webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+        webView.setWebViewClient(new AppBannerWebViewClient());
+
+        webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+          ViewGroup.LayoutParams params = webView.getLayoutParams();
+          params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+          params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+          webView.setLayoutParams(params);
+          webView.requestLayout();
+          fixFullscreenHtmlBannerUI(body, webLayout, webView);
+        });
+
+        // Ensure WebView is scrollable
+        webView.setOnTouchListener((v, event) -> {
+          if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+          }
+          return false;
+        });
 
         fixFullscreenHtmlBannerUI(body, webLayout, webView);
 
