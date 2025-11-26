@@ -515,6 +515,37 @@ public class AppBannerPopup {
       }).attach();
     }
 
+    if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+      viewPager2.post(() -> {
+        try {
+          RecyclerView recyclerView = (RecyclerView) viewPager2.getChildAt(0);
+          RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+          if (layoutManager != null) {
+            View currentView = layoutManager.findViewByPosition(viewPager2.getCurrentItem());
+            if (currentView != null) {
+              updatePagerHeightForChild(currentView, viewPager2);
+            }
+          }
+          recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+            @Override
+            public void onChildViewAttachedToWindow(View view) {
+              try {
+                int pos = recyclerView.getChildAdapterPosition(view);
+                if (pos == viewPager2.getCurrentItem()) {
+                  updatePagerHeightForChild(view, viewPager2);
+                  recyclerView.removeOnChildAttachStateChangeListener(this);
+                }
+              } catch (Exception ignore) { }
+            }
+            @Override
+            public void onChildViewDetachedFromWindow(View view) { }
+          });
+        } catch (Exception e) {
+          Logger.e(TAG, "Error setting initial ViewPager2 height", e);
+        }
+      });
+    }
+
     viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
       @Override
       public void onPageSelected(int position) {
@@ -538,6 +569,21 @@ public class AppBannerPopup {
             CleverPush.getInstance(CleverPush.context).getAppBannerModule().sendBannerEvent("delivered", data);
           }
         }
+
+        if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
+          try {
+            RecyclerView recyclerView = (RecyclerView) viewPager2.getChildAt(0);
+            RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+            if (layoutManager != null) {
+              View currentView = layoutManager.findViewByPosition(position);
+              if (currentView != null) {
+                updatePagerHeightForChild(currentView, viewPager2);
+              }
+            }
+          } catch (Exception e) {
+            Logger.e(TAG, "Error updating ViewPager2 height on page selected", e);
+          }
+        }
       }
     });
 
@@ -551,19 +597,37 @@ public class AppBannerPopup {
 
   public void updatePagerHeightForChild(View view, ViewPager2 viewPager2) {
     view.post(() -> {
-      int wMeasureSpec = View.MeasureSpec.makeMeasureSpec(view.getWidth(), View.MeasureSpec.EXACTLY);
-      int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-      LinearLayout.LayoutParams layoutParams;
-      view.measure(wMeasureSpec, hMeasureSpec);
-      if (popupRoot.getMeasuredHeight() > view.getMeasuredHeight() + TAB_LAYOUT_DEFAULT_HEIGHT + MAIN_LAYOUT_PADDING) {
-        layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, view.getMeasuredHeight());
-      } else {
-        int height = (int) (activity.getResources().getDisplayMetrics().heightPixels * 0.77);
-        layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height);
-      }
+      try {
+        View scrollView = view.findViewById(R.id.scrollView);
+        View content = view.findViewById(R.id.carouselBannerBody);
 
-      viewPager2.setLayoutParams(layoutParams);
-      viewPager2.invalidate();
+        int targetWidth = view.getWidth() > 0 ? view.getWidth() : activity.getResources().getDisplayMetrics().widthPixels;
+        int wMeasureSpec = View.MeasureSpec.makeMeasureSpec(targetWidth, View.MeasureSpec.EXACTLY);
+        int hMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+
+        int measuredContentHeight;
+        if (content != null) {
+          content.measure(wMeasureSpec, hMeasureSpec);
+          measuredContentHeight = content.getMeasuredHeight();
+          if (scrollView != null) {
+            measuredContentHeight += scrollView.getPaddingTop() + scrollView.getPaddingBottom();
+          }
+        } else {
+          view.measure(wMeasureSpec, hMeasureSpec);
+          measuredContentHeight = view.getMeasuredHeight();
+        }
+
+        int maxHeight = (int) (activity.getResources().getDisplayMetrics().heightPixels * 0.77);
+        int desiredHeight = Math.min(measuredContentHeight, maxHeight);
+        if (desiredHeight <= 0) {
+          desiredHeight = maxHeight;
+        }
+
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, desiredHeight);
+        viewPager2.setLayoutParams(layoutParams);
+        viewPager2.invalidate();
+      } catch (Exception ignore) { }
     });
   }
 
