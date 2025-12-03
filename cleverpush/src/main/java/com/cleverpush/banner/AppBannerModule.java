@@ -107,6 +107,7 @@ public class AppBannerModule {
   boolean isBannerFromNotification = false;
   private TriggeredEvent currentEvent = null;
   private AppBannerClosedListener appBannerClosedListener;
+  Set<String> shownBanners = new HashSet<>();
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -1883,6 +1884,12 @@ public class AppBannerModule {
             return;
           }
 
+          boolean isConnectedBannerShown = isConnectedBannerShown(bannerPopup.getData());
+          if (isConnectedBannerShown) {
+            Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Connected banner was already shown");
+            return;
+          }
+
           incrementBannerPerDayCount();
           incrementBannerPerSessionCount();
         }
@@ -2034,21 +2041,28 @@ public class AppBannerModule {
     assert shownBanners != null;
     shownBanners.add(banner.getId());
 
-    if (banner.getConnectedBanners() != null) {
-      for (String connectedBannerId : banner.getConnectedBanners()) {
-        if (shownBanners.contains(connectedBannerId)) {
-          continue;
-        }
-        shownBanners.add(connectedBannerId);
-      }
-    }
-
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.remove(SHOWN_APP_BANNER_PREF);
     editor.apply();
     editor.putStringSet(SHOWN_APP_BANNER_PREF, shownBanners);
     editor.apply();
   }
+
+   boolean isConnectedBannerShown(Banner banner) {
+     if (shownBanners == null) {
+       return false;
+     }
+
+     if (banner.getConnectedBanners() != null) {
+       for (String connectedBannerId : banner.getConnectedBanners()) {
+         if (shownBanners.contains(connectedBannerId)) {
+           return true;
+         }
+       }
+     }
+     shownBanners.add(banner.getId());
+     return false;
+   }
 
   public void enableBanners() {
     if (getPendingBanners() != null && getPendingBanners().size() > 0) {
