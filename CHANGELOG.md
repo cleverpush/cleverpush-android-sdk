@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.18 (03.12.2025)
+* Fixed an issue in `AppBanner` where the ConnectedBanners functionality was not working and all banners were displayed.
+* Fixed an issue in `AppBanner` where calling a trigger event without a property, while the trigger was configured with a property, caused a null pointer exception.  
+
 ## 1.35.17 (26.11.2025)
 * Fixed an issue in `AppBanner` where scroll-down functionality was not working when the banner position was set to top, bottom, or center. 
 * Fixed a bug in `HTML AppBanner` where event tracking did not work when the HTML content did not include a `<body>` tag.
