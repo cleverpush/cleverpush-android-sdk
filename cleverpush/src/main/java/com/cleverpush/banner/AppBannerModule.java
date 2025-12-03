@@ -1000,7 +1000,7 @@ public class AppBannerModule {
             }
             currentEventMatches = conditionTrue;
           } else {
-            return false;
+            currentEventMatches = false;
           }
         }
       }
