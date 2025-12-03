@@ -959,12 +959,16 @@ public class AppBannerModule {
 
       boolean conditionTrue = true;
 
-      for (BannerTriggerConditionEventProperty eventProperty : condition.getEventProperties()) {
-        boolean eventPropertiesMatching = isEventPropertyMatching(triggeredEvent, eventProperty);
-        if (!eventPropertiesMatching) {
-          conditionTrue = false;
-          break;
+      if (triggeredEvent.getProperties() != null) {
+        for (BannerTriggerConditionEventProperty eventProperty : condition.getEventProperties()) {
+          boolean eventPropertiesMatching = isEventPropertyMatching(triggeredEvent, eventProperty);
+          if (!eventPropertiesMatching) {
+            conditionTrue = false;
+            break;
+          }
         }
+      } else {
+        conditionTrue = false;
       }
 
       if (conditionTrue) {
@@ -984,16 +988,20 @@ public class AppBannerModule {
           currentEventMatches = true;
           break;
         } else {
-          boolean conditionTrue = true;
+          if (currentEvent.getProperties() != null) {
+            boolean conditionTrue = true;
 
-          for (BannerTriggerConditionEventProperty eventProperty : triggerCondition.getEventProperties()) {
-            boolean eventPropertiesMatching = isEventPropertyMatching(currentEvent, eventProperty);
-            if (!eventPropertiesMatching) {
-              conditionTrue = false;
-              break;
+            for (BannerTriggerConditionEventProperty eventProperty : triggerCondition.getEventProperties()) {
+              boolean eventPropertiesMatching = isEventPropertyMatching(currentEvent, eventProperty);
+              if (!eventPropertiesMatching) {
+                conditionTrue = false;
+                break;
+              }
             }
+            currentEventMatches = conditionTrue;
+          } else {
+            currentEventMatches = false;
           }
-          currentEventMatches = conditionTrue;
         }
       }
     }
