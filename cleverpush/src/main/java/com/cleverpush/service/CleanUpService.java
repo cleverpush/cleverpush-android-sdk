@@ -34,11 +34,20 @@ public class CleanUpService extends Service {
     boolean notificationOpenedActivityWasDestroyedRecently =
         System.currentTimeMillis() - notificationOpenedActivityWasDestroyedAt
             < EXPECTED_NOTIFICATION_OPENED_ACTIVITY_ON_DESTROY_DELAY;
-    if (shouldStartActivity || !notificationOpenedActivityWasDestroyedRecently) {
+
+    boolean appInBackground = false, appInForeground = false;
+    if (ActivityLifecycleListener.getInstance() != null) {
+      appInBackground = ActivityLifecycleListener.getInstance().isAppInBackground();
+      appInForeground = ActivityLifecycleListener.getInstance().isAppOpen();
+    }
+
+    if (!appInBackground && !appInForeground && (shouldStartActivity || !notificationOpenedActivityWasDestroyedRecently)) {
       CleverPush.removeInstance();
     }
 
-    ActivityLifecycleListener.clearSessionListener();
+    if (!appInBackground && !appInForeground) {
+      ActivityLifecycleListener.clearSessionListener();
+    }
     this.stopSelf();
   }
 }
