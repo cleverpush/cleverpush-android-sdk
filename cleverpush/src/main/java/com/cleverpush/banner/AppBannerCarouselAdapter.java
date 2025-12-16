@@ -16,6 +16,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.util.Base64;
 import android.util.DisplayMetrics;
@@ -377,6 +378,20 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.addView(button);
   }
 
+    public static Spanned removeTrailingBlankLines(Spanned spanned) {
+        SpannableStringBuilder ssb = new SpannableStringBuilder(spanned);
+
+        int i = ssb.length() - 1;
+        while (i >= 0 && Character.isWhitespace(ssb.charAt(i))) {
+            i--;
+        }
+
+        if (i < ssb.length() - 1) {
+            ssb.delete(i + 1, ssb.length());
+        }
+
+        return ssb;
+    }
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
@@ -384,8 +399,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     if (block.getHtml() != null && !block.getHtml().isEmpty()) {
       try {
         String replacedHtml = VoucherCodeUtils.replaceVoucherCodeString(block.getHtml(), voucherCode);
-        Spanned formattedText = HtmlCompat.fromHtml(replacedHtml, HtmlCompat.FROM_HTML_MODE_LEGACY);
-        textView.setText(formattedText);
+        Spanned formattedText = HtmlCompat.fromHtml(replacedHtml, HtmlCompat.FROM_HTML_MODE_COMPACT);
+        Spanned cleanedText = removeTrailingBlankLines(formattedText);
+        textView.setText(cleanedText);
       } catch (Exception e) {
         Logger.e(TAG, "Error parsing HTML in composeTextBlock for banner text block", e);
         String fallback = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
