@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.19 (16.12.2025)
+* Fixed an issue in `AppBanner` which caused too big spacing in after text blocks.
+
 ## 1.35.18 (03.12.2025)
 * Fixed an issue in `AppBanner` where the ConnectedBanners functionality was not working and all banners were displayed.
 * Fixed an issue in `AppBanner` where calling a trigger event without a property, while the trigger was configured with a property, caused a null pointer exception.  
