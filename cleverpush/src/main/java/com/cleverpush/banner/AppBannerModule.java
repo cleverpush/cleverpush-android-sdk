@@ -43,7 +43,6 @@ import com.cleverpush.listener.AppBannerClosedListener;
 import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.responsehandlers.SendBannerEventResponseHandler;
 import com.cleverpush.util.Logger;
-import com.cleverpush.util.PreferenceManagerUtils;
 import com.cleverpush.util.VersionComparator;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
@@ -2002,8 +2001,6 @@ public class AppBannerModule {
           }
         }
       });
-
-      PreferenceManagerUtils.updateSharedPreferenceByKey(CleverPush.context, CleverPushPreferences.APP_BANNER_SHOWING, true);
 
       if (getCleverPushInstance().getAppBannerShownListener() != null) {
         getCleverPushInstance().getAppBannerShownListener().shown(banner);
