@@ -140,7 +140,7 @@ public class AppBannerPopup {
       }
       return true;
     } catch (Throwable t) {
-      Logger.e(TAG, "Cannot show banner: Activity or window is not in a valid state (null, finishing, destroyed, or not attached to window)");
+      Logger.e(TAG, "Cannot show banner: Activity or window is not in a valid state (null, finishing, destroyed, or not attached to window)", t);
       return false;
     }
   }
