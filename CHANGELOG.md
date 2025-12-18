@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.20 (18.12.2025)
+* Optimized the `AppBanner` flow to prevent banners from getting stuck in a “showing” state when rendering fails, by improving activity/window lifecycle checks and validating image URLs.
+* Fixed an issue where the `CleverPush` instance and session listener were being removed while the app was still running.
+
 ## 1.35.19 (16.12.2025)
 * Fixed an issue in `AppBanner` which caused too big spacing in after text blocks.
 
