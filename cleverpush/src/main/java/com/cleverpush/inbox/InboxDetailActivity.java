@@ -393,9 +393,7 @@ public class InboxDetailActivity extends AppCompatActivity {
       return;
     }
 
-    this.toggleShowing(false);
     finish();
-
   }
 
   private boolean isRootReady() {
@@ -565,13 +563,6 @@ public class InboxDetailActivity extends AppCompatActivity {
   private float getPXScale() {
     int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
     return Math.max(Math.min(screenWidth / 400.0f, 10f), 1.0f);
-  }
-
-  private void toggleShowing(boolean isShowing) {
-    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, isShowing);
-    editor.apply();
   }
 
   public void moveToNextScreen() {

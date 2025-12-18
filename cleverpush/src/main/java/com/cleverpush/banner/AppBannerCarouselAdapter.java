@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -378,20 +379,20 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     body.addView(button);
   }
 
-    public static Spanned removeTrailingBlankLines(Spanned spanned) {
-        SpannableStringBuilder ssb = new SpannableStringBuilder(spanned);
+  public static Spanned removeTrailingBlankLines(Spanned spanned) {
+    SpannableStringBuilder ssb = new SpannableStringBuilder(spanned);
 
-        int i = ssb.length() - 1;
-        while (i >= 0 && Character.isWhitespace(ssb.charAt(i))) {
-            i--;
-        }
-
-        if (i < ssb.length() - 1) {
-            ssb.delete(i + 1, ssb.length());
-        }
-
-        return ssb;
+    int i = ssb.length() - 1;
+    while (i >= 0 && Character.isWhitespace(ssb.charAt(i))) {
+      i--;
     }
+
+    if (i < ssb.length() - 1) {
+      ssb.delete(i + 1, ssb.length());
+    }
+
+    return ssb;
+  }
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
     @SuppressLint("InflateParams") TextView textView =
         (TextView) activity.getLayoutInflater().inflate(R.layout.app_banner_text, null);
@@ -489,6 +490,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           imageUrl = block.getDarkImageUrl();
         } else {
           imageUrl = block.getImageUrl();
+        }
+
+        if (imageUrl == null || TextUtils.isEmpty(imageUrl) || imageUrl.equalsIgnoreCase("null")) {
+          activity.runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+          return;
         }
 
         URL url = new URL(imageUrl);

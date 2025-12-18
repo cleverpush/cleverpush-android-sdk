@@ -106,11 +106,43 @@ public class AppBannerPopup {
     if (ActivityLifecycleListener.currentActivity != null) {
       activity = ActivityLifecycleListener.currentActivity;
     }
-    return activity.getWindow().getDecorView().isShown();
+    return canShow();
   }
 
   private View getRoot() {
     return activity.getWindow().getDecorView().getRootView();
+  }
+
+  private boolean canShow() {
+    try {
+      if (activity == null) {
+        return false;
+      }
+      if (activity.isFinishing()) {
+        return false;
+      }
+      if (activity.isDestroyed()) {
+        return false;
+      }
+      Window window = activity.getWindow();
+      if (window == null) {
+        return false;
+      }
+      View decor = window.getDecorView();
+      if (decor == null) {
+        return false;
+      }
+      if (!decor.isShown()) {
+        return false;
+      }
+      if (!decor.isAttachedToWindow()) {
+        return false;
+      }
+      return true;
+    } catch (Throwable t) {
+      Logger.e(TAG, "Cannot show banner: Activity or window is not in a valid state (null, finishing, destroyed, or not attached to window)", t);
+      return false;
+    }
   }
 
   private float getPXScale() {
@@ -158,8 +190,6 @@ public class AppBannerPopup {
     currentDisplayedPagePosition = -1;
 
     if (isHTMLBanner()) {
-      setNotchColor(false);
-
       parent.setBackgroundColor(Color.TRANSPARENT);
       frameLayout.setBackgroundColor(Color.TRANSPARENT);
       body.setBackgroundColor(Color.TRANSPARENT);
@@ -176,9 +206,6 @@ public class AppBannerPopup {
     popup.setAnimationStyle(R.style.banner_animation);
     popup.setOnDismissListener(() -> {
       toggleShowing(false);
-      if (isHTMLBanner() && isNotchColorChange) {
-        setNotchColor(true);
-      }
     });
 
     isInitialized = true;
@@ -209,9 +236,6 @@ public class AppBannerPopup {
       popup.dismiss();
       if (CleverPush.getInstance(CleverPush.context).getAppBannerModule().getAppBannerClosedListener() != null) {
         CleverPush.getInstance(CleverPush.context).getAppBannerModule().getAppBannerClosedListener().closed();
-      }
-      if (isHTMLBanner() && isNotchColorChange) {
-        setNotchColor(true);
       }
       this.toggleShowing(false);
       CleverPush.getInstance(CleverPush.context).getAppBannerModule().onAppBannerDismiss();
@@ -401,7 +425,13 @@ public class AppBannerPopup {
 
       body.setLayoutParams(
           new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-      runInMain(() -> popup.showAtLocation(popupRoot, Gravity.TOP, 0, 0));
+      runInMain(() -> {
+        if (!canShow()) {
+          return;
+        }
+        popup.showAtLocation(getRoot(), Gravity.TOP, 0, 0);
+        toggleShowing(true);
+      });
     } else {
       body.setLayoutParams(
           new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -417,7 +447,13 @@ public class AppBannerPopup {
           mConstraintSet.connect(R.id.frameLayout, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 40);
           mConstraintSet.applyTo(mConstraintLayout);
 
-          runInMain(() -> popup.showAtLocation(popupRoot, Gravity.TOP, 0, 0));
+          runInMain(() -> {
+            if (!canShow()) {
+              return;
+            }
+            popup.showAtLocation(getRoot(), Gravity.TOP, 0, 0);
+            toggleShowing(true);
+          });
           break;
         case POSITION_TYPE_BOTTOM:
           mConstraintSet.clone(mConstraintLayout);
@@ -427,7 +463,13 @@ public class AppBannerPopup {
               40);
           mConstraintSet.applyTo(mConstraintLayout);
 
-          runInMain(() -> popup.showAtLocation(popupRoot, Gravity.BOTTOM, 0, 0));
+          runInMain(() -> {
+            if (!canShow()) {
+              return;
+            }
+            popup.showAtLocation(getRoot(), Gravity.BOTTOM, 0, 0);
+            toggleShowing(true);
+          });
           break;
         default:
           popup.setFocusable(true);
@@ -442,7 +484,13 @@ public class AppBannerPopup {
             }
             return false;  // Ensures touch events propagate to child views
           });
-          runInMain(() -> popup.showAtLocation(popupRoot, Gravity.CENTER, 0, 0));
+          runInMain(() -> {
+            if (!canShow()) {
+              return;
+            }
+            popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
+            toggleShowing(true);
+          });
           break;
       }
     }
@@ -636,7 +684,11 @@ public class AppBannerPopup {
     protected Boolean doInBackground(String... strings) {
       if (isRootReady()) {
         return true;
-      } else {
+      }
+      // Only reschedule if the activity is still valid (not finishing/destroyed)
+      if (activity != null
+          && !activity.isFinishing()
+          && (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1 || !activity.isDestroyed())) {
         new Timer().schedule(new TimerTask() {
           @Override
           public void run() {
