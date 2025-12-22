@@ -215,6 +215,7 @@ public class AppBannerPopup {
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, isShowing);
+    editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING_IN_PROGRESS, isShowing);
     editor.apply();
   }
 
