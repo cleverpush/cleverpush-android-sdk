@@ -123,6 +123,7 @@ public class AppBannerModule {
     handlerThread.start();
     handler = new Handler(handlerThread.getLooper());
     editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false);
+    editor.putBoolean(CleverPushPreferences.APP_BANNER_SHOWING_IN_PROGRESS, false);
     editor.apply();
   }
 
@@ -1856,7 +1857,8 @@ public class AppBannerModule {
       Banner banner = bannerPopup.getData();
       setAppBannerClosedListener(appBannerClosedListener);
       if (!force) {
-        if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)) {
+        if (sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING, false)
+            || sharedPreferences.getBoolean(CleverPushPreferences.APP_BANNER_SHOWING_IN_PROGRESS, false)) {
           pendingFilteredBanners.add(bannerPopup);
           Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: A Banner is already on the screen");
           return;
@@ -1904,6 +1906,8 @@ public class AppBannerModule {
 
       bannerPopup.init();
       bannerPopup.show();
+
+      sharedPreferences.edit().putBoolean(CleverPushPreferences.APP_BANNER_SHOWING_IN_PROGRESS, true).apply();
 
       getActivityLifecycleListener().setActivityInitializedListener(new ActivityInitializedListener() {
         @Override
@@ -2006,6 +2010,7 @@ public class AppBannerModule {
         getCleverPushInstance().getAppBannerShownListener().shown(banner);
       }
     } catch (Exception ex) {
+      sharedPreferences.edit().putBoolean(CleverPushPreferences.APP_BANNER_SHOWING_IN_PROGRESS, false).apply();
       Logger.e(TAG, "Error in showBanner. " + ex.getMessage(), ex);
     }
   }
@@ -2014,6 +2019,9 @@ public class AppBannerModule {
     try {
       showBanner(bannerPopup, false, null, null);
     } catch (Exception ex) {
+      try {
+        sharedPreferences.edit().putBoolean(CleverPushPreferences.APP_BANNER_SHOWING_IN_PROGRESS, false).apply();
+      } catch (Exception ignore) { }
       Logger.e(TAG, ex.getMessage(), ex);
     }
   }

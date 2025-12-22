@@ -75,6 +75,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCarouselAdapter.ViewHolder> {
 
@@ -748,7 +750,10 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                 "</script>\n";
         String htmlWithJs;
         if (lower.contains("</body>")) {
-          htmlWithJs = html.replaceAll("(?i)</body>", jsToInject + "</body>");
+          htmlWithJs = Pattern
+                  .compile("(?i)</body>")
+                  .matcher(html)
+                  .replaceAll(Matcher.quoteReplacement(jsToInject + "</body>"));
         } else if (lower.contains("<body")) {
           htmlWithJs = html + jsToInject;
         } else {

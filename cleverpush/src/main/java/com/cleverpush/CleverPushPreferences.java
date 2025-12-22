@@ -31,6 +31,7 @@ public class CleverPushPreferences {
   public static final String STORIES_UNREAD_COUNT_GROUP = "CleverPush_STORIES_UNREAD_COUNT_GROUP";
   public static final String SUB_STORY_POSITION = "CleverPush_SUB_STORY_POSITION";
   public static final String APP_BANNER_SHOWING = "CleverPush_APP_BANNER_SHOWING";
+  public static final String APP_BANNER_SHOWING_IN_PROGRESS = "CleverPush_APP_BANNER_SHOWING_IN_PROGRESS";
   public static final String UNSUBSCRIBED = "CleverPush_UNSUBSCRIBED";
   public static final String TOPIC_LAST_CHECKED = "CleverPush_TOPIC_LAST_CHECKED";
   public static final String LAST_TIME_AUTO_SHOWED = "CleverPush_LAST_TIME_AUTO_SHOWED";
