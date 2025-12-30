@@ -2957,9 +2957,14 @@ public class CleverPush {
                 SharedPreferences sharedPreferences = getSharedPreferences(getContext());
                 String lastClickedNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, null);
                 String lastClickedNotificationTime = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME, null);
+                String lastClickedNotificationDeeplinkId = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_ID, null);
+                String lastClickedNotificationDeeplinkTime = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME, null);
 
                 if (lastClickedNotificationId != null && !lastClickedNotificationId.isEmpty() && isWithin60Minutes(lastClickedNotificationTime)) {
                   jsonBody.put("notificationId", lastClickedNotificationId);
+                }
+                if (lastClickedNotificationDeeplinkId != null && !lastClickedNotificationDeeplinkId.isEmpty() && isWithin60Minutes(lastClickedNotificationDeeplinkTime)) {
+                  jsonBody.put("deeplinkId", lastClickedNotificationDeeplinkId);
                 }
               } catch (JSONException ex) {
                 Logger.e(LOG_TAG, "Error creating trackEvent request parameter", ex);
