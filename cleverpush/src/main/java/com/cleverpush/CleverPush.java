@@ -21,6 +21,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.service.notification.StatusBarNotification;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
@@ -2876,9 +2877,23 @@ public class CleverPush {
             StoredNotificationsService.getNotificationsFromLocal(getSharedPreferences(getContext())));
     int requestId = 0;
     String tag = "";
+    String removedGroupKey = null;
 
     for (int i = 0; i < notifications.size(); i++) {
       if (notificationId.equalsIgnoreCase(notifications.get(i).id)) {
+        try {
+          String groupId;
+          if (notifications.get(i).getCategory() != null) {
+            groupId = notifications.get(i).getCategory().getId();
+          } else {
+            groupId = "default";
+          }
+          removedGroupKey = (groupId != null && !groupId.isEmpty())
+                  ? ("cleverpush_group_" + groupId)
+                  : "cleverpush_group_undefined";
+        } catch (Exception ignore) {
+          removedGroupKey = null;
+        }
         requestId = notifications.get(i).getRequestId();
         tag = notifications.get(i).getTag();
         notifications.remove(i);
@@ -2896,9 +2911,55 @@ public class CleverPush {
             notificationManager.cancel(tag, requestId);
           }
         }
+        removeGroupSummaries(removedGroupKey, tag, requestId);
       } catch (Exception e) {
         Logger.e(LOG_TAG, "Error while removing notification from notification center. " + e.getLocalizedMessage(), e);
       }
+    }
+  }
+
+  private void removeGroupSummaries(String removedNotificationGroupKey, String removedNotificationTag, int removedNotificationId) {
+    try {
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        StatusBarNotification[] activeStatusBarNotifications = BadgeHelper.getActiveNotifications(context);
+        java.util.Map<String, Integer> groupKeyToChildNotificationCount = new java.util.HashMap<>();
+
+        for (StatusBarNotification statusBarNotification : activeStatusBarNotifications) {
+          if (BadgeHelper.isGroupSummary(statusBarNotification)) {
+            continue;
+          }
+          // Skip counting the just-removed child if the system still reports it as active
+          if (removedNotificationTag != null && statusBarNotification.getTag() != null &&
+                  removedNotificationId != 0 && removedNotificationTag.equals(statusBarNotification.getTag()) &&
+                  removedNotificationId == statusBarNotification.getId()) {
+            continue;
+          }
+          String groupKey = statusBarNotification.getNotification() != null ? statusBarNotification.getNotification().getGroup() : null;
+          if (groupKey == null) {
+            continue;
+          }
+          Integer count = groupKeyToChildNotificationCount.get(groupKey);
+          groupKeyToChildNotificationCount.put(groupKey, count == null ? 1 : count + 1);
+        }
+
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        for (StatusBarNotification statusBarNotification : activeStatusBarNotifications) {
+          if (!BadgeHelper.isGroupSummary(statusBarNotification)) {
+            continue;
+          }
+          String groupKey = statusBarNotification.getNotification() != null ? statusBarNotification.getNotification().getGroup() : null;
+          // If a specific group key is provided, only consider summaries for that group
+          if (removedNotificationGroupKey != null && groupKey != null && !removedNotificationGroupKey.equals(groupKey)) {
+            continue;
+          }
+          int remaining = groupKey != null && groupKeyToChildNotificationCount.get(groupKey) != null ? groupKeyToChildNotificationCount.get(groupKey) : 0;
+          if (remaining == 0 && notificationManager != null) {
+            notificationManager.cancel(statusBarNotification.getTag(), statusBarNotification.getId());
+          }
+        }
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while cleaning up summary notifications. " + e.getMessage(), e);
     }
   }
 
