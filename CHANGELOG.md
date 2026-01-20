@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.22 (20.01.2026)
+* Fixed an issue in `removeNotification` where the associated group summary notification was not being cleared from the Android notification center.
+
 ## 1.35.21 (22.12.2025)
 * Fixed a crash that occurred while rendering `HTML AppBanner`.
 
