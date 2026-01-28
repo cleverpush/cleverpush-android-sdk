@@ -2967,10 +2967,7 @@ public class CleverPush {
     try {
       getSharedPreferences(getContext())
               .edit()
-              .putString(
-                      CleverPushPreferences.NOTIFICATIONS_JSON,
-                      new Gson().toJson(new ArrayList<Notification>())
-              )
+              .remove(CleverPushPreferences.NOTIFICATIONS_JSON)
               .remove(CleverPushPreferences.NOTIFICATIONS) // Remove deprecated storage to prevent fallback reads
               .apply();
     } catch (Exception e) {
