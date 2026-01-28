@@ -2967,10 +2967,14 @@ public class CleverPush {
     try {
       getSharedPreferences(getContext())
               .edit()
-              .remove(CleverPushPreferences.NOTIFICATIONS_JSON)
+              .putString(
+                      CleverPushPreferences.NOTIFICATIONS_JSON,
+                      new Gson().toJson(new ArrayList<Notification>())
+              )
+              .remove(CleverPushPreferences.NOTIFICATIONS) // Remove deprecated storage to prevent fallback reads
               .apply();
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error while remove all notifications. " + e.getMessage(), e);
+      Logger.e(LOG_TAG, "Error while removing all notifications", e);
     }
   }
 
