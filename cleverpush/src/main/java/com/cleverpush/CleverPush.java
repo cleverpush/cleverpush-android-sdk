@@ -2963,6 +2963,18 @@ public class CleverPush {
     }
   }
 
+  public void removeAllNotifications() {
+    try {
+      getSharedPreferences(getContext())
+              .edit()
+              .remove(CleverPushPreferences.NOTIFICATIONS_JSON)
+              .remove(CleverPushPreferences.NOTIFICATIONS) // Remove deprecated storage to prevent fallback reads
+              .apply();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error while removing all notifications", e);
+    }
+  }
+
   public void trackEvent(String eventName) {
     this.trackEvent(eventName, (Map<String, Object>) null);
   }
