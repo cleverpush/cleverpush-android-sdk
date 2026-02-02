@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.23 (02.02.2026)
+* Added a new method `removeAllNotifications` to clear all locally stored notifications.
+
 ## 1.35.22 (20.01.2026)
 * Fixed an issue in `removeNotification` where the associated group summary notification was not being cleared from the Android notification center.
 
