@@ -62,6 +62,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -405,14 +406,25 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
                         "};\n" +
                         "CleverPush.trackClick = function(buttonId, customData) {\n" +
                         "  CleverPush.trackClickStringified(buttonId, customData ? JSON.stringify(customData) : null);\n" +
+                        "};\n" +
+                        "CleverPush.getSubscriptionContext = function() {\n" +
+                        "  return new Promise(function(resolve) {\n" +
+                        "    window.CleverPush._resolveSubscriptionContext = resolve;\n" +
+                        "    CleverPush.getSubscriptionContextRequest();\n" +
+                        "  });\n" +
                         "};\n",
+                null
+        );
+        String contextJson = getSubscriptionContextJson();
+        webView.evaluateJavascript(
+                "if (typeof CleverPush !== 'undefined') { CleverPush.subscriptionContext = " + contextJson + "; }",
                 null
         );
       }
     });
 
     webView.loadUrl(block.getUrl());
-    webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+    webView.addJavascriptInterface(new CleverpushInterface(webView), "CleverPush");
 
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -452,6 +464,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
       activity.runOnUiThread(() -> {
         String html = VoucherCodeUtils.replaceVoucherCodeString(htmlContent, voucherCode);
         String lower = html.toLowerCase(Locale.ROOT);
+        String contextJson = getSubscriptionContextJson();
         String jsToInject = "" +
                 "<script type=\"text/javascript\">\n" +
                 "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n"
@@ -468,6 +481,13 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
                 "for (var i = 0; i < closeBtns.length; i++) {\n" +
                 "  closeBtns[i].addEventListener('click', onCloseClick);\n" +
                 "}\n" +
+                "if (typeof CleverPush !== 'undefined') { CleverPush.subscriptionContext = " + contextJson + "; }\n" +
+                "CleverPush.getSubscriptionContext = function() {\n" +
+                "  return new Promise(function(resolve) {\n" +
+                "    window.CleverPush._resolveSubscriptionContext = resolve;\n" +
+                "    CleverPush.getSubscriptionContextRequest();\n" +
+                "  });\n" +
+                "};\n" +
                 "CleverPush.trackEvent = function(eventId, properties) {\n" +
                 "  CleverPush.trackEventStringified(eventId, properties ? JSON.stringify(properties) : null);\n" +
                 "};\n" +
@@ -497,7 +517,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         WebView webView = webLayout.findViewById(R.id.webView);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setLoadsImagesAutomatically(true);
-        webView.addJavascriptInterface(new CleverpushInterface(), "CleverPush");
+        webView.addJavascriptInterface(new CleverpushInterface(webView), "CleverPush");
         webView.setWebViewClient(new AppBannerWebViewClient());
 
         webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
@@ -541,6 +561,12 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
   }
 
   public class CleverpushInterface {
+    private final WebView webView;
+
+    public CleverpushInterface(WebView webView) {
+      this.webView = webView;
+    }
+
     @JavascriptInterface
     public void subscribe() {
       CleverPush.getInstance(CleverPush.context).subscribe();
@@ -686,6 +712,47 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
           Logger.i(TAG, "InboxView handleLinkBySystem: Invalid link (null or empty).");
         }
       });
+    }
+
+    /**
+     * Called by JS when getSubscriptionContext() Promise is used. Resolves the Promise with
+     * subscription context (same behavior as iOS).
+     */
+    @JavascriptInterface
+    public void getSubscriptionContextRequest() {
+      activity.runOnUiThread(() -> {
+        if (webView == null) return;
+        String contextJson = getSubscriptionContextJson();
+        String escaped = contextJson.replace("\\", "\\\\").replace("\"", "\\\"")
+            .replace("\r", "\\r").replace("\n", "\\n");
+        String jsCallback = "try { if (window.CleverPush && window.CleverPush._resolveSubscriptionContext) { "
+            + "window.CleverPush._resolveSubscriptionContext(JSON.parse(\"" + escaped + "\")); "
+            + "window.CleverPush._resolveSubscriptionContext = null; } } catch (e) {}";
+        webView.evaluateJavascript(jsCallback, null);
+      });
+    }
+  }
+
+  /**
+   * Returns subscription ID and channel ID as JSON for survey workflow / JS layer (iOS-compatible:
+   * null for missing values). Used when resolving getSubscriptionContext Promise and when
+   * injecting subscriptionContext via evaluateJavascript.
+   */
+  private String getSubscriptionContextJson() {
+    try {
+      CleverPush cleverPush = CleverPush.getInstance(activity);
+      String subscriptionId = cleverPush.getSubscriptionId(CleverPush.context);
+      String channelId = cleverPush.getChannelId(CleverPush.context);
+      Map<String, Object> context = new LinkedHashMap<>();
+      context.put("subscriptionId", subscriptionId != null ? subscriptionId : null);
+      context.put("channelId", channelId != null ? channelId : null);
+      return new Gson().toJson(context);
+    } catch (Exception ex) {
+      Logger.e(TAG, "Error in getSubscriptionContextJson.", ex);
+      Map<String, Object> empty = new LinkedHashMap<>();
+      empty.put("subscriptionId", (Object) null);
+      empty.put("channelId", (Object) null);
+      return new Gson().toJson(empty);
     }
   }
 }
