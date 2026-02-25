@@ -2,6 +2,9 @@ package com.cleverpush.inbox;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -731,6 +734,15 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         webView.evaluateJavascript(jsCallback, null);
       });
     }
+
+    @JavascriptInterface
+    public void copyToClipboard(String text) {
+      ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
+      if (clipboard != null) {
+        ClipData clip = ClipData.newPlainText("label", text);
+        clipboard.setPrimaryClip(clip);
+      }
+    }
   }
 
   /**
@@ -744,8 +756,8 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
       String subscriptionId = cleverPush.getSubscriptionId(CleverPush.context);
       String channelId = cleverPush.getChannelId(CleverPush.context);
       Map<String, Object> context = new LinkedHashMap<>();
-      context.put("subscriptionId", subscriptionId != null ? subscriptionId : null);
-      context.put("channelId", channelId != null ? channelId : null);
+      context.put("subscriptionId", subscriptionId);
+      context.put("channelId", channelId);
       return new Gson().toJson(context);
     } catch (Exception ex) {
       Logger.e(TAG, "Error in getSubscriptionContextJson.", ex);

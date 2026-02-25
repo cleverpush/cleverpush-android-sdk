@@ -1003,6 +1003,15 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         webView.evaluateJavascript(jsCallback, null);
       });
     }
+
+    @JavascriptInterface
+    public void copyToClipboard(String text) {
+      ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
+      if (clipboard != null) {
+        ClipData clip = ClipData.newPlainText("label", text);
+        clipboard.setPrimaryClip(clip);
+      }
+    }
   }
 
   /**
@@ -1016,8 +1025,8 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       String subscriptionId = cleverPush.getSubscriptionId(CleverPush.context);
       String channelId = cleverPush.getChannelId(CleverPush.context);
       Map<String, Object> context = new LinkedHashMap<>();
-      context.put("subscriptionId", subscriptionId != null ? subscriptionId : null);
-      context.put("channelId", channelId != null ? channelId : null);
+      context.put("subscriptionId", subscriptionId);
+      context.put("channelId", channelId);
       return new Gson().toJson(context);
     } catch (Exception ex) {
       Logger.e(TAG, "Error in getSubscriptionContextJson.", ex);
@@ -1025,15 +1034,6 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       empty.put("subscriptionId", (Object) null);
       empty.put("channelId", (Object) null);
       return new Gson().toJson(empty);
-    }
-  }
-
-  @JavascriptInterface
-  public void copyToClipboard(String text) {
-    ClipboardManager clipboard = (ClipboardManager) CleverPush.context.getSystemService(Context.CLIPBOARD_SERVICE);
-    if (clipboard != null) {
-      ClipData clip = ClipData.newPlainText("label", text);
-      clipboard.setPrimaryClip(clip);
     }
   }
 
