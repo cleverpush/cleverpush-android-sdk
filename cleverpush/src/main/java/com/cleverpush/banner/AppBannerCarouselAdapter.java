@@ -596,7 +596,8 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                 isScrolling = true; // Allow vertical scroll
                 v.getParent().requestDisallowInterceptTouchEvent(false);
               } else if (deltaX > touchSlop) {
-                v.getParent().requestDisallowInterceptTouchEvent(true); // Allow horizontal swipe
+                // Let ViewPager handle horizontal swipe so carousel can change pages correctly
+                v.getParent().requestDisallowInterceptTouchEvent(false);
               }
             }
             break;
@@ -633,7 +634,8 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                 isScrolling = true; // Allow vertical scroll
                 v.getParent().requestDisallowInterceptTouchEvent(false);
               } else if (deltaX > touchSlop) {
-                v.getParent().requestDisallowInterceptTouchEvent(true); // Allow horizontal swipe
+                // Let ViewPager handle horizontal swipe so carousel can change pages correctly
+                v.getParent().requestDisallowInterceptTouchEvent(false);
               }
             }
             break;
