@@ -86,7 +86,6 @@ import com.cleverpush.responsehandlers.TrackEventResponseHandler;
 import com.cleverpush.responsehandlers.TrackSessionStartResponseHandler;
 import com.cleverpush.responsehandlers.TriggerFollowUpEventResponseHandler;
 import com.cleverpush.responsehandlers.UnsubscribeResponseHandler;
-import com.cleverpush.service.NotificationDataProcessor;
 import com.cleverpush.service.StoredNotificationsCursor;
 import com.cleverpush.service.StoredNotificationsService;
 import com.cleverpush.service.TagsMatcher;
@@ -208,6 +207,7 @@ public class CleverPush {
 
   private AddSubscriptionTags addSubscriptionTagsHelper;
   private RemoveSubscriptionTags removeSubscriptionTagsHelper;
+  private RemoveSubscriptionAttributes removeSubscriptionAttributesHelper;
 
   private Activity customActivity = null;
 
@@ -230,8 +230,10 @@ public class CleverPush {
   private boolean autoRequestNotificationPermission = true;
   private boolean isSessionStartCalled = false;
   private boolean customNotificationActivityEnabled = false;
-  private Queue<SubscriptionAttributeTagRequest> requestAttributeQueue = new LinkedList<>();
-  private boolean isProcessingAttributeQueue = false;
+  private Queue<SubscriptionAttributeTagRequest> requestAddAttributeQueue = new LinkedList<>();
+  private boolean isProcessingAddAttributeQueue = false;
+  private Queue<SubscriptionAttributeTagRequest> requestRemoveAttributeQueue = new LinkedList<>();
+  private boolean isProcessingRemoveAttributeQueue = false;
   private Queue<SubscriptionAttributeTagRequest> requestAddTagQueue = new LinkedList<>();
   private boolean isProcessingAddTagQueue = false;
   private Queue<SubscriptionAttributeTagRequest> requestRemoveTagQueue = new LinkedList<>();
@@ -2367,14 +2369,16 @@ public class CleverPush {
   }
 
   public synchronized void addSubscriptionTags(String[] tagIds) {
-    requestAddTagQueue.add(new SubscriptionAttributeTagRequest(tagIds));
+    SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forTags(tagIds);
+    requestAddTagQueue.add(req);
     if (!isProcessingAddTagQueue) {
       processAddTagQueue();
     }
   }
 
   public synchronized void addSubscriptionTag(String tagId) {
-    requestAddTagQueue.add(new SubscriptionAttributeTagRequest(tagId));
+    SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forTag(tagId);
+    requestAddTagQueue.add(req);
     if (!isProcessingAddTagQueue) {
       processAddTagQueue();
     }
@@ -2441,7 +2445,8 @@ public class CleverPush {
   }
 
   public void removeSubscriptionTags(String[] tagIds) {
-    requestRemoveTagQueue.add(new SubscriptionAttributeTagRequest(tagIds));
+    SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forTags(tagIds);
+    requestRemoveTagQueue.add(req);
 
     if (!isProcessingRemoveTagQueue) {
       processRemoveTagQueue();
@@ -2449,7 +2454,8 @@ public class CleverPush {
   }
 
   public void removeSubscriptionTag(String tagId) {
-    requestRemoveTagQueue.add(new SubscriptionAttributeTagRequest(tagId));
+    SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forTag(tagId);
+    requestRemoveTagQueue.add(req);
 
     if (!isProcessingRemoveTagQueue) {
       processRemoveTagQueue();
@@ -2553,31 +2559,32 @@ public class CleverPush {
     }).start();
   }
 
-  private synchronized void processAttributeQueue() {
-    if (requestAttributeQueue.isEmpty()) {
-      isProcessingAttributeQueue = false; // No more requests to process
+  private synchronized void processAddAttributeQueue() {
+    if (requestAddAttributeQueue.isEmpty()) {
+      isProcessingAddAttributeQueue = false; // No more requests to process
       return;
     }
 
-    isProcessingAttributeQueue = true;
+    isProcessingAddAttributeQueue = true;
 
-    SubscriptionAttributeTagRequest request = requestAttributeQueue.poll();
+    SubscriptionAttributeTagRequest request = requestAddAttributeQueue.poll();
 
     if (request != null) {
       if (request.getValue() != null) {
         setSubscriptionAttributeObject(request.getAttributeId(), request.getValue(),
-                new SetSubscriptionAttributeResponseHandler(this::processAttributeQueue));
+                new SetSubscriptionAttributeResponseHandler(this::processAddAttributeQueue));
       } else if (request.getValues() != null) {
         setSubscriptionAttributeObject(request.getAttributeId(), request.getValues(),
-                new SetSubscriptionAttributeResponseHandler(this::processAttributeQueue));
+                new SetSubscriptionAttributeResponseHandler(this::processAddAttributeQueue));
       }
     }
   }
 
   public synchronized void setSubscriptionAttribute(String attributeId, String value) {
-    requestAttributeQueue.add(new SubscriptionAttributeTagRequest(attributeId, value));
-    if (!isProcessingAttributeQueue) {
-      processAttributeQueue();
+    SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forAttributeValue(attributeId, value);
+    requestAddAttributeQueue.add(req);
+    if (!isProcessingAddAttributeQueue) {
+      processAddAttributeQueue();
     }
   }
 
@@ -2592,9 +2599,10 @@ public class CleverPush {
   }
 
   public synchronized void setSubscriptionAttribute(String attributeId, String[] values) {
-    requestAttributeQueue.add(new SubscriptionAttributeTagRequest(attributeId, values));
-    if (!isProcessingAttributeQueue) {
-      processAttributeQueue();
+    SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forAttributeValues(attributeId, values);
+    requestAddAttributeQueue.add(req);
+    if (!isProcessingAddAttributeQueue) {
+      processAddAttributeQueue();
     }
   }
 
@@ -2634,6 +2642,77 @@ public class CleverPush {
         Logger.d(LOG_TAG, "setSubscriptionAttribute: There is no subscription for CleverPush SDK.");
       }
     });
+  }
+
+  public synchronized void removeSubscriptionAttributes(String[] attributeIds) {
+    if (attributeIds == null || attributeIds.length == 0) {
+      return;
+    }
+    SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forAttributes(attributeIds);
+    requestRemoveAttributeQueue.add(req);
+
+    if (!isProcessingRemoveAttributeQueue) {
+      processRemoveAttributeQueue();
+    }
+  }
+
+  public synchronized void removeSubscriptionAttribute(String attributeId) {
+    SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forAttribute(attributeId);
+    requestRemoveAttributeQueue.add(req);
+    if (!isProcessingRemoveAttributeQueue) {
+      processRemoveAttributeQueue();
+    }
+  }
+
+  public void removeSubscriptionAttribute(String attributeId, CompletionFailureListener listener) {
+    removeSubscriptionAttributeTrackingConsent(listener, attributeId);
+  }
+
+  private void removeSubscriptionAttributeTrackingConsent(CompletionFailureListener listener, String... attributeIds) {
+    startTrackingConsent(getRemoveSubscriptionAttributeSubscribedListener(listener, attributeIds));
+  }
+
+  private SubscribedListener getRemoveSubscriptionAttributeSubscribedListener(CompletionFailureListener listener,
+                                                                                String... attributeIds) {
+    return subscriptionId -> {
+      if (removeSubscriptionAttributesHelper != null && !removeSubscriptionAttributesHelper.isFinished()) {
+        removeSubscriptionAttributesHelper.addAttributeIds(attributeIds);
+        return;
+      }
+      removeSubscriptionAttributesHelper =
+          new RemoveSubscriptionAttributes(subscriptionId, this.channelId, getSharedPreferences(getContext()), listener,
+              attributeIds);
+      removeSubscriptionAttributesHelper.removeSubscriptionAttributes();
+    };
+  }
+
+  private synchronized void processRemoveAttributeQueue() {
+    if (requestRemoveAttributeQueue.isEmpty()) {
+      isProcessingRemoveAttributeQueue = false;
+      return;
+    }
+
+    isProcessingRemoveAttributeQueue = true;
+    SubscriptionAttributeTagRequest request = requestRemoveAttributeQueue.poll();
+
+    if (request != null) {
+      CompletionFailureListener queueListener = new CompletionFailureListener() {
+        @Override
+        public void onComplete() {
+          processRemoveAttributeQueue();
+        }
+
+        @Override
+        public void onFailure(Exception exception) {
+          processRemoveAttributeQueue();
+        }
+      };
+      if (request.getAttributeId() != null) {
+        removeSubscriptionAttributeTrackingConsent(queueListener, request.getAttributeId());
+      } else if (request.getAttributeIds() != null && request.getAttributeIds().length > 0) {
+        removeSubscriptionAttributeTrackingConsent(queueListener, request.getAttributeIds());
+      }
+    }
   }
 
   public void pushSubscriptionAttributeValue(String attributeId, String value) {

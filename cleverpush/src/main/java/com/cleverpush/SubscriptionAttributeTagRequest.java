@@ -4,29 +4,58 @@ public class SubscriptionAttributeTagRequest {
     private String attributeId;
     private String value;
     private String[] values;
+    private String[] attributeIds;
     private String tagId;
     private String[] tagIds;
 
-    public SubscriptionAttributeTagRequest(String attributeId, String value) {
-        this.attributeId = attributeId;
-        this.value = value;
+    private SubscriptionAttributeTagRequest() {
+        // private constructor
     }
 
-    public SubscriptionAttributeTagRequest(String attributeId, String[] values) {
-        this.attributeId = attributeId;
-        this.values = values;
+    public static SubscriptionAttributeTagRequest forAttribute(String attributeId) {
+        SubscriptionAttributeTagRequest request = new SubscriptionAttributeTagRequest();
+        request.attributeId = attributeId;
+        return request;
     }
 
-    public SubscriptionAttributeTagRequest(String tagId) {
-        this.tagId = tagId;
+    public static SubscriptionAttributeTagRequest forAttributes(String[] attributeIds) {
+        SubscriptionAttributeTagRequest request = new SubscriptionAttributeTagRequest();
+        request.attributeIds = attributeIds;
+        return request;
     }
 
-    public SubscriptionAttributeTagRequest(String[] tagIds) {
-        this.tagIds = tagIds;
+    public static SubscriptionAttributeTagRequest forAttributeValue(String attributeId, String value) {
+        SubscriptionAttributeTagRequest request = new SubscriptionAttributeTagRequest();
+        request.attributeId = attributeId;
+        request.value = value;
+        return request;
+    }
+
+    public static SubscriptionAttributeTagRequest forAttributeValues(String attributeId, String[] values) {
+        SubscriptionAttributeTagRequest request = new SubscriptionAttributeTagRequest();
+        request.attributeId = attributeId;
+        request.values = values;
+        return request;
+    }
+
+    public static SubscriptionAttributeTagRequest forTag(String tagId) {
+        SubscriptionAttributeTagRequest request = new SubscriptionAttributeTagRequest();
+        request.tagId = tagId;
+        return request;
+    }
+
+    public static SubscriptionAttributeTagRequest forTags(String[] tagIds) {
+        SubscriptionAttributeTagRequest request = new SubscriptionAttributeTagRequest();
+        request.tagIds = tagIds;
+        return request;
     }
 
     public String getAttributeId() {
         return attributeId;
+    }
+
+    public String[] getAttributeIds() {
+        return attributeIds;
     }
 
     public String getValue() {
