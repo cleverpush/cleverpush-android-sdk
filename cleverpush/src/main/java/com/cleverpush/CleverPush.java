@@ -2657,6 +2657,9 @@ public class CleverPush {
   }
 
   public synchronized void removeSubscriptionAttribute(String attributeId) {
+    if (attributeId == null || attributeId.isEmpty()) {
+      return;
+    }
     SubscriptionAttributeTagRequest req = SubscriptionAttributeTagRequest.forAttribute(attributeId);
     requestRemoveAttributeQueue.add(req);
     if (!isProcessingRemoveAttributeQueue) {

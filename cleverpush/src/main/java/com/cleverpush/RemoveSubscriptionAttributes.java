@@ -72,6 +72,15 @@ public class RemoveSubscriptionAttributes implements RemoveAttributeCompletedLis
   }
 
   public void removeSubscriptionAttribute(RemoveAttributeCompletedListener onRemoveAttributeCompleted, int currentPositionOfAttributeToRemove) {
+    if (attributeIds == null || attributeIds.length == 0
+        || currentPositionOfAttributeToRemove < 0 || currentPositionOfAttributeToRemove >= attributeIds.length) {
+      if (onRemoveAttributeCompleted != null) {
+        onRemoveAttributeCompleted.onFailure(new IllegalArgumentException(
+            "Invalid attribute position: " + currentPositionOfAttributeToRemove
+                + (attributeIds == null ? " (attributeIds is null)" : " (attributeIds.length=" + attributeIds.length + ")")));
+      }
+      return;
+    }
     if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {
