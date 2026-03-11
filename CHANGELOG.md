@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.35.24 (11.03.2026)
+* Added a JS bridge to send subscription context (subscriptionId, channelId) to HTML AppBanner.
+* Fixed an issue in `AppBanner` carousel swipe, where swiping back goes to the next screen instead of triggering the previous screen.
+* Added a new method `removeSubscriptionAttribute(attributeId)`, `removeSubscriptionAttribute(attributeId, CompletionFailureListener)` and `removeSubscriptionAttributes(attributeIds)` to clear single or multiple attributes from subscriptionId.
+
 ## 1.35.23 (02.02.2026)
 * Added a new method `removeAllNotifications` to clear all locally stored notifications.
 
@@ -25,7 +30,7 @@
 * Fixed a bug in `HTML AppBanner` where event tracking did not work when the HTML content did not include a `<body>` tag.
 
 ## 1.35.16 (18.11.2025)
-* Implemented rich-text formatting support in app banner text fields, including bold, italic, underline, and strikethrough.
+* Implemented rich-text formatting support in `AppBanner` text fields, including bold, italic, underline, and strikethrough.
 * Added an option to fetch received notifications from the API via getNotifications(combineWithApi, NotificationsCallbackListener).
 
 ## 1.35.15 (16.10.2025)
@@ -47,7 +52,7 @@
 
 ## 1.35.10 (12.09.2025)
 * Notifications are now grouped by their respective channels instead of being grouped all together.
-* Added new JS method `handleLinkBySystem` for HTML App Banners that allows composing emails directly using the native Mail app. In an HTML banner, you can now use: `CleverPush.handleLinkBySystem('mailto:example@email.com');`
+* Added new JS method `handleLinkBySystem` for HTML `AppBanners` that allows composing emails directly using the native Mail app. In an HTML banner, you can now use: `CleverPush.handleLinkBySystem('mailto:example@email.com');`
 * Added runtime setters to StoryView to configure stories without requiring XML
 
 ## 1.35.9 (03.09.2025)

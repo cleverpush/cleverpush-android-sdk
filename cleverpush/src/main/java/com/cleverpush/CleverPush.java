@@ -135,7 +135,7 @@ import java.util.TimerTask;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.35.23";
+  public static final String SDK_VERSION = "1.35.24";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
@@ -3218,7 +3218,7 @@ public class CleverPush {
       Logger.e(LOG_TAG, "Error creating trackNotificationDelivered request parameter", e);
     }
 
-    CleverPushHttpClient.post("/notification/delivered", jsonBody, null);
+    CleverPushHttpClient.postWithRetry("/notification/delivered", jsonBody, null);
   }
 
   public void trackNotificationClicked(String notificationId) {
@@ -3242,7 +3242,7 @@ public class CleverPush {
       Logger.e(LOG_TAG, "Error creating trackNotificationClicked request parameter", e);
     }
 
-    CleverPushHttpClient.post("/notification/clicked", jsonBody, null);
+    CleverPushHttpClient.postWithRetry("/notification/clicked", jsonBody, null);
 
     SharedPreferences.Editor editor = getSharedPreferences(getContext()).edit();
     editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, notificationId);

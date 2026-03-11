@@ -392,7 +392,7 @@ public class AppBannerModule {
       Logger.e(TAG, "Error creating sendBannerEventWithSubscriptionId(/app-banner/event) request parameter.", ex);
     }
 
-    CleverPushHttpClient.post("/app-banner/event/" + event, jsonBody,
+    CleverPushHttpClient.postWithRetry("/app-banner/event/" + event, jsonBody,
         new SendBannerEventResponseHandler().getResponseHandler());
   }
 
