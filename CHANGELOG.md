@@ -1,9 +1,12 @@
 # Changelog
 
-## 1.35.24 (11.03.2026)
+## 1.35.25 (11.03.2026)
 * Added a JS bridge to send subscription context (subscriptionId, channelId) to HTML AppBanner.
 * Fixed an issue in `AppBanner` carousel swipe, where swiping back goes to the next screen instead of triggering the previous screen.
 * Added a new method `removeSubscriptionAttribute(attributeId)`, `removeSubscriptionAttribute(attributeId, CompletionFailureListener)` and `removeSubscriptionAttributes(attributeIds)` to clear single or multiple attributes from subscriptionId.
+
+## 1.35.24 (skipped)
+* Version skipped. See 1.35.25 for the actual release.
 
 ## 1.35.23 (02.02.2026)
 * Added a new method `removeAllNotifications` to clear all locally stored notifications.
