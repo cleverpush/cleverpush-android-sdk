@@ -5,11 +5,13 @@ import static com.cleverpush.Constants.LOG_TAG;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 
 import androidx.core.app.NotificationManagerCompat;
 
 import com.cleverpush.util.Logger;
+import com.cleverpush.util.SharedPreferencesManager;
 import com.google.gson.Gson;
 
 import java.net.URI;
@@ -94,6 +96,29 @@ public class NotificationOpenedProcessor {
         }
       }
 
+      String notificationDeeplinkId = null;
+      String notificationUrl = notification.getUrl();
+
+      if (notificationUrl != null && !notificationUrl.isEmpty()) {
+        try {
+          Uri uri = Uri.parse(notificationUrl);
+          notificationDeeplinkId = uri.getQueryParameter("deeplinkId");
+        } catch (Exception e) {
+          Logger.e("CleverPush", "Error parsing deeplinkId from notification URL: " + notificationUrl, e);
+        }
+      }
+
+      SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+      if (notificationDeeplinkId != null && !notificationDeeplinkId.isEmpty()) {
+        editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_ID, notificationDeeplinkId);
+        editor.putString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME, cleverPush.getCurrentDateTime());
+      } else {
+        // Clear any previously stored deeplink when current notification has none
+        editor.remove(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_ID);
+        editor.remove(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_DEEPLINK_TIME);
+      }
+      editor.apply();
+
       try {
         boolean autoHandleDeepLink = notification.isAutoHandleDeepLink();
         String deepLinkURL = result.getNotification().getUrl();
@@ -134,4 +159,10 @@ public class NotificationOpenedProcessor {
       Logger.e(LOG_TAG, "Error while setting notification deep link: " + e.getMessage(), e);
     }
   }
+
+  public static SharedPreferences getSharedPreferences(Context context) {
+    SharedPreferences sharedPreferences = context.getSharedPreferences(SharedPreferencesManager.SDK_PREFERENCES_NAME, Context.MODE_PRIVATE);
+    return sharedPreferences;
+  }
+
 }
