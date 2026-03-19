@@ -14,11 +14,9 @@ public class ColorUtils {
           "#" + colorStr.charAt(1) + colorStr.charAt(1) + colorStr.charAt(2) + colorStr.charAt(2) + colorStr.charAt(3)
               + colorStr.charAt(3);
     }
-    // Android expects #AARRGGBB (alpha first). If we have #RRGGBBAA (alpha last, e.g. from CSS/web),
-    // convert it. Only convert when Android would see alpha=00 (first 2 digits), so we don't break
-    // Android-style #AARRGGBB with non-zero alpha.
-    if (colorStr != null && colorStr.length() == 9 && colorStr.charAt(0) == '#'
-        && colorStr.substring(1, 3).equals("00")) {
+    // Android expects #AARRGGBB (alpha first). CSS/web uses #RRGGBBAA (alpha last). Convert 9-char
+    // hex from RRGGBBAA to AARRGGBB so red/green/blue are correct (otherwise e.g. red becomes blue).
+    if (colorStr != null && colorStr.length() == 9 && colorStr.charAt(0) == '#') {
       String rr = colorStr.substring(1, 3);
       String gg = colorStr.substring(3, 5);
       String bb = colorStr.substring(5, 7);
