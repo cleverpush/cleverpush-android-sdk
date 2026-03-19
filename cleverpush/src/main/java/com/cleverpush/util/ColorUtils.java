@@ -9,20 +9,22 @@ public class ColorUtils {
     if (colorStr != null) {
       colorStr = colorStr.trim();
     }
+
+    // Convert #RGB → #RRGGBB
     if (colorStr != null && colorStr.length() == 4 && colorStr.charAt(0) == '#') {
       colorStr =
-          "#" + colorStr.charAt(1) + colorStr.charAt(1) + colorStr.charAt(2) + colorStr.charAt(2) + colorStr.charAt(3)
-              + colorStr.charAt(3);
+              "#" + colorStr.charAt(1) + colorStr.charAt(1)
+                      + colorStr.charAt(2) + colorStr.charAt(2)
+                      + colorStr.charAt(3) + colorStr.charAt(3);
     }
-    // Android expects #AARRGGBB (alpha first). CSS/web uses #RRGGBBAA (alpha last). Convert 9-char
-    // hex from RRGGBBAA to AARRGGBB so red/green/blue are correct (otherwise e.g. red becomes blue).
+
+    // Convert #RRGGBBAA → #AARRGGBB
     if (colorStr != null && colorStr.length() == 9 && colorStr.charAt(0) == '#') {
-      String rr = colorStr.substring(1, 3);
-      String gg = colorStr.substring(3, 5);
-      String bb = colorStr.substring(5, 7);
+      String rrggbb = colorStr.substring(1, 7);
       String aa = colorStr.substring(7, 9);
-      colorStr = "#" + aa + rr + gg + bb;
+      colorStr = "#" + aa + rrggbb;
     }
+
     int color = Color.BLACK;
     try {
       color = Color.parseColor(colorStr);
