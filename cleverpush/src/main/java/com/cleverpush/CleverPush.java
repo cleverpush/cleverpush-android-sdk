@@ -243,6 +243,7 @@ public class CleverPush {
   public boolean isTopicDialogAPICalled = false;
   int appBannerPerDay;
   int appBannerPerSession;
+  private boolean notificationClickInProgress = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -4170,8 +4171,28 @@ public class CleverPush {
     CleverPush.isSubscribeForTopicsDialog = isSubscribeForTopicsDialog;
   }
 
-  public static void removeInstance() {
+  public boolean isNotificationClickInProgress() {
+    return notificationClickInProgress;
+  }
+
+  public void setNotificationClickInProgress(boolean notificationClickInProgress) {
+    this.notificationClickInProgress = notificationClickInProgress;
+  }
+
+  /**
+   * Clears the SDK singleton when no notification-open flow is running.
+   *
+   * @return true if the instance was removed; false if there was nothing to remove or a click is in progress.
+   */
+  public static boolean removeInstance() {
+    if (instance == null) {
+      return false;
+    }
+    if (instance.isNotificationClickInProgress()) {
+      return false;
+    }
     instance = null;
+    return true;
   }
 
   public void setInitializeListener(InitializeListener initializeListener) {
