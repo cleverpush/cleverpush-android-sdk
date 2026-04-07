@@ -62,8 +62,8 @@ public class CleanUpService extends Service {
       if (listener == null || listener.isAppOpen()) {
         return;
       }
-      CleverPush delayed = CleverPush.getInstance(CleanUpService.this);
-      if (delayed.isNotificationClickInProgress()) {
+      
+      if (CleverPush.isNotificationClickInProgress()) {
         return;
       }
       // Only clear lifecycle session state if the singleton was actually removed; otherwise we would

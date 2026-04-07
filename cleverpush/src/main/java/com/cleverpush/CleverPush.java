@@ -243,7 +243,7 @@ public class CleverPush {
   public boolean isTopicDialogAPICalled = false;
   int appBannerPerDay;
   int appBannerPerSession;
-  private boolean notificationClickInProgress = false;
+  public static boolean notificationClickInProgress = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -4171,12 +4171,12 @@ public class CleverPush {
     CleverPush.isSubscribeForTopicsDialog = isSubscribeForTopicsDialog;
   }
 
-  public boolean isNotificationClickInProgress() {
+  public static boolean isNotificationClickInProgress() {
     return notificationClickInProgress;
   }
 
   public void setNotificationClickInProgress(boolean notificationClickInProgress) {
-    this.notificationClickInProgress = notificationClickInProgress;
+    CleverPush.notificationClickInProgress = notificationClickInProgress;
   }
 
   /**
@@ -4188,7 +4188,7 @@ public class CleverPush {
     if (instance == null) {
       return false;
     }
-    if (instance.isNotificationClickInProgress()) {
+    if (isNotificationClickInProgress()) {
       return false;
     }
     instance = null;
