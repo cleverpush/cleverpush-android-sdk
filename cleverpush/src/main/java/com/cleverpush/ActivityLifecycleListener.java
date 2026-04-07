@@ -5,9 +5,7 @@ import static com.cleverpush.Constants.LOG_TAG;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.Application;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -50,6 +48,8 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     if (instance == null) {
       instance = new ActivityLifecycleListener(sessionListener);
       application.registerActivityLifecycleCallbacks(instance);
+    } else {
+      ActivityLifecycleListener.sessionListener = sessionListener;
     }
   }
 
@@ -75,12 +75,10 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     Logger.d(LOG_TAG, "onActivityResumed");
     currentActivity = activity;
 
-    if (!isServiceRunning(CleanUpService.class)) {
-      try {
-        CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
-      } catch (IllegalStateException illegalStateException) {
-        Logger.e(LOG_TAG, "Error starting CleanUpService.", illegalStateException);
-      }
+    try {
+      CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error starting CleanUpService.", e);
     }
 
     if (counter == 0 && sessionListener != null) {
@@ -172,17 +170,9 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
   public static void clearSessionListener() {
     sessionListener = null;
     currentActivity = null;
-    activityInitializedListeners = null;
-  }
-
-  private boolean isServiceRunning(Class<?> serviceClass) {
-    ActivityManager manager = (ActivityManager) CleverPush.context.getSystemService(Context.ACTIVITY_SERVICE);
-    for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-      if (serviceClass.getName().equals(service.service.getClassName())) {
-        return true;
-      }
+    if (activityInitializedListeners != null) {
+      activityInitializedListeners.clear();
     }
-    return false;
   }
 
   public void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
