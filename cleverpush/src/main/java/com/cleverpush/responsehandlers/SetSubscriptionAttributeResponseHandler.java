@@ -53,18 +53,25 @@ public class SetSubscriptionAttributeResponseHandler {
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        if (throwable != null) {
-          Logger.e("CleverPush", "Error setting attribute." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response +
-                  "\nError: " + throwable.getMessage()
-                  , throwable
-          );
-        } else {
-          Logger.e("CleverPush", "Error setting attribute." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response
-          );
+        try {
+          if (throwable != null) {
+            Logger.e("CleverPush", "Error setting attribute." +
+                    "\nStatus code: " + statusCode +
+                    "\nResponse: " + response +
+                    "\nError: " + throwable.getMessage()
+                    , throwable
+            );
+          } else {
+            Logger.e("CleverPush", "Error setting attribute." +
+                    "\nStatus code: " + statusCode +
+                    "\nResponse: " + response
+            );
+          }
+          if (successCallback != null) {
+            successCallback.run();
+          }
+        } catch (Exception ex) {
+          Logger.e(LOG_TAG, "Error in onFailure of setting subscription attribute", ex);
         }
       }
     };
