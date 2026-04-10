@@ -44,22 +44,30 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
     String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
     String transitionState =
-        event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? GEOFENCE_ENTER_STATE :
-            GEOFENCE_EXIT_STATE;
+            event.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER ? GEOFENCE_ENTER_STATE :
+                    GEOFENCE_EXIT_STATE;
 
-    if (channelId != null && subscriptionId != null) {
-      for (Geofence geofence : event.getTriggeringGeofences()) {
-        JSONObject jsonBody = new JSONObject();
-        try {
-          jsonBody.put("geoFenceId", geofence.getRequestId());
-          jsonBody.put("channelId", channelId);
-          jsonBody.put("subscriptionId", subscriptionId);
-          jsonBody.put("state", transitionState);
+    if (channelId == null || channelId.isEmpty()) {
+      Logger.w(LOG_TAG, "geo-fence: Channel ID is null or empty.");
+      return;
+    }
 
-          CleverPushHttpClient.postWithRetry("/subscription/geo-fence", jsonBody, null);
-        } catch (JSONException e) {
-          Logger.e(LOG_TAG, "Error generating geo-fence json", e);
-        }
+    if (subscriptionId == null || subscriptionId.isEmpty()) {
+      Logger.w(LOG_TAG, "geo-fence: Subscription ID is null or empty.");
+      return;
+    }
+
+    for (Geofence geofence : event.getTriggeringGeofences()) {
+      JSONObject jsonBody = new JSONObject();
+      try {
+        jsonBody.put("geoFenceId", geofence.getRequestId());
+        jsonBody.put("channelId", channelId);
+        jsonBody.put("subscriptionId", subscriptionId);
+        jsonBody.put("state", transitionState);
+
+        CleverPushHttpClient.postWithRetry("/subscription/geo-fence", jsonBody, null);
+      } catch (JSONException e) {
+        Logger.e(LOG_TAG, "Error generating geo-fence json", e);
       }
     }
   }

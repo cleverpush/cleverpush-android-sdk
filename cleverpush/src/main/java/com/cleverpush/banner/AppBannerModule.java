@@ -197,6 +197,11 @@ public class AppBannerModule {
   }
 
   synchronized void loadBanners(String notificationId, String channelId) {
+    if (channelId == null || channelId.isEmpty()) {
+      Logger.w(TAG, "loadBanners: Channel ID is null or empty.");
+      return;
+    }
+
     if (isLoading()) {
       if (notificationId != null) {
         pendingBannerAPI.add(notificationId);
@@ -370,6 +375,10 @@ public class AppBannerModule {
                                          String blockId, String screenId, boolean isElementAlreadyClicked, boolean isScreenAlreadyShown) {
     JSONObject jsonBody = getJsonObject();
     try {
+      if (this.channel == null || this.channel.isEmpty()) {
+        Logger.w(TAG, "sendBannerEvent: Channel ID is null or empty.");
+        return;
+      }
       jsonBody.put("bannerId", banner.getId());
       if (banner.getTestId() != null) {
         jsonBody.put("testId", banner.getTestId());
@@ -380,7 +389,7 @@ public class AppBannerModule {
       if (screenId != null && !screenId.isEmpty()) {
         jsonBody.put("screenId", screenId);
       }
-      jsonBody.put("channelId", channel);
+      jsonBody.put("channelId", this.channel);
       jsonBody.put("subscriptionId", subscriptionId);
 
       if (event.equalsIgnoreCase("clicked")) {

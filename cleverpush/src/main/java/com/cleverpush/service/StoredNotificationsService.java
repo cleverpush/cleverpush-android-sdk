@@ -81,6 +81,11 @@ public class StoredNotificationsService {
                                                      int limit, int skip,
                                                      NotificationFromApiCallbackListener notificationFromApiCallbackListener,
                                                      NotificationsCallbackListener notificationsCallbackListener) {
+    if (channelId == null || channelId.isEmpty()) {
+      Logger.w(LOG_TAG, "getReceivedNotificationsFromApi: Channel ID is null or empty.");
+      return;
+    }
+
     StringBuilder url =
             new StringBuilder("/channel/" + channelId + "/received-notifications?limit=" + limit + "&skip=" + skip);
     ArrayList<String> subscriptionTopics =

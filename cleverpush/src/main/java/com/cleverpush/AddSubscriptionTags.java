@@ -80,6 +80,10 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
   }
 
   public void addSubscriptionTag(AddTagCompletedListener addTagCompletedListener, int currentPositionOfTagToAdd) {
+    if (this.channelId == null || this.channelId.isEmpty()) {
+      Logger.w(LOG_TAG, "addSubscriptionTag: Channel ID is null or empty.");
+      return;
+    }
     if (subscriptionId != null && !subscriptionId.isEmpty()) {
       tags = this.getSubscriptionTags();
       if (tags.contains(tagIds[currentPositionOfTagToAdd])) {

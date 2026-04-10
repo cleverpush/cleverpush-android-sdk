@@ -81,6 +81,10 @@ public class RemoveSubscriptionAttributes implements RemoveAttributeCompletedLis
       }
       return;
     }
+    if (this.channelId == null || this.channelId.isEmpty()) {
+      Logger.w(LOG_TAG, "removeSubscriptionAttribute: Channel ID is null or empty.");
+      return;
+    }
     if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {

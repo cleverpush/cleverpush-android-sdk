@@ -690,6 +690,11 @@ public class CleverPush {
   }
 
   public void getChannelConfigFromChannelId(boolean autoRegister, String storedChannelId, String storedSubscriptionId, InitializeListener listener) {
+    if (this.channelId == null || this.channelId.isEmpty()) {
+      Logger.w(LOG_TAG, "getChannelConfigFromChannelId: Channel ID is null or empty.");
+      return;
+    }
+
     CleverPush instance = this;
     String configPath = "/channel/" + this.channelId + "/config";
     if (developmentMode) {
@@ -1364,6 +1369,10 @@ public class CleverPush {
     if (isSessionStartCalled) {
       return;
     }
+    String channelId = getChannelId(getContext());
+    if (isChannelIdInvalid(channelId, "updateServerSessionStart"))
+      return;
+
     isSessionStartCalled = true;
     CleverPush instance = this;
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
@@ -1372,7 +1381,7 @@ public class CleverPush {
 
     JSONObject jsonBody = new JSONObject();
     try {
-      jsonBody.put("channelId", getChannelId(getContext()));
+      jsonBody.put("channelId", channelId);
       jsonBody.put("subscriptionId", getSubscriptionId(getContext()));
       jsonBody.put("fcmToken", fcmToken);
       jsonBody.put("lastNotificationId", lastNotificationId);
@@ -1406,6 +1415,10 @@ public class CleverPush {
   }
 
   public void updateServerSessionEnd() {
+    String channelId = getChannelId(getContext());
+    if (isChannelIdInvalid(channelId, "updateServerSessionEnd"))
+      return;
+
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     String fcmToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
     long sessionEndedTimestamp = System.currentTimeMillis() / MILLISECONDS_PER_SECOND;
@@ -1413,7 +1426,7 @@ public class CleverPush {
 
     JSONObject jsonBody = new JSONObject();
     try {
-      jsonBody.put("channelId", getChannelId(getContext()));
+      jsonBody.put("channelId", channelId);
       jsonBody.put("subscriptionId", getSubscriptionId(getContext()));
       jsonBody.put("fcmToken", fcmToken);
       jsonBody.put("visits", getSessionVisits());
@@ -1612,11 +1625,15 @@ public class CleverPush {
   }
 
   public void unsubscribe(UnsubscribedListener listener) {
+    String channelId = getChannelId(getContext());
+    if (isChannelIdInvalid(channelId, "unsubscribe"))
+      return;
+
     String subscriptionId = getSubscriptionId(getContext());
     if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {
-        jsonBody.put("channelId", getChannelId(getContext()));
+        jsonBody.put("channelId", channelId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException e) {
         Logger.e(LOG_TAG, "Error creating unsubscribe request parameter", e);
@@ -1690,11 +1707,15 @@ public class CleverPush {
   }
 
   public void stopCampaigns(StopCampaignListener listener) {
+    String channelId = getChannelId(getContext());
+    if (isChannelIdInvalid(channelId, "stopCampaigns"))
+      return;
+
     String subscriptionId = getSubscriptionId(getContext());
     if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {
-        jsonBody.put("channelId", getChannelId(getContext()));
+        jsonBody.put("channelId", channelId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException e) {
         Logger.e(LOG_TAG, "Error creating stopCampaigns request parameter", e);
@@ -2241,6 +2262,10 @@ public class CleverPush {
   }
 
   public void addSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
+    String channelId = getChannelId(getContext());
+    if (isChannelIdInvalid(channelId, "addSubscriptionTopic"))
+      return;
+
     this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "addSubscriptionTopic: There is no subscription for CleverPush SDK.");
@@ -2260,7 +2285,7 @@ public class CleverPush {
 
       JSONObject jsonBody = new JSONObject();
       try {
-        jsonBody.put("channelId", getChannelId(getContext()));
+        jsonBody.put("channelId", channelId);
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
@@ -2296,6 +2321,10 @@ public class CleverPush {
   }
 
   public void removeSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
+    String channelId = getChannelId(getContext());
+    if (isChannelIdInvalid(channelId, "removeSubscriptionTopic"))
+      return;
+
     this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "removeSubscriptionTopic: There is no subscription for CleverPush SDK.");
@@ -2315,7 +2344,7 @@ public class CleverPush {
 
       JSONObject jsonBody = new JSONObject();
       try {
-        jsonBody.put("channelId", getChannelId(getContext()));
+        jsonBody.put("channelId", channelId);
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
@@ -2528,6 +2557,10 @@ public class CleverPush {
 
   public void setSubscriptionTopics(String[] topicIds, CompletionFailureListener completionListener) {
     new Thread(() -> {
+      String channelId = getChannelId(getContext());
+      if (isChannelIdInvalid(channelId, "setSubscriptionTopics"))
+        return;
+
       SharedPreferences sharedPreferences = getSharedPreferences(getContext());
       final int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
 
@@ -2540,7 +2573,7 @@ public class CleverPush {
               topicsArray.put(topicId);
             }
 
-            jsonBody.put("channelId", getChannelId(getContext()));
+            jsonBody.put("channelId", channelId);
             jsonBody.put("topics", topicsArray);
             jsonBody.put("topicsVersion", topicsVersion);
             jsonBody.put("subscriptionId", subscriptionId);
@@ -2615,11 +2648,15 @@ public class CleverPush {
   }
 
   private void setSubscriptionAttributeObjectImplementation(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
+    String channelId = getChannelId(getContext());
+    if (isChannelIdInvalid(channelId, "setSubscriptionAttribute"))
+      return;
+
     this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = getJsonObject();
         try {
-          jsonBody.put("channelId", getChannelId(getContext()));
+          jsonBody.put("channelId", channelId);
           jsonBody.put("attributeId", attributeId);
           if (value instanceof String) {
             jsonBody.put("value", value);
@@ -2720,10 +2757,14 @@ public class CleverPush {
 
   public void pushSubscriptionAttributeValue(String attributeId, String value) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
+      String channelId = getChannelId(getContext());
+      if (isChannelIdInvalid(channelId, "pushSubscriptionAttributeValue"))
+        return;
+
       if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = new JSONObject();
         try {
-          jsonBody.put("channelId", this.channelId);
+          jsonBody.put("channelId", channelId);
           jsonBody.put("attributeId", attributeId);
           jsonBody.put("value", value);
           jsonBody.put("subscriptionId", subscriptionId);
@@ -2799,10 +2840,14 @@ public class CleverPush {
 
   public void pullSubscriptionAttributeValue(String attributeId, String value) {
     this.waitForTrackingConsent(() -> new Thread(() -> this.getSubscriptionId(subscriptionId -> {
+      String channelId = getChannelId(getContext());
+      if (isChannelIdInvalid(channelId, "pullSubscriptionAttributeValue"))
+        return;
+
       if (subscriptionId != null && !subscriptionId.isEmpty()) {
         JSONObject jsonBody = new JSONObject();
         try {
-          jsonBody.put("channelId", this.channelId);
+          jsonBody.put("channelId", channelId);
           jsonBody.put("attributeId", attributeId);
           jsonBody.put("value", value);
           jsonBody.put("subscriptionId", subscriptionId);
@@ -3073,6 +3118,10 @@ public class CleverPush {
         return;
       }
 
+      String channelId = getChannelId(getContext());
+      if (isChannelIdInvalid(channelId, "trackEvent"))
+        return;
+
       try {
         JSONArray channelEvents = channelConfig.getJSONArray("channelEvents");
         JSONObject event = null;
@@ -3104,7 +3153,7 @@ public class CleverPush {
                   }
                 }
 
-                jsonBody.put("channelId", this.channelId);
+                jsonBody.put("channelId", channelId);
                 jsonBody.put("eventId", eventId);
                 jsonBody.put("properties", propertiesObject);
                 jsonBody.put("subscriptionId", subscriptionId);
@@ -3170,6 +3219,10 @@ public class CleverPush {
   public void triggerFollowUpEvent(String eventName, Map<String, String> parameters) {
     this.waitForTrackingConsent(() -> {
       try {
+        String channelId = getChannelId(getContext());
+        if (isChannelIdInvalid(channelId, "triggerFollowUpEvent"))
+          return;
+
         this.getSubscriptionId(subscriptionId -> {
           if (subscriptionId != null && !subscriptionId.isEmpty()) {
             JSONObject jsonParameters = new JSONObject();
@@ -3185,7 +3238,7 @@ public class CleverPush {
 
             JSONObject jsonBody = new JSONObject();
             try {
-              jsonBody.put("channelId", this.channelId);
+              jsonBody.put("channelId", channelId);
               jsonBody.put("name", eventName);
               jsonBody.put("parameters", jsonParameters);
               jsonBody.put("subscriptionId", subscriptionId);
@@ -3230,6 +3283,9 @@ public class CleverPush {
   }
 
   public void trackNotificationClicked(String notificationId, String subscriptionId, String channelId, String actionIndex) {
+    if (isChannelIdInvalid(channelId, "trackNotificationClicked"))
+      return;
+
     JSONObject jsonBody = new JSONObject();
     try {
       jsonBody.put("notificationId", notificationId);
@@ -3273,6 +3329,10 @@ public class CleverPush {
    * This method may be called by the customer to ensure opt-in rates get calculated correctly.
    */
   public void setConfirmAlertShown() {
+    String channelId = getChannelId(getContext());
+    if (isChannelIdInvalid(channelId, "setConfirmAlertShown"))
+      return;
+
     confirmAlertShown = true;
 
     JSONObject jsonBody = new JSONObject();
@@ -4528,5 +4588,13 @@ public class CleverPush {
     } else {
       return false;
     }
+  }
+
+  private boolean isChannelIdInvalid(String channelId, String methodName) {
+    if (channelId == null || channelId.isEmpty()) {
+      Logger.w(LOG_TAG, methodName + ": Channel ID is null or empty.");
+      return true;
+    }
+    return false;
   }
 }

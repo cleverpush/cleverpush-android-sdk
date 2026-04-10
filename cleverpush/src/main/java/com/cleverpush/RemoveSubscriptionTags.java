@@ -80,6 +80,10 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
   }
 
   public void removeSubscriptionTag(RemoveTagCompletedListener onRemoveTagCompleted, int currentPositionOfTagToRemove) {
+    if (this.channelId == null || this.channelId.isEmpty()) {
+      Logger.w(LOG_TAG, "removeSubscriptionTag: Channel ID is null or empty.");
+      return;
+    }
     if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {
