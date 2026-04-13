@@ -80,6 +80,20 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
   }
 
   public void removeSubscriptionTag(RemoveTagCompletedListener onRemoveTagCompleted, int currentPositionOfTagToRemove) {
+    if (this.channelId == null || this.channelId.isEmpty()) {
+      Logger.w(LOG_TAG, "removeSubscriptionTag: Channel ID is null or empty.");
+
+      Exception exception = new IllegalStateException("Channel ID is null or empty.");
+
+      if (onRemoveTagCompleted != null) {
+        onRemoveTagCompleted.onFailure(exception);
+      } else if (completionListener != null) {
+        completionListener.onFailure(exception);
+      }
+      this.finished = true;
+
+      return;
+    }
     if (subscriptionId != null && !subscriptionId.isEmpty()) {
       JSONObject jsonBody = getJsonObject();
       try {

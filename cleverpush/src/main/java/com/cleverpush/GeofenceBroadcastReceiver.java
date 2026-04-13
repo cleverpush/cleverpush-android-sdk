@@ -84,7 +84,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
         public void onFinish() {
           if (transition == Geofence.GEOFENCE_TRANSITION_ENTER || transition == Geofence.GEOFENCE_TRANSITION_EXIT) {
             List<Geofence> triggeringGeofence = geofencingEvent.getTriggeringGeofences();
-            if (channelId != null && subscriptionId != null && geoFenceIndex < triggeringGeofence.size()) {
+            if (channelId != null && !channelId.isEmpty() && subscriptionId != null && !subscriptionId.isEmpty() && geoFenceIndex < triggeringGeofence.size()) {
               JSONObject jsonBody = new JSONObject();
               try {
                 jsonBody.put("geoFenceId", triggeringGeofence.get(geoFenceIndex).getRequestId());
