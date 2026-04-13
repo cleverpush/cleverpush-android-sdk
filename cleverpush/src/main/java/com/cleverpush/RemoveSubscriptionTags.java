@@ -87,13 +87,11 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
 
       if (onRemoveTagCompleted != null) {
         onRemoveTagCompleted.onFailure(exception);
-      }
-
-      if (completionListener != null) {
+      } else if (completionListener != null) {
         completionListener.onFailure(exception);
       }
-
       this.finished = true;
+
       return;
     }
     if (subscriptionId != null && !subscriptionId.isEmpty()) {

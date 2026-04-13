@@ -3283,6 +3283,9 @@ public class CleverPush {
   }
 
   public void trackNotificationClicked(String notificationId, String subscriptionId, String channelId, String actionIndex) {
+    if (channelId == null || channelId.isEmpty()) {
+      channelId = getChannelId(getContext());
+    }
     if (isChannelIdInvalid(channelId, "trackNotificationClicked"))
       return;
 
