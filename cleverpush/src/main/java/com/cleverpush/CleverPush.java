@@ -4529,4 +4529,42 @@ public class CleverPush {
       return false;
     }
   }
+
+  public void markSubscriptionAsTest() {
+    try {
+      String channelId = getChannelId(context);
+      if (channelId == null || channelId.isEmpty()) {
+        Logger.w(LOG_TAG, "markSubscriptionAsTest: Channel ID is null");
+        return;
+      }
+
+      String subscriptionId = getSubscriptionId(getContext());
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
+        Logger.w(LOG_TAG, "markSubscriptionAsTest: There is no subscriptionId");
+        return;
+      }
+
+      JSONObject jsonBody = new JSONObject();
+      jsonBody.put("channelId", channelId);
+      jsonBody.put("subscriptionId", subscriptionId);
+
+      String markAsTestPath = "/subscription/mark-as-test";
+      CleverPushHttpClient.postWithRetry(markAsTestPath, jsonBody, new CleverPushHttpClient.ResponseHandler() {
+        @Override
+        public void onSuccess(String response) {
+          Logger.d(LOG_TAG, "markSubscriptionAsTest: Successfully marked subscription as test");
+        }
+
+        @Override
+        public void onFailure(int statusCode, String response, Throwable throwable) {
+          Logger.e(LOG_TAG, "markSubscriptionAsTest: Failed to mark subscription as test." +
+                  "\nStatus code: " + statusCode +
+                  "\nResponse: " + response +
+                  (throwable != null ? ("\nError: " + throwable.getMessage()) : ""));
+        }
+      });
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "markSubscriptionAsTest: Error while marking subscription as test", e);
+    }
+  }
 }
