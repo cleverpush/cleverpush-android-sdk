@@ -79,6 +79,7 @@ import com.cleverpush.mapper.Mapper;
 import com.cleverpush.mapper.SubscriptionToListMapper;
 import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
 import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
+import com.cleverpush.responsehandlers.MarkSubscriptionAsTestResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
 import com.cleverpush.responsehandlers.StopCampaignResponseHandler;
@@ -2349,7 +2350,6 @@ public class CleverPush {
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-
         Logger.e(LOG_TAG, "Error creating removeSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
