@@ -83,6 +83,15 @@ public class StoredNotificationsService {
                                                      NotificationsCallbackListener notificationsCallbackListener) {
     if (channelId == null || channelId.isEmpty()) {
       Logger.w(LOG_TAG, "getReceivedNotificationsFromApi: Channel ID is null or empty.");
+
+      if (notificationFromApiCallbackListener != null) {
+        notificationFromApiCallbackListener.ready(new ArrayList<>());
+      }
+
+      if (notificationsCallbackListener != null) {
+        notificationsCallbackListener.ready(new LinkedHashSet<>());
+      }
+
       return;
     }
 
