@@ -4614,6 +4614,38 @@ public class CleverPush {
     }
   }
 
+  public void markSubscriptionAsTest() {
+    markSubscriptionAsTest(null);
+  }
+
+  public void markSubscriptionAsTest(CompletionFailureListener listener) {
+    try {
+      String channelId = getChannelId(context);
+      if (isChannelIdInvalid(channelId, "markSubscriptionAsTest"))
+        return;
+
+      String subscriptionId = getSubscriptionId(getContext());
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
+        Logger.w(LOG_TAG, "markSubscriptionAsTest: There is no subscriptionId");
+        return;
+      }
+
+      JSONObject jsonBody = new JSONObject();
+      jsonBody.put("channelId", channelId);
+      jsonBody.put("subscriptionId", subscriptionId);
+
+      String markAsTestPath = "/subscription/mark-as-test";
+
+      CleverPushHttpClient.ResponseHandler responseHandler =
+              new MarkSubscriptionAsTestResponseHandler().getResponseHandler(listener);
+      CleverPushHttpClient.postWithRetry(markAsTestPath,
+              jsonBody,
+              responseHandler);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "markSubscriptionAsTest: Error while marking subscription as test", e);
+    }
+  }
+
   private boolean isChannelIdInvalid(String channelId, String methodName) {
     if (channelId == null || channelId.isEmpty()) {
       Logger.w(LOG_TAG, methodName + ": Channel ID is null or empty.");
