@@ -79,6 +79,7 @@ import com.cleverpush.mapper.Mapper;
 import com.cleverpush.mapper.SubscriptionToListMapper;
 import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
 import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
+import com.cleverpush.responsehandlers.MarkSubscriptionAsTestResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
 import com.cleverpush.responsehandlers.StopCampaignResponseHandler;
@@ -2319,7 +2320,6 @@ public class CleverPush {
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-
         Logger.e(LOG_TAG, "Error creating removeSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
@@ -4531,6 +4531,10 @@ public class CleverPush {
   }
 
   public void markSubscriptionAsTest() {
+    markSubscriptionAsTest(null);
+  }
+
+  public void markSubscriptionAsTest(CompletionFailureListener listener) {
     try {
       String channelId = getChannelId(context);
       if (channelId == null || channelId.isEmpty()) {
@@ -4549,20 +4553,12 @@ public class CleverPush {
       jsonBody.put("subscriptionId", subscriptionId);
 
       String markAsTestPath = "/subscription/mark-as-test";
-      CleverPushHttpClient.postWithRetry(markAsTestPath, jsonBody, new CleverPushHttpClient.ResponseHandler() {
-        @Override
-        public void onSuccess(String response) {
-          Logger.d(LOG_TAG, "markSubscriptionAsTest: Successfully marked subscription as test");
-        }
 
-        @Override
-        public void onFailure(int statusCode, String response, Throwable throwable) {
-          Logger.e(LOG_TAG, "markSubscriptionAsTest: Failed to mark subscription as test." +
-                  "\nStatus code: " + statusCode +
-                  "\nResponse: " + response +
-                  (throwable != null ? ("\nError: " + throwable.getMessage()) : ""));
-        }
-      });
+      CleverPushHttpClient.ResponseHandler responseHandler =
+              new MarkSubscriptionAsTestResponseHandler().getResponseHandler(listener);
+      CleverPushHttpClient.postWithRetry(markAsTestPath,
+              jsonBody,
+              responseHandler);
     } catch (Exception e) {
       Logger.e(LOG_TAG, "markSubscriptionAsTest: Error while marking subscription as test", e);
     }
