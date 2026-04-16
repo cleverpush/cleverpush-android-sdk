@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.35.26 (16.04.2026)
+* Optimized `AppBanner` button background colors by supporting 3- and 8-digit hex values (expands #RGB → #RRGGBB and converts #RRGGBBAA → #AARRGGBB)
+* Fixed a cold-start race condition that cleared CleverPush during notification taps, causing deep links to fail after app restart.
+* Fixed an issue in `setSubscriptionAttribute` where the subscription attribute queue could get stuck on API failures by ensuring it advances in the failure path
+* Added validation to ensure APIs are only executed when a valid `channelId` is available.
+* Added new methods `markSubscriptionAsTest` and `markSubscriptionAsTest(CompletionFailureListener)` to mark a subscription as test.
+
 ## 1.35.25 (11.03.2026)
 * Added a JS bridge to send subscription context (subscriptionId, channelId) to HTML AppBanner.
 * Fixed an issue in `AppBanner` carousel swipe, where swiping back goes to the next screen instead of triggering the previous screen.
