@@ -56,8 +56,12 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
     String channelId = sharedPreferences.getString(CleverPushPreferences.CHANNEL_ID, null);
     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
     String deviceId = sharedPreferences.getString(CleverPushPreferences.DEVICE_ID, null);
-    if (channelId == null) {
-      Logger.d(LOG_TAG, "channelId in preferences not found");
+    if (channelId == null || channelId.trim().isEmpty()) {
+      Logger.w(LOG_TAG, "syncSubscription: Channel ID is null or empty.");
+      if (subscribedListener != null) {
+        subscribedListener.onFailure(
+                new IllegalStateException("Channel ID is null or empty."));
+      }
       return;
     }
 

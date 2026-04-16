@@ -5,7 +5,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -35,7 +34,6 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
-import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
@@ -49,7 +47,6 @@ import com.cleverpush.listener.AppBannersListener;
 import com.cleverpush.util.ColorUtils;
 import com.cleverpush.util.CustomExceptionHandler;
 import com.cleverpush.util.Logger;
-import com.cleverpush.util.SharedPreferencesManager;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -216,8 +213,6 @@ public class InboxDetailActivity extends AppCompatActivity {
 
     setOpenedListener(action -> {
       try {
-//            sendBannerEvent("clicked", bannerPopup.getData());
-
         if (getCleverPushInstance().getAppBannerOpenedListener() != null) {
           getCleverPushInstance().getAppBannerOpenedListener().opened(action);
         }
@@ -446,6 +441,11 @@ public class InboxDetailActivity extends AppCompatActivity {
   }
 
   void loadBanners(String notificationId, String channelId) {
+    if (channelId == null || channelId.isEmpty()) {
+      Logger.w(TAG, "InboxView loadBanners: Channel ID is null or empty.");
+      return;
+    }
+
     if (isLoading()) {
       return;
     }
