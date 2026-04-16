@@ -79,6 +79,7 @@ import com.cleverpush.mapper.Mapper;
 import com.cleverpush.mapper.SubscriptionToListMapper;
 import com.cleverpush.responsehandlers.ChannelConfigFromBundleIdResponseHandler;
 import com.cleverpush.responsehandlers.ChannelConfigFromChannelIdResponseHandler;
+import com.cleverpush.responsehandlers.MarkSubscriptionAsTestResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionAttributeResponseHandler;
 import com.cleverpush.responsehandlers.SetSubscriptionTopicsResponseHandler;
 import com.cleverpush.responsehandlers.StopCampaignResponseHandler;
@@ -2349,7 +2350,6 @@ public class CleverPush {
         jsonBody.put("topicId", topicId);
         jsonBody.put("subscriptionId", subscriptionId);
       } catch (JSONException ex) {
-
         Logger.e(LOG_TAG, "Error creating removeSubscriptionTopic request parameter", ex);
       }
       CleverPushHttpClient.ResponseHandler responseHandler =
@@ -4611,6 +4611,38 @@ public class CleverPush {
       return openStoriesString.contains(notificationId);
     } else {
       return false;
+    }
+  }
+
+  public void markSubscriptionAsTest() {
+    markSubscriptionAsTest(null);
+  }
+
+  public void markSubscriptionAsTest(CompletionFailureListener listener) {
+    try {
+      String channelId = getChannelId(context);
+      if (isChannelIdInvalid(channelId, "markSubscriptionAsTest"))
+        return;
+
+      String subscriptionId = getSubscriptionId(getContext());
+      if (subscriptionId == null || subscriptionId.isEmpty()) {
+        Logger.w(LOG_TAG, "markSubscriptionAsTest: There is no subscriptionId");
+        return;
+      }
+
+      JSONObject jsonBody = new JSONObject();
+      jsonBody.put("channelId", channelId);
+      jsonBody.put("subscriptionId", subscriptionId);
+
+      String markAsTestPath = "/subscription/mark-as-test";
+
+      CleverPushHttpClient.ResponseHandler responseHandler =
+              new MarkSubscriptionAsTestResponseHandler().getResponseHandler(listener);
+      CleverPushHttpClient.postWithRetry(markAsTestPath,
+              jsonBody,
+              responseHandler);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "markSubscriptionAsTest: Error while marking subscription as test", e);
     }
   }
 
