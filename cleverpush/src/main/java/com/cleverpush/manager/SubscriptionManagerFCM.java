@@ -43,9 +43,20 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     try {
       return getTokenWithClassFirebaseMessaging();
     } catch (Exception e) {
-      Logger.e(LOG_TAG, "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken");
+      Logger.e(LOG_TAG, "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken", e);
     }
-    return getTokenWithClassFirebaseInstanceId(senderId);
+
+    if (isFirebaseInstanceIdAvailable()) {
+      try {
+        return getTokenWithClassFirebaseInstanceId(senderId);
+      } catch (Throwable t) {
+        Logger.e(LOG_TAG, "FirebaseInstanceId fallback failed", t);
+      }
+    } else {
+      Logger.w(LOG_TAG, "FirebaseInstanceId not available on this Firebase version");
+    }
+
+    return null;
   }
 
   private void initFirebaseApp(String senderId) {
@@ -54,6 +65,15 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     }
 
     firebaseApp = FirebaseApp.getInstance();
+  }
+
+  private boolean isFirebaseInstanceIdAvailable() {
+    try {
+      Class.forName("com.google.firebase.iid.FirebaseInstanceId");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
   }
 
   /**
@@ -91,24 +111,24 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
   @SuppressWarnings("unchecked")
   @WorkerThread
   private String getTokenWithClassFirebaseMessaging() throws Exception {
-    Exception exception;
     try {
-      Class<?> FirebaseInstanceIdClass = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
-      Method getInstanceMethod = FirebaseInstanceIdClass.getMethod("getInstance");
-      Object instanceId = getInstanceMethod.invoke(null, null);
-      Method getTokenMethod = FirebaseInstanceIdClass.getMethod("getToken");
-      Task<String> tokenTask = (Task<String>) getTokenMethod.invoke(instanceId, null);
+      Class<?> firebaseMessagingClass = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
+
+      // getInstance()
+      Method getInstanceMethod = firebaseMessagingClass.getMethod("getInstance");
+      Object instance = getInstanceMethod.invoke(null);
+
+      // getToken()
+      Method getTokenMethod = firebaseMessagingClass.getMethod("getToken");
+      Task<String> tokenTask = (Task<String>) getTokenMethod.invoke(instance);
+
       return Tasks.await(tokenTask);
-    } catch (ClassNotFoundException e) {
-      exception = e;
-    } catch (NoSuchMethodException e) {
-      exception = e;
-    } catch (IllegalAccessException e) {
-      exception = new IllegalAccessException();
-    } catch (InvocationTargetException e) {
-      exception = e;
+    } catch (ClassNotFoundException |
+             NoSuchMethodException |
+             IllegalAccessException |
+             InvocationTargetException e) {
+      throw e;
     }
-    throw exception;
   }
 
   private String getSenderIdFromConfig(JSONObject channelConfig) {
