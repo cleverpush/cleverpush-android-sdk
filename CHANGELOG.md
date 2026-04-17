@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.35.27 (17.04.2026)
+* Fix FCM token retrieval for latest Firebase and add safe fallback handling
+
 ## 1.35.26 (16.04.2026)
 * Optimized `AppBanner` button background colors by supporting 3- and 8-digit hex values (expands #RGB → #RRGGBB and converts #RRGGBBAA → #AARRGGBB)
 * Fixed a cold-start race condition that cleared CleverPush during notification taps, causing deep links to fail after app restart.
