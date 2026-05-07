@@ -736,10 +736,15 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
   @SuppressLint("SetJavaScriptEnabled")
   private void composeHtmlBanner(LinearLayout body, String htmlContent) {
     try {
+      boolean isNonBlockingAppBanners =
+              CleverPush.getInstance(CleverPush.context).isAppBannersNonBlocking();
+
       activity.runOnUiThread(() -> {
+
         String html = VoucherCodeUtils.replaceVoucherCodeString(htmlContent, voucherCode);
         String lower = html.toLowerCase(Locale.ROOT);
         String contextJson = getSubscriptionContextJson();
+
         String jsToInject = "" +
                 "<script type=\"text/javascript\">\n" +
                 "// Below conditions will take care of all ids and classes which contains defined keywords at start and end of string\n"
@@ -770,6 +775,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                 "  CleverPush.trackClickStringified(buttonId, customData ? JSON.stringify(customData) : null);\n" +
                 "};\n" +
                 "</script>\n";
+
+        if (isNonBlockingAppBanners) {
+          jsToInject += getNonBlockingMeasurementScript();
+        }
+
         String htmlWithJs;
         if (lower.contains("</body>")) {
           htmlWithJs = Pattern
@@ -787,11 +797,15 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
                           jsToInject +
                           "</body></html>";
         }
+
         ConstraintLayout webLayout =
                 (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_html, null);
+
         WebView webView = webLayout.findViewById(R.id.webView);
+
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setLoadsImagesAutomatically(true);
+
         webView.addJavascriptInterface(new CleverpushInterface(webView), "CleverPush");
         webView.setWebViewClient(new AppBannerWebViewClient());
 
@@ -801,7 +815,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           params.height = ViewGroup.LayoutParams.MATCH_PARENT;
           webView.setLayoutParams(params);
           webView.requestLayout();
-          fixFullscreenHtmlBannerUI(body, webLayout, webView);
+          if (isNonBlockingAppBanners) {
+            applyNonBlockingBannerUI(body, webLayout, webView);
+          } else {
+            fixFullscreenHtmlBannerUI(body, webLayout, webView);
+          }
         });
 
         // Ensure WebView is scrollable
@@ -812,7 +830,11 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
           return false;
         });
 
-        fixFullscreenHtmlBannerUI(body, webLayout, webView);
+        if (isNonBlockingAppBanners) {
+          applyNonBlockingBannerUI(body, webLayout, webView);
+        } else {
+          fixFullscreenHtmlBannerUI(body, webLayout, webView);
+        }
 
         String encodedHtml = null;
         try {
@@ -828,6 +850,118 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     } catch (Exception e) {
       Logger.e(TAG, "Error in AppBanner composeHtmlBanner.", e);
     }
+  }
+
+  /**
+   * Returns a JS snippet that measures the bounding rect of the visible banner content
+   * inside the WebView and reports the result back to Android via the JS bridge.
+   * Used for non-blocking HTML banners so the popup window can be shrunk to wrap only
+   * the actual banner area, leaving the rest of the screen interactive.
+   */
+  private String getNonBlockingMeasurementScript() {
+    return "<script type=\"text/javascript\">\n" +
+            "(function () {\n" +
+            "  function measureCleverPushBanner() {\n" +
+            "    try {\n" +
+            "      var minLeft = Number.MAX_VALUE,\n" +
+            "          minTop = Number.MAX_VALUE,\n" +
+            "          maxRight = -Number.MAX_VALUE,\n" +
+            "          maxBottom = -Number.MAX_VALUE;\n" +
+            "      var nodes = document.body ? document.body.querySelectorAll('*') : [];\n" +
+            "      for (var i = 0; i < nodes.length; i++) {\n" +
+            "        var el = nodes[i];\n" +
+            "        if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'META' || el.tagName === 'LINK') continue;\n" +
+            "        var rect = el.getBoundingClientRect();\n" +
+            "        if (rect.width <= 0 || rect.height <= 0) continue;\n" +
+            "        var style = window.getComputedStyle(el);\n" +
+            "        if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) continue;\n" +
+            "        if (rect.left < minLeft) minLeft = rect.left;\n" +
+            "        if (rect.top < minTop) minTop = rect.top;\n" +
+            "        if (rect.right > maxRight) maxRight = rect.right;\n" +
+            "        if (rect.bottom > maxBottom) maxBottom = rect.bottom;\n" +
+            "      }\n" +
+            "      if (minLeft === Number.MAX_VALUE) return;\n" +
+            "      if (typeof CleverPush !== 'undefined' && CleverPush.setHtmlBannerBounds) {\n" +
+            "        CleverPush.setHtmlBannerBounds(\n" +
+            "          Math.round(minLeft),\n" +
+            "          Math.round(minTop),\n" +
+            "          Math.round(maxRight - minLeft),\n" +
+            "          Math.round(maxBottom - minTop),\n" +
+            "          Math.round(window.innerWidth),\n" +
+            "          Math.round(window.innerHeight)\n" +
+            "        );\n" +
+            "      }\n" +
+            "    } catch (e) {}\n" +
+            "  }\n" +
+            "  function scheduleMeasure() { setTimeout(measureCleverPushBanner, 50); }\n" +
+            "  if (document.readyState === 'complete') {\n" +
+            "    scheduleMeasure();\n" +
+            "  } else {\n" +
+            "    window.addEventListener('load', scheduleMeasure);\n" +
+            "  }\n" +
+            "  window.addEventListener('resize', scheduleMeasure);\n" +
+            "})();\n" +
+            "</script>\n";
+  }
+
+  /**
+   * Configures the WebView and surrounding containers for a non-blocking HTML banner.
+   *
+   * For full-screen banners (type: "full"), the WebView is sized to the full screen height
+   * (anchored at the bottom of webLayout) so HTML using "position: fixed; bottom" renders
+   * against the actual screen viewport. AppBannerPopup.body is separately anchored at the
+   * bottom of the popup (see displayBanner), so when the popup is later shrunk by the JS
+   * measurement callback to wrap only the banner area, the WebView's bottom (where the
+   * banner content lives) stays inside the popup window and remains visible.
+   *
+   * For non-full banners, a default WebView height (60% of screen) gives the WebView a
+   * viewport for "position: fixed" rendering without forcing the popup to fullscreen.
+   */
+  private void applyNonBlockingBannerUI(LinearLayout body, ConstraintLayout webLayout, WebView webView) {
+    int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+    boolean isFullScreenBanner =
+        appBannerPopup != null
+            && appBannerPopup.getData() != null
+            && "full".equalsIgnoreCase(appBannerPopup.getData().getPositionType());
+
+    int webViewHeightPx = isFullScreenBanner ? screenHeight : (int) (screenHeight * 0.6);
+
+    ConstraintSet constraintSet = new ConstraintSet();
+    constraintSet.clone(webLayout);
+    constraintSet.clear(R.id.webView, ConstraintSet.TOP);
+    constraintSet.constrainHeight(R.id.webView, webViewHeightPx);
+    constraintSet.constrainWidth(R.id.webView, ConstraintSet.MATCH_CONSTRAINT);
+    constraintSet.connect(R.id.webView, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0);
+    constraintSet.connect(R.id.webView, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 0);
+    constraintSet.connect(R.id.webView, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 0);
+    constraintSet.setDimensionRatio(R.id.webView, null);
+    constraintSet.applyTo(webLayout);
+
+    ViewGroup.LayoutParams webViewParams = webView.getLayoutParams();
+    if (webViewParams != null) {
+      webViewParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+      webViewParams.height = webViewHeightPx;
+      webView.setLayoutParams(webViewParams);
+    }
+
+    ViewGroup.LayoutParams webLayoutParams = webLayout.getLayoutParams();
+    if (webLayoutParams != null) {
+      webLayoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+      webLayoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+      webLayout.setLayoutParams(webLayoutParams);
+    }
+
+    if (body != null) {
+      ViewGroup.LayoutParams bodyParams = body.getLayoutParams();
+      if (bodyParams != null) {
+        bodyParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        body.setLayoutParams(bodyParams);
+      }
+      body.setPadding(0, 0, 0, 0);
+    }
+
+    webView.setVerticalScrollBarEnabled(false);
+    webView.setHorizontalScrollBarEnabled(false);
   }
 
   public static int pxToDp(int px) {
@@ -1012,6 +1146,31 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
       if (clipboard != null) {
         ClipData clip = ClipData.newPlainText("label", text);
         clipboard.setPrimaryClip(clip);
+      }
+    }
+
+    /**
+     * Receives the bounding rect of the visible banner content from the JS measurement
+     * script (in CSS pixels) and forwards it to the popup so it can shrink itself to
+     * wrap only the actual banner area, leaving the rest of the screen interactive.
+     */
+    @JavascriptInterface
+    public void setHtmlBannerBounds(int leftCss, int topCss, int widthCss, int heightCss,
+                                    int viewportWidthCss, int viewportHeightCss) {
+      try {
+        if (activity == null) return;
+        activity.runOnUiThread(() -> {
+          try {
+            if (appBannerPopup != null) {
+              appBannerPopup.applyMeasuredHtmlBannerBounds(
+                  leftCss, topCss, widthCss, heightCss, viewportWidthCss, viewportHeightCss);
+            }
+          } catch (Exception ex) {
+            Logger.e(TAG, "Error applying measured HTML banner bounds.", ex);
+          }
+        });
+      } catch (Exception ex) {
+        Logger.e(TAG, "Error in setHtmlBannerBounds.", ex);
       }
     }
   }

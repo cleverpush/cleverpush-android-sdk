@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
@@ -85,6 +86,9 @@ public class AppBannerPopup {
   int currentDisplayedPagePosition;
 
   private boolean isInitialized = false;
+  // Gravity used when showing the popup. Used to compute the correct y-offset for popup.update()
+  // since update() expresses position relative to the original showAtLocation gravity.
+  private int popupShowGravity = Gravity.TOP;
 
   AppBannerPopup(Activity activity, Banner data) {
     this.activity = activity;
@@ -181,13 +185,42 @@ public class AppBannerPopup {
     body = popupRoot.findViewById(R.id.bannerBody);
     bannerBackGroundImage = popupRoot.findViewById(R.id.bannerBackgroundImage);
 
-    popup = new PopupWindow(
-        popupRoot,
-        FrameLayout.LayoutParams.MATCH_PARENT,
-        FrameLayout.LayoutParams.MATCH_PARENT,
-        true
-    );
-    currentDisplayedPagePosition = -1;
+    boolean isNonBlockingAppBanners = CleverPush.getInstance(CleverPush.context).isAppBannersNonBlocking();
+
+    if (!isNonBlockingAppBanners) {
+      popup = new PopupWindow(
+              popupRoot,
+              FrameLayout.LayoutParams.MATCH_PARENT,
+              FrameLayout.LayoutParams.MATCH_PARENT,
+              true
+      );
+      currentDisplayedPagePosition = -1;
+    } else {
+      boolean isFullScreenBanner = data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL);
+      // Non-full banners must not use a full-screen popup window: MATCH_PARENT height keeps a
+      // window over the entire activity, so touches never reach MainActivity (setTouchModal does
+      // not change window bounds). WRAP_CONTENT limits the window to the banner so the rest of
+      // the screen stays interactive.
+      int popupWindowHeight =
+              isFullScreenBanner ? ViewGroup.LayoutParams.MATCH_PARENT : ViewGroup.LayoutParams.WRAP_CONTENT;
+      popup = new PopupWindow(
+              popupRoot,
+              ViewGroup.LayoutParams.MATCH_PARENT,
+              popupWindowHeight,
+              isFullScreenBanner
+      );
+      currentDisplayedPagePosition = -1;
+
+      if (!isFullScreenBanner || isHTMLBanner()) {
+        popup.setFocusable(false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+          popup.setTouchModal(false);
+        }
+        parent.setClickable(false);
+        parent.setFocusable(false);
+        frameLayout.setClickable(true);
+      }
+    }
 
     if (isHTMLBanner()) {
       parent.setBackgroundColor(Color.TRANSPARENT);
@@ -408,6 +441,8 @@ public class AppBannerPopup {
     }
     setUpBannerBlocks();
 
+    boolean isNonBlockingAppBanners = CleverPush.getInstance(CleverPush.context).isAppBannersNonBlocking();
+
     if (data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
       ConstraintLayout mConstraintLayout = (ConstraintLayout) popupRoot;
       ConstraintSet mConstraintSet = new ConstraintSet();
@@ -424,16 +459,49 @@ public class AppBannerPopup {
       mConstraintSet.constrainHeight(R.id.frameLayout, ConstraintSet.MATCH_CONSTRAINT);
       mConstraintSet.applyTo(mConstraintLayout);
 
-      body.setLayoutParams(
-          new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+      if (isNonBlockingAppBanners && isHTMLBanner()) {
+        // For non-blocking full-screen HTML banners, give the body a fixed full-screen
+        // height anchored at the bottom of the popup. This keeps the WebView's bottom
+        // (where HTML using "position: fixed; bottom: ...;" renders) inside the popup
+        // window even after applyMeasuredHtmlBannerBounds shrinks the popup to wrap
+        // only the banner area.
+        int screenHeightPx = activity.getResources().getDisplayMetrics().heightPixels;
+        FrameLayout.LayoutParams nonBlockingBodyParams =
+            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, screenHeightPx);
+        nonBlockingBodyParams.gravity = Gravity.BOTTOM;
+        body.setLayoutParams(nonBlockingBodyParams);
+      } else {
+        body.setLayoutParams(
+            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+      }
       runInMain(() -> {
         if (!canShow()) {
           return;
         }
-        popup.showAtLocation(getRoot(), Gravity.TOP, 0, 0);
+        if (isNonBlockingAppBanners && isHTMLBanner()) {
+          popupShowGravity = Gravity.BOTTOM;
+          popup.showAtLocation(getRoot(), Gravity.BOTTOM, 0, 0);
+        } else {
+          popupShowGravity = Gravity.TOP;
+          popup.showAtLocation(getRoot(), Gravity.TOP, 0, 0);
+        }
         toggleShowing(true);
       });
     } else {
+      if (isNonBlockingAppBanners) {
+      ViewGroup.LayoutParams nonFullRootLp = popupRoot.getLayoutParams();
+      if (nonFullRootLp == null) {
+        popupRoot.setLayoutParams(
+            new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+      } else {
+        nonFullRootLp.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        nonFullRootLp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        popupRoot.setLayoutParams(nonFullRootLp);
+      }
+      popup.setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+      popup.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
+      }
+
       body.setLayoutParams(
           new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -452,6 +520,7 @@ public class AppBannerPopup {
             if (!canShow()) {
               return;
             }
+            popupShowGravity = Gravity.TOP;
             popup.showAtLocation(getRoot(), Gravity.TOP, 0, 0);
             toggleShowing(true);
           });
@@ -468,13 +537,16 @@ public class AppBannerPopup {
             if (!canShow()) {
               return;
             }
+            popupShowGravity = Gravity.BOTTOM;
             popup.showAtLocation(getRoot(), Gravity.BOTTOM, 0, 0);
             toggleShowing(true);
           });
           break;
         default:
-          popup.setFocusable(true);
-          popup.setOutsideTouchable(false);
+          if (!isNonBlockingAppBanners) {
+            popup.setFocusable(true);
+            popup.setOutsideTouchable(false);
+          }
           popup.setTouchable(true);
           popup.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
           popup.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
@@ -489,6 +561,7 @@ public class AppBannerPopup {
             if (!canShow()) {
               return;
             }
+            popupShowGravity = Gravity.CENTER;
             popup.showAtLocation(getRoot(), Gravity.CENTER, 0, 0);
             toggleShowing(true);
           });
@@ -711,6 +784,82 @@ public class AppBannerPopup {
           Logger.e(TAG, "Error in displaying banner.", e);
         }
       }
+    }
+  }
+
+  /**
+   * Resizes the popup window of a non-blocking HTML banner so it wraps only the actual
+   * banner content area, leaving the rest of the screen interactive. Called from the
+   * JS measurement bridge with the banner's bounding rect in CSS pixels relative to the
+   * WebView viewport.
+   *
+   * The popup is anchored at the gravity it was originally shown with (BOTTOM by default
+   * for non-blocking HTML banners). For top-positioned banner content, the popup is moved
+   * up to leave the bottom of the screen interactive; for bottom-positioned content it
+   * stays anchored to the bottom.
+   */
+  public void applyMeasuredHtmlBannerBounds(int leftCss, int topCss, int widthCss, int heightCss,
+                                            int viewportWidthCss, int viewportHeightCss) {
+    try {
+      if (!isHTMLBanner()) return;
+      if (!CleverPush.getInstance(CleverPush.context).isAppBannersNonBlocking()) return;
+      if (popup == null || !popup.isShowing()) return;
+      if (viewportWidthCss <= 0 || viewportHeightCss <= 0) return;
+      if (heightCss <= 0) return;
+
+      DisplayMetrics dm = activity.getResources().getDisplayMetrics();
+      int screenWidth = dm.widthPixels;
+      int screenHeight = dm.heightPixels;
+
+      float scaleY = (float) screenHeight / viewportHeightCss;
+      int topPx = Math.max(0, (int) (topCss * scaleY));
+      int heightPx = (int) (heightCss * scaleY);
+      int marginPx = (int) (10 * dm.density);
+
+      int distFromTop = topPx;
+      int distFromBottom = Math.max(0, screenHeight - (topPx + heightPx));
+
+      // Wrap the banner area plus the smaller margin so the popup hugs the visible content,
+      // anchored to whichever edge the banner is closer to. Also align body's gravity to
+      // match: body has a fixed full-screen height anchored at one edge of frameLayout so
+      // the visible portion of the (full-size) WebView inside it lines up with where the
+      // HTML banner actually renders ("position: fixed; top:" → top, "...; bottom:" → bottom).
+      int popupHeight;
+      int popupYOffset;
+      int bodyGravity;
+      if (distFromTop <= distFromBottom) {
+        popupHeight = topPx + heightPx + marginPx;
+        if (popupShowGravity == Gravity.BOTTOM) {
+          popupYOffset = screenHeight - popupHeight;
+        } else {
+          popupYOffset = 0;
+        }
+        bodyGravity = Gravity.TOP;
+      } else {
+        popupHeight = heightPx + distFromBottom + marginPx;
+        if (popupShowGravity == Gravity.BOTTOM) {
+          popupYOffset = 0;
+        } else {
+          popupYOffset = screenHeight - popupHeight;
+        }
+        bodyGravity = Gravity.BOTTOM;
+      }
+
+      if (popupHeight <= 0 || popupHeight > screenHeight) {
+        return;
+      }
+
+      if (body != null && body.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+        FrameLayout.LayoutParams bodyParams = (FrameLayout.LayoutParams) body.getLayoutParams();
+        if (bodyParams.gravity != bodyGravity) {
+          bodyParams.gravity = bodyGravity;
+          body.setLayoutParams(bodyParams);
+        }
+      }
+
+      popup.update(0, popupYOffset, screenWidth, popupHeight);
+    } catch (Exception e) {
+      Logger.e(TAG, "Error in applyMeasuredHtmlBannerBounds.", e);
     }
   }
 

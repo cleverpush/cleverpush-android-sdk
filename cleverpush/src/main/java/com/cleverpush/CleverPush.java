@@ -245,6 +245,7 @@ public class CleverPush {
   int appBannerPerDay;
   int appBannerPerSession;
   public static boolean notificationClickInProgress = false;
+  public boolean appBannersNonBlocking = false;
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -4652,5 +4653,13 @@ public class CleverPush {
       return true;
     }
     return false;
+  }
+
+  public boolean isAppBannersNonBlocking() {
+    return appBannersNonBlocking;
+  }
+
+  public void setAppBannersNonBlocking(boolean appBannersNonBlocking) {
+    this.appBannersNonBlocking = appBannersNonBlocking;
   }
 }
