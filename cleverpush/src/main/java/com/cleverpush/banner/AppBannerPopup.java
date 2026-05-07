@@ -10,6 +10,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -801,6 +802,11 @@ public class AppBannerPopup {
   public void applyMeasuredHtmlBannerBounds(int leftCss, int topCss, int widthCss, int heightCss,
                                             int viewportWidthCss, int viewportHeightCss) {
     try {
+      if (Looper.myLooper() != Looper.getMainLooper()) {
+        mainHandler.post(() -> applyMeasuredHtmlBannerBounds(
+            leftCss, topCss, widthCss, heightCss, viewportWidthCss, viewportHeightCss));
+        return;
+      }
       if (!isHTMLBanner()) return;
       if (!CleverPush.getInstance(CleverPush.context).isAppBannersNonBlocking()) return;
       if (popup == null || !popup.isShowing()) return;
