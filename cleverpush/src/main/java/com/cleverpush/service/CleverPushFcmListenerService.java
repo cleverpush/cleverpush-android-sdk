@@ -56,27 +56,24 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
     Logger.d(LOG_TAG, "FCM: onNewToken");
 
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(this);
+
+    // Always store latest local token immediately.
+    // This ensures we never lose token rotations.
+    sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
+
     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
 
     if (subscriptionId == null) {
-      // No subscription yet: the next subscribe() will fetch the current token
-      // straight from FCM, so nothing is lost by skipping local persistence
-      // here. We intentionally do NOT write FCM_TOKEN now — that key must
-      // reflect the last value successfully synced to the server, which is
-      // what checkChangedPushToken() relies on to detect rotations.
-      Logger.d(LOG_TAG, "CleverPushFcmListenerService onNewToken: no subscription yet, will be picked up on next subscribe.");
+      Logger.d(LOG_TAG, "CleverPushFcmListenerService onNewToken: no subscription yet, token cached for next subscribe.");
       return;
     }
 
-    // Persistence of FCM_TOKEN is deliberately gated on a successful server
-    // sync inside SubscriptionManagerFCM.checkChangedPushToken(...).
-    // If this sync attempt is dropped (e.g. getChannelConfig's callback never
-    // fires because CleverPush isn't initialized in this process, or the HTTP
-    // call fails), the stored token still reflects the last server-known
-    // value. On the next app start, checkChangedPushToken(config, null) will
-    // observe that the live FCM token differs from the stored one and re-sync.
     CleverPush cleverPush = CleverPush.getInstance(this);
+
     cleverPush.getChannelConfig(
-        (JSONObject channelConfig) -> cleverPush.getSubscriptionManager().checkChangedPushToken(channelConfig, token));
+            (JSONObject channelConfig) ->
+                    cleverPush.getSubscriptionManager()
+                            .checkChangedPushToken(channelConfig, token)
+    );
   }
 }

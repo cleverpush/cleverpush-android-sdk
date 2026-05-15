@@ -3,6 +3,7 @@ package com.cleverpush;
 public class CleverPushPreferences {
 
   public static final String FCM_TOKEN = "CleverPush_FCM_TOKEN";
+  public static final String SYNCED_FCM_TOKEN = "CleverPush_SYNCED_FCM_TOKEN";
   public static final String HMS_TOKEN = "CleverPush_HMS_TOKEN";
   public static final String ADM_TOKEN = "CleverPush_ADM_TOKEN";
   public static final String CHANNEL_ID = "CleverPush_CHANNEL_ID";
