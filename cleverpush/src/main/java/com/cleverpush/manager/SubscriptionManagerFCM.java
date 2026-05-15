@@ -178,8 +178,10 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         Logger.e(LOG_TAG, "SubscriptionManager: Getting FCM Sender ID failed");
         return;
       }
+
       try {
         String newToken = changedToken != null ? changedToken : getTokenAttempt(senderId);
+
         if (newToken == null) {
           Logger.d(LOG_TAG, "checkChangedPushToken: no FCM token available yet, will retry on next sync.");
           return;
