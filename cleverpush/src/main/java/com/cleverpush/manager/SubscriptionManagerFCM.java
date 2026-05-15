@@ -169,7 +169,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     String existingToken = sharedPreferences.getString(CleverPushPreferences.FCM_TOKEN, null);
 
     if (existingToken == null) {
-      return;
+      Logger.d(LOG_TAG, "No stored FCM token found. Syncing current token.");
     }
 
     new Thread(() -> {
@@ -180,16 +180,31 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
       }
       try {
         String newToken = changedToken != null ? changedToken : getTokenAttempt(senderId);
-        if (newToken != null && !newToken.equals(existingToken)) {
+        if (newToken == null) {
+          Logger.d(LOG_TAG, "checkChangedPushToken: no FCM token available yet, will retry on next sync.");
+          return;
+        }
+
+        boolean forcedTokenRefresh = changedToken != null;
+        boolean tokenMissingLocally = existingToken == null;
+        boolean tokenChanged = !newToken.equals(existingToken);
+
+        if (forcedTokenRefresh || tokenMissingLocally || tokenChanged) {
+          if (tokenMissingLocally) {
+            Logger.i(LOG_TAG, "Persisting FCM token after missing local copy (self-heal).");
+          }
           this.syncSubscription(newToken, new SubscribedCallbackListener() {
             @Override
             public void onSuccess(String subscriptionId) {
-              Logger.i(LOG_TAG, "Synchronized new FCM token: " + newToken);
+              Logger.i(LOG_TAG, "Synchronized FCM token: " + newToken);
+              sharedPreferences.edit()
+                      .putString(CleverPushPreferences.FCM_TOKEN, newToken)
+                      .apply();
             }
 
             @Override
             public void onFailure(Throwable exception) {
-
+              Logger.e(LOG_TAG, "Failed to sync FCM token", exception);
             }
           }, senderId);
         } else {
