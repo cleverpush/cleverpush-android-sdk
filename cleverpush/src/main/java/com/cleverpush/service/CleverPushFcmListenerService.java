@@ -56,15 +56,24 @@ public class CleverPushFcmListenerService extends FirebaseMessagingService {
     Logger.d(LOG_TAG, "FCM: onNewToken");
 
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(this);
+
+    // Always store latest local token immediately.
+    // This ensures we never lose token rotations.
+    sharedPreferences.edit().putString(CleverPushPreferences.FCM_TOKEN, token).apply();
+
     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
 
     if (subscriptionId == null) {
-      Logger.d(LOG_TAG, "CleverPushFcmListenerService onNewToken: There is no subscription for CleverPush SDK.");
+      Logger.d(LOG_TAG, "CleverPushFcmListenerService onNewToken: no subscription yet, token cached for next subscribe.");
       return;
     }
 
     CleverPush cleverPush = CleverPush.getInstance(this);
+
     cleverPush.getChannelConfig(
-        (JSONObject channelConfig) -> cleverPush.getSubscriptionManager().checkChangedPushToken(channelConfig, token));
+            (JSONObject channelConfig) ->
+                    cleverPush.getSubscriptionManager()
+                            .checkChangedPushToken(channelConfig, token)
+    );
   }
 }
