@@ -29,6 +29,8 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
   private static final String TOKEN_BLACKLISTED = "BLACKLISTED";
   private static final String ERROR_SERVICE_NOT_AVAILABLE = "SERVICE_NOT_AVAILABLE";
   private static final String THREAD_NAME = "FCM_GET_TOKEN";
+  private static final String REGEN_THREAD_NAME = "FCM_REGEN_TOKEN";
+  private volatile boolean isRegeneratingPushToken = false;
 
   private FirebaseApp firebaseApp;
   private Thread registerThread;
@@ -146,6 +148,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
   @Override
   public void subscribe(JSONObject channelConfig, SubscribedCallbackListener subscribedListener) {
+    this.lastChannelConfig = channelConfig;
     String senderId = this.getSenderIdFromConfig(channelConfig);
     if (senderId == null) {
       Logger.e(LOG_TAG, "SubscriptionManager: Getting FCM Sender ID failed");
@@ -165,6 +168,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
   @Override
   public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
+    this.lastChannelConfig = channelConfig;
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(this.context);
 
     // IMPORTANT:
@@ -185,6 +189,11 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
       }
 
       try {
+        if (isRegeneratingPushToken) {
+          Logger.d(LOG_TAG, "Ignoring checkChangedPushToken because token regeneration is already in progress.");
+          return;
+        }
+
         String newToken = changedToken != null ? changedToken : getTokenAttempt(senderId);
 
         if (newToken == null) {
@@ -283,6 +292,94 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
       }
 
       return null;
+    }
+  }
+
+  /**
+   * Regenerates the FCM push token by deleting the existing token,
+   * requesting a new one from Firebase, and synchronizing it with
+   * the CleverPush backend.
+   */
+  @Override
+  protected void regeneratePushToken() {
+    final JSONObject channelConfig = this.lastChannelConfig;
+    final String senderId = this.getSenderIdFromConfig(channelConfig);
+    if (senderId == null) {
+      Logger.e(LOG_TAG, "regeneratePushToken: FCM Sender ID is not available, skipping regeneration.");
+      return;
+    }
+
+    isRegeneratingPushToken = true;
+
+    new Thread(() -> {
+      try {
+        initFirebaseApp(senderId);
+
+        // 1. Delete the current FCM token so the next getToken() returns a new one.
+        try {
+          deleteTokenWithClassFirebaseMessaging();
+          Logger.d(LOG_TAG, "regeneratePushToken: deleted existing FCM token.");
+        } catch (Throwable t) {
+          Logger.e(LOG_TAG, "regeneratePushToken: failed to delete existing FCM token, attempting to fetch new token anyway.", t);
+        }
+
+        // 2. Clear locally cached tokens so checkChangedPushToken-like flows
+        //    do not short-circuit and so the next sync actually pushes the new token.
+        SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(this.context);
+        sharedPreferences.edit()
+            .remove(CleverPushPreferences.FCM_TOKEN)
+            .remove(CleverPushPreferences.SYNCED_FCM_TOKEN)
+            .apply();
+
+        // 3. Fetch a fresh token from Firebase.
+        String newToken = getTokenAttempt(senderId);
+        if (newToken == null) {
+          Logger.d(LOG_TAG, "regeneratePushToken: no FCM token available yet after regeneration, will retry on next sync.");
+          return;
+        }
+
+        Logger.i(LOG_TAG, "regeneratePushToken: obtained new FCM token: " + newToken);
+
+        // 4. Sync the new token with the CleverPush backend.
+        this.syncSubscription(newToken, new SubscribedCallbackListener() {
+          @Override
+          public void onSuccess(String subscriptionId) {
+            Logger.i(LOG_TAG, "regeneratePushToken: synchronized regenerated FCM token.");
+            sharedPreferences.edit()
+                .putString(CleverPushPreferences.FCM_TOKEN, newToken)
+                .putString(CleverPushPreferences.SYNCED_FCM_TOKEN, newToken)
+                .apply();
+            isRegeneratingPushToken = false;
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            Logger.e(LOG_TAG, "regeneratePushToken: failed to sync regenerated FCM token.", exception);
+            isRegeneratingPushToken = false;
+          }
+        }, senderId);
+      } catch (Throwable throwable) {
+        Logger.e(LOG_TAG, "Unknown error in regeneratePushToken.", throwable);
+        isRegeneratingPushToken = false;
+      }
+    }, REGEN_THREAD_NAME).start();
+  }
+
+  /**
+   * Reflective call to {@code FirebaseMessaging.getInstance().deleteToken()} so the
+   * SDK keeps working even when only the Firebase classes are present at runtime.
+   */
+  @WorkerThread
+  @SuppressWarnings("unchecked")
+  private void deleteTokenWithClassFirebaseMessaging() throws Exception {
+    Class<?> firebaseMessagingClass = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
+    Method getInstanceMethod = firebaseMessagingClass.getMethod("getInstance");
+    Object instance = getInstanceMethod.invoke(null);
+
+    Method deleteTokenMethod = firebaseMessagingClass.getMethod("deleteToken");
+    Task<Void> deleteTask = (Task<Void>) deleteTokenMethod.invoke(instance);
+    if (deleteTask != null) {
+      Tasks.await(deleteTask);
     }
   }
 

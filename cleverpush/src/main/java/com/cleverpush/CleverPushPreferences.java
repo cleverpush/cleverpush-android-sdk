@@ -16,6 +16,7 @@ public class CleverPushPreferences {
   public static final String SUBSCRIPTION_LANGUAGE = "CleverPush_SUBSCRIPTION_LANGUAGE";
   public static final String SUBSCRIPTION_COUNTRY = "CleverPush_SUBSCRIPTION_COUNTRY";
   public static final String SUBSCRIPTION_CREATED_AT = "CleverPush_SUBSCRIPTION_CREATED_AT";
+  public static final String REGENERATE_PUSH_TOKEN_REQUESTED_AT = "CleverPush_REGENERATE_PUSH_TOKEN_REQUESTED_AT";
   public static final String NOTIFICATIONS = "CleverPush_NOTIFICATIONS"; // deprecated, now using NOTIFICATIONS_JSON
   public static final String NOTIFICATIONS_JSON = "CleverPush_NOTIFICATIONS_JSON";
   public static final String LAST_NOTIFICATION_ID = "CleverPush_LAST_NOTIFICATION_ID";

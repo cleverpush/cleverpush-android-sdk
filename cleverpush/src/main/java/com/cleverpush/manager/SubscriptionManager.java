@@ -12,8 +12,6 @@ public interface SubscriptionManager {
     ADM,
   }
 
-  ;
-
   void subscribe(JSONObject channelConfig, SubscribedCallbackListener callback);
 
   void checkChangedPushToken(JSONObject channelConfig);
