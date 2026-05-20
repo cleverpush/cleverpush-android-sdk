@@ -335,6 +335,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         String newToken = getTokenAttempt(senderId);
         if (newToken == null) {
           Logger.d(LOG_TAG, "regeneratePushToken: no FCM token available yet after regeneration, will retry on next sync.");
+          isRegeneratingPushToken = false;
           return;
         }
 
