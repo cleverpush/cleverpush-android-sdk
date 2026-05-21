@@ -2224,14 +2224,18 @@ public class CleverPush {
                 Logger.e(LOG_TAG, "Error parsing customData for topic.", e);
               }
 
+              Map<String, String> nameTranslationMap = ChannelTopic.parseNameTranslation(topicObject);
+
               ChannelTopic topic = new ChannelTopic(
-                  topicObject.getString("_id"),
-                  topicObject.optString("name"),
-                  topicObject.optString("parentTopic", null),
-                  topicObject.optBoolean("defaultUnchecked", false),
-                  topicObject.optString("fcmBroadcastTopic", null),
-                  topicObject.optString("externalId", null),
-                  customData);
+                      topicObject.getString("_id"),
+                      topicObject.optString("name"),
+                      topicObject.optString("parentTopic", null),
+                      topicObject.optBoolean("defaultUnchecked", false),
+                      topicObject.optString("fcmBroadcastTopic", null),
+                      topicObject.optString("externalId", null),
+                      customData,
+                      topicObject.optBoolean("nameTranslationEnabled", false),
+                      nameTranslationMap);
               topics.add(topic);
             }
           }
@@ -3768,18 +3772,19 @@ public class CleverPush {
   private String getTopicCheckboxText(JSONObject topic) {
     int oneHour = 60 * 60;
     int topicLastChecked = getTopicLastChecked();
+    String displayName = ChannelTopic.resolveLocalizedDisplayName(topic);
     try {
       SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
       simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       Date date = simpleDateFormat.parse(topic.optString("createdAt"));
       int topicCreatedAt = (int) (date.getTime() / 1000);
       if (this.isSubscribed() && topicsDialogShowWhenNewAdded && topicLastChecked > 0 && topicCreatedAt + oneHour > topicLastChecked) {
-        return topic.optString("name") + " ●";
+        return displayName + " ●";
       } else {
-        return topic.optString("name");
+        return displayName;
       }
     } catch (Exception e) {
-      return topic.optString("name");
+      return displayName;
     }
   }
 
