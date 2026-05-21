@@ -18,6 +18,7 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
 
   @Override
   public void subscribe(JSONObject channelConfig, final SubscribedCallbackListener subscribedListener) {
+    this.lastChannelConfig = channelConfig;
     Context context = this.context;
     new Thread(() -> {
       final ADM adm = new ADM(context);
@@ -33,6 +34,6 @@ public class SubscriptionManagerADM extends SubscriptionManagerBase {
 
   @Override
   public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
-
+    this.lastChannelConfig = channelConfig;
   }
 }

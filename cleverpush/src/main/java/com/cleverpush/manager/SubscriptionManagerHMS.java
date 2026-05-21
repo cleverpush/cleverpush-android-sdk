@@ -34,6 +34,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
 
   @Override
   public void subscribe(JSONObject channelConfig, SubscribedCallbackListener subscribedListener) {
+    this.lastChannelConfig = channelConfig;
     this.subscribedListener = subscribedListener;
 
     new Thread(() -> {
@@ -67,6 +68,7 @@ public class SubscriptionManagerHMS extends SubscriptionManagerBase {
 
   @Override
   public void checkChangedPushToken(JSONObject channelConfig, String changedToken) {
+    this.lastChannelConfig = channelConfig;
     SharedPreferencesManager prefManager = new SharedPreferencesManager(this.context);
     String existingToken = prefManager.getString(CleverPushPreferences.HMS_TOKEN, null);
 

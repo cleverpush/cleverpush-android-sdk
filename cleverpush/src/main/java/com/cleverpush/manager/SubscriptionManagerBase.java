@@ -26,12 +26,23 @@ import java.util.Set;
 import java.util.TimeZone;
 
 abstract class SubscriptionManagerBase implements SubscriptionManager {
+  protected volatile JSONObject lastChannelConfig;
   Context context;
   SubscriptionManagerType type;
 
   SubscriptionManagerBase(Context context, SubscriptionManagerType type) {
     this.context = context;
     this.type = type;
+  }
+
+  /**
+   * Hook for platform-specific push-token regeneration. Default is a no-op;
+   * platforms that support deleting/refreshing their push token (e.g. FCM)
+   * should override this and use {@link #lastChannelConfig} to obtain any
+   * platform-specific config (sender id, app id, ...).
+   */
+  protected void regeneratePushToken() {
+    // no-op by default
   }
 
   void syncSubscription(String token, SubscribedCallbackListener subscribedListener) {
@@ -144,14 +155,16 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             long subscriptionCreatedAt = sharedPreferences.getLong(CleverPushPreferences.SUBSCRIPTION_CREATED_AT, 0);
             if (subscriptionCreatedAt == 0 || isSubscriptionChanged) {
               sharedPreferences.edit()
-                  .putLong(CleverPushPreferences.SUBSCRIPTION_CREATED_AT, (int) (System.currentTimeMillis() / 1000L))
-                  .apply();
+                      .putLong(CleverPushPreferences.SUBSCRIPTION_CREATED_AT, (int) (System.currentTimeMillis() / 1000L))
+                      .apply();
             }
             sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, newSubscriptionId).apply();
             sharedPreferences.edit()
-                .putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L))
-                .apply();
+                    .putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L))
+                    .apply();
           }
+
+          handleRegeneratePushTokenRequestedAt(sharedPreferences, responseJson);
           if (responseJson.has("topics")) {
             JSONArray topicsArray = responseJson.getJSONArray("topics");
             List<String> topicIds = new ArrayList<>();
@@ -165,7 +178,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             }
             if (!CleverPush.isSubscribeForTopicsDialog()) {
               sharedPreferences.edit().putStringSet(CleverPushPreferences.SUBSCRIPTION_TOPICS, new HashSet<>(topicIds))
-                  .apply();
+                      .apply();
             } else {
               CleverPush.setIsSubscribeForTopicsDialog(false);
             }
@@ -174,7 +187,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
               int topicsVersion = responseJson.getInt("topicsVersion");
               if (topicsVersion > 0) {
                 sharedPreferences.edit().putInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, topicsVersion)
-                    .apply();
+                        .apply();
               }
             }
           }
@@ -196,7 +209,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
           }
 
           if (newSubscriptionId != null) {
-            subscribedListener.onSuccess(newSubscriptionId);
+            if (subscribedListener != null) {
+              subscribedListener.onSuccess(newSubscriptionId);
+            }
           }
         } catch (Throwable throwable) {
           Logger.e(LOG_TAG, "Error in syncSubscription request's onSuccess.", throwable);
@@ -210,7 +225,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
           syncSubscription(token, subscribedListener, senderId, true);
           return;
         }
-        subscribedListener.onFailure(throwable);
+        if (subscribedListener != null) {
+          subscribedListener.onFailure(throwable);
+        }
         if (throwable != null) {
           Logger.e(LOG_TAG, "Failed while sync subscription request." +
                   "\nStatus code: " + statusCode +
@@ -234,6 +251,54 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
   @Override
   public void checkChangedPushToken(JSONObject channelConfig) {
     this.checkChangedPushToken(channelConfig, null);
+  }
+
+  /**
+   * Handles the {@code regeneratePushTokenRequestedAt} value returned by
+   * {@code /subscription/sync/}. If the server value differs from the
+   * locally stored value, the new value is persisted and
+   * {@link #regeneratePushToken()} is triggered.
+   *
+   * If the field is missing, invalid, or unchanged, no action is taken.
+   */
+  private void handleRegeneratePushTokenRequestedAt(SharedPreferences sharedPreferences, JSONObject responseJson) {
+    try {
+      if (!responseJson.has("regeneratePushTokenRequestedAt")) {
+        return;
+      }
+
+      String serverRequestedAt = responseJson.optString("regeneratePushTokenRequestedAt", null);
+
+      if (serverRequestedAt == null
+              || serverRequestedAt.isEmpty()
+              || "null".equalsIgnoreCase(serverRequestedAt)) {
+        return;
+      }
+
+      String localRequestedAt = sharedPreferences.getString(
+              CleverPushPreferences.REGENERATE_PUSH_TOKEN_REQUESTED_AT,
+              null
+      );
+
+      if (serverRequestedAt.equals(localRequestedAt)) {
+        return;
+      }
+
+      sharedPreferences.edit()
+              .putString(
+                      CleverPushPreferences.REGENERATE_PUSH_TOKEN_REQUESTED_AT,
+                      serverRequestedAt
+              )
+              .apply();
+
+      Logger.d(LOG_TAG, "regeneratePushTokenRequestedAt changed (local=" + localRequestedAt
+              + ", server=" + serverRequestedAt + "), regenerating push token.");
+
+      regeneratePushToken();
+
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error in handleRegeneratePushTokenRequestedAt", e);
+    }
   }
 
 }
