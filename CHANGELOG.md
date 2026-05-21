@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.35.28 (21.05.2026)
+* Improved FCM token sync reliability and stale token recovery
+* Added support for topic name translations in `TopicDialog`
+* Added support for non-blocking in-app banners via `setAppBannersNonBlocking(true)` to allow background interaction while banners are visible
+* Updated Firebase Messaging dependency range to support v25.x versions
+* Added support for FCM push token regeneration by detecting regeneratePushTokenRequestedAt changes
+
 ## 1.35.27 (17.04.2026)
 * Fix FCM token retrieval for latest Firebase and add safe fallback handling
 
