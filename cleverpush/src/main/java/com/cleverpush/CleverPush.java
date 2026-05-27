@@ -22,8 +22,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.service.notification.StatusBarNotification;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -204,6 +207,7 @@ public class CleverPush {
   private boolean showingTopicsDialog = false;
   private boolean confirmAlertShown = false;
   private boolean topicsDialogShowWhenNewAdded = false;
+  private Runnable topicBulkActionsUpdater;
   private InitializeListener initializeListener;
 
   private AddSubscriptionTags addSubscriptionTagsHelper;
@@ -3464,6 +3468,7 @@ public class CleverPush {
           Set<String> selectedTopics = new HashSet<>(instance.getSubscriptionTopics());
           final boolean hasDeSelectAllInitial = this.hasDeSelectAll();
           boolean showUnsubscribeCheckbox = channelConfig.optBoolean("topicsDialogShowUnsubscribe", false);
+          boolean topicsDialogBulkActions = channelConfig.optBoolean("topicsDialogBulkActions", false);
 
           LinearLayout checkboxLayout = getTopicCheckboxLayout();
           LinearLayout parentLayout = getTopicParentLayout();
@@ -3483,6 +3488,11 @@ public class CleverPush {
 
           setTopicCheckboxList(parentLayout, channelTopics, unsubscribeCheckbox, hasDeSelectAll(), getNightModeFlags(),
                   selectedTopics);
+
+          if (topicsDialogBulkActions) {
+            View bulkActionsView = getTopicBulkActionsLayout(parentLayout, unsubscribeCheckbox, getNightModeFlags());
+            checkboxLayout.addView(bulkActionsView);
+          }
 
           checkboxLayout.addView(scrollView);
 
@@ -3538,12 +3548,26 @@ public class CleverPush {
       headerTitle = CleverPush.context.getResources().getString(R.string.topics_dialog_title);
     }
 
+    String saveText = null;
+    if (channelConfig.has("confirmAlertSelectTopicsSaveText")) {
+      try {
+        saveText = channelConfig.getString("confirmAlertSelectTopicsSaveText");
+      } catch (Exception e) {
+        Logger.e(LOG_TAG, "Error while getting save button text from channel config.", e);
+      }
+    }
+
+    if (saveText == null || saveText.isEmpty()) {
+      saveText = CleverPush.context.getResources().getString(R.string.save);
+    }
+
     alertBuilder.setTitle(headerTitle);
     alertBuilder.setView(checkboxLayout);
 
     alertBuilder.setOnDismissListener(dialogInterface -> {
       updateTopicLastCheckedTime();
       showingTopicsDialog = false;
+      topicBulkActionsUpdater = null;
     });
 
     alertBuilder.setNegativeButton(CleverPush.context.getResources().getString(R.string.cancel),
@@ -3559,7 +3583,7 @@ public class CleverPush {
           showingTopicsDialog = false;
         });
 
-    alertBuilder.setPositiveButton(CleverPush.context.getResources().getString(R.string.save), (dialogInterface, i) -> {
+    alertBuilder.setPositiveButton(saveText, (dialogInterface, i) -> {
       if (unsubscribeCheckbox != null && unsubscribeCheckbox.isChecked()) {
         unsubscribe();
         setDeSelectAll(true);
@@ -3627,6 +3651,127 @@ public class CleverPush {
   }
 
   /**
+   * Builds a horizontal "Select All" / "Remove All" header that is displayed above the topic
+   * checkbox list when the channel configuration has {@code topicsDialogBulkActions} enabled.
+   * Both buttons are disabled (greyed out) when their action would be a no-op (all checked /
+   * none checked).
+   */
+  private View getTopicBulkActionsLayout(LinearLayout parentLayout, CheckBox unsubscribeCheckbox,
+                                         int nightModeFlags) {
+    LinearLayout bulkActionsLayout = new LinearLayout(context);
+    LinearLayout.LayoutParams bulkActionsLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    bulkActionsLayoutParams.setMargins(45, 30, 45, 0);
+    bulkActionsLayout.setLayoutParams(bulkActionsLayoutParams);
+    bulkActionsLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+    Button selectAllButton = getTopicBulkActionButton(R.string.select_all, Gravity.START, nightModeFlags);
+    selectAllButton.setOnClickListener(v ->
+        setAllTopicCheckboxesChecked(parentLayout, unsubscribeCheckbox, true));
+
+    Button removeAllButton = getTopicBulkActionButton(R.string.remove_all, Gravity.END, nightModeFlags);
+    removeAllButton.setOnClickListener(v ->
+        setAllTopicCheckboxesChecked(parentLayout, unsubscribeCheckbox, false));
+
+    bulkActionsLayout.addView(selectAllButton);
+    bulkActionsLayout.addView(removeAllButton);
+
+    topicBulkActionsUpdater = () -> {
+      int[] counts = countTopicCheckboxes(parentLayout, unsubscribeCheckbox);
+      int total = counts[0];
+      int checked = counts[1];
+      selectAllButton.setEnabled(total > 0 && checked < total);
+      removeAllButton.setEnabled(checked > 0);
+    };
+    topicBulkActionsUpdater.run();
+
+    return bulkActionsLayout;
+  }
+
+  /**
+   * Creates a borderless {@link Button} used as a bulk action entry inside the topics dialog.
+   * The text color follows the same night-mode adaption as {@link #getTopicCheckbox}, and uses
+   * a {@link ColorStateList} so the disabled state is automatically rendered with a dimmer
+   * color when the button is disabled via {@link Button#setEnabled(boolean)}.
+   */
+  private Button getTopicBulkActionButton(int textResId, int gravity, int nightModeFlags) {
+    Button button = new Button(context);
+    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+        0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+    button.setLayoutParams(params);
+    button.setText(textResId);
+    button.setAllCaps(false);
+    button.setBackground(null);
+    button.setPadding(0, 16, 0, 16);
+    button.setGravity(gravity | Gravity.CENTER_VERTICAL);
+
+    int enabledColor;
+    int disabledColor;
+    if (!this.disableNightModeAdaption && nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+      enabledColor = Color.WHITE;
+      disabledColor = Color.argb(102, 255, 255, 255);
+    } else {
+      enabledColor = button.getCurrentTextColor();
+      disabledColor = Color.argb(102, 0, 0, 0);
+    }
+    ColorStateList textColors = new ColorStateList(
+        new int[][] {
+            new int[] {-android.R.attr.state_enabled},
+            new int[0]
+        },
+        new int[] {disabledColor, enabledColor}
+    );
+    button.setTextColor(textColors);
+    return button;
+  }
+
+  /**
+   * Recursively toggles every topic checkbox under {@code parentLayout} to the given state.
+   * The unsubscribe checkbox (if present) is skipped so that its state is only updated by the
+   * existing {@link #toggleCheckedTopic} side effects.
+   */
+  private void setAllTopicCheckboxesChecked(ViewGroup parentLayout, CheckBox unsubscribeCheckbox,
+                                            boolean checked) {
+    for (int i = 0; i < parentLayout.getChildCount(); i++) {
+      View child = parentLayout.getChildAt(i);
+      if (child instanceof CheckBox) {
+        if (child == unsubscribeCheckbox) {
+          continue;
+        }
+        ((CheckBox) child).setChecked(checked);
+      } else if (child instanceof ViewGroup) {
+        setAllTopicCheckboxesChecked((ViewGroup) child, unsubscribeCheckbox, checked);
+      }
+    }
+  }
+
+  /**
+   * Counts the total number of topic checkboxes (excluding {@code unsubscribeCheckbox}) and how
+   * many of them are currently checked. Returns {@code [total, checked]}.
+   */
+  private int[] countTopicCheckboxes(ViewGroup parentLayout, CheckBox unsubscribeCheckbox) {
+    int total = 0;
+    int checked = 0;
+    for (int i = 0; i < parentLayout.getChildCount(); i++) {
+      View child = parentLayout.getChildAt(i);
+      if (child instanceof CheckBox) {
+        if (child == unsubscribeCheckbox) {
+          continue;
+        }
+        total++;
+        if (((CheckBox) child).isChecked()) {
+          checked++;
+        }
+      } else if (child instanceof ViewGroup) {
+        int[] sub = countTopicCheckboxes((ViewGroup) child, unsubscribeCheckbox);
+        total += sub[0];
+        checked += sub[1];
+      }
+    }
+    return new int[] {total, checked};
+  }
+
+  /**
    * Will create list of checkbox for the topics.
    *
    * @param parentLayout   parent layout to add checkboxes
@@ -3651,6 +3796,10 @@ public class CleverPush {
 
     setupTopicParentCheckboxes(parentLayout, unsubscribeCheckbox, channelTopics, deselectAll, nightModeFlags,
         selectedTopics);
+
+    if (topicBulkActionsUpdater != null) {
+      topicBulkActionsUpdater.run();
+    }
   }
 
   private boolean isTopicCheckboxChecked(Set<String> selectedTopics, JSONObject topic) {
@@ -3711,6 +3860,9 @@ public class CleverPush {
     }
     if (selectedTopics.size() == 0 && unsubscribeCheckbox != null) {
       unsubscribeCheckbox.setChecked(true);
+    }
+    if (topicBulkActionsUpdater != null) {
+      topicBulkActionsUpdater.run();
     }
   }
 

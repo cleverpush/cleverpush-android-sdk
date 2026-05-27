@@ -11,6 +11,8 @@
     <string name="save">Speichern</string>
     <string name="topics_dialog_title">Abonnierte Themen</string>
     <string name="deselect_all">Alles abwählen</string>
+    <string name="select_all">Alle auswählen</string>
+    <string name="remove_all">Alle entfernen</string>
     <string name="geofence_transition_invalid_type">Ungültiger Geofence</string>
     <string name="no_notifications_available">Keine Nachrichten verfügbar</string>
 </resources>
