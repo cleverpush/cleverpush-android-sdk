@@ -3729,18 +3729,40 @@ public class CleverPush {
    * Recursively toggles every topic checkbox under {@code parentLayout} to the given state.
    * The unsubscribe checkbox (if present) is skipped so that its state is only updated by the
    * existing {@link #toggleCheckedTopic} side effects.
+   *
+   * <p>The checkboxes are snapshotted before any state change is applied because each
+   * {@link CheckBox#setChecked(boolean)} call may cascade into
+   * {@link #toggleCheckedTopic} and, when the last selected topic is removed, into the
+   * {@code unsubscribeCheckbox} listener which rebuilds the entire {@code parentLayout} via
+   * {@link #setTopicCheckboxList}. Iterating the live view hierarchy by index in that case
+   * would trigger an {@link IndexOutOfBoundsException} or skip / re-toggle freshly added
+   * children (CP-11581).</p>
    */
   private void setAllTopicCheckboxesChecked(ViewGroup parentLayout, CheckBox unsubscribeCheckbox,
                                             boolean checked) {
+    List<CheckBox> checkboxes = new ArrayList<>();
+    collectTopicCheckboxes(parentLayout, unsubscribeCheckbox, checkboxes);
+    for (CheckBox checkbox : checkboxes) {
+      checkbox.setChecked(checked);
+    }
+  }
+
+  /**
+   * Recursively collects every topic checkbox under {@code parentLayout} (excluding
+   * {@code unsubscribeCheckbox}) into {@code checkboxes}. This snapshot lets bulk actions
+   * iterate without being affected by view-hierarchy mutations triggered by listeners.
+   */
+  private void collectTopicCheckboxes(ViewGroup parentLayout, CheckBox unsubscribeCheckbox,
+                                      List<CheckBox> checkboxes) {
     for (int i = 0; i < parentLayout.getChildCount(); i++) {
       View child = parentLayout.getChildAt(i);
       if (child instanceof CheckBox) {
         if (child == unsubscribeCheckbox) {
           continue;
         }
-        ((CheckBox) child).setChecked(checked);
+        checkboxes.add((CheckBox) child);
       } else if (child instanceof ViewGroup) {
-        setAllTopicCheckboxesChecked((ViewGroup) child, unsubscribeCheckbox, checked);
+        collectTopicCheckboxes((ViewGroup) child, unsubscribeCheckbox, checkboxes);
       }
     }
   }
