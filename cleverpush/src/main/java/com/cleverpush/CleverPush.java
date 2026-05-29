@@ -4675,8 +4675,9 @@ public class CleverPush {
   public void setPianoSegments(String[] segments) {
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.remove(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS).apply();
-    if (segments != null) {
+    if (segments == null) {
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS);
+    } else {
       editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS, new HashSet<>(Arrays.asList(segments)));
     }
     editor.apply();
