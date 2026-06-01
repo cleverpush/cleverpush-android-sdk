@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.29 (01.06.2026)
+* Added a `Select All` / `Remove All` option for topic selections in `TopicDialog`
+* Added `setPianoSegments` method to sync Piano segments to a subscription
+
 ## 1.35.28 (21.05.2026)
 * Improved FCM token sync reliability and stale token recovery
 * Added support for topic name translations in `TopicDialog`
