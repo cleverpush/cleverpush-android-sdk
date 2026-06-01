@@ -4667,4 +4667,20 @@ public class CleverPush {
   public void setAppBannersNonBlocking(boolean appBannersNonBlocking) {
     this.appBannersNonBlocking = appBannersNonBlocking;
   }
+
+  public Set<String> getSubscriptionPianoSegments() {
+    return getSharedPreferences(getContext()).getStringSet(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS, new HashSet<>());
+  }
+
+  public void setPianoSegments(String[] segments) {
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    if (segments == null) {
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS);
+    } else {
+      editor.putStringSet(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS, new HashSet<>(Arrays.asList(segments)));
+    }
+    editor.apply();
+    this.trySubscriptionSync();
+  }
 }

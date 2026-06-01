@@ -97,6 +97,11 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       }
     }
 
+    Set<String> pianoSegments = null;
+    if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS)) {
+      pianoSegments = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS, null);
+    }
+
     JSONObject jsonBody = new JSONObject();
     try {
       if (this.type == SubscriptionManagerType.ADM) {
@@ -133,6 +138,9 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       if (topics != null) {
         jsonBody.put("topics", new JSONArray(topics));
         jsonBody.put("topicsVersion", topicsVersion);
+      }
+      if (pianoSegments != null) {
+        jsonBody.put("pianoSegments", new JSONArray(pianoSegments));
       }
       jsonBody.put("hasNotificationPermission", CleverPush.getInstance(CleverPush.context).areNotificationsEnabled());
     } catch (JSONException e) {
