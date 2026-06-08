@@ -11,7 +11,9 @@ public enum CheckFilterRelation {
   NotEqual,
   Contains,
   NotContains,
-  ContainsSubstring;
+  ContainsSubstring,
+  Exists,
+  NotExists;
 
   private static final Map<String, CheckFilterRelation> relations = new HashMap<>();
 
@@ -24,6 +26,8 @@ public enum CheckFilterRelation {
     relations.put("contains", CheckFilterRelation.Contains);
     relations.put("notContains", CheckFilterRelation.NotContains);
     relations.put("containsSubstring", CheckFilterRelation.ContainsSubstring);
+    relations.put("exists", CheckFilterRelation.Exists);
+    relations.put("notExists", CheckFilterRelation.NotExists);
   }
 
   public static CheckFilterRelation fromString(String raw) {

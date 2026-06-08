@@ -736,7 +736,25 @@ public class AppBannerModule {
         Object attributeValueObj = getCleverPushInstance().getSubscriptionAttribute(attributeId);
         boolean currentMatch = false;
 
-        if (relation == CheckFilterRelation.ContainsSubstring) {
+        if (relation == CheckFilterRelation.Exists
+                || relation == CheckFilterRelation.NotExists) {
+          try {
+            String jsonString = sharedPreferences.getString(
+                    CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES,
+                    new JSONObject().toString()
+            );
+
+            JSONObject attributes = new JSONObject(jsonString);
+            boolean exists = attributes.has(attributeId);
+
+            currentMatch = relation == CheckFilterRelation.Exists
+                    ? exists
+                    : !exists;
+          } catch (JSONException e) {
+            Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing subscription attributes Exists/NotExists relation.", e);
+            currentMatch = relation == CheckFilterRelation.NotExists;
+          }
+        } else if (relation == CheckFilterRelation.ContainsSubstring) {
           if (attributeValueObj instanceof String) {
             currentMatch = ((String) attributeValueObj).contains(compareAttributeValue);
           } else if (attributeValueObj instanceof JSONArray) {
