@@ -754,7 +754,7 @@ public class AppBannerModule {
             currentMatch = !attributes.has(attributeId);
           } catch (JSONException e) {
             Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing subscription attributes for NotExists relation.", e);
-            currentMatch = true;
+            currentMatch = false;
           }
         } else if (relation == CheckFilterRelation.ContainsSubstring) {
           if (attributeValueObj instanceof String) {
