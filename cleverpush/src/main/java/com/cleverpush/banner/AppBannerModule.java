@@ -752,7 +752,7 @@ public class AppBannerModule {
                     : !exists;
           } catch (JSONException e) {
             Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing subscription attributes Exists/NotExists relation.", e);
-            currentMatch = relation == CheckFilterRelation.NotExists;
+            currentMatch = false;
           }
         } else if (relation == CheckFilterRelation.ContainsSubstring) {
           if (attributeValueObj instanceof String) {
