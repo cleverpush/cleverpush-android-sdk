@@ -4795,10 +4795,22 @@ public class CleverPush {
   }
 
   public void markSubscriptionAsTest() {
-    markSubscriptionAsTest(null);
+    setSubscriptionTestStatus(null, true);
   }
 
   public void markSubscriptionAsTest(CompletionFailureListener listener) {
+    setSubscriptionTestStatus(listener, true);
+  }
+
+  public void unmarkSubscriptionAsTest() {
+    setSubscriptionTestStatus(null, false);
+  }
+
+  public void unmarkSubscriptionAsTest(CompletionFailureListener listener) {
+    setSubscriptionTestStatus(listener, false);
+  }
+
+  private void setSubscriptionTestStatus(CompletionFailureListener listener, boolean isTest) {
     try {
       String channelId = getChannelId(context);
       if (isChannelIdInvalid(channelId, "markSubscriptionAsTest"))
@@ -4813,6 +4825,7 @@ public class CleverPush {
       JSONObject jsonBody = new JSONObject();
       jsonBody.put("channelId", channelId);
       jsonBody.put("subscriptionId", subscriptionId);
+      jsonBody.put("isTest", isTest);
 
       String markAsTestPath = "/subscription/mark-as-test";
 
