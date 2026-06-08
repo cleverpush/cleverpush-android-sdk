@@ -736,25 +736,22 @@ public class AppBannerModule {
         Object attributeValueObj = getCleverPushInstance().getSubscriptionAttribute(attributeId);
         boolean currentMatch = false;
 
-        if (relation == CheckFilterRelation.Exists) {
-          String jsonString =
-                  sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, (new JSONObject()).toString());
+        if (relation == CheckFilterRelation.Exists
+                || relation == CheckFilterRelation.NotExists) {
           try {
+            String jsonString = sharedPreferences.getString(
+                    CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES,
+                    new JSONObject().toString()
+            );
+
             JSONObject attributes = new JSONObject(jsonString);
-            currentMatch = attributes.has(attributeId);
+            boolean exists = attributes.has(attributeId);
+
+            currentMatch = relation == CheckFilterRelation.Exists
+                    ? exists
+                    : !exists;
           } catch (JSONException e) {
-            Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing subscription attributes for Exists relation", e);
-            return false;
-          }
-        } else if (relation == CheckFilterRelation.NotExists) {
-          String jsonString =
-                  sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, (new JSONObject()).toString());
-          try {
-            JSONObject attributes = new JSONObject(jsonString);
-            currentMatch = !attributes.has(attributeId);
-          } catch (JSONException e) {
-            Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing subscription attributes for NotExists relation.", e);
-            currentMatch = false;
+            Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing subscription attributes Exists/NotExists relation.", e);
           }
         } else if (relation == CheckFilterRelation.ContainsSubstring) {
           if (attributeValueObj instanceof String) {
