@@ -398,8 +398,8 @@ public class AppBannerModule {
     isBannerRequestRunning = false;
 
     loadBanners(
-            nextRequest.notificationId,
-            nextRequest.channelId
+            nextRequest.getNotificationId(),
+            nextRequest.getChannelId()
     );
   }
 
