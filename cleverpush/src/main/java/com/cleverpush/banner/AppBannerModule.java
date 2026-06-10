@@ -225,11 +225,13 @@ public class AppBannerModule {
     if (fromNotification) {
       if (isLoadingNotificationBanners()) {
         pendingBannerAPI.add(notificationId);
+        isBannerRequestRunning = false;
         return;
       }
       setLoadingNotificationBanners(true);
     } else {
       if (isLoadingDefaultBanners()) {
+        isBannerRequestRunning = false;
         return;
       }
       setLoadingDefaultBanners(true);
@@ -349,7 +351,7 @@ public class AppBannerModule {
           setLoadingNotificationBanners(false);
           processNextBannerRequest(true);
         } else {
-          defaultBannersLoaded = false;
+          defaultBannersLoaded = true;
           setLoadingDefaultBanners(false);
           processNextBannerRequest(false);
         }
