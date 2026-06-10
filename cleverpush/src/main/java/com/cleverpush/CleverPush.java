@@ -640,7 +640,12 @@ public class CleverPush {
           }
 
           if (this.appBannerModule != null && this.getCurrentActivity() != null) {
-            this.appBannerModule.initSession(channelId);
+            String sessionChannelId = this.channelId;
+            if (sessionChannelId == null || sessionChannelId.isEmpty()) {
+              sessionChannelId = getSharedPreferences(getContext())
+                      .getString(CleverPushPreferences.CHANNEL_ID, null);
+            }
+            this.appBannerModule.initSession(sessionChannelId);
           } else if (this.getCurrentActivity() == null) {
             Logger.e(LOG_TAG, "getCurrentActivity() is null");
           }
@@ -4169,6 +4174,7 @@ public class CleverPush {
       editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
       editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
       editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS);
       if (!this.keepTargetingDataOnUnsubscribe) {
         editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
         editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);

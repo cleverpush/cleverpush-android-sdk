@@ -360,7 +360,7 @@ class AppBannerModuleTest {
         Collection<AppBannersListener> bannersListeners = new ArrayList<>();
         bannersListeners.add(appBannersListener);
 
-        doReturn(bannersListeners).when(appBannerModule).getBannersListeners();
+        doReturn(bannersListeners).when(appBannerModule).getNotificationBannersListeners();
         doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
         doReturn(cleverPush).when(appBannerModule).getCleverPushInstance();
         doReturn(true).when(cleverPush).isDevelopmentModeEnabled();
@@ -469,7 +469,7 @@ class AppBannerModuleTest {
 
         appBannerModule.getBanners(appBannersListener, "notificationId");
 
-        assertThat(appBannerModule.getBannersListeners().size()).isEqualTo(1);
+        assertThat(appBannerModule.getNotificationBannersListeners().size()).isEqualTo(1);
         verify(appBannerModule).loadBanners("notificationId", "channelId");
     }
 
