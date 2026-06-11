@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.35.30 (11.06.2027)
+* Added new methods `unmarkSubscriptionAsTest` and `unmarkSubscriptionAsTest(CompletionFailureListener)` to unmark a subscription as test.
+* Added a new Attribute condition type in Targeting for AppBanner: Exists/NotExists
+* Fix app banners not appearing when a banner-carrying push is tapped from the background
+* Fixed an issue in `AppBanner` where, when non-blocking mode was enabled, a gray background was shown instead of the configured background color.
+
 ## 1.35.29 (01.06.2026)
 * Added a `Select All` / `Remove All` option for topic selections in `TopicDialog`
 * Added `setPianoSegments` method to sync Piano segments to a subscription
