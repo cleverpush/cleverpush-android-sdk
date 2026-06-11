@@ -87,9 +87,6 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     }
 
     try {
-      // Only flush the queued listeners once a real host activity is resumed.
-      // The transient NotificationOpenedActivity trampoline calls finish() in onCreate,
-      // so firing listeners against it would bind banners/dialogs to a dying activity.
       if (isValidHostActivity(activity)
           && activityInitializedListeners != null && activityInitializedListeners.size() > 0) {
         for (ActivityInitializedListener listener : activityInitializedListeners) {
@@ -183,9 +180,6 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
   public void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
 
     if (!isValidHostActivity(currentActivity)) {
-      // No real host activity yet (null, finishing, destroyed, or the transient
-      // NotificationOpenedActivity trampoline). Queue the listener so it runs when a
-      // proper activity is resumed instead of binding to a dying activity.
       if (activityInitializedListeners == null) {
         activityInitializedListeners = new ArrayList<>();
       }
@@ -205,10 +199,6 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
       return false;
     }
     if (activity instanceof NotificationOpenedActivity) {
-      // In the default (non-callback) flow this trampoline calls finish() right after
-      // processing the intent, so it is not a usable host - defer until the real activity
-      // resumes. In NotificationOpenedCallbackListener mode it is intentionally kept alive,
-      // so we preserve the previous behavior and treat it as a valid host.
       try {
         if (!CleverPush.getInstance(CleverPush.context).isUsingNotificationOpenedCallbackListener()) {
           return false;
