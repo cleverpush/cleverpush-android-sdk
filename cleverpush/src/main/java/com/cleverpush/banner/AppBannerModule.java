@@ -34,6 +34,7 @@ import com.cleverpush.banner.models.BannerTriggerConditionEventProperty;
 import com.cleverpush.banner.models.BannerTriggerConditionType;
 import com.cleverpush.banner.models.BannerTriggerType;
 import com.cleverpush.banner.models.CheckFilterRelation;
+import com.cleverpush.banner.models.PendingBannerRequest;
 import com.cleverpush.banner.models.PlatformType;
 import com.cleverpush.banner.models.VersionComparison;
 import com.cleverpush.database.DatabaseClient;
@@ -66,6 +67,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -86,13 +88,15 @@ public class AppBannerModule {
   private String channel;
   private long lastSessionTimestamp;
   private int sessions;
-  private boolean loading = false;
+  private boolean loadingDefaultBanners = false;
+  private boolean loadingNotificationBanners = false;
   private Collection<AppBannerPopup> filteredBanners = new ArrayList<>();
   private Collection<AppBannerPopup> pendingBanners = new ArrayList<>();
   private LinkedList<AppBannerPopup> pendingFilteredBanners = new LinkedList<>();
   private Collection<Banner> allBanners = new LinkedList<>();
   private Collection<Banner> allNotificationBanners = new LinkedList<>();
   private Collection<AppBannersListener> bannersListeners = new ArrayList<>();
+  private Collection<AppBannersListener> notificationBannersListeners = new ArrayList<>();
   private boolean trackingEnabled = true;
   HashMap<String, String> currentVoucherCodePlaceholder = new HashMap<>();
   public boolean isInitSessionCalled = false;
@@ -107,6 +111,9 @@ public class AppBannerModule {
   private TriggeredEvent currentEvent = null;
   private AppBannerClosedListener appBannerClosedListener;
   Set<String> shownBanners = new HashSet<>();
+  private final Queue<PendingBannerRequest> pendingBannerRequests = new LinkedList<>();
+  private boolean isBannerRequestRunning = false;
+  private boolean defaultBannersLoaded = false;
 
   private AppBannerModule(String channel, boolean showDrafts, SharedPreferences sharedPreferences,
                           SharedPreferences.Editor editor) {
@@ -198,18 +205,39 @@ public class AppBannerModule {
 
   synchronized void loadBanners(String notificationId, String channelId) {
     if (channelId == null || channelId.isEmpty()) {
-      Logger.w(TAG, "loadBanners: Channel ID is null or empty.");
+      channelId = getCleverPushInstance().getChannelId(getCleverPushInstance().getContext());
+    }
+
+    if (isChannelIdInvalid(channelId, "loadBanners"))
+      return;
+
+    if (isBannerRequestRunning) {
+      pendingBannerRequests.add(
+              new PendingBannerRequest(notificationId, channelId)
+      );
       return;
     }
 
-    if (isLoading()) {
-      if (notificationId != null) {
+    isBannerRequestRunning = true;
+
+    boolean fromNotification = notificationId != null && !notificationId.isEmpty();
+
+    if (fromNotification) {
+      if (isLoadingNotificationBanners()) {
         pendingBannerAPI.add(notificationId);
+        isBannerRequestRunning = false;
+        return;
       }
-      return;
+      setLoadingNotificationBanners(true);
+    } else {
+      if (isLoadingDefaultBanners()) {
+        isBannerRequestRunning = false;
+        return;
+      }
+      setLoadingDefaultBanners(true);
+      defaultBannersLoaded = true;
     }
 
-    setLoading(true);
     String bannersPath = "/channel/" + channelId + "/app-banners?platformName=Android";
     if (getCleverPushInstance().isDevelopmentModeEnabled()) {
       bannersPath += "&t=" + System.currentTimeMillis();
@@ -225,7 +253,6 @@ public class AppBannerModule {
     CleverPushHttpClient.getWithRetry(bannersPath, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
-        setLoading(false);
         allBanners = new LinkedList<>();
         allNotificationBanners = new LinkedList<>();
         try {
@@ -289,15 +316,17 @@ public class AppBannerModule {
             allBanners.addAll(bannerList);
           }
 
-          for (AppBannersListener listener : getBannersListeners()) {
-            if (finalFromNotification) {
+          if (finalFromNotification) {
+            for (AppBannersListener listener : new ArrayList<>(getNotificationBannersListeners())) {
               listener.ready(allNotificationBanners);
-            } else {
+            }
+            notificationBannersListeners = new ArrayList<>();
+          } else {
+            for (AppBannersListener listener : getBannersListeners()) {
               listener.ready(allBanners);
             }
+            bannersListeners = new ArrayList<>();
           }
-
-          bannersListeners = new ArrayList<>();
         } catch (Exception ex) {
           Logger.e(TAG, "Error in sorting AppBanners." + ex.getMessage(), ex);
         }
@@ -318,11 +347,26 @@ public class AppBannerModule {
         }
 
         showSilentNotificationBanners();
+        if (finalFromNotification) {
+          setLoadingNotificationBanners(false);
+          processNextBannerRequest(true);
+        } else {
+          defaultBannersLoaded = true;
+          setLoadingDefaultBanners(false);
+          processNextBannerRequest(false);
+        }
       }
 
       @Override
       public void onFailure(int statusCode, String response, Throwable throwable) {
-        setLoading(false);
+        if (finalFromNotification) {
+          setLoadingNotificationBanners(false);
+          processNextBannerRequest(true);
+        } else {
+          defaultBannersLoaded = false;
+          setLoadingDefaultBanners(false);
+          processNextBannerRequest(false);
+        }
         if (throwable != null) {
           Logger.e("CleverPush", "Something went wrong when loading banners." +
                   "\nStatus code: " + statusCode +
@@ -340,12 +384,33 @@ public class AppBannerModule {
     });
   }
 
+  private synchronized void processNextBannerRequest(boolean isBannerFromNotification) {
+    PendingBannerRequest nextRequest =
+            pendingBannerRequests.poll();
+
+    if (nextRequest == null) {
+      isBannerRequestRunning = false;
+
+      if (isBannerFromNotification && !defaultBannersLoaded && !isLoadingDefaultBanners()) {
+        loadBanners(null, channel);
+      }
+      return;
+    }
+
+    isBannerRequestRunning = false;
+
+    loadBanners(
+            nextRequest.getNotificationId(),
+            nextRequest.getChannelId()
+    );
+  }
+
   /**
    * Displays silent notification banners based on stored preferences.
    * Retrieves silent push banner info from preferences, iterates through entries,
    * and shows corresponding banners using showBanner. Updates preferences after each display.
    */
-  private void showSilentNotificationBanners() {
+  void showSilentNotificationBanners() {
     try {
       String silentPushBanners = sharedPreferences.getString(CleverPushPreferences.SILENT_PUSH_APP_BANNER, null);
 
@@ -353,7 +418,11 @@ public class AppBannerModule {
         Type type = new TypeToken<Map<String, String>>() {}.getType();
         Map<String, String> silentPushBannersMap = new Gson().fromJson(silentPushBanners, type);
 
-        for (Map.Entry<String, String> entry : silentPushBannersMap.entrySet()) {
+        if (silentPushBannersMap == null || silentPushBannersMap.isEmpty()) {
+          return;
+        }
+
+        for (Map.Entry<String, String> entry : new ArrayList<>(silentPushBannersMap.entrySet())) {
           String silentNotificationId = entry.getKey();
           String silentBannerId = entry.getValue();
 
@@ -375,6 +444,13 @@ public class AppBannerModule {
                                          String blockId, String screenId, boolean isElementAlreadyClicked, boolean isScreenAlreadyShown) {
     JSONObject jsonBody = getJsonObject();
     try {
+      if (this.channel == null || this.channel.isEmpty()) {
+        this.channel = getCleverPushInstance().getChannelId(getCleverPushInstance().getContext());
+      }
+
+      if (isChannelIdInvalid(this.channel, "sendBannerEvent"))
+        return;
+
       if (this.channel == null || this.channel.isEmpty()) {
         Logger.w(TAG, "sendBannerEvent: Channel ID is null or empty.");
         return;
@@ -432,10 +508,19 @@ public class AppBannerModule {
   }
 
   public void initSession(String channel) {
+    Logger.d("CleverPush", "[Loading banners initSession2");
     initSession(channel, false);
   }
 
   public void initSession(String channel, boolean isChannelIdChanged) {
+    if (channel != null && !channel.isEmpty()) {
+      this.channel = channel;
+    }
+
+    if (isChannelIdInvalid(this.channel, "initSession")) {
+      return;
+    }
+
     if (isInitSessionCalled && !isChannelIdChanged) {
       return;
     }
@@ -443,11 +528,11 @@ public class AppBannerModule {
 
     events.clear();
 
-    this.channel = channel;
     if (!getCleverPushInstance().isDevelopmentModeEnabled()
             && lastSessionTimestamp > 0
             && (System.currentTimeMillis() - lastSessionTimestamp) < MIN_SESSION_LENGTH
             && !isChannelIdChanged) {
+      showSilentNotificationBanners();
       return;
     }
 
@@ -465,6 +550,7 @@ public class AppBannerModule {
     this.saveSessions();
     allBanners = null;
     allNotificationBanners = null;
+    defaultBannersLoaded = false;
     handler.post(this::loadBanners);
 
     this.startup();
@@ -542,7 +628,7 @@ public class AppBannerModule {
     if (notificationId != null) {
       getHandler().post(() -> {
         this.loadBanners(notificationId, channel);
-        bannersListeners.add(listener);
+        notificationBannersListeners.add(listener);
       });
     } else {
       if (getListOfBanners() == null) {
@@ -1723,18 +1809,20 @@ public class AppBannerModule {
         getBanners(banners -> {
           for (Banner banner : banners) {
             if (banner.getId().equals(bannerId)) {
-              AppBannerPopup popup = getAppBannerPopup(banner);
+              getActivityLifecycleListener().setActivityInitializedListener(() -> {
+                AppBannerPopup popup = getAppBannerPopup(banner);
 
-              if (getCleverPushInstance().isAppBannersDisabled()) {
-                pendingBanners.add(popup);
-                break;
-              }
+                if (getCleverPushInstance().isAppBannersDisabled()) {
+                  pendingBanners.add(popup);
+                  return;
+                }
 
-              if (notificationId != null && !notificationId.isEmpty() && banner.getTriggers().size() > 0) {
-                validatePushBannerTrigger(banner, popup, force, appBannerClosedListener, notificationId);
-              } else {
-                getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId));
-              }
+                if (notificationId != null && !notificationId.isEmpty() && banner.getTriggers().size() > 0) {
+                  validatePushBannerTrigger(banner, popup, force, appBannerClosedListener, notificationId);
+                } else {
+                  getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId));
+                }
+              });
               break;
             }
           }
@@ -2129,12 +2217,20 @@ public class AppBannerModule {
     return lastSessionTimestamp;
   }
 
-  public boolean isLoading() {
-    return loading;
+  public boolean isLoadingDefaultBanners() {
+    return loadingDefaultBanners;
   }
 
-  public void setLoading(boolean loading) {
-    this.loading = loading;
+  public void setLoadingDefaultBanners(boolean loadingDefaultBanners) {
+    this.loadingDefaultBanners = loadingDefaultBanners;
+  }
+
+  public boolean isLoadingNotificationBanners() {
+    return loadingNotificationBanners;
+  }
+
+  public void setLoadingNotificationBanners(boolean loadingNotificationBanners) {
+    this.loadingNotificationBanners = loadingNotificationBanners;
   }
 
   public Collection<Banner> getListOfBanners() {
@@ -2161,8 +2257,13 @@ public class AppBannerModule {
     return bannersListeners;
   }
 
+  public Collection<AppBannersListener> getNotificationBannersListeners() {
+    return notificationBannersListeners;
+  }
+
   public void clearBannersListeners() {
     bannersListeners.clear();
+    notificationBannersListeners.clear();
   }
 
   public JSONObject getJsonObject() {
@@ -2290,5 +2391,13 @@ public class AppBannerModule {
 
   public void setAppBannerClosedListener(AppBannerClosedListener appBannerClosedListener) {
     this.appBannerClosedListener = appBannerClosedListener;
+  }
+
+  private boolean isChannelIdInvalid(String channelId, String methodName) {
+    if (channelId == null || channelId.isEmpty()) {
+      Logger.w(TAG, methodName + ": Channel ID is null or empty.");
+      return true;
+    }
+    return false;
   }
 }

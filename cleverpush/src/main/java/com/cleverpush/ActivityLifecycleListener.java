@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -86,7 +87,8 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     }
 
     try {
-      if (activityInitializedListeners != null && activityInitializedListeners.size() > 0) {
+      if (isValidHostActivity(activity)
+          && activityInitializedListeners != null && activityInitializedListeners.size() > 0) {
         for (ActivityInitializedListener listener : activityInitializedListeners) {
           listener.initialized();
         }
@@ -177,7 +179,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
   public void setActivityInitializedListener(ActivityInitializedListener activityInitializedListener) {
 
-    if (currentActivity == null) {
+    if (!isValidHostActivity(currentActivity)) {
       if (activityInitializedListeners == null) {
         activityInitializedListeners = new ArrayList<>();
       }
@@ -185,6 +187,33 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     } else {
       activityInitializedListener.initialized();
     }
+  }
+
+  /**
+   * Determines whether the given activity is a valid host for showing UI (banners, dialogs, etc.).
+   * The CleverPush NotificationOpenedActivity is a trampoline that finishes itself immediately,
+   * so it must not be treated as a usable host.
+   */
+  static boolean isValidHostActivity(Activity activity) {
+    if (activity == null) {
+      return false;
+    }
+    if (activity instanceof NotificationOpenedActivity) {
+      try {
+        if (!CleverPush.getInstance(CleverPush.context).isUsingNotificationOpenedCallbackListener()) {
+          return false;
+        }
+      } catch (Throwable ignored) {
+        return false;
+      }
+    }
+    if (activity.isFinishing()) {
+      return false;
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed()) {
+      return false;
+    }
+    return true;
   }
 
   @Nullable

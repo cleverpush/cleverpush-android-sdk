@@ -69,6 +69,8 @@ public class AppBannerPopup {
 
   private final int TAB_LAYOUT_DEFAULT_HEIGHT = 48;
   private final int MAIN_LAYOUT_PADDING = 15;
+  private static final int MAX_SHOW_RETRIES = 50;
+  private static final long SHOW_RETRY_DELAY_MS = 100L;
   private final Handler mainHandler;
   private Activity activity;
   private final Banner data;
@@ -79,9 +81,6 @@ public class AppBannerPopup {
   public FrameLayout frameLayout;
   public  ConstraintLayout parent;
   private ImageView bannerBackGroundImage;
-  private int currentStatusBarColor;
-  private int currentNavigationBarColor;
-  private boolean isNotchColorChange = false;
 
   private AppBannerOpenedListener openedListener;
   int currentDisplayedPagePosition;
@@ -95,7 +94,8 @@ public class AppBannerPopup {
     this.activity = activity;
     this.data = data;
 
-    mainHandler = new CustomExceptionHandler(activity.getMainLooper());
+    Looper looper = activity != null ? activity.getMainLooper() : Looper.getMainLooper();
+    mainHandler = new CustomExceptionHandler(looper);
   }
 
   private static SpringForce getDefaultForce(float finalValue) {
@@ -257,7 +257,7 @@ public class AppBannerPopup {
     if (!isInitialized) {
       throw new IllegalStateException("Must be initialized");
     }
-    new tryShowSafe().execute();
+    new tryShowSafe(0).execute();
   }
 
   public void dismiss() {
@@ -755,21 +755,26 @@ public class AppBannerPopup {
   }
 
   public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
+    private final int attempt;
+
+    public tryShowSafe(int attempt) {
+      this.attempt = attempt;
+    }
+
     @Override
     protected Boolean doInBackground(String... strings) {
       if (isRootReady()) {
         return true;
       }
-      // Only reschedule if the activity is still valid (not finishing/destroyed)
-      if (activity != null
-          && !activity.isFinishing()
-          && (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1 || !activity.isDestroyed())) {
+      if (attempt < MAX_SHOW_RETRIES) {
         new Timer().schedule(new TimerTask() {
           @Override
           public void run() {
-            new tryShowSafe().execute();
+            new tryShowSafe(attempt + 1).execute();
           }
-        }, 100);
+        }, SHOW_RETRY_DELAY_MS);
+      } else {
+        Logger.i(TAG, "AppBanner not shown: no valid host activity became available after retries.");
       }
       return false;
     }
