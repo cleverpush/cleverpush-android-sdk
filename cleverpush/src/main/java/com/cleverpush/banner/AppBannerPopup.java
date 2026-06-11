@@ -233,6 +233,10 @@ public class AppBannerPopup {
         parent.setAlpha(0.0f);
       }
 
+      if (isNonBlockingAppBanners) {
+        parent.setBackgroundColor(Color.TRANSPARENT);
+      }
+
       bannerBackGroundImage.setVisibility(View.VISIBLE);
       composeBackground(bannerBackGroundImage, body, data.getBackground());
     }
