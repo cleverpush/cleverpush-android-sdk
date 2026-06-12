@@ -25,6 +25,9 @@ public class BannerButtonBlock extends BannerBlock {
   private List<BannerBlockScreen> blockScreens;
   private String family = null;
   private String id;
+  private int borderWidth;
+  private String borderColor;
+  private String borderStyle;
 
   private BannerButtonBlock() {
   }
@@ -81,6 +84,18 @@ public class BannerButtonBlock extends BannerBlock {
     return id;
   }
 
+  public int getBorderWidth() {
+    return borderWidth;
+  }
+
+  public String getBorderColor() {
+    return borderColor;
+  }
+
+  public String getBorderStyle() {
+    return borderStyle;
+  }
+
   public static BannerButtonBlock createButtonBlock(JSONObject json) throws JSONException {
     BannerButtonBlock buttonBlock = new BannerButtonBlock();
 
@@ -107,6 +122,9 @@ public class BannerButtonBlock extends BannerBlock {
     buttonBlock.radius = json.optInt("radius");
     buttonBlock.action = BannerAction.create(json.getJSONObject("action"));
     buttonBlock.blockScreens = new LinkedList<>();
+    buttonBlock.borderWidth = json.optInt("borderWidth");
+    buttonBlock.borderColor = json.optString("borderColor");
+    buttonBlock.borderStyle = json.optString("borderStyle");
 
     if (json.has("screens")) {
       JSONArray blockArray = json.getJSONArray("screens");
