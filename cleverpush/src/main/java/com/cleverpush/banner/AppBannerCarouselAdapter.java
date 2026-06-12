@@ -15,6 +15,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
+import android.os.Build;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -408,7 +409,7 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     boolean isDashed = borderStyle != null && borderStyle.equalsIgnoreCase("dashed");
     boolean isDotted = borderStyle != null && borderStyle.equalsIgnoreCase("dotted");
 
-    if (isDashed || isDotted) {
+    if ((isDashed || isDotted) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       button.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
       GradientDrawable borderDrawable = new GradientDrawable();
