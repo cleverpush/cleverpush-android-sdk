@@ -597,6 +597,10 @@ public class AppBannerModule {
           continue;
         }
 
+        if (!isBannerRelativeToDeliveryAllowed(banner)) {
+          continue;
+        }
+
         if (!isBannerTargetingAllowed(banner)) {
           continue;
         }
@@ -657,6 +661,79 @@ public class AppBannerModule {
     return banner.getStopAtType() != BannerStopAtType.SpecificTime
         || banner.getStopAt() == null
         || banner.getStopAt().after(now);
+  }
+
+  boolean isBannerRelativeToDeliveryAllowed(Banner banner) {
+    if (banner == null) {
+      return false;
+    }
+
+    if (banner.getStopAtType() != BannerStopAtType.RelativeToDelivery
+            || banner.getStopAtRelativeDays() <= 0) {
+      return true;
+    }
+
+    Long deliveryDate = getBannerDeliveryDate(banner);
+    if (deliveryDate == null) {
+      return true;
+    }
+
+    long expiresAt = deliveryDate + TimeUnit.DAYS.toMillis(banner.getStopAtRelativeDays());
+    return System.currentTimeMillis() < expiresAt;
+  }
+
+  private void saveBannerDeliveryDate(Banner banner) {
+    if (banner == null
+            || banner.getStopAtType() != BannerStopAtType.RelativeToDelivery
+            || banner.getStopAtRelativeDays() <= 0) {
+      return;
+    }
+
+    try {
+      JSONObject deliveryDates = getBannerDeliveryDates();
+
+      if (!deliveryDates.has(banner.getId())) {
+        deliveryDates.put(banner.getId(), System.currentTimeMillis());
+
+        sharedPreferences.edit()
+                .putString(CleverPushPreferences.APP_BANNER_DELIVERY_DATES, deliveryDates.toString())
+                .apply();
+      }
+
+    } catch (Exception e) {
+      Logger.e(TAG, "Failed saving banner delivery date", e);
+    }
+  }
+
+  private Long getBannerDeliveryDate(Banner banner) {
+    if (banner == null) {
+      return null;
+    }
+
+    try {
+      JSONObject deliveryDates = getBannerDeliveryDates();
+
+      if (!deliveryDates.has(banner.getId())) {
+        return null;
+      }
+
+      return deliveryDates.getLong(banner.getId());
+
+    } catch (Exception e) {
+      Logger.e(TAG, "getBannerDeliveryDate: Failed reading banner delivery date", e);
+      return null;
+    }
+  }
+
+  private JSONObject getBannerDeliveryDates() {
+    try {
+      String data = sharedPreferences.getString(CleverPushPreferences.APP_BANNER_DELIVERY_DATES, "{}");
+
+      return new JSONObject(data);
+
+    } catch (Exception e) {
+      return new JSONObject();
+    }
   }
 
   boolean isBannerTargetingAllowed(Banner banner) {
@@ -1988,6 +2065,11 @@ public class AppBannerModule {
           return;
         }
 
+        if (!isBannerRelativeToDeliveryAllowed(banner)) {
+          Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: RelativeToDelivery " + banner.getStopAtRelativeDays() + " days");
+          return;
+        }
+
         if (!isBannerTargetingAllowed(banner)) {
           Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting not allowed");
           return;
@@ -2160,6 +2242,8 @@ public class AppBannerModule {
     if (getCurrentActivity() == null) {
       return;
     }
+
+    saveBannerDeliveryDate(banner);
 
     SharedPreferences sharedPreferences =
         getCurrentActivity().getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);

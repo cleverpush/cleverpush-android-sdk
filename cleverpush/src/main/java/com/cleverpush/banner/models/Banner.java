@@ -74,6 +74,7 @@ public class Banner {
   private int everyXDays;
   private BannerAttributesLogicType attributesLogic = BannerAttributesLogicType.And;
   private List<BannerOSTarget> osTarget;
+  private int stopAtRelativeDays;
 
   private Banner() {
   }
@@ -300,6 +301,10 @@ public class Banner {
 
   public BannerAttributesLogicType getAttributesLogic() {
     return attributesLogic;
+  }
+
+  public int getStopAtRelativeDays() {
+    return stopAtRelativeDays;
   }
 
   public List<BannerOSTarget> getOsTarget() {
@@ -539,6 +544,7 @@ public class Banner {
       }
     }
 
+    banner.stopAtRelativeDays = json.optInt("stopAtRelativeDays");
     return banner;
   }
 

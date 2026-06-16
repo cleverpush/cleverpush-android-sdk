@@ -4876,4 +4876,40 @@ public class CleverPush {
     editor.apply();
     this.trySubscriptionSync();
   }
+
+  public void clearAllBannerDeliveryDates() {
+    try {
+      getSharedPreferences(getContext())
+              .edit()
+              .remove(CleverPushPreferences.APP_BANNER_DELIVERY_DATES)
+              .apply();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Failed clearing banner delivery dates", e);
+    }
+  }
+
+  public void clearBannerDeliveryDate(String bannerId) {
+    if (bannerId == null || bannerId.isEmpty()) {
+      return;
+    }
+
+    try {
+      SharedPreferences preferences = getSharedPreferences(getContext());
+
+      String data = preferences.getString(CleverPushPreferences.APP_BANNER_DELIVERY_DATES, "{}");
+
+      JSONObject deliveryDates = new JSONObject(data);
+
+      if (deliveryDates.has(bannerId)) {
+        deliveryDates.remove(bannerId);
+
+        preferences.edit()
+                .putString(CleverPushPreferences.APP_BANNER_DELIVERY_DATES, deliveryDates.toString())
+                .apply();
+      }
+
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Failed clearing banner delivery date for bannerId: " + bannerId, e);
+    }
+  }
 }
