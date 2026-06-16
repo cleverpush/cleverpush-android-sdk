@@ -2239,11 +2239,11 @@ public class AppBannerModule {
   }
 
   void setBannerIsShown(Banner banner) {
+    saveBannerDeliveryDate(banner);
+
     if (getCurrentActivity() == null) {
       return;
     }
-
-    saveBannerDeliveryDate(banner);
 
     SharedPreferences sharedPreferences =
         getCurrentActivity().getSharedPreferences(APP_BANNER_SHARED_PREFS, Context.MODE_PRIVATE);
