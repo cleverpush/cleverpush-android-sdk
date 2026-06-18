@@ -45,7 +45,11 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
     try {
       return getTokenWithClassFirebaseMessaging();
-    } catch (ExecutionException | InterruptedException e) {
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      Logger.e(LOG_TAG, "FirebaseMessaging.getToken() interrupted", e);
+      return null;
+    } catch (ExecutionException e) {
       if (isServiceNotAvailable(e)) {
         throw new IOException(ERROR_SERVICE_NOT_AVAILABLE);
       }
