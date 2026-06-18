@@ -1,6 +1,9 @@
 -keep class com.cleverpush.** { *; }
 -dontwarn com.cleverpush.**
 
+# NotificationServiceExtension
+-keep class * implements com.cleverpush.NotificationServiceExtension { *; }
+
 # Firebase
 -keep class com.google.firebase.messaging.FirebaseMessaging { *; }
 -keep class com.google.firebase.iid.FirebaseInstanceId { *; }
