@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.35.31 (25.06.2027)
+* Added a Proguard rule for `NotificationServiceExtension`.
+* Added support for RelativeToDelivery expiration for `AppBanner`, along with `clearAllBannerDeliveryDates()` and `clearBannerDeliveryDate(bannerId)` methods to clear stored delivery data.
+* Added configurable button borders for AppBanner, including border width, color, and styles (solid, dashed, dotted).
+
 ## 1.35.30 (11.06.2027)
 * Added new methods `unmarkSubscriptionAsTest` and `unmarkSubscriptionAsTest(CompletionFailureListener)` to unmark a subscription as test.
 * Added a new Attribute condition type in Targeting for AppBanner: Exists/NotExists
