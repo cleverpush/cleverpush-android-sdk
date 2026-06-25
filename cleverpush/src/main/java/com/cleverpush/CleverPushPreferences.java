@@ -49,5 +49,6 @@ public class CleverPushPreferences {
   public static final String APP_BANNER_PER_SESSION = "CleverPush_APP_BANNER_PER_SESSION";
   public static final String INBOX_VIEW_NOTIFICATION_OPENED = "CleverPush_INBOX_VIEW_NOTIFICATION_OPENED";
   public static final String SUBSCRIPTION_PIANO_SEGMENTS = "CleverPush_SUBSCRIPTION_PIANO_SEGMENTS";
+  public static final String APP_BANNER_DELIVERY_DATES = "CleverPush_APP_BANNER_DELIVERY_DATES";
 
 }
