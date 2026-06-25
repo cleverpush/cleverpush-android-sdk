@@ -11,7 +11,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
+import android.os.Build;
 import android.net.Uri;
 import android.text.Spanned;
 import android.util.Base64;
@@ -40,7 +43,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
-import com.cleverpush.banner.AppBannerCarouselAdapter;
 import com.cleverpush.banner.AppBannerWebViewClient;
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.banner.models.Banner;
@@ -230,7 +232,10 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
       backgroundColor = block.getBackground();
     }
     bg.setColor(ColorUtils.parseColor(backgroundColor));
-    button.setBackground(bg);
+
+    Drawable buttonBackground = applyBorder(button, bg, block, backgroundColor);
+
+    button.setBackground(buttonBackground);
 
     if (block.getAction() != null) {
       button.setOnClickListener(view -> this.onClickListener(block.getAction()));
@@ -254,6 +259,48 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     });
 
     body.addView(button);
+  }
+
+  private Drawable applyBorder(Button button, GradientDrawable bg, BannerButtonBlock block, String backgroundColor) {
+    int borderWidth = block.getBorderWidth();
+    if (borderWidth <= 0) {
+      return bg;
+    }
+
+    String borderColor = block.getBorderColor();
+    int strokeColor;
+    if (borderColor != null && !borderColor.isEmpty()) {
+      strokeColor = ColorUtils.parseColor(borderColor);
+    } else {
+      strokeColor = Color.WHITE;
+    }
+
+    int strokeWidthPx = Math.round(borderWidth * getPXScale());
+    float cornerRadius = block.getRadius() * getPXScale();
+
+    String borderStyle = block.getBorderStyle();
+    boolean isDashed = borderStyle != null && borderStyle.equalsIgnoreCase("dashed");
+    boolean isDotted = borderStyle != null && borderStyle.equalsIgnoreCase("dotted");
+
+    if ((isDashed || isDotted) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      button.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
+      GradientDrawable borderDrawable = new GradientDrawable();
+      borderDrawable.setShape(GradientDrawable.RECTANGLE);
+      borderDrawable.setColor(Color.TRANSPARENT);
+      borderDrawable.setCornerRadius(cornerRadius);
+      if (isDashed) {
+        borderDrawable.setStroke(strokeWidthPx, strokeColor, strokeWidthPx * 3f, strokeWidthPx * 2f);
+      } else {
+        borderDrawable.setStroke(strokeWidthPx, strokeColor, strokeWidthPx, strokeWidthPx);
+      }
+
+      return new LayerDrawable(new Drawable[] {bg, borderDrawable});
+    }
+
+    // solid (default)
+    bg.setStroke(strokeWidthPx, strokeColor);
+    return bg;
   }
 
   private void composeTextBlock(LinearLayout body, BannerTextBlock block, int position) {
