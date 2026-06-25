@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.ExecutionException;
 
 public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
@@ -44,6 +45,16 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
     try {
       return getTokenWithClassFirebaseMessaging();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      Logger.e(LOG_TAG, "FirebaseMessaging.getToken() interrupted", e);
+      return null;
+    } catch (ExecutionException e) {
+      if (isServiceNotAvailable(e)) {
+        throw new IOException(ERROR_SERVICE_NOT_AVAILABLE);
+      }
+      Logger.e(LOG_TAG, "FirebaseMessaging.getToken() failed", e);
+      return null;
     } catch (Exception e) {
       Logger.e(LOG_TAG, "FirebaseMessaging.getToken not found, attempting to use FirebaseInstanceId.getToken", e);
     }
@@ -59,6 +70,17 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     }
 
     return null;
+  }
+
+  private boolean isServiceNotAvailable(Throwable throwable) {
+    Throwable current = throwable;
+    while (current != null) {
+      if (ERROR_SERVICE_NOT_AVAILABLE.equals(current.getMessage())) {
+        return true;
+      }
+      current = current.getCause();
+    }
+    return false;
   }
 
   private void initFirebaseApp(String senderId) {

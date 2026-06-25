@@ -1,10 +1,11 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
     namespace 'com.cleverpush.cleverpush_example_android'
-    compileSdkVersion 33
+    compileSdkVersion 34
 
     defaultConfig {
         applicationId "com.cleverpush.cleverpush_example_android"
@@ -15,12 +16,12 @@ android {
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-       /* //add this options
-        javaCompileOptions {
-            annotationProcessorOptions {
-                includeCompileClasspath = true
-            }
-        }*/
+        /* //add this options
+         javaCompileOptions {
+             annotationProcessorOptions {
+                 includeCompileClasspath = true
+             }
+         }*/
     }
 
     buildTypes {

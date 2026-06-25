@@ -1,13 +1,13 @@
 buildscript {
     ext {
         buildVersions = [
-                compileSdkVersion: 33,
+                compileSdkVersion: 34,
         ]
         androidGradlePluginVersion = '8.1.4'
         googleServicesGradlePluginVersion = '4.3.3'
         huaweiAgconnectVersion = '1.2.1.301'
         huaweiHmsPushVersion = '4.0.3.301'
-        kotlinVersion = '1.5.20'
+        kotlinVersion = '1.9.22'
         jacocoVersion = '0.8.10'
     }
 
