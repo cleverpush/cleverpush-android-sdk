@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.cleverpush">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -104,4 +105,15 @@
     <uses-permission android:name="me.everything.badger.permission.BADGE_COUNT_WRITE" />
 
     <!-- End: ShortcutBadger -->
+
+    <!-- START: Beacons / BLE monitoring -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
+    <!-- End: Beacons / BLE monitoring -->
 </manifest>

@@ -41,6 +41,8 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 
 import com.cleverpush.banner.AppBannerModule;
+import com.cleverpush.beacon.BeaconConfig;
+import com.cleverpush.beacon.BeaconManager;
 import com.cleverpush.database.DatabaseClient;
 import com.cleverpush.database.TableBannerTrackEvent;
 import com.cleverpush.listener.ActivityInitializedListener;
@@ -48,6 +50,7 @@ import com.cleverpush.listener.AppBannerClosedListener;
 import com.cleverpush.listener.AppBannerOpenedListener;
 import com.cleverpush.listener.AppBannerShownListener;
 import com.cleverpush.listener.AppBannersListener;
+import com.cleverpush.listener.BeaconDetectedListener;
 import com.cleverpush.listener.ChannelAttributesListener;
 import com.cleverpush.listener.ChannelConfigListener;
 import com.cleverpush.listener.ChannelTagsListener;
@@ -227,6 +230,7 @@ public class CleverPush {
   public static BroadcastReceiver broadcastReceiverHandler = new BroadcastReceiverHandler();
   private PendingIntent geofencePendingIntent;
   private GeofencingClient geofencingClient;
+  private BeaconDetectedListener pendingBeaconDetectedListener;
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
@@ -1335,6 +1339,174 @@ public class CleverPush {
         Logger.d(LOG_TAG, "GoogleApiClient onConnectionSuspended");
       }
     };
+  }
+
+  public void onBeaconDetected(BeaconDetectedListener listener) {
+    this.pendingBeaconDetectedListener = listener;
+    try {
+      BeaconManager.getInstance(getContext()).setBeaconDetectedListener(listener);
+    } catch (Throwable t) {
+      Logger.e(LOG_TAG, "Error setting beacon detected listener.", t);
+    }
+  }
+
+  /**
+   * Enables debug beacon scanning to log all BLE advertisements.
+   * For diagnostics only; disable in production. Call before {@link #initBeacons()}.
+   */
+  public void setBeaconDebugScanAll(boolean enabled) {
+    try {
+      BeaconManager.getInstance(getContext()).setDebugScanAllBeacons(enabled);
+    } catch (Throwable t) {
+      Logger.e(LOG_TAG, "Error setting beacon debug scan mode.", t);
+    }
+  }
+
+  /**
+   * Optional: sets how many minutes to wait before the same beacon
+   * can trigger again in the same app session.
+   *
+   * @param intervalMinutes wait time in minutes (0 = every detection)
+   */
+  public void setBeaconEventInterval(long intervalMinutes) {
+    try {
+      long intervalMs = intervalMinutes <= 0 ? 0L : intervalMinutes * 60_000L;
+      BeaconManager.getInstance(getContext()).setCooldownMs(intervalMs);
+    } catch (Throwable t) {
+      Logger.e(LOG_TAG, "Error setting beacon event interval.", t);
+    }
+  }
+
+  /**
+   * Starts beacon monitoring and automatically handles
+   * setup, permissions, and scanning configuration.
+   */
+  public void initBeacons() {
+    initBeacons(getCurrentActivity());
+  }
+
+  public void initBeacons(Activity dialogActivity) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+      Logger.w(LOG_TAG, "initBeacons: BLE scanning requires Android 5.0 (API 21) or higher.");
+      return;
+    }
+
+    BeaconManager beaconManager = BeaconManager.getInstance(getContext());
+    if (this.pendingBeaconDetectedListener != null) {
+      beaconManager.setBeaconDetectedListener(this.pendingBeaconDetectedListener);
+    }
+
+    if (!beaconManager.isBleSupported()) {
+      Logger.w(LOG_TAG, "initBeacons: This device does not support Bluetooth Low Energy.");
+      return;
+    }
+
+    if (hasBeaconPermissions()) {
+      startBeaconMonitoring();
+      return;
+    }
+
+    if (dialogActivity == null) {
+      getActivityLifecycleListener().setActivityInitializedListener(() -> initBeacons(getCurrentActivity()));
+      return;
+    }
+
+    requestBeaconPermissions(dialogActivity);
+  }
+
+  private void startBeaconMonitoring() {
+    getChannelConfig(config -> {
+      try {
+        List<BeaconConfig> beacons = BeaconConfig.listFromConfig(config);
+        if (beacons.isEmpty()) {
+          Logger.d(LOG_TAG, "initBeacons: no beacons configured for this channel.");
+          return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+          BeaconManager.getInstance(getContext()).start(beacons);
+        }
+      } catch (Throwable t) {
+        Logger.e(LOG_TAG, "Error starting beacon monitoring.", t);
+      }
+    });
+  }
+
+  public String[] getRequiredBeaconPermissions() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      // ACCESS_FINE_LOCATION is required in addition to the Bluetooth permissions: beacon
+      // advertisements are on Android's BLE location denylist and are only delivered to scanners
+      // that hold location permission (we do not use neverForLocation).
+      return new String[] {
+          "android.permission.BLUETOOTH_SCAN",
+          "android.permission.BLUETOOTH_CONNECT",
+          Manifest.permission.ACCESS_FINE_LOCATION
+      };
+    }
+    return new String[] {Manifest.permission.ACCESS_FINE_LOCATION};
+  }
+
+  public boolean hasBeaconPermissions() {
+    for (String permission : getRequiredBeaconPermissions()) {
+      if (ContextCompat.checkSelfPermission(getContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private void requestBeaconPermissions(Activity dialogActivity) {
+    String[] missing = getMissingBeaconPermissions();
+    if (missing.length == 0) {
+      startBeaconMonitoring();
+      return;
+    }
+    requestPermissions(dialogActivity, missing, new PermissionActivity.PermissionCallback() {
+      @Override
+      public void onGrant() {
+        Logger.d(LOG_TAG, "initBeacons: beacon permissions granted.");
+        startBeaconMonitoring();
+      }
+
+      @Override
+      public void onDeny() {
+        Logger.d(LOG_TAG, "initBeacons: beacon permissions denied by user. Monitoring not started. "
+            + "Call initBeacons() again to retry (e.g. after explaining why it is needed).");
+      }
+    });
+  }
+
+  private String[] getMissingBeaconPermissions() {
+    List<String> missing = new ArrayList<>();
+    for (String permission : getRequiredBeaconPermissions()) {
+      if (ContextCompat.checkSelfPermission(getContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+        missing.add(permission);
+      }
+    }
+    return missing.toArray(new String[0]);
+  }
+
+  private void requestPermissions(Activity dialogActivity, String[] permissionTypes,
+                                  PermissionActivity.PermissionCallback callback) {
+    try {
+      if (dialogActivity == null || dialogActivity.getClass().equals(PermissionActivity.class)) {
+        return;
+      }
+      if (permissionTypes == null || permissionTypes.length == 0) {
+        return;
+      }
+
+      Logger.d(LOG_TAG, "Requesting permissions: " + Arrays.toString(permissionTypes));
+
+      PermissionActivity.registerAsCallback(PermissionActivity.keyFor(permissionTypes), callback);
+
+      Intent intent = new Intent(dialogActivity, PermissionActivity.class);
+      intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+      intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+      intent.putExtra(PermissionActivity.INTENT_EXTRA_PERMISSION_TYPES, permissionTypes);
+      dialogActivity.startActivity(intent);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Exception during multi-permission request.", e);
+    }
   }
 
   public void trackPageView(String url) {

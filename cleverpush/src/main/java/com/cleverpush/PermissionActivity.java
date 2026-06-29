@@ -2,7 +2,6 @@ package com.cleverpush;
 
 import static com.cleverpush.Constants.LOG_TAG;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -24,18 +23,24 @@ public class PermissionActivity extends Activity implements ActivityCompat.OnReq
   }
 
   public static final String INTENT_EXTRA_PERMISSION_TYPE = "PERMISSION_TYPE";
+  public static final String INTENT_EXTRA_PERMISSION_TYPES = "PERMISSION_TYPES";
   private static final int PERMISSION_REQUEST_CODE = 100;
   private static final String TAG = PermissionActivity.class.getCanonicalName();
 
   private static final HashMap<String, PermissionCallback> callbackMap = new HashMap<>();
 
-  private String permissionType;
+  private String[] permissionTypes;
+  private String callbackKey;
 
   public static void registerAsCallback(
       @NonNull String permissionType,
       @NonNull PermissionCallback callback
   ) {
     callbackMap.put(permissionType, callback);
+  }
+
+  public static String keyFor(@NonNull String[] permissionTypes) {
+    return android.text.TextUtils.join(",", permissionTypes);
   }
 
   @Override
@@ -51,28 +56,51 @@ public class PermissionActivity extends Activity implements ActivityCompat.OnReq
   }
 
   private void requestPermission(Bundle extras) {
-    permissionType = extras.getString(INTENT_EXTRA_PERMISSION_TYPE);
-    ActivityCompat.requestPermissions(this, new String[] {permissionType}, PERMISSION_REQUEST_CODE);
+    if (extras == null) {
+      finish();
+      return;
+    }
+    String[] types = extras.getStringArray(INTENT_EXTRA_PERMISSION_TYPES);
+    if (types == null) {
+      String single = extras.getString(INTENT_EXTRA_PERMISSION_TYPE);
+      if (single == null) {
+        finish();
+        return;
+      }
+      types = new String[] {single};
+    }
+    permissionTypes = types;
+    callbackKey = keyFor(types);
+    ActivityCompat.requestPermissions(this, permissionTypes, PERMISSION_REQUEST_CODE);
   }
 
   @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     if (requestCode == PERMISSION_REQUEST_CODE) {
-      boolean isGranted = ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED;
+      boolean allGranted = true;
+      for (String permission : permissionTypes) {
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+          allGranted = false;
+          break;
+        }
+      }
       Logger.d(LOG_TAG, "onRequestPermissionsResult: " + permissions.length + " " + grantResults.length);
 
-      PermissionCallback callback = callbackMap.get(permissionType);
+      PermissionCallback callback = callbackMap.get(callbackKey);
+      if (callback == null && permissionTypes.length == 1) {
+        callback = callbackMap.get(permissionTypes[0]);
+      }
       if (callback == null) {
-        Logger.w(LOG_TAG, "onRequestPermissionsResult: Missing callback for permissionType: " + permissionType);
+        Logger.w(LOG_TAG, "onRequestPermissionsResult: Missing callback for permissionType: " + callbackKey);
         finish();
         return;
       }
 
-      if (isGranted) {
-        Logger.d(LOG_TAG, "Permission granted: " + permissionType);
+      if (allGranted) {
+        Logger.d(LOG_TAG, "Permission granted: " + callbackKey);
         callback.onGrant();
       } else {
-        Logger.d(LOG_TAG, "Permission denied: " + permissionType);
+        Logger.d(LOG_TAG, "Permission denied: " + callbackKey);
         callback.onDeny();
       }
     }
