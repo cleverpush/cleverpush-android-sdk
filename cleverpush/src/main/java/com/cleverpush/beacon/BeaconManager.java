@@ -99,6 +99,7 @@ public class BeaconManager {
   public void setCooldownMs(long cooldownMs) {
     if (cooldownMs >= 0) {
       this.cooldownMs = cooldownMs;
+      lastTriggeredAt.clear();
     }
   }
 
@@ -131,6 +132,9 @@ public class BeaconManager {
 
       if (configBeacons.isEmpty()) {
         Logger.d(LOG_TAG, "BeaconManager: no beacons configured in channel config, skipping start.");
+        if (started) {
+          stop();
+        }
         return;
       }
 
@@ -170,6 +174,7 @@ public class BeaconManager {
     started = false;
     handler.removeCallbacksAndMessages(null);
     stopScanInternal();
+    lastTriggeredAt.clear();
     Logger.d(LOG_TAG, "BeaconManager: stopped monitoring.");
   }
 
@@ -531,7 +536,7 @@ public class BeaconManager {
   @SuppressWarnings("MissingPermission")
   private void onEnterForeground() {
     foreground = true;
-    if (retriggerOnForeground) {
+    if (retriggerOnForeground && cooldownMs == FIRE_ONCE_COOLDOWN_MS) {
       lastTriggeredAt.clear();
     }
     if (!isStarted()) {

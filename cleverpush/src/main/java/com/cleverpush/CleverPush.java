@@ -1406,7 +1406,8 @@ public class CleverPush {
       return;
     }
 
-    if (dialogActivity == null) {
+    if (dialogActivity == null || dialogActivity instanceof PermissionActivity) {
+      Logger.d(LOG_TAG, "initBeacons: no usable host activity yet, deferring until an Activity is resumed.");
       getActivityLifecycleListener().setActivityInitializedListener(() -> initBeacons(getCurrentActivity()));
       return;
     }

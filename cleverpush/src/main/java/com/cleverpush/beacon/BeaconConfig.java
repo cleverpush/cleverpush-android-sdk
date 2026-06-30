@@ -33,6 +33,9 @@ public class BeaconConfig {
       return null;
     }
     String uuid = json.optString("uuid", null);
+    if (uuid != null) {
+      uuid = uuid.trim();
+    }
     if (uuid == null || uuid.isEmpty()) {
       return null;
     }
