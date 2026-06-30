@@ -231,6 +231,7 @@ public class CleverPush {
   private PendingIntent geofencePendingIntent;
   private GeofencingClient geofencingClient;
   private BeaconDetectedListener pendingBeaconDetectedListener;
+  private boolean beaconInitDeferred = false;
   private String authorizerToken;
   private boolean isSubscriptionChanged = false;
   private IabTcfMode iabTcfMode = null;
@@ -1406,9 +1407,16 @@ public class CleverPush {
       return;
     }
 
-    if (dialogActivity == null || dialogActivity instanceof PermissionActivity) {
+    if (!ActivityLifecycleListener.isValidHostActivity(dialogActivity)) {
+      if (beaconInitDeferred) {
+        return;
+      }
+      beaconInitDeferred = true;
       Logger.d(LOG_TAG, "initBeacons: no usable host activity yet, deferring until an Activity is resumed.");
-      getActivityLifecycleListener().setActivityInitializedListener(() -> initBeacons(getCurrentActivity()));
+      getActivityLifecycleListener().setActivityInitializedListener(() -> {
+        beaconInitDeferred = false;
+        initBeacons(getCurrentActivity());
+      });
       return;
     }
 

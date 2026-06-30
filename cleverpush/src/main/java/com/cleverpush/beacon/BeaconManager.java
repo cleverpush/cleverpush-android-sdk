@@ -13,7 +13,10 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
@@ -65,6 +68,9 @@ public class BeaconManager {
   private boolean debugScanAllBeacons = false;
   private boolean foregroundTransitionState = false;
   private boolean retriggerOnForeground = true;
+  private boolean monitoringRequested = false;
+  private boolean bluetoothReceiverRegistered = false;
+  private BroadcastReceiver bluetoothStateReceiver;
 
   private BeaconManager(Context context) {
     this.appContext = context.getApplicationContext();
@@ -143,39 +149,115 @@ public class BeaconManager {
         return;
       }
 
-      BluetoothAdapter adapter = getBluetoothAdapter();
-      if (adapter == null || !adapter.isEnabled()) {
-        Logger.w(LOG_TAG, "BeaconManager: Bluetooth is disabled. Monitoring will start once it is enabled and start() is called again.");
-        return;
-      }
-
-      scanner = adapter.getBluetoothLeScanner();
-      if (scanner == null) {
-        Logger.w(LOG_TAG, "BeaconManager: BluetoothLeScanner unavailable.");
-        return;
-      }
-
+      monitoringRequested = true;
       registerLifecycleCallbacks();
+      registerBluetoothStateReceiver();
 
-      if (isStarted()) {
-        Logger.d(LOG_TAG, "BeaconManager: already started, refreshed " + configBeacons.size() + " beacon(s).");
-        return;
-      }
-
-      started = true;
-      Logger.d(LOG_TAG, "BeaconManager: started monitoring " + configBeacons.size() + " beacon(s).");
-      scheduleScanCycle(0);
+      beginScanningIfPossible();
     } catch (Throwable t) {
       Logger.e(LOG_TAG, "BeaconManager: error during start.", t);
     }
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+  private synchronized void beginScanningIfPossible() {
+    if (!monitoringRequested || configBeacons.isEmpty()) {
+      return;
+    }
+
+    BluetoothAdapter adapter = getBluetoothAdapter();
+    if (adapter == null || !adapter.isEnabled()) {
+      Logger.w(LOG_TAG, "BeaconManager: Bluetooth is disabled. Monitoring will start automatically once Bluetooth is enabled.");
+      return;
+    }
+
+    scanner = adapter.getBluetoothLeScanner();
+    if (scanner == null) {
+      Logger.w(LOG_TAG, "BeaconManager: BluetoothLeScanner unavailable.");
+      return;
+    }
+
+    if (isStarted()) {
+      Logger.d(LOG_TAG, "BeaconManager: already started, refreshed " + configBeacons.size() + " beacon(s).");
+      return;
+    }
+
+    started = true;
+    Logger.d(LOG_TAG, "BeaconManager: started monitoring " + configBeacons.size() + " beacon(s).");
+    scheduleScanCycle(0);
+  }
+
   public synchronized void stop() {
+    started = false;
+    monitoringRequested = false;
+    handler.removeCallbacksAndMessages(null);
+    stopScanInternal();
+    unregisterBluetoothStateReceiver();
+    lastTriggeredAt.clear();
+    Logger.d(LOG_TAG, "BeaconManager: stopped monitoring.");
+  }
+
+  private void registerBluetoothStateReceiver() {
+    if (bluetoothReceiverRegistered) {
+      return;
+    }
+    try {
+      bluetoothStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+          if (intent == null || !BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
+            return;
+          }
+          if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return;
+          }
+          int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+          if (state == BluetoothAdapter.STATE_ON) {
+            onBluetoothTurnedOn();
+          } else if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_TURNING_OFF) {
+            onBluetoothTurnedOff();
+          }
+        }
+      };
+      IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+      appContext.registerReceiver(bluetoothStateReceiver, filter);
+      bluetoothReceiverRegistered = true;
+    } catch (Throwable t) {
+      Logger.e(LOG_TAG, "BeaconManager: failed to register Bluetooth state receiver.", t);
+    }
+  }
+
+  private void unregisterBluetoothStateReceiver() {
+    if (!bluetoothReceiverRegistered) {
+      return;
+    }
+    try {
+      appContext.unregisterReceiver(bluetoothStateReceiver);
+    } catch (Throwable t) {
+      Logger.e(LOG_TAG, "BeaconManager: failed to unregister Bluetooth state receiver.", t);
+    } finally {
+      bluetoothReceiverRegistered = false;
+      bluetoothStateReceiver = null;
+    }
+  }
+
+  @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+  private synchronized void onBluetoothTurnedOn() {
+    if (!monitoringRequested || isStarted()) {
+      return;
+    }
+    Logger.d(LOG_TAG, "BeaconManager: Bluetooth enabled - resuming beacon monitoring.");
+    beginScanningIfPossible();
+  }
+
+  private synchronized void onBluetoothTurnedOff() {
+    if (!isStarted()) {
+      return;
+    }
+    Logger.d(LOG_TAG, "BeaconManager: Bluetooth disabled - pausing beacon scanning until it is re-enabled.");
     started = false;
     handler.removeCallbacksAndMessages(null);
     stopScanInternal();
-    lastTriggeredAt.clear();
-    Logger.d(LOG_TAG, "BeaconManager: stopped monitoring.");
   }
 
   private void scheduleScanCycle(long delayMs) {
@@ -239,8 +321,10 @@ public class BeaconManager {
       ScanSettings settings = buildScanSettings();
       scanner.startScan(filters, settings, scanCallback);
       scanning = true;
-      Logger.d(LOG_TAG, "BeaconManager: scan window started (foreground=" + foreground
-              + ", filters=" + (filters == null ? "none/all" : String.valueOf(filters.size())) + ").");
+      if (debugScanAllBeacons) {
+        Logger.d(LOG_TAG, "BeaconManager: scan window started (foreground=" + foreground
+                + ", filters=" + (filters == null ? "none/all" : String.valueOf(filters.size())) + ").");
+      }
     } catch (Throwable t) {
       Logger.e(LOG_TAG, "BeaconManager: failed to start scan.", t);
     }
