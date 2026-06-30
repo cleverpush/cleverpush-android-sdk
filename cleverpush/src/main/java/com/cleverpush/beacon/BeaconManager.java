@@ -138,7 +138,7 @@ public class BeaconManager {
 
       if (configBeacons.isEmpty()) {
         Logger.d(LOG_TAG, "BeaconManager: no beacons configured in channel config, skipping start.");
-        if (started) {
+        if (started || monitoringRequested) {
           stop();
         }
         return;
@@ -620,7 +620,7 @@ public class BeaconManager {
   @SuppressWarnings("MissingPermission")
   private void onEnterForeground() {
     foreground = true;
-    if (retriggerOnForeground && cooldownMs == FIRE_ONCE_COOLDOWN_MS) {
+    if (retriggerOnForeground) {
       lastTriggeredAt.clear();
     }
     if (!isStarted()) {
