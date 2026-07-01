@@ -248,10 +248,7 @@ public class NotificationDataProcessor {
         return;
       }
 
-      if (!Boolean.TRUE.equals(notification.getBypassConditions())) {
-        return;
-      }
-
+      boolean shouldBypass = Boolean.TRUE.equals(notification.getBypassConditions());
       String notificationId = notification.getId();
 
       Type type = new TypeToken<Map<String, Boolean>>() {
@@ -261,6 +258,16 @@ public class NotificationDataProcessor {
       if (storedJson != null) {
         bypassMap = new Gson().fromJson(storedJson, type);
       }
+
+      if (!shouldBypass) {
+        if (bypassMap != null && bypassMap.remove(notificationId) != null) {
+          sharedPreferences.edit()
+              .putString(CleverPushPreferences.NOTIFICATION_BANNER_BYPASS_CONDITIONS, new Gson().toJson(bypassMap, type))
+              .apply();
+        }
+        return;
+      }
+
       if (bypassMap == null) {
         bypassMap = new HashMap<>();
       }
