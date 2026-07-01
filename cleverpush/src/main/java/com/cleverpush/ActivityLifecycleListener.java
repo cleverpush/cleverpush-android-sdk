@@ -198,6 +198,9 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     if (activity == null) {
       return false;
     }
+    if (activity instanceof PermissionActivity) {
+      return false;
+    }
     if (activity instanceof NotificationOpenedActivity) {
       try {
         if (!CleverPush.getInstance(CleverPush.context).isUsingNotificationOpenedCallbackListener()) {
