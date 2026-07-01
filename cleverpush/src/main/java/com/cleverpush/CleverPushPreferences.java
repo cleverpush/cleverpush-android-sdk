@@ -20,6 +20,7 @@ public class CleverPushPreferences {
   public static final String NOTIFICATIONS = "CleverPush_NOTIFICATIONS"; // deprecated, now using NOTIFICATIONS_JSON
   public static final String NOTIFICATIONS_JSON = "CleverPush_NOTIFICATIONS_JSON";
   public static final String LAST_NOTIFICATION_ID = "CleverPush_LAST_NOTIFICATION_ID";
+  public static final String NOTIFICATION_BANNER_BYPASS_CONDITIONS = "CleverPush_NOTIFICATION_BANNER_BYPASS_CONDITIONS";
   public static final String LAST_CLICKED_NOTIFICATION_ID = "CleverPush_LAST_CLICKED_NOTIFICATION_ID";
   public static final String LAST_CLICKED_NOTIFICATION_TIME = "CleverPush_LAST_CLICKED_NOTIFICATION_TIME";
   public static final String APP_OPENS = "CleverPush_APP_OPENS";

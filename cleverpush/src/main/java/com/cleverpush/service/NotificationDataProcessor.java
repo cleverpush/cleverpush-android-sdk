@@ -65,6 +65,8 @@ public class NotificationDataProcessor {
     SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(CleverPush.context);
     SharedPreferences.Editor editor = sharedPreferences.edit();
 
+    storeBannerBypassCondition(sharedPreferences, notification);
+
     // default behaviour: do not show notification if application is in the foreground
     // ways to bypass this:
     // - use NotificationReceivedCallbackListener and return false
@@ -237,6 +239,46 @@ public class NotificationDataProcessor {
     }
 
     return true;
+  }
+
+  private static void storeBannerBypassCondition(SharedPreferences sharedPreferences, Notification notification) {
+    try {
+      String appBanner = notification.getAppBanner();
+      if (appBanner == null || appBanner.isEmpty()) {
+        return;
+      }
+
+      boolean shouldBypass = Boolean.TRUE.equals(notification.getBypassConditions());
+      String notificationId = notification.getId();
+
+      Type type = new TypeToken<Map<String, Boolean>>() {
+      }.getType();
+      String storedJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_BANNER_BYPASS_CONDITIONS, null);
+      Map<String, Boolean> bypassMap = null;
+      if (storedJson != null) {
+        bypassMap = new Gson().fromJson(storedJson, type);
+      }
+
+      if (!shouldBypass) {
+        if (bypassMap != null && bypassMap.remove(notificationId) != null) {
+          sharedPreferences.edit()
+              .putString(CleverPushPreferences.NOTIFICATION_BANNER_BYPASS_CONDITIONS, new Gson().toJson(bypassMap, type))
+              .apply();
+        }
+        return;
+      }
+
+      if (bypassMap == null) {
+        bypassMap = new HashMap<>();
+      }
+
+      bypassMap.put(notificationId, true);
+      sharedPreferences.edit()
+          .putString(CleverPushPreferences.NOTIFICATION_BANNER_BYPASS_CONDITIONS, new Gson().toJson(bypassMap, type))
+          .apply();
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error storing banner bypassConditions flag", e);
+    }
   }
 
   private static void handleSilentNotificationBanner(Notification notification, SharedPreferences sharedPreferences,
