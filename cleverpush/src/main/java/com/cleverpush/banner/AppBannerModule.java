@@ -1908,9 +1908,54 @@ public class AppBannerModule {
     });
   }
 
+  boolean shouldBypassBannerConditions(String notificationId) {
+    if (notificationId == null || notificationId.isEmpty()) {
+      return false;
+    }
+    try {
+      String storedJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_BANNER_BYPASS_CONDITIONS, null);
+      if (storedJson == null) {
+        return false;
+      }
+      Type type = new TypeToken<Map<String, Boolean>>() {
+      }.getType();
+      Map<String, Boolean> bypassMap = new Gson().fromJson(storedJson, type);
+      return bypassMap != null && Boolean.TRUE.equals(bypassMap.get(notificationId));
+    } catch (Exception e) {
+      Logger.e(TAG, "Error reading banner bypassConditions flag", e);
+      return false;
+    }
+  }
+
+  void removeBannerBypassCondition(String notificationId) {
+    if (notificationId == null || notificationId.isEmpty()) {
+      return;
+    }
+    try {
+      String storedJson = sharedPreferences.getString(CleverPushPreferences.NOTIFICATION_BANNER_BYPASS_CONDITIONS, null);
+      if (storedJson == null) {
+        return;
+      }
+      Type type = new TypeToken<Map<String, Boolean>>() {
+      }.getType();
+      Map<String, Boolean> bypassMap = new Gson().fromJson(storedJson, type);
+      if (bypassMap == null || !bypassMap.containsKey(notificationId)) {
+        return;
+      }
+      bypassMap.remove(notificationId);
+      editor.putString(CleverPushPreferences.NOTIFICATION_BANNER_BYPASS_CONDITIONS, new Gson().toJson(bypassMap, type));
+      editor.apply();
+    } catch (Exception e) {
+      Logger.e(TAG, "Error clearing banner bypassConditions flag", e);
+    }
+  }
+
   private void validatePushBannerTrigger(Banner banner, AppBannerPopup popup, boolean force, AppBannerClosedListener appBannerClosedListener, String notificationId) {
     boolean triggers = false, isTriggerCondition = false, isTargetEvent = false;
     int delaySeconds = 0;
+
+    boolean bypassConditions = shouldBypassBannerConditions(notificationId);
+
     if (banner.getTriggerType() == BannerTriggerType.Conditions) {
       isTriggerCondition = true;
       for (BannerTrigger trigger : banner.getTriggers()) {
@@ -1967,7 +2012,7 @@ public class AppBannerModule {
     }
 
     boolean targetEvents = true;
-    if (banner.getEventFilters() != null && banner.getEventFilters().size() > 0) {
+    if (!bypassConditions && banner.getEventFilters() != null && banner.getEventFilters().size() > 0) {
       isTargetEvent = true;
       for (BannerTargetEvent bannerTargetEvent : banner.getEventFilters()) {
         boolean targetConditionTrue;
@@ -2070,7 +2115,8 @@ public class AppBannerModule {
           return;
         }
 
-        if (!isBannerTargetingAllowed(banner)) {
+        boolean bypassConditions = shouldBypassBannerConditions(notificationId);
+        if (!bypassConditions && !isBannerTargetingAllowed(banner)) {
           Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: Targeting not allowed");
           return;
         }
@@ -2102,6 +2148,8 @@ public class AppBannerModule {
 
       bannerPopup.init();
       bannerPopup.show();
+
+      removeBannerBypassCondition(notificationId);
 
       sharedPreferences.edit().putBoolean(CleverPushPreferences.APP_BANNER_SHOWING_IN_PROGRESS, true).apply();
 

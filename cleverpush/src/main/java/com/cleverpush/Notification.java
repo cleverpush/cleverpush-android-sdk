@@ -56,6 +56,8 @@ public class Notification implements Serializable {
   String voucherCode;
   @SerializedName("autoHandleDeepLink")
   Boolean autoHandleDeepLink;
+  @SerializedName("bypassConditions")
+  Boolean bypassConditions;
 
   Boolean read = false;
   Boolean fromApi = false;
@@ -277,6 +279,10 @@ public class Notification implements Serializable {
     return autoHandleDeepLink != null && autoHandleDeepLink;
   }
 
+  public Boolean getBypassConditions() {
+    return bypassConditions;
+  }
+
   public String getCurrentDate() {
     try {
       SimpleDateFormat dateFormat;
@@ -332,6 +338,7 @@ public class Notification implements Serializable {
     copiedNotification.extender = this.extender;
     copiedNotification.rawPayload = this.rawPayload;
     copiedNotification.requestId = this.requestId;
+    copiedNotification.bypassConditions = this.bypassConditions;
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
       copiedNotification.notificationChannel = this.notificationChannel;
     }
