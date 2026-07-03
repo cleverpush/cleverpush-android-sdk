@@ -107,10 +107,10 @@ public class AppBannerModule {
   private Set<String> bannerDeliveredList = new HashSet<>();
   public String currentEventId = null;
   Set<String> currentNotificationDeeplink = new HashSet<>();
-  boolean isBannerFromNotification = false;
   private TriggeredEvent currentEvent = null;
   private AppBannerClosedListener appBannerClosedListener;
   Set<String> shownBanners = new HashSet<>();
+  private final Map<String, PendingPushBannerValidation> pendingPushBannerValidations = new HashMap<>();
   private final Queue<PendingBannerRequest> pendingBannerRequests = new LinkedList<>();
   private boolean isBannerRequestRunning = false;
   private boolean defaultBannersLoaded = false;
@@ -244,7 +244,6 @@ public class AppBannerModule {
     }
     boolean FromNotification = false;
     if (notificationId != null && !notificationId.isEmpty()) {
-      isBannerFromNotification = true;
       FromNotification = true;
       bannersPath += "&notificationId=" + notificationId;
     }
@@ -253,8 +252,11 @@ public class AppBannerModule {
     CleverPushHttpClient.getWithRetry(bannersPath, new CleverPushHttpClient.ResponseHandler() {
       @Override
       public void onSuccess(String response) {
-        allBanners = new LinkedList<>();
-        allNotificationBanners = new LinkedList<>();
+        if (finalFromNotification) {
+          allNotificationBanners = new LinkedList<>();
+        } else {
+          allBanners = new LinkedList<>();
+        }
         try {
           JSONObject responseJson = new JSONObject(response);
           JSONArray rawBanners = responseJson.getJSONArray("banners");
@@ -569,7 +571,24 @@ public class AppBannerModule {
     events.add(event);
     currentEventId = event.getId();
     currentEvent = event;
+    revalidatePendingPushBanners();
     this.startup();
+  }
+
+  private void revalidatePendingPushBanners() {
+    List<PendingPushBannerValidation> pendingValidations;
+    synchronized (pendingPushBannerValidations) {
+      if (pendingPushBannerValidations.isEmpty()) {
+        return;
+      }
+      pendingValidations = new ArrayList<>(pendingPushBannerValidations.values());
+      pendingPushBannerValidations.clear();
+    }
+
+    for (PendingPushBannerValidation pending : pendingValidations) {
+      validatePushBannerTrigger(pending.banner, getAppBannerPopup(pending.banner), pending.force,
+          pending.appBannerClosedListener, pending.notificationId);
+    }
   }
 
   public void getBannerList(AppBannersListener listener, String channelId) {
@@ -1143,7 +1162,10 @@ public class AppBannerModule {
       }
 
       if (condition.getEventProperties() == null || condition.getEventProperties().size() == 0) {
-        return true;
+        if (triggeredEvent.getProperties() == null || triggeredEvent.getProperties().isEmpty()) {
+          return true;
+        }
+        continue;
       }
 
       boolean conditionTrue = true;
@@ -1174,8 +1196,10 @@ public class AppBannerModule {
     for (BannerTriggerCondition triggerCondition : triggers) {
       if (currentEvent.getId() != null && currentEvent.getId().equals(triggerCondition.getEvent())) {
         if (triggerCondition.getEventProperties() == null || triggerCondition.getEventProperties().isEmpty()) {
-          currentEventMatches = true;
-          break;
+          currentEventMatches = currentEvent.getProperties() == null || currentEvent.getProperties().isEmpty();
+          if (currentEventMatches) {
+            break;
+          }
         } else {
           if (currentEvent.getProperties() != null) {
             boolean conditionTrue = true;
@@ -1714,13 +1738,7 @@ public class AppBannerModule {
 
       if (!contains) {
         getActivityLifecycleListener().setActivityInitializedListener(
-            () -> {
-              if (isBannerFromNotification) {
-                isBannerFromNotification = false;
-              } else {
-                filteredBanners.add(new AppBannerPopup(getCurrentActivity(), banner));
-              }
-            });
+            () -> filteredBanners.add(new AppBannerPopup(getCurrentActivity(), banner)));
       }
     }
   }
@@ -2057,11 +2075,15 @@ public class AppBannerModule {
     if (isTriggerCondition && isTargetEvent) {
       if (!targetEvents || !triggers) {
         Logger.d(TAG, "Skipping Notification Banner " + banner.getId() + " because: Trigger and Target Event not satisfied " + sessions);
+        if (!triggers) {
+          queuePendingPushBannerValidation(banner, force, appBannerClosedListener, notificationId);
+        }
         return;
       }
     } else if (isTriggerCondition) {
       if (!triggers) {
         Logger.d(TAG, "Skipping Notification Banner " + banner.getId() + " because: Trigger not satisfied " + sessions);
+        queuePendingPushBannerValidation(banner, force, appBannerClosedListener, notificationId);
         return;
       }
     } else if (isTargetEvent) {
@@ -2081,6 +2103,52 @@ public class AppBannerModule {
     } else {
       long delay = banner.getStartAt().getTime() - now.getTime();
       getHandler().postDelayed(() -> getHandler().post(() -> showBanner(popup, force, appBannerClosedListener, notificationId)), delay + (1000L * delaySeconds));
+    }
+  }
+
+  private void queuePendingPushBannerValidation(Banner banner, boolean force,
+                                                AppBannerClosedListener appBannerClosedListener, String notificationId) {
+    if (!hasEventTriggerCondition(banner)) {
+      return;
+    }
+    synchronized (pendingPushBannerValidations) {
+      pendingPushBannerValidations.put(banner.getId(),
+          new PendingPushBannerValidation(banner, force, appBannerClosedListener, notificationId));
+    }
+    Logger.d(TAG, "Queued Notification Banner " + banner.getId() + " for re-validation once its trigger event is tracked");
+  }
+
+  private boolean hasEventTriggerCondition(Banner banner) {
+    if (banner.getTriggerType() != BannerTriggerType.Conditions || banner.getTriggers() == null) {
+      return false;
+    }
+    for (BannerTrigger trigger : banner.getTriggers()) {
+      if (trigger.getConditions() == null) {
+        continue;
+      }
+      for (BannerTriggerCondition condition : trigger.getConditions()) {
+        if (condition.getType() != null
+            && condition.getType().equals(BannerTriggerConditionType.Event)
+            && condition.getEvent() != null) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private static class PendingPushBannerValidation {
+    final Banner banner;
+    final boolean force;
+    final AppBannerClosedListener appBannerClosedListener;
+    final String notificationId;
+
+    PendingPushBannerValidation(Banner banner, boolean force,
+                                AppBannerClosedListener appBannerClosedListener, String notificationId) {
+      this.banner = banner;
+      this.force = force;
+      this.appBannerClosedListener = appBannerClosedListener;
+      this.notificationId = notificationId;
     }
   }
 
