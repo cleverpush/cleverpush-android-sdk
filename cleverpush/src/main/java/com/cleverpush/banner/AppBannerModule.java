@@ -111,6 +111,7 @@ public class AppBannerModule {
   private AppBannerClosedListener appBannerClosedListener;
   Set<String> shownBanners = new HashSet<>();
   private final Map<String, PendingPushBannerValidation> pendingPushBannerValidations = new HashMap<>();
+  private final Set<String> pushValidatedBannerIds = Collections.synchronizedSet(new HashSet<>());
   private final Queue<PendingBannerRequest> pendingBannerRequests = new LinkedList<>();
   private boolean isBannerRequestRunning = false;
   private boolean defaultBannersLoaded = false;
@@ -1737,6 +1738,10 @@ public class AppBannerModule {
       }
 
       if (!contains) {
+        if (pushValidatedBannerIds.remove(banner.getId())) {
+          Logger.d(TAG, "Skipping Banner " + banner.getId() + " because: already scheduled via push notification");
+          continue;
+        }
         getActivityLifecycleListener().setActivityInitializedListener(
             () -> filteredBanners.add(new AppBannerPopup(getCurrentActivity(), banner)));
       }
@@ -2092,6 +2097,8 @@ public class AppBannerModule {
         return;
       }
     }
+
+    pushValidatedBannerIds.add(banner.getId());
 
     Date now = new Date();
     if (banner.getStartAt().before(now)) {
