@@ -753,23 +753,40 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
     return Math.max(Math.min(screenWidth / 400.0f, 10f), 1.0f);
   }
 
-  private void fixFullscreenHtmlBannerUI(LinearLayout body, ConstraintLayout webLayout, WebView webView) {
-    DisplayMetrics displayMetrics = new DisplayMetrics();
-    activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+  private int getBannerHostWidthPx() {
+    if (activity != null) {
+      View decor = activity.getWindow().getDecorView();
+      if (decor.getWidth() > 0) {
+        return decor.getWidth();
+      }
+    }
+    return Resources.getSystem().getDisplayMetrics().widthPixels;
+  }
 
-    int screenWidth = displayMetrics.widthPixels;
-    int screenHeight = displayMetrics.heightPixels;
+  private int getBannerHostHeightPx() {
+    if (activity != null) {
+      View decor = activity.getWindow().getDecorView();
+      if (decor.getHeight() > 0) {
+        return decor.getHeight();
+      }
+    }
+    return Resources.getSystem().getDisplayMetrics().heightPixels;
+  }
+
+  private void fixFullscreenHtmlBannerUI(LinearLayout body, ConstraintLayout webLayout, WebView webView) {
+    int hostWidth = getBannerHostWidthPx();
+    int hostHeight = getBannerHostHeightPx();
 
     ConstraintSet constraintSet = new ConstraintSet();
     constraintSet.clone(webLayout);
-    constraintSet.constrainMinHeight(R.id.webView, screenHeight);
+    constraintSet.constrainMinHeight(R.id.webView, hostHeight);
     constraintSet.applyTo(webLayout);
 
     body.setPadding(0, 0, 0, 0);
 
     ViewGroup.LayoutParams layoutParams = webView.getLayoutParams();
-    layoutParams.width = screenWidth;
-    layoutParams.height = screenHeight;
+    layoutParams.width = hostWidth;
+    layoutParams.height = hostHeight;
     webView.setLayoutParams(layoutParams);
 
     appBannerPopup.getViewPager2().getChildAt(0).setOverScrollMode(View.OVER_SCROLL_NEVER);
@@ -942,6 +959,16 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
             "    } catch (e) {}\n" +
             "  }\n" +
             "  function scheduleMeasure() { setTimeout(measureCleverPushBanner, 50); }\n" +
+            "  var measureTimeout;\n" +
+            "  function debouncedMeasure() {\n" +
+            "    if (measureTimeout) { clearTimeout(measureTimeout); }\n" +
+            "    measureTimeout = setTimeout(measureCleverPushBanner, 50);\n" +
+            "  }\n" +
+            "  if (typeof MutationObserver !== 'undefined' && document.body) {\n" +
+            "    var observer = new MutationObserver(debouncedMeasure);\n" +
+            "    observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });\n" +
+            "    setTimeout(function() { observer.disconnect(); }, 15000);\n" +
+            "  }\n" +
             "  if (document.readyState === 'complete') {\n" +
             "    scheduleMeasure();\n" +
             "  } else {\n" +
@@ -966,13 +993,13 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
    * viewport for "position: fixed" rendering without forcing the popup to fullscreen.
    */
   private void applyNonBlockingBannerUI(LinearLayout body, ConstraintLayout webLayout, WebView webView) {
-    int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+    int hostHeight = getBannerHostHeightPx();
     boolean isFullScreenBanner =
         appBannerPopup != null
             && appBannerPopup.getData() != null
             && "full".equalsIgnoreCase(appBannerPopup.getData().getPositionType());
 
-    int webViewHeightPx = isFullScreenBanner ? screenHeight : (int) (screenHeight * 0.6);
+    int webViewHeightPx = isFullScreenBanner ? hostHeight : (int) (hostHeight * 0.6);
 
     ConstraintSet constraintSet = new ConstraintSet();
     constraintSet.clone(webLayout);
@@ -1210,8 +1237,9 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         activity.runOnUiThread(() -> {
           try {
             if (appBannerPopup != null) {
+              int webViewHeightPx = webView.getHeight();
               appBannerPopup.applyMeasuredHtmlBannerBounds(
-                  leftCss, topCss, widthCss, heightCss, viewportWidthCss, viewportHeightCss);
+                  leftCss, topCss, widthCss, heightCss, viewportWidthCss, viewportHeightCss, webViewHeightPx);
             }
           } catch (Exception ex) {
             Logger.e(TAG, "Error applying measured HTML banner bounds.", ex);

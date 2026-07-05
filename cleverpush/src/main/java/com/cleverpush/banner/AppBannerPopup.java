@@ -470,9 +470,12 @@ public class AppBannerPopup {
         // (where HTML using "position: fixed; bottom: ...;" renders) inside the popup
         // window even after applyMeasuredHtmlBannerBounds shrinks the popup to wrap
         // only the banner area.
-        int screenHeightPx = activity.getResources().getDisplayMetrics().heightPixels;
+        int hostHeightPx = activity.getWindow().getDecorView().getHeight();
+        if (hostHeightPx <= 0) {
+          hostHeightPx = activity.getResources().getDisplayMetrics().heightPixels;
+        }
         FrameLayout.LayoutParams nonBlockingBodyParams =
-            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, screenHeightPx);
+            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, hostHeightPx);
         nonBlockingBodyParams.gravity = Gravity.BOTTOM;
         body.setLayoutParams(nonBlockingBodyParams);
       } else {
@@ -810,10 +813,17 @@ public class AppBannerPopup {
    */
   public void applyMeasuredHtmlBannerBounds(int leftCss, int topCss, int widthCss, int heightCss,
                                             int viewportWidthCss, int viewportHeightCss) {
+    applyMeasuredHtmlBannerBounds(
+        leftCss, topCss, widthCss, heightCss, viewportWidthCss, viewportHeightCss, 0);
+  }
+
+  public void applyMeasuredHtmlBannerBounds(int leftCss, int topCss, int widthCss, int heightCss,
+                                            int viewportWidthCss, int viewportHeightCss,
+                                            int webViewHeightPx) {
     try {
       if (Looper.myLooper() != Looper.getMainLooper()) {
         mainHandler.post(() -> applyMeasuredHtmlBannerBounds(
-            leftCss, topCss, widthCss, heightCss, viewportWidthCss, viewportHeightCss));
+            leftCss, topCss, widthCss, heightCss, viewportWidthCss, viewportHeightCss, webViewHeightPx));
         return;
       }
       if (!isHTMLBanner()) return;
@@ -823,10 +833,12 @@ public class AppBannerPopup {
       if (heightCss <= 0) return;
 
       DisplayMetrics dm = activity.getResources().getDisplayMetrics();
-      int screenWidth = dm.widthPixels;
-      int screenHeight = dm.heightPixels;
+      View decor = activity.getWindow().getDecorView();
+      int screenWidth = decor.getWidth() > 0 ? decor.getWidth() : dm.widthPixels;
+      int screenHeight = decor.getHeight() > 0 ? decor.getHeight() : dm.heightPixels;
+      int viewportHeightPx = webViewHeightPx > 0 ? webViewHeightPx : viewportHeightCss;
 
-      float scaleY = (float) screenHeight / viewportHeightCss;
+      float scaleY = (float) viewportHeightPx / viewportHeightCss;
       int topPx = Math.max(0, (int) (topCss * scaleY));
       int heightPx = (int) (heightCss * scaleY);
       int marginPx = (int) (10 * dm.density);
