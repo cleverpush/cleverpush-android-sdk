@@ -203,7 +203,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         Typeface font = FontUtils.findFont(activity, fontFamily);
         button.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, "Error in AppBanner composeButtonBlock setTypeface.", ex);
+        Logger.e(TAG, "Error in InboxView composeButtonBlock setTypeface.", ex);
       }
     }
 
@@ -344,7 +344,7 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         Typeface font = FontUtils.findFont(activity, fontFamily);
         textView.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, "Error in AppBanner composeTextBlock setTypeface.", ex);
+        Logger.e(TAG, "Error in InboxView composeTextBlock setTypeface.", ex);
       }
     }
 
