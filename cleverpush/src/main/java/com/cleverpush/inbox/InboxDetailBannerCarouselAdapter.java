@@ -194,12 +194,16 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     button.setText(block.getText());
     button.setTextSize(TypedValue.COMPLEX_UNIT_SP, block.getSize() * 4 / 3);
 
-    if (block.getFamily() != null) {
+    String fontFamily = block.getFontFamilyAndroid() != null
+            ? block.getFontFamilyAndroid()
+            : block.getFamily();
+
+    if (fontFamily != null) {
       try {
-        Typeface font = FontUtils.findFont(activity, block.getFamily());
+        Typeface font = FontUtils.findFont(activity, fontFamily);
         button.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, "Error in InboxView composeButtonBlock setTypeface.", ex);
+        Logger.e(TAG, "Error in AppBanner composeButtonBlock setTypeface.", ex);
       }
     }
 
@@ -331,12 +335,16 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     }
     textView.setTextColor(ColorUtils.parseColor(textColor));
 
-    if (block.getFamily() != null) {
+    String fontFamily = block.getFontFamilyAndroid() != null
+            ? block.getFontFamilyAndroid()
+            : block.getFamily();
+
+    if (fontFamily != null) {
       try {
-        Typeface font = FontUtils.findFont(activity, block.getFamily());
+        Typeface font = FontUtils.findFont(activity, fontFamily);
         textView.setTypeface(font);
       } catch (Exception ex) {
-        Logger.e(TAG, "Error in InboxView composeTextBlock setTypeface.", ex);
+        Logger.e(TAG, "Error in AppBanner composeTextBlock setTypeface.", ex);
       }
     }
 
