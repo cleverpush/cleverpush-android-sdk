@@ -24,6 +24,7 @@ public class BannerButtonBlock extends BannerBlock {
   private List<BannerAction> actions;
   private List<BannerBlockScreen> blockScreens;
   private String family = null;
+  private String fontFamilyAndroid = null;
   private String id;
   private int borderWidth;
   private String borderColor;
@@ -78,6 +79,10 @@ public class BannerButtonBlock extends BannerBlock {
 
   public String getFamily() {
     return family;
+  }
+
+  public String getFontFamilyAndroid() {
+    return fontFamilyAndroid;
   }
 
   public String getId() {
@@ -135,6 +140,10 @@ public class BannerButtonBlock extends BannerBlock {
 
     if (json.has("family") && !json.optString("family").isEmpty()) {
       buttonBlock.family = json.optString("family");
+    }
+
+    if (json.has("fontFamilyAndroid") && !json.optString("fontFamilyAndroid").isEmpty()) {
+      buttonBlock.fontFamilyAndroid = json.optString("fontFamilyAndroid");
     }
 
     if (json.has("actions")) {
