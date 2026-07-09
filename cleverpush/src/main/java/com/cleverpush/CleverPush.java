@@ -3358,7 +3358,7 @@ public class CleverPush {
                 String lastClickedNotificationId = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_ID, null);
                 String lastClickedNotificationTime = sharedPreferences.getString(CleverPushPreferences.LAST_CLICKED_NOTIFICATION_TIME, null);
 
-                if (lastClickedNotificationId != null && !lastClickedNotificationId.isEmpty() && isWithin60Minutes(lastClickedNotificationTime)) {
+                if (lastClickedNotificationId != null && !lastClickedNotificationId.isEmpty() && isWithin24Hours(lastClickedNotificationTime)) {
                   jsonBody.put("notificationId", lastClickedNotificationId);
                 }
               } catch (JSONException ex) {
@@ -4866,9 +4866,9 @@ public class CleverPush {
   }
 
   /**
-   * Method to check if the lastClickedNotificationTime is within 60 minutes of current date and time
+   * Method to check if the lastClickedNotificationTime is within 24 hours of current date and time
    * */
-  private boolean isWithin60Minutes(String lastClickedNotificationTime) {
+  private boolean isWithin24Hours(String lastClickedNotificationTime) {
     if (lastClickedNotificationTime == null || lastClickedNotificationTime.isEmpty()) {
       return false;
     }
@@ -4877,8 +4877,8 @@ public class CleverPush {
       Date lastClickedTime = sdf.parse(lastClickedNotificationTime);
       Date currentTime = Calendar.getInstance().getTime();
       long diffInMilliseconds = Math.abs(currentTime.getTime() - lastClickedTime.getTime());
-      long diffInMinutes = diffInMilliseconds / (60 * 1000);
-      return diffInMinutes <= 60;
+      long diffInHours = diffInMilliseconds / (60 * 60 * 1000);
+      return diffInHours < 24;
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error parsing date", e);
       return false;
