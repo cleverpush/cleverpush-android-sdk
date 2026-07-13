@@ -4647,6 +4647,26 @@ public class CleverPush {
     editor.apply();
   }
 
+  public void setGroupNotificationSoundMode(GroupNotificationSoundMode mode) {
+    if (mode == null) {
+      mode = GroupNotificationSoundMode.ALL_NOTIFICATIONS;
+    }
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putString(CleverPushPreferences.GROUP_NOTIFICATION_SOUND_MODE, mode.getCode());
+    editor.apply();
+  }
+
+  public GroupNotificationSoundMode getGroupNotificationSoundMode() {
+    if (getContext() == null) {
+      return GroupNotificationSoundMode.ALL_NOTIFICATIONS;
+    }
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    String code = sharedPreferences.getString(CleverPushPreferences.GROUP_NOTIFICATION_SOUND_MODE, null);
+    GroupNotificationSoundMode mode = code != null ? GroupNotificationSoundMode.lookupByCode(code) : null;
+    return mode != null ? mode : GroupNotificationSoundMode.ALL_NOTIFICATIONS;
+  }
+
   public void setUpNotificationCategoryGroups() {
     getChannelConfig(config -> {
       if (config == null) {
