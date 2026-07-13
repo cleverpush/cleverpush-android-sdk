@@ -4648,8 +4648,17 @@ public class CleverPush {
   }
 
   public void setGroupNotificationSoundMode(GroupNotificationSoundMode mode) {
+    if (getContext() == null) {
+      Logger.w(LOG_TAG, "setGroupNotificationSoundMode: context is null");
+      return;
+    }
     if (mode == null) {
       mode = GroupNotificationSoundMode.ALL_NOTIFICATIONS;
+    }
+    if (mode == GroupNotificationSoundMode.FIRST_IN_GROUP_ONLY
+        && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      Logger.w(LOG_TAG, "setGroupNotificationSoundMode: FIRST_IN_GROUP_ONLY requires Android 6.0 (API 23) "
+          + "or higher. The mode will be ignored on this device and ALL_NOTIFICATIONS will be applied.");
     }
     SharedPreferences sharedPreferences = getSharedPreferences(getContext());
     SharedPreferences.Editor editor = sharedPreferences.edit();
