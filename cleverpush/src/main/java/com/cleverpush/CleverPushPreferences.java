@@ -39,6 +39,7 @@ public class CleverPushPreferences {
   public static final String TOPIC_LAST_CHECKED = "CleverPush_TOPIC_LAST_CHECKED";
   public static final String LAST_TIME_AUTO_SHOWED = "CleverPush_LAST_TIME_AUTO_SHOWED";
   public static final String NOTIFICATION_STYLE = "CleverPush_NOTIFICATION_STYLE";
+  public static final String GROUP_NOTIFICATION_SOUND_MODE = "CleverPush_GROUP_NOTIFICATION_SOUND_MODE";
   public static final String DEVICE_ID = "CleverPush_DEVICE_ID";
   public static final String SILENT_PUSH_APP_BANNER = "CleverPush_SILENT_PUSH_APP_BANNER";
   public static final String APP_INSTALLATION_DATE = "CleverPush_APP_INSTALLATION_DATE";

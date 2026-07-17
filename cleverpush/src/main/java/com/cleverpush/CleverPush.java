@@ -4647,6 +4647,35 @@ public class CleverPush {
     editor.apply();
   }
 
+  public void setGroupNotificationSoundMode(GroupNotificationSoundMode mode) {
+    if (getContext() == null) {
+      Logger.w(LOG_TAG, "setGroupNotificationSoundMode: context is null");
+      return;
+    }
+    if (mode == null) {
+      mode = GroupNotificationSoundMode.ALL_NOTIFICATIONS;
+    }
+    if (mode == GroupNotificationSoundMode.FIRST_IN_GROUP_ONLY
+        && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      Logger.w(LOG_TAG, "setGroupNotificationSoundMode: FIRST_IN_GROUP_ONLY requires Android 6.0 (API 23) "
+          + "or higher. The mode will be ignored on this device and ALL_NOTIFICATIONS will be applied.");
+    }
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putString(CleverPushPreferences.GROUP_NOTIFICATION_SOUND_MODE, mode.getCode());
+    editor.apply();
+  }
+
+  public GroupNotificationSoundMode getGroupNotificationSoundMode() {
+    if (getContext() == null) {
+      return GroupNotificationSoundMode.ALL_NOTIFICATIONS;
+    }
+    SharedPreferences sharedPreferences = getSharedPreferences(getContext());
+    String code = sharedPreferences.getString(CleverPushPreferences.GROUP_NOTIFICATION_SOUND_MODE, null);
+    GroupNotificationSoundMode mode = code != null ? GroupNotificationSoundMode.lookupByCode(code) : null;
+    return mode != null ? mode : GroupNotificationSoundMode.ALL_NOTIFICATIONS;
+  }
+
   public void setUpNotificationCategoryGroups() {
     getChannelConfig(config -> {
       if (config == null) {

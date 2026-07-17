@@ -25,6 +25,7 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.RemoteViews;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
@@ -32,6 +33,7 @@ import androidx.core.content.ContextCompat;
 import com.cleverpush.BadgeHelper;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushPreferences;
+import com.cleverpush.GroupNotificationSoundMode;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationAction;
 import com.cleverpush.NotificationCarouselItem;
@@ -292,6 +294,11 @@ public class NotificationService {
       notificationBuilder = new NotificationCompat.Builder(context);
     }
 
+    String groupKey = getGroupKeyForCurrentChannel(notification);
+    GroupNotificationSoundMode groupSoundMode = getGroupNotificationSoundMode(context);
+    boolean suppressSound =
+        shouldSuppressGroupSound(groupSoundMode, hasActiveNotificationsInGroup(context, groupKey));
+
     notificationBuilder = notificationBuilder
         .setContentIntent(contentIntent)
         .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
@@ -299,8 +306,15 @@ public class NotificationService {
         .setContentText(text)
         .setSmallIcon(getSmallIcon(context))
         .setAutoCancel(true)
-        .setGroup(getGroupKeyForCurrentChannel(notification))
-        .setSound(soundUri);
+        .setGroup(groupKey)
+        .setSound(suppressSound ? null : soundUri);
+
+    if (suppressSound) {
+      // On Android O+ the sound comes from the notification channel and cannot be disabled per
+      // notification via setSound. Deferring the alert to the group summary (which never alerts in
+      // FIRST_IN_GROUP_ONLY mode) keeps this notification silent without modifying the channel.
+      notificationBuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY);
+    }
 
     if (notification.getActions() != null && notification.getActions().length > 0) {
       List<NotificationCompat.Action> actions = new ArrayList<>();
@@ -439,6 +453,63 @@ public class NotificationService {
     return NotificationStyle.AUTO;
   }
 
+  GroupNotificationSoundMode getGroupNotificationSoundMode(Context context) {
+    try {
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+      String code = sharedPreferences.getString(CleverPushPreferences.GROUP_NOTIFICATION_SOUND_MODE, null);
+      if (code != null) {
+        GroupNotificationSoundMode mode = GroupNotificationSoundMode.lookupByCode(code);
+        if (mode != null) {
+          return mode;
+        }
+      }
+    } catch (Exception exception) {
+      Logger.e(LOG_TAG, "NotificationService getGroupNotificationSoundMode: Error getting groupNotificationSoundMode",
+          exception);
+    }
+
+    return GroupNotificationSoundMode.ALL_NOTIFICATIONS;
+  }
+
+  boolean shouldSuppressGroupSound(GroupNotificationSoundMode mode, boolean groupHasActiveNotifications) {
+    return mode == GroupNotificationSoundMode.FIRST_IN_GROUP_ONLY && groupHasActiveNotifications;
+  }
+
+  boolean hasActiveNotificationsInGroup(Context context, String groupKey) {
+    if (groupKey == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      return false;
+    }
+
+    try {
+      StatusBarNotification[] activeNotifications = BadgeHelper.getActiveNotifications(context);
+      return containsActiveGroupChild(activeNotifications, groupKey);
+    } catch (Exception exception) {
+      Logger.e(LOG_TAG, "NotificationService: Error while checking active notifications in group", exception);
+      return false;
+    }
+  }
+
+  @RequiresApi(api = Build.VERSION_CODES.M)
+  boolean containsActiveGroupChild(StatusBarNotification[] activeNotifications, String groupKey) {
+    if (activeNotifications == null || groupKey == null) {
+      return false;
+    }
+    for (StatusBarNotification activeNotification : activeNotifications) {
+      android.app.Notification active = activeNotification.getNotification();
+      if (active == null) {
+        continue;
+      }
+      boolean isGroupSummary = (active.flags & NotificationCompat.FLAG_GROUP_SUMMARY) != 0;
+      if (isGroupSummary) {
+        continue;
+      }
+      if (groupKey.equals(active.getGroup())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   int showNotification(Context context, Notification notification, Subscription subscription) {
     String notificationStr = notification.getRawPayload();
     String subscriptionStr = subscription.getRawPayload();
@@ -494,6 +565,8 @@ public class NotificationService {
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
     String groupKey = getGroupKeyForCurrentChannel(notification);
+    boolean firstInGroupOnly =
+        getGroupNotificationSoundMode(context) == GroupNotificationSoundMode.FIRST_IN_GROUP_ONLY;
 
     NotificationCompat.Builder builder =
             new NotificationCompat.Builder(context, summaryNotificationId)
@@ -508,7 +581,11 @@ public class NotificationService {
                             .addLine(text))
                     .setGroup(groupKey)
                     .setGroupSummary(true)
-                    .setSound(getSoundUri(context, notification));
+                    .setSound(firstInGroupOnly ? null : getSoundUri(context, notification));
+
+    if (firstInGroupOnly) {
+      builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+    }
 
     int effectiveColor = 0;
     NotificationCategory notificationCategory = notification.getCategory();
