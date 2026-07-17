@@ -14,6 +14,7 @@ public final class BannerTextBlock extends BannerBlock {
   private int size;
   private Alignment alignment;
   private String family = null;
+  private String fontFamilyAndroid = null;
   private String id;
   private List<BannerBlockScreen> blockScreens;
   private String html;
@@ -45,6 +46,10 @@ public final class BannerTextBlock extends BannerBlock {
     return family;
   }
 
+  public String getFontFamilyAndroid() {
+    return fontFamilyAndroid;
+  }
+
   public String getId() {
     return id;
   }
@@ -72,6 +77,10 @@ public final class BannerTextBlock extends BannerBlock {
     textBlock.alignment = Alignment.fromString(json.getString("alignment"));
     if (json.has("family") && !json.optString("family").isEmpty()) {
       textBlock.family = json.optString("family");
+    }
+
+    if (json.has("fontFamilyAndroid") && !json.optString("fontFamilyAndroid").isEmpty()) {
+      textBlock.fontFamilyAndroid = json.optString("fontFamilyAndroid");
     }
 
     textBlock.blockScreens = new LinkedList<>();
