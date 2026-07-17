@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.35.33 (17.07.2027)
+* Added `setGroupNotificationSoundMode(GroupNotificationSoundMode)` to configure notification sounds for grouped notifications, with `FIRST_IN_GROUP_ONLY` and `ALL_NOTIFICATIONS` (default) modes.
+* Extended the `notificationId` attribution window for `/subscription/conversion` from 60 minutes to 24 hours.
+* Fixed an issue where event-triggered `AppBanner`s were not displayed when events were tracked after opening a push notification.
+* Added platform-specific font support for `AppBanners`.
+
 ## 1.35.32 (02.07.2027)
 * Added support for bypassing targeting conditions for `AppBanner` attached to push notifications when sent via AppBanner → Test Push.
 * Added BLE/iBeacon monitoring with automatic event tracking, along with `initBeacons()` and `initBeacons(Activity)` methods for beacon setup and monitoring.
