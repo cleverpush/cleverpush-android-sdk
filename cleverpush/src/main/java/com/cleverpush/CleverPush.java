@@ -2870,8 +2870,13 @@ public class CleverPush {
 
   private void setSubscriptionAttributeObjectImplementation(String attributeId, Object value, SetSubscriptionAttributeResponseHandler responseHandler) {
     String channelId = getChannelId(getContext());
-    if (isChannelIdInvalid(channelId, "setSubscriptionAttribute"))
+    if (isChannelIdInvalid(channelId, "setSubscriptionAttribute")) {
+      if (responseHandler != null) {
+        responseHandler.getResponseHandler(getSubscriptionAttributes())
+            .onFailure(0, "Channel ID is null or empty.", null);
+      }
       return;
+    }
 
     this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId != null && !subscriptionId.isEmpty()) {
@@ -2898,6 +2903,10 @@ public class CleverPush {
         CleverPushHttpClient.postWithRetry("/subscription/attribute", jsonBody, responseHandler.getResponseHandler(subscriptionAttributes));
       } else {
         Logger.d(LOG_TAG, "setSubscriptionAttribute: There is no subscription for CleverPush SDK.");
+        if (responseHandler != null) {
+          responseHandler.getResponseHandler(getSubscriptionAttributes())
+              .onFailure(0, "There is no subscription for CleverPush SDK.", null);
+        }
       }
     });
   }
