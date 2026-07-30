@@ -1836,6 +1836,9 @@ public class CleverPush {
               new UnsubscribeResponseHandler(this, listener).getResponseHandler());
     } else {
       Logger.d(LOG_TAG, "unsubscribe: There is no subscription for CleverPush SDK.");
+      if (listener != null) {
+        listener.onFailure( new Exception("There is no subscription for CleverPush SDK."));
+      }
       clearSubscriptionData();
     }
   }
@@ -1918,6 +1921,9 @@ public class CleverPush {
               new StopCampaignResponseHandler(this, listener).getResponseHandler());
     } else {
       Logger.d(LOG_TAG, "stopCampaigns: There is no subscription for CleverPush SDK.");
+      if (listener != null) {
+        listener.onFailure( new Exception("There is no subscription for CleverPush SDK."));
+      }
     }
   }
 
@@ -2044,13 +2050,22 @@ public class CleverPush {
   }
 
   public synchronized void getSubscriptionId(SubscribedListener listener) {
-    if (listener != null) {
-      if (subscriptionId == null || subscriptionId.isEmpty()) {
-        Logger.d(LOG_TAG, "getSubscriptionId: There is no subscription for CleverPush SDK.");
-        getSubscriptionIdListeners.add(listener);
-      } else {
-        listener.subscribed(subscriptionId);
-      }
+    if (listener == null) {
+      return;
+    }
+
+    boolean hasSubscription = subscriptionId != null && !subscriptionId.isEmpty();
+    if (hasSubscription) {
+      listener.subscribed(subscriptionId);
+      return;
+    }
+
+    boolean shouldWaitForSubscription = !initialized || isSubscriptionInProgress() || isSubscribed();
+    Logger.d(LOG_TAG, "getSubscriptionId: There is no subscription for CleverPush SDK.");
+    if (shouldWaitForSubscription) {
+      getSubscriptionIdListeners.add(listener);
+    } else {
+      listener.subscribed(null);
     }
   }
 
@@ -2066,17 +2081,17 @@ public class CleverPush {
     subscriptionId = value;
     notifyAll();
 
-    if (subscriptionId != null) {
-      for (SubscribedListener listener : getSubscriptionIdListeners) {
-        if (listener == null) {
-          continue;
-        }
-        listener.subscribed(subscriptionId);
-      }
-      getSubscriptionIdListeners = new ArrayList<>();
-    } else {
+    if (subscriptionId == null || subscriptionId.isEmpty()) {
       Logger.d(LOG_TAG, "setSubscriptionId: There is no subscription for CleverPush SDK.");
     }
+
+    for (SubscribedListener listener : getSubscriptionIdListeners) {
+      if (listener == null) {
+        continue;
+      }
+      listener.subscribed(subscriptionId);
+    }
+    getSubscriptionIdListeners = new ArrayList<>();
   }
 
   public boolean isNotificationReceivedListenerCallback() {
@@ -2460,12 +2475,15 @@ public class CleverPush {
 
   public void addSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
     String channelId = getChannelId(getContext());
-    if (isChannelIdInvalid(channelId, "addSubscriptionTopic"))
+    if (isChannelIdInvalid(channelId, "addSubscriptionTopic")) {
+      notifyCompletionFailure(completionListener, "Channel ID is null or empty.");
       return;
+    }
 
     this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "addSubscriptionTopic: There is no subscription for CleverPush SDK.");
+        notifyNoSubscriptionFailure(completionListener);
         return;
       }
       Set<String> topics = new HashSet<>(this.getSubscriptionTopics());
@@ -2519,12 +2537,15 @@ public class CleverPush {
 
   public void removeSubscriptionTopic(String topicId, CompletionFailureListener completionListener) {
     String channelId = getChannelId(getContext());
-    if (isChannelIdInvalid(channelId, "removeSubscriptionTopic"))
+    if (isChannelIdInvalid(channelId, "removeSubscriptionTopic")) {
+      notifyCompletionFailure(completionListener, "Channel ID is null or empty.");
       return;
+    }
 
     this.getSubscriptionId(subscriptionId -> {
       if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.d(LOG_TAG, "removeSubscriptionTopic: There is no subscription for CleverPush SDK.");
+        notifyNoSubscriptionFailure(completionListener);
         return;
       }
       Set<String> topics = new HashSet<>(this.getSubscriptionTopics());
@@ -2727,6 +2748,7 @@ public class CleverPush {
         removeSubscriptionTagsHelper.removeSubscriptionTags();
       } else {
         Logger.d(LOG_TAG, "removeSubscriptionTagTrackingImplementation: There is no subscription for CleverPush SDK.");
+        notifyNoSubscriptionFailure(listener);
       }
     });
   }
@@ -2754,8 +2776,10 @@ public class CleverPush {
   public void setSubscriptionTopics(String[] topicIds, CompletionFailureListener completionListener) {
     new Thread(() -> {
       String channelId = getChannelId(getContext());
-      if (isChannelIdInvalid(channelId, "setSubscriptionTopics"))
+      if (isChannelIdInvalid(channelId, "setSubscriptionTopics")) {
+        notifyCompletionFailure(completionListener, "Channel ID is null or empty.");
         return;
+      }
 
       SharedPreferences sharedPreferences = getSharedPreferences(getContext());
       final int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
@@ -2783,6 +2807,7 @@ public class CleverPush {
               new SetSubscriptionTopicsResponseHandler(this).getResponseHandler(topicIds, completionListener, true));
         } else {
           Logger.d(LOG_TAG, "setSubscriptionTopics: There is no subscription for CleverPush SDK.");
+          notifyNoSubscriptionFailure(completionListener);
         }
       });
     }).start();
@@ -5029,12 +5054,15 @@ public class CleverPush {
   private void setSubscriptionTestStatus(CompletionFailureListener listener, boolean isTest) {
     try {
       String channelId = getChannelId(context);
-      if (isChannelIdInvalid(channelId, "markSubscriptionAsTest"))
+      if (isChannelIdInvalid(channelId, "markSubscriptionAsTest")) {
+        notifyCompletionFailure(listener, "Channel ID is null or empty.");
         return;
+      }
 
       String subscriptionId = getSubscriptionId(getContext());
       if (subscriptionId == null || subscriptionId.isEmpty()) {
         Logger.w(LOG_TAG, "markSubscriptionAsTest: There is no subscriptionId");
+        notifyNoSubscriptionFailure(listener);
         return;
       }
 
@@ -5052,6 +5080,7 @@ public class CleverPush {
               responseHandler);
     } catch (Exception e) {
       Logger.e(LOG_TAG, "markSubscriptionAsTest: Error while marking subscription as test", e);
+      notifyCompletionFailure(listener, e);
     }
   }
 
@@ -5061,6 +5090,20 @@ public class CleverPush {
       return true;
     }
     return false;
+  }
+
+  private void notifyNoSubscriptionFailure(CompletionFailureListener listener) {
+    notifyCompletionFailure(listener, "There is no subscription for CleverPush SDK.");
+  }
+
+  private void notifyCompletionFailure(CompletionFailureListener listener, String message) {
+    notifyCompletionFailure(listener, new Exception(message));
+  }
+
+  private void notifyCompletionFailure(CompletionFailureListener listener, Exception exception) {
+    if (listener != null) {
+      listener.onFailure(exception);
+    }
   }
 
   public boolean isAppBannersNonBlocking() {
