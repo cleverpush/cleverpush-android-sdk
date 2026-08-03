@@ -9,7 +9,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application>
-        <activity android:name=".inbox.InboxDetailActivity" />
+        <activity
+            android:name=".inbox.InboxDetailActivity"
+            android:theme="@style/cleverpush_inbox_detail_theme" />
         <activity
             android:name="com.cleverpush.NotificationOpenedActivity"
             android:exported="true"
