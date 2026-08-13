@@ -3345,7 +3345,7 @@ public class CleverPush {
                 JSONObject propertiesObject = new JSONObject();
                 if (properties != null) {
                   for (Map.Entry<String, Object> entry : properties.entrySet()) {
-                    propertiesObject.put(entry.getKey(), entry.getValue());
+                    propertiesObject.put(entry.getKey(), entry.getValue() != null ? entry.getValue() : JSONObject.NULL);
                   }
                 }
 
@@ -3375,7 +3375,8 @@ public class CleverPush {
 
         if (properties != null) {
           for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            handleBannerTrackEvent(eventId, entry.getKey(), entry.getValue().toString());
+            Object value = entry.getValue();
+            handleBannerTrackEvent(eventId, entry.getKey(), value != null ? value.toString() : "");
           }
         } else {
           handleBannerTrackEvent(eventId, "", "");
