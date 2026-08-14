@@ -1,24 +1,31 @@
 # Changelog
 
-## 1.35.33 (17.07.2027)
+## 1.35.34 (14.08.2026)
+* Prevented `getSubscriptionId` and `CompletionFailureListener` APIs from hanging indefinitely when `autoRegister` is `false` and the user never subscribes.
+* Fixed an issue in `trackEvent` when property values are `null`.
+* Fixed crashes in `InboxDetailActivity` when the host app uses a `NoActionBar` theme and during handler initialization when opening inbox messages.
+* Fixed an image loading error in `InboxView` when no current activity is available.
+* Fixed a crash in `PermissionActivity` when it is opened without permission extras.
+
+## 1.35.33 (17.07.2026)
 * Added `setGroupNotificationSoundMode(GroupNotificationSoundMode)` to configure notification sounds for grouped notifications, with `FIRST_IN_GROUP_ONLY` and `ALL_NOTIFICATIONS` (default) modes.
 * Extended the `notificationId` attribution window for `/subscription/conversion` from 60 minutes to 24 hours.
 * Fixed an issue where event-triggered `AppBanner`s were not displayed when events were tracked after opening a push notification.
 * Added platform-specific font support for `AppBanners`.
 
-## 1.35.32 (02.07.2027)
+## 1.35.32 (02.07.2026)
 * Added support for bypassing targeting conditions for `AppBanner` attached to push notifications when sent via AppBanner → Test Push.
 * Added BLE/iBeacon monitoring with automatic event tracking, along with `initBeacons()` and `initBeacons(Activity)` methods for beacon setup and monitoring.
 * Added an optional `onBeaconDetected(listener)` callback method for matched beacons.
 * Added `setBeaconEventInterval(minutes)` to control beacon re-trigger frequency within an app session.
 * Added `setBeaconDebugScanAll(boolean)` for diagnostic unfiltered scanning and verbose logging.
 
-## 1.35.31 (25.06.2027)
+## 1.35.31 (25.06.2026)
 * Added a Proguard rule for `NotificationServiceExtension`.
 * Added support for RelativeToDelivery expiration for `AppBanner`, along with `clearAllBannerDeliveryDates()` and `clearBannerDeliveryDate(bannerId)` methods to clear stored delivery data.
 * Added configurable button borders for AppBanner, including border width, color, and styles (solid, dashed, dotted).
 
-## 1.35.30 (11.06.2027)
+## 1.35.30 (11.06.2026)
 * Added new methods `unmarkSubscriptionAsTest` and `unmarkSubscriptionAsTest(CompletionFailureListener)` to unmark a subscription as test.
 * Added a new Attribute condition type in Targeting for AppBanner: Exists/NotExists
 * Fix app banners not appearing when a banner-carrying push is tapped from the background
