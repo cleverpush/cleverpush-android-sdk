@@ -121,6 +121,14 @@ public class AddSubscriptionTags implements AddTagCompletedListener {
               addTagCompletedListener, currentPositionOfTagToAdd, tags));
     } else {
       Logger.d(LOG_TAG, "addSubscriptionTag: There is no subscription for CleverPush SDK.");
+      Exception exception = new Exception("There is no subscription for CleverPush SDK.");
+      if (addTagCompletedListener != null) {
+        addTagCompletedListener.onFailure(exception);
+      }
+      if (completionListener != null) {
+        completionListener.onFailure(exception);
+      }
+      this.finished = true;
     }
   }
 

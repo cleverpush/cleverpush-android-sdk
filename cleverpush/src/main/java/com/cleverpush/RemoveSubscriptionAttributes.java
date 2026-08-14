@@ -107,6 +107,13 @@ public class RemoveSubscriptionAttributes implements RemoveAttributeCompletedLis
               onRemoveAttributeCompleted, currentPositionOfAttributeToRemove));
     } else {
       Logger.d(LOG_TAG, "removeSubscriptionAttribute: There is no subscription for CleverPush SDK.");
+      Exception exception = new Exception("There is no subscription for CleverPush SDK.");
+      if (onRemoveAttributeCompleted != null) {
+        onRemoveAttributeCompleted.onFailure(exception);
+      } else if (completionListener != null) {
+        completionListener.onFailure(exception);
+      }
+      this.finished = true;
     }
   }
 

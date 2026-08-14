@@ -111,6 +111,13 @@ public class RemoveSubscriptionTags implements RemoveTagCompletedListener {
               onRemoveTagCompleted, currentPositionOfTagToRemove, tags));
     } else {
       Logger.d(LOG_TAG, "removeSubscriptionTag: There is no subscription for CleverPush SDK.");
+      Exception exception = new Exception("There is no subscription for CleverPush SDK.");
+      if (onRemoveTagCompleted != null) {
+        onRemoveTagCompleted.onFailure(exception);
+      } else if (completionListener != null) {
+        completionListener.onFailure(exception);
+      }
+      this.finished = true;
     }
   }
 
