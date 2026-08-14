@@ -46,13 +46,14 @@ public class PermissionActivity extends Activity implements ActivityCompat.OnReq
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    requestPermission(getIntent().getExtras());
+    Intent intent = getIntent();
+    requestPermission(intent == null ? null : intent.getExtras());
   }
 
   @Override
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
-    requestPermission(intent.getExtras());
+    requestPermission(intent == null ? null : intent.getExtras());
   }
 
   private void requestPermission(Bundle extras) {
