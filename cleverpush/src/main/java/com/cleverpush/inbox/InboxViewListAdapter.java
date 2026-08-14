@@ -7,6 +7,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
@@ -21,7 +23,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.Notification;
 import com.cleverpush.R;
@@ -208,7 +209,7 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
 
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream[0]);
         if (bitmap != null) {
-          ActivityLifecycleListener.currentActivity.runOnUiThread(new Runnable() {
+          new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
               image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 50, 50, false));

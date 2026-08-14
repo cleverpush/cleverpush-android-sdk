@@ -134,8 +134,10 @@ public class InboxDetailActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_inbox_detail);
 
-    getSupportActionBar().setTitle("Message Detail");
-    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    if (getSupportActionBar() != null) {
+      getSupportActionBar().setTitle("Message Detail");
+      getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
 
     this.context = this;
     this.activity = this;
@@ -150,10 +152,10 @@ public class InboxDetailActivity extends AppCompatActivity {
   private void init() {
     int layoutId = R.layout.activity_inbox_detail;
     popupRoot = createLayout(layoutId);
-    handleBundleData(getIntent().getExtras());
     handlerThread.start();
     handler = new Handler(handlerThread.getLooper());
     mainHandler = new CustomExceptionHandler(activity.getMainLooper());
+    handleBundleData(getIntent().getExtras());
   }
 
   private View createLayout(int layoutId) {
