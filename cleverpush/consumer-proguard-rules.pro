@@ -11,6 +11,7 @@
 
 # Google Mobile Services
 -keep class com.google.android.gms.common.api.GoogleApiClient { *; }
+-dontwarn com.google.android.gms.location.**
 
 # Huawei
 -keep class com.huawei.hms.api.HuaweiApiAvailability { *; }

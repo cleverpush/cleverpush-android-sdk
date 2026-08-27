@@ -280,7 +280,13 @@ public class CleverPush {
       }
     }
 
-    geofencingClient = LocationServices.getGeofencingClient(context);
+    if (hasPlayServicesLocationLibrary()) {
+      try {
+        geofencingClient = LocationServices.getGeofencingClient(context);
+      } catch (Throwable t) {
+        Logger.e(LOG_TAG, "Error initializing GeofencingClient", t);
+      }
+    }
   }
 
   /**
@@ -1240,38 +1246,58 @@ public class CleverPush {
    * initialize Geo Fences
    */
   public void initGeoFences() {
-    if (hasLocationPermission()) {
-      googleApiClient = getGoogleApiClient();
-      getChannelConfig(config -> {
-        if (config != null) {
-          try {
-            JSONArray geoFenceArray = config.getJSONArray("geoFences");
-            if (geoFenceArray != null) {
-              for (int i = 0; i < geoFenceArray.length(); i++) {
-                JSONObject geoFence = geoFenceArray.getJSONObject(i);
-                if (geoFence != null) {
-                  geofenceList.add(new Geofence.Builder()
-                      .setRequestId(geoFence.getString("_id"))
-                      .setCircularRegion(
-                          geoFence.getDouble("latitude"),
-                          geoFence.getDouble("longitude"),
-                          geoFence.getLong("radius"))
-                      .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
-                      .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                      .build());
-                }
-              }
-            }
-          } catch (Exception ex) {
-            Logger.d(LOG_TAG, "Error in initGeoFences.", ex);
-          }
-        }
-      });
+    if (!hasPlayServicesLocationLibrary()) {
+      Logger.d(LOG_TAG, "play-services-location not available, skipping geofences");
+      return;
+    }
 
-      if (geofenceList.size() > 0) {
-        googleApiClient.connect();
+    if (!hasLocationPermission()) {
+      Logger.d(LOG_TAG, "Location permission not available, skipping geofences");
+      return;
+    }
+
+    if (geofencingClient == null) {
+      try {
+        geofencingClient =
+                LocationServices.getGeofencingClient(CleverPush.context);
+      } catch (Throwable t) {
+        Logger.e(LOG_TAG, "Error creating GeofencingClient", t);
+        return;
       }
     }
+
+    getChannelConfig(config -> {
+      if (config != null) {
+        try {
+          JSONArray geoFenceArray = config.getJSONArray("geoFences");
+          if (geoFenceArray != null) {
+            for (int i = 0; i < geoFenceArray.length(); i++) {
+              JSONObject geoFence = geoFenceArray.getJSONObject(i);
+              if (geoFence != null) {
+                geofenceList.add(new Geofence.Builder()
+                        .setRequestId(geoFence.getString("_id"))
+                        .setCircularRegion(
+                                geoFence.getDouble("latitude"),
+                                geoFence.getDouble("longitude"),
+                                geoFence.getLong("radius"))
+                        .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
+                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                        .build());
+              }
+            }
+          }
+        } catch (Exception ex) {
+          Logger.d(LOG_TAG, "Error in initGeoFences.", ex);
+        }
+      }
+
+      if (!hasLocationPermission()) {
+        Logger.d(LOG_TAG, "Location permission not available, skipping geofences");
+        return;
+      }
+
+      addGeofences();
+    });
   }
 
   GoogleApiClient getGoogleApiClient() {
@@ -1284,6 +1310,19 @@ public class CleverPush {
 
   private GoogleApiClient.OnConnectionFailedListener getOnConnectionFailedListener() {
     return connectionResult -> Logger.d(LOG_TAG, "GoogleApiClient onConnectionFailed");
+  }
+
+  private void addGeofences() {
+    if (geofencingClient == null || geofenceList.isEmpty()) {
+      return;
+    }
+    try {
+      geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+          .addOnSuccessListener(aVoid -> Logger.i(LOG_TAG, "Geofences added successfully"))
+          .addOnFailureListener(e -> Logger.e(LOG_TAG, "Failed to add geofences. " + e.getLocalizedMessage(), e));
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error adding geofences", e);
+    }
   }
 
   private GeofencingRequest getGeofencingRequest() {
@@ -2198,6 +2237,15 @@ public class CleverPush {
   static boolean hasFCMLibrary() {
     try {
       Class.forName("com.google.firebase.messaging.FirebaseMessaging");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  static boolean hasPlayServicesLocationLibrary() {
+    try {
+      Class.forName("com.google.android.gms.location.LocationServices");
       return true;
     } catch (ClassNotFoundException e) {
       return false;
