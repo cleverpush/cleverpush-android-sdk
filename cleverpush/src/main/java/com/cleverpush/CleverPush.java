@@ -1275,14 +1275,16 @@ public class CleverPush {
               JSONObject geoFence = geoFenceArray.getJSONObject(i);
               if (geoFence != null) {
                 geofenceList.add(new Geofence.Builder()
-                        .setRequestId(geoFence.getString("_id"))
-                        .setCircularRegion(
-                                geoFence.getDouble("latitude"),
-                                geoFence.getDouble("longitude"),
-                                geoFence.getLong("radius"))
-                        .setExpirationDuration(Geofence.NEVER_EXPIRE) // Future: use "endsAt" instead
-                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                        .build());
+                    .setRequestId(geoFence.getString("_id"))
+                    .setCircularRegion(
+                        geoFence.getDouble("latitude"),
+                        geoFence.getDouble("longitude"),
+                        geoFence.getLong("radius"))
+                    // Future: use "endsAt" instead
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER
+                        | Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .build());
               }
             }
           }
@@ -1318,8 +1320,9 @@ public class CleverPush {
     }
     try {
       geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
-          .addOnSuccessListener(aVoid -> Logger.i(LOG_TAG, "Geofences added successfully"))
-          .addOnFailureListener(e -> Logger.e(LOG_TAG, "Failed to add geofences. " + e.getLocalizedMessage(), e));
+          .addOnSuccessListener(v -> Logger.i(LOG_TAG, "Geofences added successfully"))
+          .addOnFailureListener(e -> Logger.e(LOG_TAG,
+              "Failed to add geofences. " + e.getLocalizedMessage(), e));
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error adding geofences", e);
     }
