@@ -2247,6 +2247,12 @@ public class CleverPush {
     }
   }
 
+  /**
+   * Returns whether {@code play-services-location} is present and loadable.
+   * A missing or partially linked Play Services install is treated as unavailable.
+   *
+   * @return true if {@code LocationServices} can be loaded
+   */
   public static boolean hasPlayServicesLocationLibrary() {
     try {
       Class.forName("com.google.android.gms.location.LocationServices");
