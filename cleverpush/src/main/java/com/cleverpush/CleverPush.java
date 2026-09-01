@@ -1365,7 +1365,8 @@ public class CleverPush {
                       .addOnFailureListener(getCurrentActivity(), new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                          Logger.e(LOG_TAG, "GoogleApiClient onConnected failure. " + e.getLocalizedMessage(), e);
+                          Logger.e(LOG_TAG, "GoogleApiClient onConnected failure. "
+                              + e.getLocalizedMessage(), e);
                         }
                       });
             }
@@ -2246,11 +2247,11 @@ public class CleverPush {
     }
   }
 
-  static boolean hasPlayServicesLocationLibrary() {
+  public static boolean hasPlayServicesLocationLibrary() {
     try {
       Class.forName("com.google.android.gms.location.LocationServices");
       return true;
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException | LinkageError e) {
       return false;
     }
   }

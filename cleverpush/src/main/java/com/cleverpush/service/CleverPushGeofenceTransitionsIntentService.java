@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
+import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.util.Logger;
@@ -32,7 +33,21 @@ public class CleverPushGeofenceTransitionsIntentService extends IntentService {
 
   @Override
   protected void onHandleIntent(Intent intent) {
+    if (!CleverPush.hasPlayServicesLocationLibrary()) {
+      Logger.d(LOG_TAG, "play-services-location not available, ignoring geofence event");
+      return;
+    }
+    try {
+      handleGeofenceIntent(intent);
+    } catch (NoClassDefFoundError error) {
+      Logger.e(LOG_TAG, "play-services-location missing while handling geofence event",
+          error);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error in onHandleIntent geofence service.", e);
+    }
+  }
 
+  private void handleGeofenceIntent(Intent intent) {
     GeofencingEvent event = GeofencingEvent.fromIntent(intent);
     if (event.hasError()) {
       Logger.e(TAG, "GeofencingEvent Error: " + event.getErrorCode());

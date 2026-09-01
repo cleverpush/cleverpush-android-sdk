@@ -83,15 +83,18 @@ dependencies {
     api 'com.google.code.gson:gson:2.9.1'
 
     // Google & Firebase
-    // firebase-messaging must stay transitive (customers need it at runtime)
+    // firebase-messaging must stay transitive (customers need it at runtime).
+    // 24+ requires minSdk 21; prefer 23.4.1 so API 19-20 consumers keep working.
+    // Apps on Firebase BoM 33+ can still resolve 24.x/25.x via their own constraints.
     api('com.google.firebase:firebase-messaging') {
         version {
             require '[23.0.0, 25.0.99]'
-            prefer '24.0.0'
+            prefer '23.4.1'
         }
     }
 
-    // Do not publish these in the POM
+    // Do not publish these in the POM. Host apps that use geofencing must add
+    // play-services-location themselves (see README / CHANGELOG).
     compileOnly 'com.google.android.gms:play-services-base:18.5.0'
 
     compileOnly('com.google.android.gms:play-services-location') {
@@ -107,7 +110,7 @@ dependencies {
     // Huawei
     compileOnly "com.huawei.hms:push:$huaweiHmsPushVersion"
 
-    // Android Material Components
+     // Android Material Components
     api 'com.google.android.material:material:1.4.0'
 
     // Glide
@@ -135,7 +138,7 @@ dependencies {
     testImplementation 'org.awaitility:awaitility:4.1.0'
 }
 
-// firebase-messaging:24.0.0 pulls play-services-base:18.0.1 at runtime while
+// firebase-messaging 23.x pulls an older play-services-base at runtime while
 // compileOnly location 21.3.0 / play-services-base:18.5.0 need 18.5.0 on compile.
 // Force alignment in this module only; it is not published to the POM.
 configurations.configureEach {

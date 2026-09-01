@@ -37,6 +37,21 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
   CountDownTimer countDownTimer;
 
   public void onReceive(Context context, Intent intent) {
+    if (!CleverPush.hasPlayServicesLocationLibrary()) {
+      Logger.d(LOG_TAG, "play-services-location not available, ignoring geofence event");
+      return;
+    }
+    try {
+      handleGeofenceIntent(context, intent);
+    } catch (NoClassDefFoundError error) {
+      Logger.e(LOG_TAG, "play-services-location missing while handling geofence event",
+          error);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error in onReceive GeofenceBroadcastReceiver.", e);
+    }
+  }
+
+  private void handleGeofenceIntent(Context context, Intent intent) {
     GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
     if (geofencingEvent.hasError()) {
       String errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.getErrorCode());
