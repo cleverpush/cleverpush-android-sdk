@@ -809,12 +809,42 @@ public class CleverPush {
                                       String subscriptionId) {
     int nextSync = getNextSync(sharedPreferences);
     boolean isUnsubscribed = sharedPreferences.getBoolean(CleverPushPreferences.UNSUBSCRIBED, false);
-    return (!isUnsubscribed && subscriptionId == null && autoRegister) || isSyncTimePassed(nextSync, subscriptionId);
+    return (!isUnsubscribed && subscriptionId == null && autoRegister)
+            || isSyncTimePassed(nextSync, subscriptionId)
+            || isAppVersionChanged(sharedPreferences, subscriptionId);
   }
 
   private boolean isSyncTimePassed(int nextSync, String subscriptionId) {
     int currentTime = (int) (System.currentTimeMillis() / MILLISECONDS_PER_SECOND);
     return subscriptionId != null && nextSync < currentTime;
+  }
+
+  boolean isAppVersionChanged(SharedPreferences sharedPreferences, String subscriptionId) {
+    if (subscriptionId == null || subscriptionId.isEmpty()) {
+      return false;
+    }
+    String currentAppVersion = getCurrentAppVersion();
+    if (currentAppVersion == null || currentAppVersion.isEmpty()) {
+      return false;
+    }
+    String storedAppVersion = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_APP_VERSION, null);
+    boolean changed = storedAppVersion == null || storedAppVersion.isEmpty()
+            || !storedAppVersion.equals(currentAppVersion);
+    return changed;
+  }
+
+  String getCurrentAppVersion() {
+    try {
+      Context appContext = getContext();
+      if (appContext == null) {
+        return "";
+      }
+      PackageInfo packageInfo = appContext.getPackageManager().getPackageInfo(appContext.getPackageName(), 0);
+      return packageInfo.versionName != null ? packageInfo.versionName : "";
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error fetching current app version.", e);
+      return "";
+    }
   }
 
   /**
@@ -4389,6 +4419,7 @@ public class CleverPush {
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.remove(CleverPushPreferences.SUBSCRIPTION_ID);
       editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
+      editor.remove(CleverPushPreferences.SUBSCRIPTION_APP_VERSION);
       editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
       editor.remove(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS);
       if (!this.keepTargetingDataOnUnsubscribe) {
