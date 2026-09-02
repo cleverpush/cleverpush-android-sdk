@@ -290,12 +290,68 @@ class CleverPushTest {
         when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn(null);
         when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn("subscription_id");
         when(sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0)).thenReturn((int) (System.currentTimeMillis() / 1000L));
+        doReturn(false).when(cleverPush).isAppVersionChanged(sharedPreferences, "subscription_id");
 
         cleverPush.subscribeOrSync(true);
 
         verify(subscriptionManager).checkChangedPushToken(any());
         verify(cleverPush).fireSubscribedListener("subscription_id");
         verify(cleverPush).setSubscriptionId("subscription_id");
+    }
+
+    @Test
+    void testSubscribeOrSyncWhenAppVersionChanged() {
+        doReturn(context).when(cleverPush).getContext();
+        doReturn("channelId").when(cleverPush).getChannelId(context);
+        doReturn(sharedPreferences).when(cleverPush).getSharedPreferences(context);
+        when(sharedPreferences.edit()).thenReturn(editor);
+        when(editor.putString(CleverPushPreferences.CHANNEL_ID, "channelId")).thenReturn(editor);
+        when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null)).thenReturn("subscription_id");
+        when(sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, 0)).thenReturn((int) (System.currentTimeMillis() / 1000L));
+        doReturn(true).when(cleverPush).isAppVersionChanged(sharedPreferences, "subscription_id");
+
+        cleverPush.subscribeOrSync(true);
+
+        verify(cleverPush).subscribe(false);
+    }
+
+    @Test
+    void testIsAppVersionChangedWhenStoredVersionDiffers() {
+        doReturn("12.17.0").when(cleverPush).getCurrentAppVersion();
+        when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_APP_VERSION, null)).thenReturn("12.0.0");
+
+        boolean changed = cleverPush.isAppVersionChanged(sharedPreferences, "subscription_id");
+
+        Assertions.assertTrue(changed);
+    }
+
+    @Test
+    void testIsAppVersionChangedWhenStoredVersionMatches() {
+        doReturn("12.17.0").when(cleverPush).getCurrentAppVersion();
+        when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_APP_VERSION, null)).thenReturn("12.17.0");
+
+        boolean changed = cleverPush.isAppVersionChanged(sharedPreferences, "subscription_id");
+
+        Assertions.assertFalse(changed);
+    }
+
+    @Test
+    void testIsAppVersionChangedWhenStoredVersionIsMissing() {
+        doReturn("12.17.0").when(cleverPush).getCurrentAppVersion();
+        when(sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_APP_VERSION, null)).thenReturn(null);
+
+        boolean changed = cleverPush.isAppVersionChanged(sharedPreferences, "subscription_id");
+
+        Assertions.assertTrue(changed);
+    }
+
+    @Test
+    void testIsAppVersionChangedWhenThereIsNoSubscription() {
+        doReturn("12.17.0").when(cleverPush).getCurrentAppVersion();
+
+        boolean changed = cleverPush.isAppVersionChanged(sharedPreferences, null);
+
+        Assertions.assertFalse(changed);
     }
 
     @Test
@@ -1154,6 +1210,7 @@ class CleverPushTest {
 
         verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_ID);
         verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
+        verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_APP_VERSION);
         verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
         verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
         verify(editor).remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);

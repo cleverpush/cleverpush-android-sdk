@@ -9,6 +9,7 @@ public class CleverPushPreferences {
   public static final String CHANNEL_ID = "CleverPush_CHANNEL_ID";
   public static final String SUBSCRIPTION_ID = "CleverPush_SUBSCRIPTION_ID";
   public static final String SUBSCRIPTION_LAST_SYNC = "CleverPush_SUBSCRIPTION_LAST_SYNC";
+  public static final String SUBSCRIPTION_APP_VERSION = "CleverPush_SUBSCRIPTION_APP_VERSION";
   public static final String SUBSCRIPTION_TAGS = "CleverPush_SUBSCRIPTION_TAGS";
   public static final String SUBSCRIPTION_TOPICS = "CleverPush_SUBSCRIPTION_TOPICS";
   public static final String SUBSCRIPTION_TOPICS_VERSION = "CleverPush_SUBSCRIPTION_TOPICS_VERSION";
