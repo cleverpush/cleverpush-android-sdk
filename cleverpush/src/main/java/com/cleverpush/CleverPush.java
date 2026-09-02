@@ -758,21 +758,8 @@ public class CleverPush {
 
     String subscriptionId = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ID, null);
 
-    if (shouldAutoSubscribe(sharedPreferences, autoRegister, subscriptionId)) {
-      boolean newSubscription = subscriptionId == null;
-      this.subscribe(newSubscription, new SubscribedCallbackListener() {
-        @Override
-        public void onSuccess(String subscriptionId) {
-          initFeatures();
-        }
-
-        @Override
-        public void onFailure(Throwable exception) {
-          initFeatures();
-        }
-      });
-    } else if (subscriptionId != null && !this.areNotificationsEnabled()
-        && !this.ignoreDisabledNotificationPermission) {
+    if (subscriptionId != null && !this.areNotificationsEnabled()
+            && !this.ignoreDisabledNotificationPermission) {
       Logger.d(LOG_TAG, "notification authorization revoked, unsubscribing");
       this.unsubscribe(new UnsubscribedListener() {
         @Override
@@ -782,6 +769,19 @@ public class CleverPush {
 
         @Override
         public void onFailure(Throwable throwable) {
+          initFeatures();
+        }
+      });
+    } else if (shouldAutoSubscribe(sharedPreferences, autoRegister, subscriptionId)) {
+      boolean newSubscription = subscriptionId == null;
+      this.subscribe(newSubscription, new SubscribedCallbackListener() {
+        @Override
+        public void onSuccess(String subscriptionId) {
+          initFeatures();
+        }
+
+        @Override
+        public void onFailure(Throwable exception) {
           initFeatures();
         }
       });
@@ -827,7 +827,8 @@ public class CleverPush {
     if (currentAppVersion == null || currentAppVersion.isEmpty()) {
       return false;
     }
-    String storedAppVersion = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_APP_VERSION, null);
+    String storedAppVersion = sharedPreferences.getString(
+            CleverPushPreferences.SUBSCRIPTION_APP_VERSION, null);
     boolean changed = storedAppVersion == null || storedAppVersion.isEmpty()
             || !storedAppVersion.equals(currentAppVersion);
     return changed;
@@ -839,7 +840,8 @@ public class CleverPush {
       if (appContext == null) {
         return "";
       }
-      PackageInfo packageInfo = appContext.getPackageManager().getPackageInfo(appContext.getPackageName(), 0);
+      PackageInfo packageInfo = appContext.getPackageManager()
+              .getPackageInfo(appContext.getPackageName(), 0);
       return packageInfo.versionName != null ? packageInfo.versionName : "";
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error fetching current app version.", e);
