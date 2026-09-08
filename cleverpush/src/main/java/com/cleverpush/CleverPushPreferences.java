@@ -23,6 +23,8 @@ public class CleverPushPreferences {
   public static final String NOTIFICATION_BANNER_BYPASS_CONDITIONS = "CleverPush_NOTIFICATION_BANNER_BYPASS_CONDITIONS";
   public static final String LAST_CLICKED_NOTIFICATION_ID = "CleverPush_LAST_CLICKED_NOTIFICATION_ID";
   public static final String LAST_CLICKED_NOTIFICATION_TIME = "CleverPush_LAST_CLICKED_NOTIFICATION_TIME";
+  public static final String LAST_DEEP_LINK_URL = "CleverPush_LAST_DEEP_LINK_URL";
+  public static final String LAST_DEEP_LINK_TIME = "CleverPush_LAST_DEEP_LINK_TIME";
   public static final String APP_OPENS = "CleverPush_APP_OPENS";
   public static final String APP_REVIEW_SHOWN = "CleverPush_APP_REVIEW_SHOWN";
   public static final String PENDING_TOPICS_DIALOG = "CleverPush_PENDING_TOPICS_DIALOG";

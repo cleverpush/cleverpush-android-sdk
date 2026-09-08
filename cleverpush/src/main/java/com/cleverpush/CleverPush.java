@@ -3395,6 +3395,8 @@ public class CleverPush {
                 if (lastClickedNotificationId != null && !lastClickedNotificationId.isEmpty() && isWithin24Hours(lastClickedNotificationTime)) {
                   jsonBody.put("notificationId", lastClickedNotificationId);
                 }
+
+                DeepLinkTracker.addAttributionToEvent(jsonBody, sharedPreferences);
               } catch (JSONException ex) {
                 Logger.e(LOG_TAG, "Error creating trackEvent request parameter", ex);
               }

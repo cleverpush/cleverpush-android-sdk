@@ -52,29 +52,36 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     } else {
       ActivityLifecycleListener.sessionListener = sessionListener;
     }
+    if (currentActivity != null) {
+      DeepLinkTracker.captureFromActivity(currentActivity);
+    }
   }
 
   static void registerActivityLifecycleCallbacks(@NonNull final Application application,
                                                  SessionListener sessionListener, Activity activity) {
     registerActivityLifecycleCallbacks(application, sessionListener);
     instance.currentActivity = activity;
+    DeepLinkTracker.captureFromActivity(activity);
   }
 
   @Override
   public void onActivityCreated(Activity activity, Bundle bundle) {
     currentActivity = activity;
+    DeepLinkTracker.captureFromActivity(activity);
   }
 
   @Override
   public void onActivityStarted(Activity activity) {
     activityCount++;
     isInBackground = false;
+    DeepLinkTracker.captureFromActivity(activity);
   }
 
   @Override
   public void onActivityResumed(Activity activity) {
     Logger.d(LOG_TAG, "onActivityResumed");
     currentActivity = activity;
+    DeepLinkTracker.captureFromActivity(activity);
 
     try {
       CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
