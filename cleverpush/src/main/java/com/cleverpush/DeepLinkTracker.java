@@ -60,7 +60,7 @@ public final class DeepLinkTracker {
       return;
     }
 
-    String url = extractDeepLinkUrl(intent);
+    String url = extractDeepLinkUrl(intent, context);
     if (url == null) {
       return;
     }
@@ -80,13 +80,13 @@ public final class DeepLinkTracker {
     }
   }
 
-  public static void storeDeepLink(Context context, String url) {
+  static void storeDeepLink(Context context, String url) {
     if (context == null) {
       return;
     }
 
     String normalizedUrl = normalizeDeepLinkUrl(url);
-    if (normalizedUrl == null) {
+    if (normalizedUrl == null || !DeepLinkAllowlist.allows(context, normalizedUrl)) {
       return;
     }
 
@@ -101,7 +101,7 @@ public final class DeepLinkTracker {
     }
   }
 
-  public static void addAttributionToEvent(JSONObject jsonBody, SharedPreferences sharedPreferences) {
+  static void addAttributionToEvent(JSONObject jsonBody, SharedPreferences sharedPreferences) {
     if (jsonBody == null || sharedPreferences == null) {
       return;
     }
@@ -117,7 +117,7 @@ public final class DeepLinkTracker {
     }
   }
 
-  static String extractDeepLinkUrl(Intent intent) {
+  static String extractDeepLinkUrl(Intent intent, Context context) {
     if (intent == null) {
       return null;
     }
@@ -125,13 +125,13 @@ public final class DeepLinkTracker {
     Uri data = intent.getData();
     if (data != null) {
       String url = data.toString();
-      if (isTrackableDeepLink(url)) {
+      if (isTrackableDeepLink(url) && DeepLinkAllowlist.allows(context, url)) {
         return url;
       }
     }
 
     String dataString = intent.getDataString();
-    if (isTrackableDeepLink(dataString)) {
+    if (isTrackableDeepLink(dataString) && DeepLinkAllowlist.allows(context, dataString)) {
       return dataString;
     }
 
