@@ -49,7 +49,6 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     if (instance == null) {
       instance = new ActivityLifecycleListener(sessionListener);
       application.registerActivityLifecycleCallbacks(instance);
-      DeepLinkInstrumentation.install();
     } else {
       ActivityLifecycleListener.sessionListener = sessionListener;
     }
@@ -118,6 +117,12 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error while registering OnSharedPreferenceChangeListener. " + e.getMessage(), e);
     }
+  }
+
+  @Override
+  public void onActivityPostResumed(@NonNull Activity activity) {
+    // Runs after onNewIntent + the host onResume, so getIntent() is current if setIntent was used.
+    captureDeepLink(activity);
   }
 
   @Override

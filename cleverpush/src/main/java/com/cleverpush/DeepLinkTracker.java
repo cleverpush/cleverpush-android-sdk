@@ -28,9 +28,10 @@ import java.util.WeakHashMap;
  * Detects deep links opened in the host app, stores the URL, and attributes it on
  * later {@code trackEvent} calls. Does not send events on its own.
  * <p>
- * Reused host activities of any {@link Activity} subclass are handled automatically.
- * New-intent delivery is intercepted process-wide so a stale {@link Activity#getIntent()}
- * does not drop later deep links. ComponentActivity listeners are a fallback.
+ * Reused host activities of any {@link Activity} subclass are handled automatically
+ * via public hooks: {@code addOnNewIntentListener} when present, otherwise the
+ * new-intent extras/list on the activity and {@link Activity#getIntent()} after
+ * {@code onResume} (when the host called {@link Activity#setIntent(Intent)}).
  */
 public final class DeepLinkTracker {
 
@@ -268,28 +269,25 @@ public final class DeepLinkTracker {
         return latestNewIntent;
       }
     }
+    Intent deliveredNewIntent = peekDeliveredNewIntent(activity);
+    if (deliveredNewIntent != null) {
+      return deliveredNewIntent;
+    }
     return activity.getIntent();
   }
 
   /**
-   * Registers new-intent capture for every host {@link Activity}. Process instrumentation
-   * covers raw Activity hosts; ComponentActivity listeners remain as a fallback.
+   * Registers a public onNewIntent listener when the host activity exposes one
+   * (ComponentActivity, OnNewIntentProvider, or any addOnNewIntentListener API).
+   * Raw {@link Activity} hosts are covered by {@link #peekDeliveredNewIntent(Activity)}
+   * and by capturing {@link Activity#getIntent()} after resume.
    */
   private static void registerOnNewIntentCapture(Activity activity) {
-    DeepLinkInstrumentation.install();
-    registerComponentActivityListener(activity);
-  }
-
-  private static void registerComponentActivityListener(Activity activity) {
+    Method addOnNewIntentListener = findAddOnNewIntentListener(activity.getClass());
+    if (addOnNewIntentListener == null) {
+      return;
+    }
     try {
-      Class<?> componentActivityClass = Class.forName("androidx.activity.ComponentActivity");
-      if (!componentActivityClass.isInstance(activity)) {
-        return;
-      }
-      Method addOnNewIntentListener = findAddOnNewIntentListener(componentActivityClass);
-      if (addOnNewIntentListener == null) {
-        return;
-      }
       Class<?> listenerType = addOnNewIntentListener.getParameterTypes()[0];
       Object listener = java.lang.reflect.Proxy.newProxyInstance(
           listenerType.getClassLoader(),
@@ -302,15 +300,71 @@ public final class DeepLinkTracker {
           });
       addOnNewIntentListener.invoke(activity, listener);
     } catch (Throwable ignored) {
-      // Not a ComponentActivity, or addOnNewIntentListener is unavailable.
+      // Listener API present but not usable; resume-time capture still runs.
     }
   }
 
-  private static Method findAddOnNewIntentListener(Class<?> componentActivityClass) {
-    for (Method method : componentActivityClass.getMethods()) {
-      if ("addOnNewIntentListener".equals(method.getName())
-          && method.getParameterTypes().length == 1) {
-        return method;
+  private static Method findAddOnNewIntentListener(Class<?> type) {
+    while (type != null && type != Object.class) {
+      for (Method method : type.getMethods()) {
+        if ("addOnNewIntentListener".equals(method.getName())
+            && method.getParameterTypes().length == 1) {
+          return method;
+        }
+      }
+      type = type.getSuperclass();
+    }
+    return null;
+  }
+
+  /**
+   * Fallback for host activities that do not expose addOnNewIntentListener.
+   * Some platform versions keep the intents delivered to {@code onNewIntent} on
+   * the activity; read them so reused raw {@link Activity} hosts still attribute.
+   */
+  private static Intent peekDeliveredNewIntent(Activity activity) {
+    String[] fieldNames = {"mNewIntents", "mLastNewIntent"};
+    for (String fieldName : fieldNames) {
+      try {
+        java.lang.reflect.Field field = findActivityField(activity.getClass(), fieldName);
+        if (field == null) {
+          continue;
+        }
+        field.setAccessible(true);
+        Object value = field.get(activity);
+        Intent intent = unwrapDeliveredIntent(value);
+        if (intent != null) {
+          return intent;
+        }
+      } catch (Throwable ignored) {
+        // Field hidden or empty; try the next source.
+      }
+    }
+    return null;
+  }
+
+  private static java.lang.reflect.Field findActivityField(Class<?> type, String fieldName) {
+    while (type != null && type != Object.class) {
+      try {
+        return type.getDeclaredField(fieldName);
+      } catch (NoSuchFieldException ignored) {
+        type = type.getSuperclass();
+      }
+    }
+    return null;
+  }
+
+  private static Intent unwrapDeliveredIntent(Object value) {
+    if (value instanceof Intent) {
+      return (Intent) value;
+    }
+    if (value instanceof java.util.List) {
+      java.util.List<?> list = (java.util.List<?>) value;
+      for (int i = list.size() - 1; i >= 0; i--) {
+        Object item = list.get(i);
+        if (item instanceof Intent) {
+          return (Intent) item;
+        }
       }
     }
     return null;
