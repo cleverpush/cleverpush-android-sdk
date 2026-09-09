@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 
+import androidx.core.util.Consumer;
+
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.inbox.InboxDetailActivity;
 import com.cleverpush.stories.StoryDetailActivity;
@@ -16,11 +18,13 @@ import com.cleverpush.util.SharedPreferencesManager;
 
 import org.json.JSONObject;
 
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.WeakHashMap;
 
 /**
  * Detects deep links opened in the host app, stores the URL, and attributes it on
@@ -35,12 +39,36 @@ public final class DeepLinkTracker {
 
   private static String lastProcessedUrl;
   private static int lastProcessedIntentHash;
+  private static final WeakHashMap<Activity, Boolean> newIntentCaptureRegistered = new WeakHashMap<>();
 
   private DeepLinkTracker() {
   }
 
   public static void captureFromActivity(Activity activity) {
     if (shouldIgnoreActivity(activity)) {
+      return;
+    }
+    ensureOnNewIntentCapture(activity);
+    captureFromIntent(activity.getIntent(), activity.getApplicationContext());
+  }
+
+  /**
+   * Called automatically when a reused host activity receives a new deep link.
+   * Updates the activity intent so later lifecycle captures do not keep attributing
+   * {@link Activity#getIntent()}'s original launch URL.
+   */
+  static void captureFromNewIntent(Activity activity, Intent intent) {
+    if (shouldIgnoreActivity(activity)) {
+      return;
+    }
+    ensureOnNewIntentCapture(activity);
+    if (intent != null) {
+      try {
+        activity.setIntent(intent);
+      } catch (Exception ignored) {
+        // Host activity may not allow intent replacement; capture still uses the new intent.
+      }
+      captureFromIntent(intent, activity.getApplicationContext());
       return;
     }
     captureFromIntent(activity.getIntent(), activity.getApplicationContext());
@@ -206,6 +234,39 @@ public final class DeepLinkTracker {
         || activity instanceof WebViewActivity
         || activity instanceof InboxDetailActivity
         || activity instanceof StoryDetailActivity;
+  }
+
+  static void ensureOnNewIntentCapture(Activity activity) {
+    if (activity == null) {
+      return;
+    }
+    synchronized (newIntentCaptureRegistered) {
+      if (newIntentCaptureRegistered.containsKey(activity)) {
+        return;
+      }
+      newIntentCaptureRegistered.put(activity, Boolean.TRUE);
+    }
+    registerOnNewIntentCapture(activity);
+  }
+
+  /**
+   * Host activities that extend ComponentActivity (including AppCompatActivity) expose
+   * onNewIntent listeners. Hooking that path is required because getIntent() still
+   * returns the original launch intent when the activity is reused.
+   */
+  private static void registerOnNewIntentCapture(Activity activity) {
+    try {
+      Class<?> componentActivityClass = Class.forName("androidx.activity.ComponentActivity");
+      if (!componentActivityClass.isInstance(activity)) {
+        return;
+      }
+      Method addOnNewIntentListener = componentActivityClass.getMethod(
+          "addOnNewIntentListener", Consumer.class);
+      Consumer<Intent> listener = intent -> captureFromNewIntent(activity, intent);
+      addOnNewIntentListener.invoke(activity, listener);
+    } catch (Throwable ignored) {
+      // Not a ComponentActivity, or addOnNewIntentListener is unavailable.
+    }
   }
 
   private static String getCurrentDateTime() {
