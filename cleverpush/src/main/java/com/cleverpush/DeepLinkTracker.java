@@ -8,8 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 
-import androidx.core.util.Consumer;
-
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.inbox.InboxDetailActivity;
 import com.cleverpush.stories.StoryDetailActivity;
@@ -39,7 +37,9 @@ public final class DeepLinkTracker {
 
   private static String lastProcessedUrl;
   private static int lastProcessedIntentHash;
+  private static final Object NEW_INTENT_LOCK = new Object();
   private static final WeakHashMap<Activity, Boolean> newIntentCaptureRegistered = new WeakHashMap<>();
+  private static final WeakHashMap<Activity, Intent> latestNewIntents = new WeakHashMap<>();
 
   private DeepLinkTracker() {
   }
@@ -49,29 +49,27 @@ public final class DeepLinkTracker {
       return;
     }
     ensureOnNewIntentCapture(activity);
-    captureFromIntent(activity.getIntent(), activity.getApplicationContext());
+    captureFromIntent(resolveCaptureIntent(activity), activity.getApplicationContext());
   }
 
   /**
    * Called automatically when a reused host activity receives a new deep link.
-   * Updates the activity intent so later lifecycle captures do not keep attributing
-   * {@link Activity#getIntent()}'s original launch URL.
+   * Forwards that intent to {@link #captureFromIntent} and updates the activity
+   * intent so later lifecycle captures do not keep attributing the original URL.
    */
   static void captureFromNewIntent(Activity activity, Intent intent) {
-    if (shouldIgnoreActivity(activity)) {
+    if (shouldIgnoreActivity(activity) || intent == null) {
       return;
     }
-    ensureOnNewIntentCapture(activity);
-    if (intent != null) {
-      try {
-        activity.setIntent(intent);
-      } catch (Exception ignored) {
-        // Host activity may not allow intent replacement; capture still uses the new intent.
-      }
-      captureFromIntent(intent, activity.getApplicationContext());
-      return;
+    synchronized (NEW_INTENT_LOCK) {
+      latestNewIntents.put(activity, intent);
     }
-    captureFromIntent(activity.getIntent(), activity.getApplicationContext());
+    try {
+      activity.setIntent(intent);
+    } catch (Exception ignored) {
+      // Host activity may not allow intent replacement; capture still uses the new intent.
+    }
+    captureFromIntent(intent, activity.getApplicationContext());
   }
 
   public static void captureFromIntent(Intent intent, Context context) {
@@ -240,7 +238,7 @@ public final class DeepLinkTracker {
     if (activity == null) {
       return;
     }
-    synchronized (newIntentCaptureRegistered) {
+    synchronized (NEW_INTENT_LOCK) {
       if (newIntentCaptureRegistered.containsKey(activity)) {
         return;
       }
@@ -249,10 +247,30 @@ public final class DeepLinkTracker {
     registerOnNewIntentCapture(activity);
   }
 
+  static void clearActivity(Activity activity) {
+    if (activity == null) {
+      return;
+    }
+    synchronized (NEW_INTENT_LOCK) {
+      newIntentCaptureRegistered.remove(activity);
+      latestNewIntents.remove(activity);
+    }
+  }
+
+  private static Intent resolveCaptureIntent(Activity activity) {
+    synchronized (NEW_INTENT_LOCK) {
+      Intent latestNewIntent = latestNewIntents.get(activity);
+      if (latestNewIntent != null) {
+        return latestNewIntent;
+      }
+    }
+    return activity.getIntent();
+  }
+
   /**
    * Host activities that extend ComponentActivity (including AppCompatActivity) expose
-   * onNewIntent listeners. Hooking that path is required because getIntent() still
-   * returns the original launch intent when the activity is reused.
+   * onNewIntent listeners. Resolved at runtime so the SDK does not compile against a
+   * specific AndroidX Activity version.
    */
   private static void registerOnNewIntentCapture(Activity activity) {
     try {
@@ -260,13 +278,34 @@ public final class DeepLinkTracker {
       if (!componentActivityClass.isInstance(activity)) {
         return;
       }
-      Method addOnNewIntentListener = componentActivityClass.getMethod(
-          "addOnNewIntentListener", Consumer.class);
-      Consumer<Intent> listener = intent -> captureFromNewIntent(activity, intent);
+      Method addOnNewIntentListener = findAddOnNewIntentListener(componentActivityClass);
+      if (addOnNewIntentListener == null) {
+        return;
+      }
+      Class<?> listenerType = addOnNewIntentListener.getParameterTypes()[0];
+      Object listener = java.lang.reflect.Proxy.newProxyInstance(
+          listenerType.getClassLoader(),
+          new Class<?>[] {listenerType},
+          (proxy, method, args) -> {
+            if (args != null && args.length == 1 && args[0] instanceof Intent) {
+              captureFromNewIntent(activity, (Intent) args[0]);
+            }
+            return null;
+          });
       addOnNewIntentListener.invoke(activity, listener);
     } catch (Throwable ignored) {
       // Not a ComponentActivity, or addOnNewIntentListener is unavailable.
     }
+  }
+
+  private static Method findAddOnNewIntentListener(Class<?> componentActivityClass) {
+    for (Method method : componentActivityClass.getMethods()) {
+      if ("addOnNewIntentListener".equals(method.getName())
+          && method.getParameterTypes().length == 1) {
+        return method;
+      }
+    }
+    return null;
   }
 
   private static String getCurrentDateTime() {

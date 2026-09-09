@@ -53,7 +53,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
       ActivityLifecycleListener.sessionListener = sessionListener;
     }
     if (currentActivity != null) {
-      DeepLinkTracker.captureFromActivity(currentActivity);
+      captureDeepLink(currentActivity);
     }
   }
 
@@ -61,27 +61,27 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
                                                  SessionListener sessionListener, Activity activity) {
     registerActivityLifecycleCallbacks(application, sessionListener);
     instance.currentActivity = activity;
-    DeepLinkTracker.captureFromActivity(activity);
+    captureDeepLink(activity);
   }
 
   @Override
   public void onActivityCreated(Activity activity, Bundle bundle) {
     currentActivity = activity;
-    DeepLinkTracker.captureFromActivity(activity);
+    captureDeepLink(activity);
   }
 
   @Override
   public void onActivityStarted(Activity activity) {
     activityCount++;
     isInBackground = false;
-    DeepLinkTracker.captureFromActivity(activity);
+    captureDeepLink(activity);
   }
 
   @Override
   public void onActivityResumed(Activity activity) {
     Logger.d(LOG_TAG, "onActivityResumed");
     currentActivity = activity;
-    DeepLinkTracker.captureFromActivity(activity);
+    captureDeepLink(activity);
 
     try {
       CleverPush.context.startService(new Intent(CleverPush.context, CleanUpService.class));
@@ -171,9 +171,19 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
 
   @Override
   public void onActivityDestroyed(Activity activity) {
+    DeepLinkTracker.clearActivity(activity);
     if (activity == currentActivity) {
       currentActivity = null;
     }
+  }
+
+  /**
+   * Registers onNewIntent forwarding first so a reused host activity's new URL is
+   * captured instead of {@link Activity#getIntent()}'s original launch intent.
+   */
+  private static void captureDeepLink(Activity activity) {
+    DeepLinkTracker.ensureOnNewIntentCapture(activity);
+    DeepLinkTracker.captureFromActivity(activity);
   }
 
   public static void clearSessionListener() {
