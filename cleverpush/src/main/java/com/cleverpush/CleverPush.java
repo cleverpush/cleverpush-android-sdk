@@ -3395,6 +3395,8 @@ public class CleverPush {
                 if (lastClickedNotificationId != null && !lastClickedNotificationId.isEmpty() && isWithin24Hours(lastClickedNotificationTime)) {
                   jsonBody.put("notificationId", lastClickedNotificationId);
                 }
+
+                DeepLinkTracker.addAttributionToEvent(jsonBody, sharedPreferences);
               } catch (JSONException ex) {
                 Logger.e(LOG_TAG, "Error creating trackEvent request parameter", ex);
               }
@@ -4526,6 +4528,15 @@ public class CleverPush {
     }
 
     return ActivityLifecycleListener.currentActivity;
+  }
+
+  /**
+   * Forward {@link Activity#onNewIntent(Intent)} so a reused raw {@link Activity}
+   * attributes the new deep link on later {@code trackEvent} calls.
+   * Not required for AppCompatActivity / ComponentActivity hosts.
+   */
+  public void onNewIntent(Activity activity, Intent intent) {
+    DeepLinkTracker.captureFromNewIntent(activity, intent);
   }
 
   public Context getCurrentContext() {
