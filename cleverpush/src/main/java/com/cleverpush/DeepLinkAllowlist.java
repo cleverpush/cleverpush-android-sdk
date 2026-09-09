@@ -64,10 +64,7 @@ final class DeepLinkAllowlist {
         if (rule == null || rule.scheme == null || !rule.scheme.equals(scheme)) {
           continue;
         }
-        if (rule.host == null || rule.host.isEmpty() || "*".equals(rule.host)) {
-          return true;
-        }
-        if (rule.host.equals(host)) {
+        if (hostMatches(rule.host, host)) {
           return true;
         }
       }
@@ -149,6 +146,16 @@ final class DeepLinkAllowlist {
       eventType = parser.next();
     }
     return rules;
+  }
+
+  static boolean hostMatches(String ruleHost, String urlHost) {
+    if (ruleHost == null || ruleHost.isEmpty() || "*".equals(ruleHost)) {
+      return true;
+    }
+    return ruleHost.equals(urlHost)
+        || (urlHost != null && ruleHost.startsWith("*.")
+        && urlHost.length() > ruleHost.length() - 1
+        && urlHost.endsWith(ruleHost.substring(1)));
   }
 
   static boolean isUsableRule(Rule rule) {

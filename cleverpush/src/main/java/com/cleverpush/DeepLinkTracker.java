@@ -86,7 +86,7 @@ public final class DeepLinkTracker {
     }
 
     String normalizedUrl = normalizeDeepLinkUrl(url);
-    if (normalizedUrl == null || !DeepLinkAllowlist.allows(context, normalizedUrl)) {
+    if (normalizedUrl == null) {
       return;
     }
 
