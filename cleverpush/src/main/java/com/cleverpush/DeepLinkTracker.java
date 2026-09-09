@@ -293,6 +293,16 @@ public final class DeepLinkTracker {
           listenerType.getClassLoader(),
           new Class<?>[] {listenerType},
           (proxy, method, args) -> {
+            String methodName = method.getName();
+            if ("equals".equals(methodName)) {
+              return Boolean.valueOf(proxy == args[0]);
+            }
+            if ("hashCode".equals(methodName)) {
+              return Integer.valueOf(System.identityHashCode(proxy));
+            }
+            if ("toString".equals(methodName)) {
+              return "CleverPushOnNewIntentListener";
+            }
             if (args != null && args.length == 1 && args[0] instanceof Intent) {
               captureFromNewIntent(activity, (Intent) args[0]);
             }

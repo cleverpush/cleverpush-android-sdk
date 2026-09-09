@@ -25,7 +25,7 @@ final class DeepLinkInstrumentation extends Instrumentation {
 
   private static final Object INSTALL_LOCK = new Object();
   private static boolean installed;
-  private static boolean installAttempted;
+  private static boolean installBlocked;
 
   private final Instrumentation base;
 
@@ -33,17 +33,12 @@ final class DeepLinkInstrumentation extends Instrumentation {
     this.base = base != null ? base : new Instrumentation();
   }
 
-  static boolean isInstalled() {
-    return installed;
-  }
-
   @SuppressLint("PrivateApi")
   static void install() {
     synchronized (INSTALL_LOCK) {
-      if (installed || installAttempted) {
+      if (installed || installBlocked) {
         return;
       }
-      installAttempted = true;
       try {
         Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
         Object activityThread = activityThreadClass.getMethod("currentActivityThread").invoke(null);
@@ -60,6 +55,7 @@ final class DeepLinkInstrumentation extends Instrumentation {
         field.set(activityThread, new DeepLinkInstrumentation(current));
         installed = true;
       } catch (Throwable throwable) {
+        installBlocked = true;
         Logger.d(LOG_TAG, "DeepLinkTracker: process instrumentation unavailable; "
             + "raw Activity hosts should call CleverPush.onNewIntent(activity, intent)");
       }
@@ -174,5 +170,15 @@ final class DeepLinkInstrumentation extends Instrumentation {
   @Override
   public void callActivityOnUserLeaving(Activity activity) {
     base.callActivityOnUserLeaving(activity);
+  }
+
+  @Override
+  public void callActivityOnPictureInPictureRequested(Activity activity) {
+    base.callActivityOnPictureInPictureRequested(activity);
+  }
+
+  @Override
+  public boolean onException(Object obj, Throwable e) {
+    return base.onException(obj, e);
   }
 }
