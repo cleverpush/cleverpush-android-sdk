@@ -27,6 +27,10 @@ import java.util.WeakHashMap;
 /**
  * Detects deep links opened in the host app, stores the URL, and attributes it on
  * later {@code trackEvent} calls. Does not send events on its own.
+ * <p>
+ * Reused host activities of any {@link Activity} subclass are handled automatically.
+ * New-intent delivery is intercepted process-wide so a stale {@link Activity#getIntent()}
+ * does not drop later deep links. ComponentActivity listeners are a fallback.
  */
 public final class DeepLinkTracker {
 
@@ -268,11 +272,15 @@ public final class DeepLinkTracker {
   }
 
   /**
-   * Host activities that extend ComponentActivity (including AppCompatActivity) expose
-   * onNewIntent listeners. Resolved at runtime so the SDK does not compile against a
-   * specific AndroidX Activity version.
+   * Registers new-intent capture for every host {@link Activity}. Process instrumentation
+   * covers raw Activity hosts; ComponentActivity listeners remain as a fallback.
    */
   private static void registerOnNewIntentCapture(Activity activity) {
+    DeepLinkInstrumentation.install();
+    registerComponentActivityListener(activity);
+  }
+
+  private static void registerComponentActivityListener(Activity activity) {
     try {
       Class<?> componentActivityClass = Class.forName("androidx.activity.ComponentActivity");
       if (!componentActivityClass.isInstance(activity)) {
