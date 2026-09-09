@@ -49,6 +49,7 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
     if (instance == null) {
       instance = new ActivityLifecycleListener(sessionListener);
       application.registerActivityLifecycleCallbacks(instance);
+      DeepLinkInstrumentation.install();
     } else {
       ActivityLifecycleListener.sessionListener = sessionListener;
     }

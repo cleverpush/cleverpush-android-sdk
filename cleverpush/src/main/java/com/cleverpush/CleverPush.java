@@ -4530,6 +4530,15 @@ public class CleverPush {
     return ActivityLifecycleListener.currentActivity;
   }
 
+  /**
+   * Forward {@link Activity#onNewIntent(Intent)} so a reused raw {@link Activity}
+   * attributes the new deep link on later {@code trackEvent} calls.
+   * Not required for AppCompatActivity / ComponentActivity hosts.
+   */
+  public void onNewIntent(Activity activity, Intent intent) {
+    DeepLinkTracker.captureFromNewIntent(activity, intent);
+  }
+
   public Context getCurrentContext() {
     if (getCurrentActivity() != null) {
       return getCurrentActivity();
