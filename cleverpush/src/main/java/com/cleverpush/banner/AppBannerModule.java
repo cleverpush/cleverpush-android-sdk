@@ -920,7 +920,8 @@ public class AppBannerModule {
         boolean currentMatch = false;
 
         if (relation == CheckFilterRelation.Exists
-                || relation == CheckFilterRelation.NotExists) {
+                || relation == CheckFilterRelation.NotExists
+                || relation == CheckFilterRelation.IsEmpty) {
           try {
             String jsonString = sharedPreferences.getString(
                     CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES,
@@ -930,11 +931,15 @@ public class AppBannerModule {
             JSONObject attributes = new JSONObject(jsonString);
             boolean exists = attributes.has(attributeId);
 
-            currentMatch = relation == CheckFilterRelation.Exists
-                    ? exists
-                    : !exists;
+            if (relation == CheckFilterRelation.IsEmpty) {
+              currentMatch = exists && isSubscriptionAttributeValueEmpty(attributes.opt(attributeId));
+            } else {
+              currentMatch = relation == CheckFilterRelation.Exists
+                      ? exists
+                      : !exists;
+            }
           } catch (JSONException e) {
-            Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing subscription attributes Exists/NotExists relation.", e);
+            Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error parsing subscription attributes Exists/NotExists/IsEmpty relation.", e);
           }
         } else if (relation == CheckFilterRelation.ContainsSubstring) {
           if (attributeValueObj instanceof String) {
@@ -999,6 +1004,23 @@ public class AppBannerModule {
       Logger.e(TAG, "isBannerAttributeTargetingAllowed: Error while checking target. " + e.getLocalizedMessage(), e);
       return false;
     }
+  }
+
+  /**
+   * Returns {@code true} when a stored subscription attribute value is considered empty.
+   * Empty covers {@code null}, JSON {@code null}, empty strings, and empty arrays.
+   */
+  private boolean isSubscriptionAttributeValueEmpty(Object value) {
+    if (value == null || value == JSONObject.NULL) {
+      return true;
+    }
+    if (value instanceof String) {
+      return ((String) value).isEmpty();
+    }
+    if (value instanceof JSONArray) {
+      return ((JSONArray) value).length() == 0;
+    }
+    return false;
   }
 
   /**
