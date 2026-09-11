@@ -1020,9 +1020,6 @@ public class AppBannerModule {
     if (value instanceof JSONArray) {
       return ((JSONArray) value).length() == 0;
     }
-    if (value instanceof String[]) {
-      return ((String[]) value).length == 0;
-    }
     return false;
   }
 
