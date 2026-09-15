@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.CookieManager;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ImageView;
 
 import com.cleverpush.R;
@@ -26,7 +28,7 @@ public class WebViewActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_web_view);
+    setContentView(R.layout.cp_activity_web_view);
     handleBundleData(getIntent().getExtras());
   }
 
@@ -44,8 +46,8 @@ public class WebViewActivity extends Activity {
   @SuppressLint("SetJavaScriptEnabled")
   private void init() {
     try {
-      WebView webView = findViewById(R.id.webView);
-      ImageView closeButton = findViewById(R.id.ivClose);
+      WebView webView = findViewById(R.id.cp_webview);
+      ImageView closeButton = findViewById(R.id.cp_iv_close);
 
       if (webView == null) {
         Logger.e("CleverPush", "WebViewActivity: WebView is null");
@@ -64,6 +66,18 @@ public class WebViewActivity extends Activity {
       }
 
       CookieManager.getInstance().setAcceptCookie(true);
+
+      webView.setWebViewClient(new WebViewClient() {
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+          return false;
+        }
+
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+          return false;
+        }
+      });
 
       webView.loadUrl(url);
 

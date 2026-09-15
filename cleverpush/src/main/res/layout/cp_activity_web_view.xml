@@ -5,18 +5,17 @@
     android:layout_height="match_parent">
 
     <WebView
-        android:id="@+id/webView"
+        android:id="@+id/cp_webview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/ivClose"
+        android:id="@+id/cp_iv_close"
         android:background="@drawable/drawable_circle_filled_dark_gray"
         android:padding="10dp"
         android:layout_marginTop="10dp"
         android:layout_marginLeft="10dp"
         android:src="@drawable/ic_close" />
 </RelativeLayout>
-
