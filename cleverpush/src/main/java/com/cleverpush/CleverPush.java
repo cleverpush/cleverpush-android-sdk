@@ -1784,6 +1784,10 @@ public class CleverPush {
       });
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error in handleSubscribe.", e);
+      this.subscriptionInProgress = false;
+      if (subscribedCallbackListener != null) {
+        subscribedCallbackListener.onFailure(e);
+      }
     }
   }
 

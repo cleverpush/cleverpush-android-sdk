@@ -21,14 +21,18 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
   private static final int REGISTRATION_RETRY_COUNT = 3;
   private static final int REGISTRATION_RETRY_BACKOFF_MS = 10_000;
+  private static final int GET_TOKEN_TIMEOUT_SECONDS = 60;
 
   private static final String TOKEN_BLACKLISTED = "BLACKLISTED";
   private static final String ERROR_SERVICE_NOT_AVAILABLE = "SERVICE_NOT_AVAILABLE";
+  private static final String ERROR_TOKEN_TIMEOUT = "FCM_TOKEN_TIMEOUT";
   private static final String THREAD_NAME = "FCM_GET_TOKEN";
   private static final String REGEN_THREAD_NAME = "FCM_REGEN_TOKEN";
   private volatile boolean isRegeneratingPushToken = false;
@@ -48,7 +52,10 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       Logger.e(LOG_TAG, "FirebaseMessaging.getToken() interrupted", e);
-      return null;
+      throw new IOException(ERROR_SERVICE_NOT_AVAILABLE);
+    } catch (TimeoutException e) {
+      Logger.e(LOG_TAG, "FirebaseMessaging.getToken() timed out after " + GET_TOKEN_TIMEOUT_SECONDS + "s", e);
+      throw new IOException(ERROR_TOKEN_TIMEOUT);
     } catch (ExecutionException e) {
       if (isServiceNotAvailable(e)) {
         throw new IOException(ERROR_SERVICE_NOT_AVAILABLE);
@@ -146,7 +153,7 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
       Method getTokenMethod = firebaseMessagingClass.getMethod("getToken");
       Task<String> tokenTask = (Task<String>) getTokenMethod.invoke(instance);
 
-      return Tasks.await(tokenTask);
+      return Tasks.await(tokenTask, GET_TOKEN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (ClassNotFoundException |
              NoSuchMethodException |
              IllegalAccessException |
@@ -265,6 +272,9 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
   private synchronized void subscribeInBackground(final String senderId,
                                                   SubscribedCallbackListener subscribedListener) {
     if (registerThread != null && registerThread.isAlive()) {
+      if (subscribedListener != null) {
+        subscribedListener.onFailure(new Exception("FCM token registration is already in progress"));
+      }
       return;
     }
 
@@ -279,11 +289,15 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
           }
 
           if (currentRetry >= (REGISTRATION_RETRY_COUNT - 1)) {
-            Logger.e(LOG_TAG, "Retry count of " + REGISTRATION_RETRY_COUNT + " exceed! Could not get a FCM Token.");
-          } else {
-            Logger.i(LOG_TAG, "FCM returned SERVICE_NOT_AVAILABLE error. Current retry count: " + currentRetry);
+            String error = "Retry count of " + REGISTRATION_RETRY_COUNT + " exceed! Could not get a FCM Token.";
+            Logger.e(LOG_TAG, error);
+            if (subscribedListener != null) {
+              subscribedListener.onFailure(new Exception(error));
+            }
+            return;
           }
 
+          Logger.i(LOG_TAG, "FCM returned SERVICE_NOT_AVAILABLE error. Current retry count: " + currentRetry);
           try {
             Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
           } catch (InterruptedException e) {
@@ -292,7 +306,9 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         }
       } catch (Throwable throwable) {
         Logger.e(LOG_TAG, "Unknown error getting FCM Token in subscribeInBackground.", throwable);
-        subscribedListener.onFailure(throwable);
+        if (subscribedListener != null) {
+          subscribedListener.onFailure(throwable);
+        }
       }
     }, THREAD_NAME);
     registerThread.start();
@@ -308,6 +324,9 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
 
       return token;
     } catch (IOException exception) {
+      if (ERROR_TOKEN_TIMEOUT.equals(exception.getMessage())) {
+        throw exception;
+      }
       if (!ERROR_SERVICE_NOT_AVAILABLE.equals(exception.getMessage())) {
         Logger.e(LOG_TAG, "Error Getting FCM Token in getTokenAttempt", exception);
         throw exception;
