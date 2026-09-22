@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -52,9 +55,10 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       Logger.e(LOG_TAG, "FirebaseMessaging.getToken() interrupted", e);
-      throw new IOException(ERROR_SERVICE_NOT_AVAILABLE);
+      throw e;
     } catch (TimeoutException e) {
-      Logger.e(LOG_TAG, "FirebaseMessaging.getToken() timed out after " + GET_TOKEN_TIMEOUT_SECONDS + "s", e);
+      Logger.e(LOG_TAG, "FirebaseMessaging.getToken() timed out after "
+          + GET_TOKEN_TIMEOUT_SECONDS + "s", e);
       throw new IOException(ERROR_TOKEN_TIMEOUT);
     } catch (ExecutionException e) {
       if (isServiceNotAvailable(e)) {
@@ -69,6 +73,11 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
     if (isFirebaseInstanceIdAvailable()) {
       try {
         return getTokenWithClassFirebaseInstanceId(senderId);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw e;
+      } catch (IOException e) {
+        throw e;
       } catch (Throwable t) {
         Logger.e(LOG_TAG, "FirebaseInstanceId fallback failed", t);
       }
@@ -112,7 +121,35 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
    */
   @Deprecated
   @WorkerThread
-  private String getTokenWithClassFirebaseInstanceId(String senderId) throws IOException {
+  private String getTokenWithClassFirebaseInstanceId(String senderId)
+      throws IOException, InterruptedException {
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      Future<String> tokenFuture = executor.submit(
+          () -> invokeFirebaseInstanceIdGetToken(senderId));
+      return tokenFuture.get(GET_TOKEN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      Logger.e(LOG_TAG, "FirebaseInstanceId.getToken() timed out after "
+          + GET_TOKEN_TIMEOUT_SECONDS + "s", e);
+      throw new IOException(ERROR_TOKEN_TIMEOUT);
+    } catch (ExecutionException e) {
+      Throwable cause = e.getCause() != null ? e.getCause() : e;
+      if (cause instanceof IOException) {
+        throw (IOException) cause;
+      }
+      if (cause instanceof Error) {
+        throw (Error) cause;
+      }
+      throw new Error(
+          "Reflection error in FirebaseInstanceId.getInstance(firebaseApp)"
+              + ".getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE)",
+          cause);
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  private String invokeFirebaseInstanceIdGetToken(String senderId) {
     Exception exception;
     try {
       Class<?> FirebaseInstanceIdClass = Class.forName("com.google.firebase.iid.FirebaseInstanceId");
@@ -301,7 +338,12 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
           try {
             Thread.sleep(REGISTRATION_RETRY_BACKOFF_MS * (currentRetry + 1));
           } catch (InterruptedException e) {
-            Logger.e(LOG_TAG, "Caught InterruptedException in subscribeInBackground.", e);
+            Thread.currentThread().interrupt();
+            Logger.e(LOG_TAG, "FCM token registration interrupted", e);
+            if (subscribedListener != null) {
+              subscribedListener.onFailure(e);
+            }
+            return;
           }
         }
       } catch (Throwable throwable) {
