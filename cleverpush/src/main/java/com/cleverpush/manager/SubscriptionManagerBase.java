@@ -87,15 +87,16 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
 
     int topicsVersion = sharedPreferences.getInt(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION, 0) + 1;
 
-    String appVersion = "";
+    String fetchedAppVersion = "";
     if (this.context != null) {
       try {
         PackageInfo pInfo = this.context.getPackageManager().getPackageInfo(this.context.getPackageName(), 0);
-        appVersion = pInfo.versionName;
+        fetchedAppVersion = pInfo.versionName != null ? pInfo.versionName : "";
       } catch (PackageManager.NameNotFoundException e) {
         Logger.e(LOG_TAG, "Error in syncSubscription for fetching appVersion.", e);
       }
     }
+    final String appVersion = fetchedAppVersion;
 
     Set<String> pianoSegments = null;
     if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS)) {
@@ -170,6 +171,11 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
             sharedPreferences.edit()
                     .putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L))
                     .apply();
+            if (!appVersion.isEmpty()) {
+              sharedPreferences.edit()
+                      .putString(CleverPushPreferences.SUBSCRIPTION_APP_VERSION, appVersion)
+                      .apply();
+            }
           }
 
           handleRegeneratePushTokenRequestedAt(sharedPreferences, responseJson);
