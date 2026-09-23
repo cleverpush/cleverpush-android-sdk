@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.35.35 (23.09.2026)
+* Improved subscription sync to trigger immediately when the app version changes.
+* Added `isEmpty` attribute targeting to `AppBanner`, allowing app banners to match when an attribute key exists but its value is empty or null.
+* Fixed an issue in `AppBanner` where URLs were not loading correctly in the WebView when using the `Open URL in WebView` action.
+* Added support for storing the opened deep link URL and passing it as `deeplinkId` when `trackEvent` is called.
+* Fixed an issue where `subscribe()` could hang indefinitely on a fresh install when `FirebaseMessaging.getToken()` did not complete. The FCM token request now times out after 60 seconds and `onFailure` is always called when the token request fails.
+
 ## 1.35.34 (14.08.2026)
 * Prevented `getSubscriptionId` and `CompletionFailureListener` APIs from hanging indefinitely when `autoRegister` is `false` and the user never subscribes.
 * Fixed an issue in `trackEvent` when property values are `null`.
