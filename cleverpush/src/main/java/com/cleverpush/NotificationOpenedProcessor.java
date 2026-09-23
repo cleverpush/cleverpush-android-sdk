@@ -99,6 +99,9 @@ public class NotificationOpenedProcessor {
         try {
           boolean autoHandleDeepLink = notification.isAutoHandleDeepLink();
           String deepLinkURL = result.getNotification().getUrl();
+          if (deepLinkURL != null && !deepLinkURL.isEmpty()) {
+            DeepLinkTracker.storeDeepLink(context, deepLinkURL);
+          }
           if (autoHandleDeepLink && deepLinkURL != null && !deepLinkURL.isEmpty()) {
             setNotificationDeepLink(deepLinkURL, cleverPush);
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkURL));
