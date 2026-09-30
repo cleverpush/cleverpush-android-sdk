@@ -4848,32 +4848,7 @@ public class CleverPush {
       mSharedPreferencesLiveData.observeForever(new Observer<String>() {
         @Override
         public void onChanged(String vendorConsents) {
-          try {
-            IabTcfMode currentMode = getIabTcfMode();
-            if (currentMode == null || currentMode == IabTcfMode.DISABLED) {
-              return;
-            }
-            if (vendorConsents != null && !vendorConsents.isEmpty()) {
-              if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
-                char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
-                boolean hasConsent = (consentStatus == '1');
-                if (currentMode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
-                  setTrackingConsent(hasConsent);
-                }
-                if (currentMode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
-                  setSubscribeConsent(hasConsent);
-                }
-
-                if (!hasConsent) {
-                  Logger.d(LOG_TAG, "setTCF Vendor does not have consent");
-                }
-              } else {
-                Logger.d(LOG_TAG, "setTCF Vendor consents string is too short to get character at index " + IABTCF_VendorConsent_POSITION + ".");
-              }
-            }
-          } catch (Exception e) {
-            Logger.e(LOG_TAG, "Error processing VendorConsents for IABTCF", e);
-          }
+          applyTcfVendorConsents(vendorConsents);
         }
       });
     } catch (Exception e) {
@@ -4889,11 +4864,71 @@ public class CleverPush {
    */
   public void setIabTcfMode(IabTcfMode mode) {
     this.iabTcfMode = mode;
-    if (mode == IabTcfMode.DISABLED) {
+    if (mode == null || mode == IabTcfMode.DISABLED) {
       setTrackingConsentRequired(false);
       setSubscribeConsentRequired(false);
       releaseTrackingConsentQueue();
       releaseSubscribeConsentQueue();
+      return;
+    }
+
+    boolean trackingRequired = mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT;
+    boolean subscribeRequired = mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT;
+    setTrackingConsentRequired(trackingRequired);
+    setSubscribeConsentRequired(subscribeRequired);
+    if (!trackingRequired) {
+      releaseTrackingConsentQueue();
+    }
+    if (!subscribeRequired) {
+      releaseSubscribeConsentQueue();
+    }
+    applyStoredTcfConsent();
+  }
+
+  private void applyStoredTcfConsent() {
+    Context prefsContext = CleverPush.context != null ? CleverPush.context : context;
+    if (prefsContext == null) {
+      return;
+    }
+    try {
+      SharedPreferences prefs = SharedPreferencesManager.getDefaultSharedPreferences(prefsContext);
+      applyTcfVendorConsents(prefs.getString(IABTCF_VendorConsents, null));
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error in setTCF", e);
+    }
+  }
+
+  /**
+   * A missing or too-short vendor string is treated as no consent while a wait mode is active.
+   */
+  private void applyTcfVendorConsents(String vendorConsents) {
+    try {
+      IabTcfMode currentMode = getIabTcfMode();
+      if (currentMode == null || currentMode == IabTcfMode.DISABLED) {
+        return;
+      }
+
+      boolean hasConsent = false;
+      if (vendorConsents != null && !vendorConsents.isEmpty()) {
+        if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
+          // charAt uses zero-based indexing, so the 1139th character is at index 1138.
+          hasConsent = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1) == '1';
+          if (!hasConsent) {
+            Logger.d(LOG_TAG, "setTCF Vendor does not have consent");
+          }
+        } else {
+          Logger.d(LOG_TAG, "setTCF Vendor consents string is too short to get character at index " + IABTCF_VendorConsent_POSITION + ".");
+        }
+      }
+
+      if (currentMode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+        setTrackingConsent(hasConsent);
+      }
+      if (currentMode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+        setSubscribeConsent(hasConsent);
+      }
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "Error processing VendorConsents for IABTCF", e);
     }
   }
 
