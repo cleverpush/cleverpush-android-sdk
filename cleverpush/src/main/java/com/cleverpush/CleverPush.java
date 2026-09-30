@@ -1919,16 +1919,15 @@ public class CleverPush {
       stopCampaigns(null);
     }
 
-    // hasTrackingConsent is false then event should not be stored in the queue for TCF
-    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !previousTrackingConsent && hasTrackingConsent) {
-      trackingConsentListeners = new ArrayList<>();
-    }
-
     if (hasTrackingConsent) {
       Collection<TrackingConsentListener> copyTrackingConsentListeners = new ArrayList<>(trackingConsentListeners);
       for (TrackingConsentListener listener : copyTrackingConsentListeners) {
         listener.ready();
       }
+    }
+
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !previousTrackingConsent && hasTrackingConsent) {
+      trackingConsentListeners = new ArrayList<>();
     }
 
     if (isTrackingConsentRequired() && !hasTrackingConsent && trackingConsentListeners.size() > 0) {
@@ -2015,15 +2014,15 @@ public class CleverPush {
     hasSubscribeConsentCalled = true;
     hasSubscribeConsent = consent;
 
-    // hasSubscribeConsent is false then event should not be stored in the queue for TCF
-    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !previousSubscribeConsent && hasSubscribeConsent) {
-      subscribeConsentListeners = new ArrayList<>();
-    }
-
     if (hasSubscribeConsent) {
-      for (SubscribeConsentListener listener : subscribeConsentListeners) {
+      Collection<SubscribeConsentListener> copySubscribeConsentListeners = new ArrayList<>(subscribeConsentListeners);
+      for (SubscribeConsentListener listener : copySubscribeConsentListeners) {
         listener.ready();
       }
+    }
+
+    if (getIabTcfMode() != null && getIabTcfMode() != IabTcfMode.DISABLED && !previousSubscribeConsent && hasSubscribeConsent) {
+      subscribeConsentListeners = new ArrayList<>();
     }
 
     if (isSubscribeConsentRequired() && !hasSubscribeConsent && subscribeConsentListeners.size() > 0) {
@@ -4842,7 +4841,7 @@ public class CleverPush {
       setSubscribeConsentRequired(mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT);
 
       Context mContext = context.getApplicationContext();
-      SharedPreferences mPreferences = getSharedPreferences(CleverPush.context);
+      SharedPreferences mPreferences = SharedPreferencesManager.getDefaultSharedPreferences(CleverPush.context);
 
       SharedPreferencesLiveData mSharedPreferencesLiveData = new SharedPreferencesLiveData(mPreferences, IABTCF_VendorConsents);
 
@@ -4850,14 +4849,18 @@ public class CleverPush {
         @Override
         public void onChanged(String vendorConsents) {
           try {
+            IabTcfMode currentMode = getIabTcfMode();
+            if (currentMode == null || currentMode == IabTcfMode.DISABLED) {
+              return;
+            }
             if (vendorConsents != null && !vendorConsents.isEmpty()) {
               if (vendorConsents.length() > IABTCF_VendorConsent_POSITION - 1) {
                 char consentStatus = vendorConsents.charAt(IABTCF_VendorConsent_POSITION - 1); // charAt uses zero-based indexing, so the 1139th character is at index 1138.
                 boolean hasConsent = (consentStatus == '1');
-                if (mode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
+                if (currentMode == IabTcfMode.TRACKING_WAIT_FOR_CONSENT) {
                   setTrackingConsent(hasConsent);
                 }
-                if (mode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
+                if (currentMode == IabTcfMode.SUBSCRIBE_WAIT_FOR_CONSENT) {
                   setSubscribeConsent(hasConsent);
                 }
 
@@ -4886,6 +4889,28 @@ public class CleverPush {
    */
   public void setIabTcfMode(IabTcfMode mode) {
     this.iabTcfMode = mode;
+    if (mode == IabTcfMode.DISABLED) {
+      setTrackingConsentRequired(false);
+      setSubscribeConsentRequired(false);
+      releaseTrackingConsentQueue();
+      releaseSubscribeConsentQueue();
+    }
+  }
+
+  private void releaseTrackingConsentQueue() {
+    Collection<TrackingConsentListener> pending = new ArrayList<>(trackingConsentListeners);
+    trackingConsentListeners = new ArrayList<>();
+    for (TrackingConsentListener listener : pending) {
+      listener.ready();
+    }
+  }
+
+  private void releaseSubscribeConsentQueue() {
+    Collection<SubscribeConsentListener> pending = new ArrayList<>(subscribeConsentListeners);
+    subscribeConsentListeners = new ArrayList<>();
+    for (SubscribeConsentListener listener : pending) {
+      listener.ready();
+    }
   }
 
   protected IabTcfMode getIabTcfMode() {

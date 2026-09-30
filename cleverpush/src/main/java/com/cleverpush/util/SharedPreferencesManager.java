@@ -29,6 +29,14 @@ public class SharedPreferencesManager {
   }
 
   /**
+   * IAB TCF v2 CMPs write IABTCF_* keys to the app's default SharedPreferences.
+   * SDK state lives in {@link #SDK_PREFERENCES_NAME} and must not be used for TCF consent.
+   */
+  public static SharedPreferences getDefaultSharedPreferences(Context context) {
+    return PreferenceManager.getDefaultSharedPreferences(context);
+  }
+
+  /**
    * Migrate default shared preferences to CleverPush shared preferences
    * This method copies all key-value pairs from the default shared preferences to CleverPush shared preferences.
    */
