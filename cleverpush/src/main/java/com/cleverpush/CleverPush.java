@@ -508,6 +508,7 @@ public class CleverPush {
         try {
           boolean posted = mainHandler.post(() ->
                   continueInit(
+                          channelId,
                           notificationReceivedListener,
                           notificationOpenedListener,
                           subscribedListener,
@@ -533,6 +534,7 @@ public class CleverPush {
     prepareSharedPreferences();
 
     continueInit(
+            channelId,
             notificationReceivedListener,
             notificationOpenedListener,
             subscribedListener,
@@ -571,10 +573,13 @@ public class CleverPush {
     }
   }
 
-  private void continueInit(@Nullable NotificationReceivedListenerBase notificationReceivedListener,
+  private void continueInit(@Nullable String channelId,
+                            @Nullable NotificationReceivedListenerBase notificationReceivedListener,
                             @Nullable NotificationOpenedListenerBase notificationOpenedListener,
                             @Nullable SubscribedListener subscribedListener, boolean autoRegister,
                             @Nullable InitializeListener initializeListener) {
+    this.channelId = channelId;
+
     if (context != null) {
       SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
       if (sharedPreferences != null) {
@@ -827,7 +832,8 @@ public class CleverPush {
   }
 
   /**
-   * check if initialized
+   * Returns true after the channel-config response has been stored.
+   * This is still false when {@code init} returns, including before preference loading moved off the main thread.
    */
   public boolean isInitialized() {
     return this.channelId != null && this.channelConfig != null;
