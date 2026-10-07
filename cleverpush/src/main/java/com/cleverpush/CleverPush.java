@@ -258,7 +258,8 @@ public class CleverPush {
   int appBannerPerSession;
   public static boolean notificationClickInProgress = false;
   public boolean appBannersNonBlocking = false;
-  private final ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
+  private final ExecutorService backgroundExecutor = newDaemonExecutor("CleverPushInit");
+  private final ExecutorService databaseExecutor = newDaemonExecutor("CleverPushDatabase");
   private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
   public CleverPush(@NonNull Context context) {
@@ -506,14 +507,19 @@ public class CleverPush {
         prepareSharedPreferences();
 
         try {
-          boolean posted = mainHandler.post(() ->
-                  continueInit(
-                          channelId,
-                          notificationReceivedListener,
-                          notificationOpenedListener,
-                          subscribedListener,
-                          autoRegister,
-                          initializeListener));
+          boolean posted = mainHandler.post(() -> {
+            try {
+              continueInit(
+                      channelId,
+                      notificationReceivedListener,
+                      notificationOpenedListener,
+                      subscribedListener,
+                      autoRegister,
+                      initializeListener);
+            } catch (Exception exception) {
+              Logger.e(LOG_TAG, "Error while continuing CleverPush init.", exception);
+            }
+          });
 
           if (!posted) {
             Logger.e(
@@ -670,6 +676,14 @@ public class CleverPush {
     setUpNotificationCategoryGroups();
 
     deleteDataBasedOnRetentionDays();
+  }
+
+  private static ExecutorService newDaemonExecutor(String threadName) {
+    return Executors.newSingleThreadExecutor(runnable -> {
+      Thread thread = new Thread(runnable, threadName);
+      thread.setDaemon(true);
+      return thread;
+    });
   }
 
   private static boolean isMainThread() {
@@ -5023,7 +5037,7 @@ public class CleverPush {
    * Retention days are obtained from the result of getLocalTrackEventRetentionDays().
    */
   private void deleteDataBasedOnRetentionDays() {
-    backgroundExecutor.execute(() -> {
+    databaseExecutor.execute(() -> {
       try {
         int retentionDays = getLocalTrackEventRetentionDays();
         Logger.d(LOG_TAG, "Retention days: " + retentionDays);
