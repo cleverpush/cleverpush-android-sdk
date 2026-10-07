@@ -21,6 +21,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.service.notification.StatusBarNotification;
 import android.view.Gravity;
 import android.view.View;
@@ -139,6 +140,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CleverPush {
 
@@ -255,6 +258,8 @@ public class CleverPush {
   int appBannerPerSession;
   public static boolean notificationClickInProgress = false;
   public boolean appBannersNonBlocking = false;
+  private final ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
   public CleverPush(@NonNull Context context) {
     if (context == null) {
@@ -484,22 +489,98 @@ public class CleverPush {
    * @param autoRegister                 boolean for auto register
    * @param initializeListener           callback for the init
    */
-  public void init(String channelId, @Nullable final NotificationReceivedListenerBase notificationReceivedListener,
-                   @Nullable final NotificationOpenedListenerBase notificationOpenedListener,
-                   @Nullable final SubscribedListener subscribedListener, boolean autoRegister,
-                   @Nullable final InitializeListener initializeListener) {
+  public void init(
+          String channelId,
+          @Nullable final NotificationReceivedListenerBase notificationReceivedListener,
+          @Nullable final NotificationOpenedListenerBase notificationOpenedListener,
+          @Nullable final SubscribedListener subscribedListener,
+          boolean autoRegister,
+          @Nullable final InitializeListener initializeListener) {
+
     this.channelId = channelId;
+    channelConfig = null;
+    initialized = false;
 
-    // Check if CleverPush SharedPreferences is created and contains the key channelId
-    SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
-    boolean containsChannelId = sharedPreferences.contains(CleverPushPreferences.CHANNEL_ID);
+    if (isMainThread()) {
+      backgroundExecutor.execute(() -> {
+        prepareSharedPreferences();
 
-    // If CleverPush SharedPreferences is not created or does not contain the key channelId, call migrateSharedPreferences
-    if (!containsChannelId) {
-      SharedPreferencesManager.migrateSharedPreferences(context);
+        try {
+          boolean posted = mainHandler.post(() ->
+                  continueInit(
+                          notificationReceivedListener,
+                          notificationOpenedListener,
+                          subscribedListener,
+                          autoRegister,
+                          initializeListener));
+
+          if (!posted) {
+            Logger.e(
+                    LOG_TAG,
+                    "Unable to continue CleverPush initialization on main thread.");
+          }
+        } catch (Exception exception) {
+          Logger.e(
+                  LOG_TAG,
+                  "Error while continuing CleverPush init.",
+                  exception);
+        }
+      });
+
+      return;
     }
 
-    setAppInstallationDate(sharedPreferences);
+    prepareSharedPreferences();
+
+    continueInit(
+            notificationReceivedListener,
+            notificationOpenedListener,
+            subscribedListener,
+            autoRegister,
+            initializeListener);
+  }
+
+  /**
+   * Loads CleverPush preferences and migrates the legacy file when channelId is missing.
+   * Executed in the background to avoid blocking the main thread during initialization.
+   */
+  private void prepareSharedPreferences() {
+    try {
+      Context appContext = context;
+
+      if (appContext == null) {
+        return;
+      }
+
+      SharedPreferences sharedPreferences =
+              SharedPreferencesManager.getSharedPreferences(appContext);
+
+      if (sharedPreferences == null) {
+        return;
+      }
+
+      if (!sharedPreferences.contains(CleverPushPreferences.CHANNEL_ID)) {
+        SharedPreferencesManager.migrateSharedPreferences(appContext);
+      }
+
+    } catch (Exception exception) {
+      Logger.e(
+              LOG_TAG,
+              "Error while preparing SharedPreferences in init.",
+              exception);
+    }
+  }
+
+  private void continueInit(@Nullable NotificationReceivedListenerBase notificationReceivedListener,
+                            @Nullable NotificationOpenedListenerBase notificationOpenedListener,
+                            @Nullable SubscribedListener subscribedListener, boolean autoRegister,
+                            @Nullable InitializeListener initializeListener) {
+    if (context != null) {
+      SharedPreferences sharedPreferences = SharedPreferencesManager.getSharedPreferences(context);
+      if (sharedPreferences != null) {
+        setAppInstallationDate(sharedPreferences);
+      }
+    }
 
     if (notificationReceivedListener != null) {
       this.setNotificationReceivedListener(notificationReceivedListener);
@@ -584,6 +665,15 @@ public class CleverPush {
     setUpNotificationCategoryGroups();
 
     deleteDataBasedOnRetentionDays();
+  }
+
+  private static boolean isMainThread() {
+    try {
+      Looper mainLooper = Looper.getMainLooper();
+      return mainLooper != null && mainLooper == Looper.myLooper();
+    } catch (RuntimeException exception) {
+      return false;
+    }
   }
 
   private void setAppInstallationDate(SharedPreferences sharedPreferences) {
@@ -4927,16 +5017,20 @@ public class CleverPush {
    * Retention days are obtained from the result of getLocalTrackEventRetentionDays().
    */
   private void deleteDataBasedOnRetentionDays() {
-    try {
-      int retentionDays = getLocalTrackEventRetentionDays();
-      Logger.d(LOG_TAG, "Retention days: "+ retentionDays);
-      DatabaseClient.getInstance(CleverPush.context)
-              .getAppDatabase()
-              .trackEventDao()
-              .deleteDataBasedOnRetentionDays(retentionDays);
-    } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error while deleting data based on retention days", e);
-    }
+    backgroundExecutor.execute(() -> {
+      try {
+        int retentionDays = getLocalTrackEventRetentionDays();
+        Logger.d(LOG_TAG, "Retention days: " + retentionDays);
+        DatabaseClient.getInstance(CleverPush.context)
+                .getAppDatabase()
+                .trackEventDao()
+                .deleteDataBasedOnRetentionDays(retentionDays);
+        Logger.d(LOG_TAG, "Successfully deleted old track event data.");
+      } catch (Exception e) {
+        Logger.e(LOG_TAG,
+                "Error while deleting data based on retention days", e);
+      }
+    });
   }
 
   private boolean isAutoResubscribe() {
