@@ -31,6 +31,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -865,16 +866,25 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         webView.addJavascriptInterface(new CleverpushInterface(webView), "CleverPush");
         webView.setWebViewClient(new AppBannerWebViewClient());
 
-        webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-          ViewGroup.LayoutParams params = webView.getLayoutParams();
-          params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-          params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-          webView.setLayoutParams(params);
-          webView.requestLayout();
-          if (isNonBlockingAppBanners) {
-            applyNonBlockingBannerUI(body, webLayout, webView);
-          } else {
-            fixFullscreenHtmlBannerUI(body, webLayout, webView);
+        // Adjust once the WebView has been laid out. setLayoutParams / ConstraintSet.applyTo
+        // request another layout, so remove the listener first or that pass runs this again.
+        webView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+          @Override
+          public void onGlobalLayout() {
+            if (webView.getWidth() <= 0 || webView.getHeight() <= 0) {
+              return;
+            }
+
+            ViewTreeObserver observer = webView.getViewTreeObserver();
+            if (observer.isAlive()) {
+              observer.removeOnGlobalLayoutListener(this);
+            }
+
+            if (isNonBlockingAppBanners) {
+              applyNonBlockingBannerUI(body, webLayout, webView);
+            } else {
+              fixFullscreenHtmlBannerUI(body, webLayout, webView);
+            }
           }
         });
 
