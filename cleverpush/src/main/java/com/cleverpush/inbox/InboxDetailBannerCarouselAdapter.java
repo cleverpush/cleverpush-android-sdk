@@ -579,17 +579,13 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
         webView.addJavascriptInterface(new CleverpushInterface(webView), "CleverPush");
         webView.setWebViewClient(new AppBannerWebViewClient());
 
-        // One shot: setLayoutParams / ConstraintSet.applyTo request another layout.
-        // Leaving this registered repeats that for as long as the banner is visible.
-        webView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-          @Override
-          public void onGlobalLayout() {
-            ViewTreeObserver observer = webView.getViewTreeObserver();
-            if (observer.isAlive()) {
-              observer.removeOnGlobalLayoutListener(this);
-            }
-            fixFullscreenHtmlBannerUI(body, webLayout, webView);
-          }
+        webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+          ViewGroup.LayoutParams params = webView.getLayoutParams();
+          params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+          params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+          webView.setLayoutParams(params);
+          webView.requestLayout();
+          fixFullscreenHtmlBannerUI(body, webLayout, webView);
         });
 
         // Ensure WebView is scrollable

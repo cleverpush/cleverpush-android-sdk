@@ -866,18 +866,18 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
         webView.addJavascriptInterface(new CleverpushInterface(webView), "CleverPush");
         webView.setWebViewClient(new AppBannerWebViewClient());
 
-        // Adjust once the WebView has been laid out. setLayoutParams / ConstraintSet.applyTo
-        // request another layout, so remove the listener first or that pass runs this again.
+        // Adjust once the WebView has been laid out. Unregister before the size check so a
+        // 0-size pass cannot leave the listener registered for later layouts and rebinds.
         webView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
           @Override
           public void onGlobalLayout() {
-            if (webView.getWidth() <= 0 || webView.getHeight() <= 0) {
-              return;
-            }
-
             ViewTreeObserver observer = webView.getViewTreeObserver();
             if (observer.isAlive()) {
               observer.removeOnGlobalLayoutListener(this);
+            }
+
+            if (webView.getWidth() <= 0 || webView.getHeight() <= 0) {
+              return;
             }
 
             if (isNonBlockingAppBanners) {
