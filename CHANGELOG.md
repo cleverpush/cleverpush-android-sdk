@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.35.36 (16.10.2026)
+* Fixed consent detection and event queue handling in IabTcfMode.
+* Fixed main-thread disk access during SDK initialization.
+* Fixed an ANR in HTML banners caused by a layout listener that was not properly unregistered.
+
 ## 1.35.35 (23.09.2026)
 * Improved subscription sync to trigger immediately when the app version changes.
 * Added `isEmpty` attribute targeting to `AppBanner`, allowing app banners to match when an attribute key exists but its value is empty or null.
