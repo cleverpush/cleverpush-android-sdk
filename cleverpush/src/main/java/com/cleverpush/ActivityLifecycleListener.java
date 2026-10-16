@@ -114,6 +114,9 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
       new Thread(() -> {
         SharedPreferences prefs = SharedPreferencesManager.getSharedPreferences(activity);
         prefs.registerOnSharedPreferenceChangeListener(this);
+
+        SharedPreferences defaultSharedPreferences = SharedPreferencesManager.getDefaultSharedPreferences(activity);
+        defaultSharedPreferences.registerOnSharedPreferenceChangeListener(this);
       }).start();
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error while registering OnSharedPreferenceChangeListener. " + e.getMessage(), e);
@@ -154,6 +157,9 @@ public class ActivityLifecycleListener implements Application.ActivityLifecycleC
       new Thread(() -> {
         SharedPreferences prefs = SharedPreferencesManager.getSharedPreferences(activity);
         prefs.unregisterOnSharedPreferenceChangeListener(this);
+
+        SharedPreferences defaultSharedPreferences = SharedPreferencesManager.getDefaultSharedPreferences(activity);
+        defaultSharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
       }).start();
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error while unregistering OnSharedPreferenceChangeListener. " + e.getMessage(), e);
