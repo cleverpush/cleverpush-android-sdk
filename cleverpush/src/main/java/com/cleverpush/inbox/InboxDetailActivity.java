@@ -6,11 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -31,11 +27,13 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.bumptech.glide.Glide;
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
 import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.Notification;
 import com.cleverpush.R;
+import com.cleverpush.banner.AppBannerPopup;
 import com.cleverpush.banner.models.Banner;
 import com.cleverpush.banner.models.BannerScreens;
 import com.cleverpush.banner.models.Event;
@@ -54,8 +52,6 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -89,6 +85,8 @@ public class InboxDetailActivity extends AppCompatActivity {
   private Banner data;
   private View popupRoot;
   private Handler mainHandler;
+  private static final int MAX_SHOW_RETRIES = 50;
+  private static final long SHOW_RETRY_DELAY_MS = 100L;
 
   public static void launch(Activity activity, ArrayList<Notification> notifications, int selectedPosition) {
     Intent intent = new Intent(activity, InboxDetailActivity.class);
@@ -295,7 +293,7 @@ public class InboxDetailActivity extends AppCompatActivity {
     if (!isInitialized) {
       throw new IllegalStateException("Must be initialized");
     }
-    new tryShowSafe().execute();
+    new tryShowSafe(0).execute();
   }
 
   private void displayBanner(LinearLayout body) {
@@ -538,25 +536,25 @@ public class InboxDetailActivity extends AppCompatActivity {
       }
       bannerBackground.setBackground(drawableBG);
     } else if (bg.getImageUrl() != null) {
-      new Thread(() -> {
+      String imageUrl;
+      if (data.isDarkModeEnabled(this) && bg.getDarkImageUrl() != null) {
+        imageUrl = bg.getDarkImageUrl();
+      } else {
+        imageUrl = bg.getImageUrl();
+      }
+      // Glide.into(ImageView) must run on the main thread. Glide decodes off the UI thread itself.
+      runOnUiThread(() -> {
         try {
-          String imageUrl;
-          if (data.isDarkModeEnabled(this) && bg.getDarkImageUrl() != null) {
-            imageUrl = bg.getDarkImageUrl();
-          } else {
-            imageUrl = bg.getImageUrl();
-          }
-
-          InputStream in = new URL(imageUrl).openStream();
-          Bitmap bitmap = BitmapFactory.decodeStream(in);
-          if (bitmap != null) {
-            Drawable drawable = new BitmapDrawable(bitmap);
-            bannerBackground.setBackgroundDrawable(drawable);
-          }
+          ImageView bannerBackgroundImage =
+                  findViewById(R.id.inboxViewBannerBackgroundImage);
+          Glide.with(this)
+                  .load(imageUrl)
+                  .centerCrop()
+                  .into(bannerBackgroundImage);
         } catch (Exception ex) {
           Logger.e(TAG, "Error at setting background image in InboxView: ", ex);
         }
-      }).start();
+      });
     } else {
       bannerBackground.setVisibility(View.GONE);
     }
@@ -601,18 +599,26 @@ public class InboxDetailActivity extends AppCompatActivity {
   }
 
   public class tryShowSafe extends AsyncTask<String, Void, Boolean> {
+    private final int attempt;
+
+    public tryShowSafe(int attempt) {
+      this.attempt = attempt;
+    }
 
     @Override
     protected Boolean doInBackground(String... strings) {
       if (isRootReady()) {
         return true;
-      } else {
+      }
+      if (attempt < MAX_SHOW_RETRIES) {
         new Timer().schedule(new TimerTask() {
           @Override
           public void run() {
-            new tryShowSafe().execute();
+            new tryShowSafe(attempt + 1).execute();
           }
-        }, 100);
+        }, SHOW_RETRY_DELAY_MS);
+      } else {
+        Logger.i(TAG, "InboxView AppBanner not shown: no valid host activity became available after retries.");
       }
       return false;
     }

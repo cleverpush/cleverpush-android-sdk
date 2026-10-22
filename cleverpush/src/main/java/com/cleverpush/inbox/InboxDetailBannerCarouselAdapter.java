@@ -16,6 +16,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.net.Uri;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.util.Base64;
 import android.util.TypedValue;
@@ -35,13 +36,18 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
 import com.cleverpush.banner.AppBannerWebViewClient;
@@ -121,13 +127,15 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
 
   @Override
   public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
     try {
+      body.removeAllViews();
+
       HashMap<String, String> currentVoucherCodePlaceholder = CleverPush.getInstance(CleverPush.context).getAppBannerModule().getCurrentVoucherCodePlaceholder();
       if (currentVoucherCodePlaceholder != null && currentVoucherCodePlaceholder.containsKey(data.getId())) {
         voucherCode = currentVoucherCodePlaceholder.get(data.getId());
       }
 
-      LinearLayout body = holder.itemView.findViewById(R.id.carouselBannerBody);
       if (data.getContentType() != null && data.getContentType().equalsIgnoreCase(CONTENT_TYPE_HTML)) {
         composeHtmlBanner(body, data.getContent());
       } else {
@@ -315,8 +323,9 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     if (block.getHtml() != null && !block.getHtml().isEmpty()) {
       try {
         String replacedHtml = VoucherCodeUtils.replaceVoucherCodeString(block.getHtml(), voucherCode);
-        Spanned formattedText = HtmlCompat.fromHtml(replacedHtml, HtmlCompat.FROM_HTML_MODE_LEGACY);
-        textView.setText(formattedText);
+        Spanned formattedText = HtmlCompat.fromHtml(replacedHtml, HtmlCompat.FROM_HTML_MODE_COMPACT);
+        Spanned cleanedText = removeTrailingBlankLines(formattedText);
+        textView.setText(cleanedText);
       } catch (Exception e) {
         Logger.e(TAG, "Error parsing HTML in composeTextBlock for inbox view text block", e);
         String fallback = VoucherCodeUtils.replaceVoucherCodeString(block.getText(), voucherCode);
@@ -360,7 +369,9 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
 
   private void composeImageBlock(LinearLayout body, BannerImageBlock block, int position) {
     @SuppressLint("InflateParams") ConstraintLayout imageLayout =
-            (ConstraintLayout) activity.getLayoutInflater().inflate(R.layout.app_banner_image, null);
+            (ConstraintLayout) activity.getLayoutInflater()
+                    .inflate(R.layout.app_banner_image, null);
+
     ImageView img = imageLayout.findViewById(R.id.imageView);
     ProgressBar progressBar = imageLayout.findViewById(R.id.progressBar);
     progressBar.setVisibility(View.VISIBLE);
@@ -368,81 +379,64 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
     ConstraintSet imgConstraints = new ConstraintSet();
     imgConstraints.clone(imageLayout);
 
-    float widthPercentage = Math.min(100, Math.max(0, block.getScale())) / 100.0f;
-    
-    imgConstraints.constrainPercentWidth(img.getId(), widthPercentage);
-    float aspectRatio = 1.0f;
-    
-    float height = widthPercentage / aspectRatio * 100;
-    imgConstraints.constrainPercentHeight(img.getId(), height);
+    float widthPercentage =
+            Math.min(100, Math.max(0, block.getScale())) / 100.0f;
 
+    imgConstraints.constrainPercentWidth(img.getId(), widthPercentage);
+
+    float aspectRatio = 1.0f;
+    float height = widthPercentage / aspectRatio * 100;
+
+    imgConstraints.constrainPercentHeight(img.getId(), height);
     imgConstraints.applyTo(imageLayout);
 
-    new Thread(() -> {
-      HttpURLConnection connection = null;
-      InputStream in = null;
-      try {
-        String imageUrl;
-        if (appBannerPopup.getData().isDarkModeEnabled(activity)
-                && block.getDarkImageUrl() != null && !block.getDarkImageUrl().isEmpty()) {
-          imageUrl = block.getDarkImageUrl();
-        } else {
-          imageUrl = block.getImageUrl();
-        }
+    String imageUrl;
+    if (appBannerPopup.getData().isDarkModeEnabled(activity)
+            && block.getDarkImageUrl() != null
+            && !block.getDarkImageUrl().isEmpty()) {
+      imageUrl = block.getDarkImageUrl();
+    } else {
+      imageUrl = block.getImageUrl();
+    }
 
-        URL url = new URL(imageUrl);
-        connection = (HttpURLConnection) url.openConnection();
-        connection.setDoInput(true);
+    if (imageUrl == null || imageUrl.isEmpty()
+            || "null".equalsIgnoreCase(imageUrl)) {
+      progressBar.setVisibility(View.GONE);
+    } else {
+      Glide.with(activity)
+              .load(imageUrl)
+              .diskCacheStrategy(DiskCacheStrategy.ALL)
+              .listener(new RequestListener<Drawable>() {
+                @Override
+                public boolean onLoadFailed(
+                        @Nullable GlideException e,
+                        Object model,
+                        Target<Drawable> target,
+                        boolean isFirstResource) {
+                  progressBar.setVisibility(View.GONE);
+                  Logger.e(TAG, "Error loading InboxView image.", e);
+                  return false;
+                }
 
-        // Get the content type from the response headers
-        String contentType = connection.getHeaderField("Content-Type");
-
-        // Checks whether the content at the specified URL is a GIF image.
-        boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
-
-        in = connection.getInputStream();
-        final Bitmap bitmap = BitmapFactory.decodeStream(in);
-
-        activity.runOnUiThread(() -> {
-          if (isGif) {
-            Glide.with(CleverPush.context)
-                    .asGif()
-                    .load(imageUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(img);
-          } else {
-            if (bitmap != null) {
-              img.setImageBitmap(bitmap);
-            }
-          }
-          progressBar.setVisibility(View.GONE);
-        });
-
-      } catch (Exception e) {
-        Logger.e(TAG, "Error in InboxView composeImageBlock.", e);
-        if (activity != null) {
-          activity.runOnUiThread(() -> {
-            progressBar.setVisibility(View.GONE);
-          });
-        }
-      } finally {
-        if (connection != null) {
-          connection.disconnect();
-        }
-        if (in != null) {
-          try {
-            in.close();
-          } catch (IOException e) {
-            Logger.e(TAG, "Error in closing InputStream in InboxView composeImageBlock.", e);
-          }
-        }
-      }
-    }).start();
+                @Override
+                public boolean onResourceReady(
+                        Drawable resource,
+                        Object model,
+                        Target<Drawable> target,
+                        DataSource dataSource,
+                        boolean isFirstResource) {
+                  progressBar.setVisibility(View.GONE);
+                  return false;
+                }
+              })
+              .into(img);
+    }
 
     body.addView(imageLayout);
 
     if (block.getAction() != null) {
-      img.setOnClickListener(view -> this.onClickListener(block.getAction()));
+      img.setOnClickListener(view ->
+              this.onClickListener(block.getAction()));
     }
   }
 
@@ -822,5 +816,20 @@ public class InboxDetailBannerCarouselAdapter extends RecyclerView.Adapter<Inbox
       empty.put("channelId", (Object) null);
       return new Gson().toJson(empty);
     }
+  }
+
+  public static Spanned removeTrailingBlankLines(Spanned spanned) {
+    SpannableStringBuilder ssb = new SpannableStringBuilder(spanned);
+
+    int i = ssb.length() - 1;
+    while (i >= 0 && Character.isWhitespace(ssb.charAt(i))) {
+      i--;
+    }
+
+    if (i < ssb.length() - 1) {
+      ssb.delete(i + 1, ssb.length());
+    }
+
+    return ssb;
   }
 }

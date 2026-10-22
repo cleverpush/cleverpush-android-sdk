@@ -1,7 +1,5 @@
 package com.cleverpush.inbox;
 
-import static com.cleverpush.Constants.LOG_TAG;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
@@ -21,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.CleverPush;
-import com.cleverpush.CleverPushHttpClient;
 import com.cleverpush.CleverPushPreferences;
 import com.cleverpush.Notification;
 import com.cleverpush.NotificationOpenedResult;
@@ -32,9 +29,6 @@ import com.cleverpush.listener.NotificationClickListener;
 import com.cleverpush.listener.NotificationsCallbackListener;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.SharedPreferencesManager;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Set;
