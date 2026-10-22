@@ -385,20 +385,19 @@ public class AppBannerPopup {
       bannerBackground.setBackground(drawableBG);
       bannerBackground.setVisibility(View.VISIBLE);
     } else if (background.getImageUrl() != null) {
-      new Thread(() -> {
+      String imageUrl;
+      if (data.isDarkModeEnabled(activity)
+              && background.getDarkImageUrl() != null
+              && !background.getDarkImageUrl().isEmpty()) {
+        imageUrl = background.getDarkImageUrl();
+      } else {
+        imageUrl = background.getImageUrl();
+      }
+
+      // Glide.into(ImageView) must run on the main thread. Glide decodes off the UI thread itself.
+      Runnable loadBackground = () -> {
         try {
-
           bannerBackground.setVisibility(View.VISIBLE);
-          String imageUrl;
-
-          if (data.isDarkModeEnabled(activity)
-                  && background.getDarkImageUrl() != null
-                  && !background.getDarkImageUrl().isEmpty()) {
-            imageUrl = background.getDarkImageUrl();
-          } else {
-            imageUrl = background.getImageUrl();
-          }
-
           Glide.with(bannerBackground)
                   .load(imageUrl)
                   .centerCrop()
@@ -406,7 +405,12 @@ public class AppBannerPopup {
         } catch (Exception ex) {
           Logger.e(TAG, "Error at setting background image in app banner.", ex);
         }
-      }).start();
+      };
+      if (Looper.myLooper() == Looper.getMainLooper()) {
+        loadBackground.run();
+      } else {
+        mainHandler.post(loadBackground);
+      }
     } else {
       bannerBackground.setVisibility(View.GONE);
     }

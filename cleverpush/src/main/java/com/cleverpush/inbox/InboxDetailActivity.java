@@ -536,14 +536,15 @@ public class InboxDetailActivity extends AppCompatActivity {
       }
       bannerBackground.setBackground(drawableBG);
     } else if (bg.getImageUrl() != null) {
-      new Thread(() -> {
+      String imageUrl;
+      if (data.isDarkModeEnabled(this) && bg.getDarkImageUrl() != null) {
+        imageUrl = bg.getDarkImageUrl();
+      } else {
+        imageUrl = bg.getImageUrl();
+      }
+      // Glide.into(ImageView) must run on the main thread. Glide decodes off the UI thread itself.
+      runOnUiThread(() -> {
         try {
-          String imageUrl;
-          if (data.isDarkModeEnabled(this) && bg.getDarkImageUrl() != null) {
-            imageUrl = bg.getDarkImageUrl();
-          } else {
-            imageUrl = bg.getImageUrl();
-          }
           ImageView bannerBackgroundImage =
                   findViewById(R.id.inboxViewBannerBackgroundImage);
           Glide.with(this)
@@ -553,7 +554,7 @@ public class InboxDetailActivity extends AppCompatActivity {
         } catch (Exception ex) {
           Logger.e(TAG, "Error at setting background image in InboxView: ", ex);
         }
-      }).start();
+      });
     } else {
       bannerBackground.setVisibility(View.GONE);
     }
