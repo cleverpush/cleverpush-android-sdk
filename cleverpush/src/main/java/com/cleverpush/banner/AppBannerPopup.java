@@ -3,8 +3,6 @@ package com.cleverpush.banner;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
@@ -39,6 +37,7 @@ import androidx.dynamicanimation.animation.SpringForce;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.bumptech.glide.Glide;
 import com.cleverpush.ActivityLifecycleListener;
 import com.cleverpush.util.Logger;
 import com.cleverpush.CleverPush;
@@ -54,9 +53,7 @@ import com.cleverpush.util.SharedPreferencesManager;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -364,8 +361,10 @@ public class AppBannerPopup {
   }
 
   private void processBackground(ImageView bannerBackground, LinearLayout body, BannerBackground background) {
-    if (background.getImageUrl() == null || background.getImageUrl().equalsIgnoreCase("null") || background.getImageUrl()
-            .equalsIgnoreCase("")) {
+    if (background.getImageUrl() == null
+            || background.getImageUrl().equalsIgnoreCase("null")
+            || background.getImageUrl().equalsIgnoreCase("")) {
+      Glide.with(bannerBackground).clear(bannerBackground);
       GradientDrawable drawableBG = new GradientDrawable();
       drawableBG.setShape(GradientDrawable.RECTANGLE);
       if (!data.getPositionType().equalsIgnoreCase(POSITION_TYPE_FULL)) {
@@ -384,21 +383,26 @@ public class AppBannerPopup {
       }
       bannerBackground.setImageBitmap(null);
       bannerBackground.setBackground(drawableBG);
+      bannerBackground.setVisibility(View.VISIBLE);
     } else if (background.getImageUrl() != null) {
       new Thread(() -> {
         try {
+
+          bannerBackground.setVisibility(View.VISIBLE);
           String imageUrl;
-          if (data.isDarkModeEnabled(activity) && background.getDarkImageUrl() != null) {
+
+          if (data.isDarkModeEnabled(activity)
+                  && background.getDarkImageUrl() != null
+                  && !background.getDarkImageUrl().isEmpty()) {
             imageUrl = background.getDarkImageUrl();
           } else {
             imageUrl = background.getImageUrl();
           }
 
-          InputStream in = new URL(imageUrl).openStream();
-          Bitmap bitmap = BitmapFactory.decodeStream(in);
-          if (bitmap != null) {
-            bannerBackground.setImageBitmap(bitmap);
-          }
+          Glide.with(bannerBackground)
+                  .load(imageUrl)
+                  .centerCrop()
+                  .into(bannerBackground);
         } catch (Exception ex) {
           Logger.e(TAG, "Error at setting background image in app banner.", ex);
         }

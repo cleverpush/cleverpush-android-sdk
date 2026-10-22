@@ -3,13 +3,12 @@ package com.cleverpush.inbox;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cleverpush.util.FontUtils;
 import com.cleverpush.util.Logger;
 import android.util.TypedValue;
@@ -31,10 +30,6 @@ import com.cleverpush.listener.ChannelConfigListener;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -183,42 +178,62 @@ public class InboxViewListAdapter extends RecyclerView.Adapter<InboxViewHolder> 
   }
 
   private void loadImage(int position, ImageView image) {
-    new Thread(() -> {
-      try {
-        final InputStream[] inputStream = {null};
-        if (notificationArrayList.get(position).getMediaUrl() != null
-                && !notificationArrayList.get(position).getMediaUrl().isEmpty()) {
-          inputStream[0] = new URL(notificationArrayList.get(position).getMediaUrl()).openStream();
-          Logger.e("image", notificationArrayList.get(position).getMediaUrl());
-        } else if (notificationArrayList.get(position).getIconUrl() != null
-                && !notificationArrayList.get(position).getIconUrl().isEmpty()) {
-          inputStream[0] = new URL(notificationArrayList.get(position).getIconUrl()).openStream();
-          Logger.e("image", notificationArrayList.get(position).getIconUrl());
-        } else {
-          CleverPush.getInstance(context).getChannelConfig(new ChannelConfigListener() {
-            @Override
-            public void ready(JSONObject channelConfig) {
-              try {
-                inputStream[0] = new URL(channelConfig.optString("channelIcon")).openStream();
-              } catch (Exception e) {
-                Logger.e(TAG, "Error in InboxView List's image load from channelIcon.", e);
-              }
-            }
-          });
+    Glide.with(image).clear(image);
+    image.setImageDrawable(null);
+
+    Notification notification = notificationArrayList.get(position);
+    String imageUrl = notification.getMediaUrl();
+
+    if (TextUtils.isEmpty(imageUrl)
+            || "null".equalsIgnoreCase(imageUrl)) {
+      imageUrl = notification.getIconUrl();
+    }
+
+    if (!TextUtils.isEmpty(imageUrl)
+            && !"null".equalsIgnoreCase(imageUrl)) {
+      image.setTag(imageUrl);
+      loadImageUrl(image, imageUrl);
+      return;
+    }
+
+    image.setTag(null);
+
+    CleverPush.getInstance(context).getChannelConfig(new ChannelConfigListener() {
+      @Override
+      public void ready(JSONObject channelConfig) {
+        if (channelConfig == null) {
+          return;
         }
 
-        Bitmap bitmap = BitmapFactory.decodeStream(inputStream[0]);
-        if (bitmap != null) {
-          new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-              image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 50, 50, false));
-            }
-          });
+        String channelIcon = channelConfig.optString("channelIcon");
+
+        if (TextUtils.isEmpty(channelIcon)
+                || "null".equalsIgnoreCase(channelIcon)) {
+          return;
         }
-      } catch (Exception exception) {
-        Logger.e(TAG, "Error in InboxView List's image load.", exception);
+
+        image.post(() -> {
+          // Don't load the channel icon if this ImageView was rebound.
+          if (image.getTag() == null) {
+            image.setTag(channelIcon);
+            loadImageUrl(image, channelIcon);
+          }
+        });
       }
-    }).start();
+    });
+  }
+
+  private void loadImageUrl(ImageView image, String imageUrl) {
+    int size = Math.round(TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            50,
+            context.getResources().getDisplayMetrics()));
+
+    Glide.with(image)
+            .load(imageUrl)
+            .override(size, size)
+            .centerCrop()
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .into(image);
   }
 }
