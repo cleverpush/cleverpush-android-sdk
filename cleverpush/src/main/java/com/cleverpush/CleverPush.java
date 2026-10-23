@@ -4538,12 +4538,12 @@ public class CleverPush {
       editor.remove(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC);
       editor.remove(CleverPushPreferences.SUBSCRIPTION_APP_VERSION);
       editor.remove(CleverPushPreferences.SUBSCRIPTION_CREATED_AT);
-      editor.remove(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS);
       if (!this.keepTargetingDataOnUnsubscribe) {
         editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS);
         editor.remove(CleverPushPreferences.SUBSCRIPTION_TOPICS_VERSION);
         editor.remove(CleverPushPreferences.SUBSCRIPTION_TAGS);
         editor.remove(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES);
+        editor.remove(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS);
       }
       editor.apply();
       TriggeredEvent triggeredEvent = new TriggeredEvent(Constants.CLEVERPUSH_APP_BANNER_UNSUBSCRIBE_EVENT, null);
