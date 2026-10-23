@@ -103,6 +103,26 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       pianoSegments = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_PIANO_SEGMENTS, null);
     }
 
+    Set<String> subscriptionTags = null;
+    if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_TAGS)) {
+      subscriptionTags = sharedPreferences.getStringSet(CleverPushPreferences.SUBSCRIPTION_TAGS, null);
+    }
+
+    JSONObject subscriptionAttributes = null;
+    if (sharedPreferences.contains(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES)) {
+      String jsonString = sharedPreferences.getString(CleverPushPreferences.SUBSCRIPTION_ATTRIBUTES, null);
+      if (jsonString != null && !jsonString.isEmpty()) {
+        try {
+          JSONObject parsedAttributes = new JSONObject(jsonString);
+          if (parsedAttributes.length() > 0) {
+            subscriptionAttributes = parsedAttributes;
+          }
+        } catch (JSONException e) {
+          Logger.e(LOG_TAG, "Error parsing subscription attributes for syncSubscription.", e);
+        }
+      }
+    }
+
     JSONObject jsonBody = new JSONObject();
     try {
       if (this.type == SubscriptionManagerType.ADM) {
@@ -142,6 +162,12 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       }
       if (pianoSegments != null) {
         jsonBody.put("pianoSegments", new JSONArray(pianoSegments));
+      }
+      if (subscriptionTags != null) {
+        jsonBody.put("tags", new JSONArray(subscriptionTags));
+      }
+      if (subscriptionAttributes != null) {
+        jsonBody.put("customAttributes", subscriptionAttributes);
       }
       jsonBody.put("hasNotificationPermission", CleverPush.getInstance(CleverPush.context).areNotificationsEnabled());
     } catch (JSONException e) {
