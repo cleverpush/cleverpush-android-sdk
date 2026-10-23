@@ -163,7 +163,7 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
       if (pianoSegments != null) {
         jsonBody.put("pianoSegments", new JSONArray(pianoSegments));
       }
-      if (subscriptionTags != null && !subscriptionTags.isEmpty()) {
+      if (subscriptionTags != null) {
         jsonBody.put("tags", new JSONArray(subscriptionTags));
       }
       if (subscriptionAttributes != null) {
