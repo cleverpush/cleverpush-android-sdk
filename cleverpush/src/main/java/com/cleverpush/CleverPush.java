@@ -4314,13 +4314,27 @@ public class CleverPush {
 
           updatingChildren[0] = true;
           try {
-            for (CheckBox childCheckbox : childCheckboxes) {
+            for (int childIndex = 0; childIndex < childCheckboxes.size(); childIndex++) {
+              CheckBox childCheckbox = childCheckboxes.get(childIndex);
               if (childCheckbox.isChecked() != isChecked) {
                 childCheckbox.setChecked(isChecked);
+              }
+              // Child listeners return while updatingChildren is set, so the saved set
+              // has to follow the parent state here or a later save drops the children.
+              String childId = childTopicIdList.get(childIndex);
+              if (isChecked) {
+                selectedTopics.add(childId);
+              } else {
+                selectedTopics.remove(childId);
               }
             }
           } finally {
             updatingChildren[0] = false;
+          }
+
+          // toggleCheckedTopic refreshed the buttons before the children changed.
+          if (topicBulkActionsUpdater != null) {
+            topicBulkActionsUpdater.run();
           }
         }
       });
@@ -4347,8 +4361,11 @@ public class CleverPush {
               updatingParentFromChild[0] = false;
             }
 
-            // Ensure the parent and all of its children are selected in the saved set.
+            // Parent listener returns while updatingParentFromChild is set, so record the parent here.
             selectedTopics.add(id);
+            if (topicBulkActionsUpdater != null) {
+              topicBulkActionsUpdater.run();
+            }
           }
         });
       }
