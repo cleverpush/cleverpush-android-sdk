@@ -402,6 +402,7 @@ public class NotificationService {
   /**
    * Applies per-notification alert, banner, and sound choices from a NotificationServiceExtension.
    * Muting also suppresses the heads-up popup and overrides the channel sound, matching Expo.
+   * The group summary stays on the category channel. Presentation channels are only for this notification.
    */
   private void applyPresentationOptions(Context context, Notification notification, NotificationCompat.Builder builder) {
     if (notification == null || !notification.hasPresentationOptions()) {
@@ -409,6 +410,7 @@ public class NotificationService {
     }
 
     boolean playSound = notification.getShouldPlaySound() == null || notification.getShouldPlaySound();
+    // Unset shouldShowBanner leaves the category channel in place. Only an explicit true moves it.
     boolean showBanner = notification.resolvesShowBanner();
 
     if (!playSound) {
@@ -425,7 +427,6 @@ public class NotificationService {
             null
         );
         builder.setChannelId(channelId);
-        summaryNotificationId = channelId;
       }
       return;
     }
@@ -442,9 +443,8 @@ public class NotificationService {
             soundUri
         );
         builder.setChannelId(channelId);
-        summaryNotificationId = channelId;
       }
-    } else {
+    } else if (Boolean.FALSE.equals(notification.getShouldShowBanner())) {
       builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
     }
   }

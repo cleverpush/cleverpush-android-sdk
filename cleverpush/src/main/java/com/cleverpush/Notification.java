@@ -271,14 +271,16 @@ public class Notification implements Serializable {
     return shouldShowBanner != null || shouldPlaySound != null || shouldShowAlert != null;
   }
 
+  /**
+   * True only when a heads-up banner was explicitly requested.
+   * An unset value does not request one, so the category channel stays unchanged.
+   * {@code shouldShowAlert == false} hides the notification and therefore shows no banner.
+   */
   public boolean resolvesShowBanner() {
     if (Boolean.FALSE.equals(shouldShowAlert)) {
       return false;
     }
-    if (shouldShowBanner != null) {
-      return shouldShowBanner;
-    }
-    return true;
+    return Boolean.TRUE.equals(shouldShowBanner);
   }
 
   /**
