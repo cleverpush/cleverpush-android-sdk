@@ -76,6 +76,13 @@ public class NotificationService {
   private final String  GROUPLESS_SUMMARY_KEY = "cleverpush_group_undefined";
   private final int GROUPLESS_SUMMARY_ID = 0;
   private String summaryNotificationId;
+  /**
+   * Set only for {@code shouldShowBanner == false}. The group summary is posted on this
+   * sound-enabled default-importance channel instead of a high-importance category channel.
+   */
+  private String noBannerSummaryChannelId;
+  /** Group key that matches {@link #noBannerSummaryChannelId}, so the category group keeps one summary. */
+  private String noBannerSummaryGroupKey;
 
   private NotificationService() {
 
@@ -222,6 +229,9 @@ public class NotificationService {
   private NotificationCompat.Builder createBasicNotification(Context context, String notificationStr,
                                                              String subscriptionStr, Notification notification,
                                                              int requestId) {
+    noBannerSummaryChannelId = null;
+    noBannerSummaryGroupKey = null;
+
     String voucherCode = notification.getVoucherCode();
     String iconUrl = notification.getIconUrl();
     String mediaUrl = notification.getMediaUrl();
@@ -394,7 +404,102 @@ public class NotificationService {
       notificationBuilder.setColor(effectiveColor);
     }
 
+    applyPresentationOptions(context, notification, notificationBuilder);
+
     return notificationBuilder;
+  }
+
+  /**
+   * Applies per-notification alert, banner, and sound choices from a NotificationServiceExtension.
+   * Muting also suppresses the heads-up popup and overrides the channel sound, matching Expo.
+   * {@code shouldShowBanner == false} uses a sound-enabled default-importance channel for this
+   * notification and its group summary. Other presentation channels leave the category summary in place.
+   */
+  private void applyPresentationOptions(Context context, Notification notification, NotificationCompat.Builder builder) {
+    if (notification == null || !notification.hasPresentationOptions()) {
+      return;
+    }
+
+    boolean playSound = notification.getShouldPlaySound() == null || notification.getShouldPlaySound();
+    // Unset shouldShowBanner leaves the category channel in place. Only an explicit true moves it.
+    boolean showBanner = notification.resolvesShowBanner();
+
+    if (!playSound) {
+      builder.setSilent(true);
+      builder.setSound(null);
+      builder.setPriority(NotificationCompat.PRIORITY_LOW);
+      builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        String channelId = ensurePresentationChannel(
+            context,
+            "cleverpush_presentation_silent",
+            "Silent",
+            NotificationManager.IMPORTANCE_LOW,
+            null
+        );
+        builder.setChannelId(channelId);
+      }
+      return;
+    }
+
+    if (showBanner) {
+      builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Uri soundUri = getSoundUri(context, notification);
+        String channelId = ensurePresentationChannel(
+            context,
+            presentationChannelId("high", soundUri),
+            "Banner",
+            NotificationManager.IMPORTANCE_HIGH,
+            soundUri
+        );
+        builder.setChannelId(channelId);
+      }
+    } else if (Boolean.FALSE.equals(notification.getShouldShowBanner())) {
+      builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Uri soundUri = getSoundUri(context, notification);
+        String channelId = ensurePresentationChannel(
+            context,
+            presentationChannelId("default", soundUri),
+            "Alerts",
+            NotificationManager.IMPORTANCE_DEFAULT,
+            soundUri
+        );
+        builder.setChannelId(channelId);
+        noBannerSummaryChannelId = channelId;
+        // Own group so the category summary is not replaced or duplicated.
+        noBannerSummaryGroupKey = getGroupKeyForCurrentChannel(notification) + "_" + channelId;
+        builder.setGroup(noBannerSummaryGroupKey);
+      }
+    }
+  }
+
+  private String presentationChannelId(String kind, Uri soundUri) {
+    if (soundUri == null) {
+      return "cleverpush_presentation_" + kind;
+    }
+    return "cleverpush_presentation_" + kind + "_" + Integer.toHexString(soundUri.toString().hashCode());
+  }
+
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  private String ensurePresentationChannel(Context context, String channelId, String name, int importance, Uri soundUri) {
+    NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+    if (notificationManager != null && notificationManager.getNotificationChannel(channelId) == null) {
+      NotificationChannel channel = new NotificationChannel(channelId, name, importance);
+      AudioAttributes audioAttributes = null;
+      if (soundUri != null) {
+        audioAttributes = new AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .build();
+      } else {
+        channel.enableVibration(false);
+      }
+      channel.setSound(soundUri, audioAttributes);
+      notificationManager.createNotificationChannel(channel);
+    }
+    return channelId;
   }
 
   private RemoteViews getTextWithImageViews(Context context, Notification notification, boolean hasMedia) {
@@ -511,6 +616,10 @@ public class NotificationService {
   }
 
   int showNotification(Context context, Notification notification, Subscription subscription) {
+    if (notification != null && !notification.shouldPresentNotification()) {
+      return 0;
+    }
+
     String notificationStr = notification.getRawPayload();
     String subscriptionStr = subscription.getRawPayload();
 
@@ -564,12 +673,18 @@ public class NotificationService {
     String voucherCode = notification.getVoucherCode();
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
-    String groupKey = getGroupKeyForCurrentChannel(notification);
+    String groupKey = noBannerSummaryGroupKey != null
+        ? noBannerSummaryGroupKey
+        : getGroupKeyForCurrentChannel(notification);
+    String summaryChannelId = noBannerSummaryChannelId != null
+        ? noBannerSummaryChannelId
+        : summaryNotificationId;
+    boolean muteSound = Boolean.FALSE.equals(notification.getShouldPlaySound());
     boolean firstInGroupOnly =
         getGroupNotificationSoundMode(context) == GroupNotificationSoundMode.FIRST_IN_GROUP_ONLY;
 
     NotificationCompat.Builder builder =
-            new NotificationCompat.Builder(context, summaryNotificationId)
+            new NotificationCompat.Builder(context, summaryChannelId)
                     .setContentIntent(contentIntent)
                     .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
                     .setContentTitle(title)
@@ -581,9 +696,11 @@ public class NotificationService {
                             .addLine(text))
                     .setGroup(groupKey)
                     .setGroupSummary(true)
-                    .setSound(firstInGroupOnly ? null : getSoundUri(context, notification));
+                    .setSound(muteSound || firstInGroupOnly ? null : getSoundUri(context, notification));
 
-    if (firstInGroupOnly) {
+    if (muteSound) {
+      builder.setSilent(true);
+    } else if (firstInGroupOnly) {
       builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
     }
 
@@ -605,7 +722,7 @@ public class NotificationService {
   }
 
   private int getSummaryIdForCurrentChannel() {
-    String key = summaryNotificationId;
+    String key = noBannerSummaryGroupKey != null ? noBannerSummaryGroupKey : summaryNotificationId;
     if (key == null || key.isEmpty()) {
       key = "default";
     }

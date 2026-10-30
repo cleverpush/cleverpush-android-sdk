@@ -66,6 +66,14 @@ public class Notification implements Serializable {
   String rawPayload;
   int requestId;
 
+  /**
+   * Per-notification presentation. Null means the SDK default.
+   * Set by the React Native SDK. Native apps do not use these fields.
+   */
+  transient Boolean shouldShowBanner;
+  transient Boolean shouldPlaySound;
+  transient Boolean shouldShowAlert;
+
   @RequiresApi(api = Build.VERSION_CODES.O)
   transient public Object notificationChannel;
 
@@ -226,6 +234,67 @@ public class Notification implements Serializable {
     this.extender = extender;
   }
 
+  /**
+   * Heads-up popup. Android and iOS.
+   * On Android, {@code true} uses a high-importance channel so the notification can pop up.
+   * {@code false} keeps it in the shade on a sound-enabled default-importance channel.
+   */
+  public void setShouldShowBanner(boolean shouldShowBanner) {
+    this.shouldShowBanner = shouldShowBanner;
+  }
+
+  public Boolean getShouldShowBanner() {
+    return shouldShowBanner;
+  }
+
+  /**
+   * Play the notification sound. Android and iOS.
+   * On Android, {@code false} mutes the notification and suppresses the heads-up popup,
+   * including when the notification channel has its own sound.
+   */
+  public void setShouldPlaySound(boolean shouldPlaySound) {
+    this.shouldPlaySound = shouldPlaySound;
+  }
+
+  public Boolean getShouldPlaySound() {
+    return shouldPlaySound;
+  }
+
+  /**
+   * {@code false} hides the notification.
+   * Use {@link #setShouldShowBanner(boolean)} to keep it in the shade without a heads-up popup.
+   */
+  public void setShouldShowAlert(boolean shouldShowAlert) {
+    this.shouldShowAlert = shouldShowAlert;
+  }
+
+  public boolean hasPresentationOptions() {
+    return shouldShowBanner != null || shouldPlaySound != null || shouldShowAlert != null;
+  }
+
+  /**
+   * True only when a heads-up banner was explicitly requested.
+   * An unset value does not request one, so the category channel stays unchanged.
+   * {@code shouldShowAlert == false} hides the notification and therefore shows no banner.
+   */
+  public boolean resolvesShowBanner() {
+    if (Boolean.FALSE.equals(shouldShowAlert)) {
+      return false;
+    }
+    return Boolean.TRUE.equals(shouldShowBanner);
+  }
+
+  /**
+   * False when this notification should not be posted.
+   * {@code shouldShowAlert == false} hides it. A muted notification is still posted, without a heads-up popup.
+   */
+  public boolean shouldPresentNotification() {
+    if (!hasPresentationOptions()) {
+      return true;
+    }
+    return !Boolean.FALSE.equals(shouldShowAlert);
+  }
+
   public String getRawPayload() {
     return rawPayload;
   }
@@ -336,6 +405,9 @@ public class Notification implements Serializable {
     copiedNotification.read = this.read;
     copiedNotification.fromApi = this.fromApi;
     copiedNotification.extender = this.extender;
+    copiedNotification.shouldShowBanner = this.shouldShowBanner;
+    copiedNotification.shouldPlaySound = this.shouldPlaySound;
+    copiedNotification.shouldShowAlert = this.shouldShowAlert;
     copiedNotification.rawPayload = this.rawPayload;
     copiedNotification.requestId = this.requestId;
     copiedNotification.bypassConditions = this.bypassConditions;
