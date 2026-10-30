@@ -6,11 +6,20 @@ public class NotificationReceivedEvent {
 
   Context context = null;
   Notification notification = null;
+  Subscription subscription = null;
   boolean preventDefaultCalled = false;
 
   public NotificationReceivedEvent(Context context, Notification notification) {
     this.context = context;
     this.notification = notification;
+  }
+
+  public void setSubscription(Subscription subscription) {
+    this.subscription = subscription;
+  }
+
+  public Subscription getSubscription() {
+    return this.subscription;
   }
 
   public Context getContext() {

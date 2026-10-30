@@ -394,7 +394,86 @@ public class NotificationService {
       notificationBuilder.setColor(effectiveColor);
     }
 
+    applyPresentationOptions(context, notification, notificationBuilder);
+
     return notificationBuilder;
+  }
+
+  /**
+   * Applies per-notification alert, banner, and sound choices from a NotificationServiceExtension.
+   * Muting also suppresses the heads-up popup and overrides the channel sound, matching Expo.
+   */
+  private void applyPresentationOptions(Context context, Notification notification, NotificationCompat.Builder builder) {
+    if (notification == null || !notification.hasPresentationOptions()) {
+      return;
+    }
+
+    boolean playSound = notification.getShouldPlaySound() == null || notification.getShouldPlaySound();
+    boolean showBanner = notification.resolvesShowBanner();
+
+    if (!playSound) {
+      builder.setSilent(true);
+      builder.setSound(null);
+      builder.setPriority(NotificationCompat.PRIORITY_LOW);
+      builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        String channelId = ensurePresentationChannel(
+            context,
+            "cleverpush_presentation_silent",
+            "Silent",
+            NotificationManager.IMPORTANCE_LOW,
+            null
+        );
+        builder.setChannelId(channelId);
+        summaryNotificationId = channelId;
+      }
+      return;
+    }
+
+    if (showBanner) {
+      builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Uri soundUri = getSoundUri(context, notification);
+        String channelId = ensurePresentationChannel(
+            context,
+            presentationChannelId("high", soundUri),
+            "Banner",
+            NotificationManager.IMPORTANCE_HIGH,
+            soundUri
+        );
+        builder.setChannelId(channelId);
+        summaryNotificationId = channelId;
+      }
+    } else {
+      builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+    }
+  }
+
+  private String presentationChannelId(String kind, Uri soundUri) {
+    if (soundUri == null) {
+      return "cleverpush_presentation_" + kind;
+    }
+    return "cleverpush_presentation_" + kind + "_" + Integer.toHexString(soundUri.toString().hashCode());
+  }
+
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  private String ensurePresentationChannel(Context context, String channelId, String name, int importance, Uri soundUri) {
+    NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+    if (notificationManager != null && notificationManager.getNotificationChannel(channelId) == null) {
+      NotificationChannel channel = new NotificationChannel(channelId, name, importance);
+      AudioAttributes audioAttributes = null;
+      if (soundUri != null) {
+        audioAttributes = new AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .build();
+      } else {
+        channel.enableVibration(false);
+      }
+      channel.setSound(soundUri, audioAttributes);
+      notificationManager.createNotificationChannel(channel);
+    }
+    return channelId;
   }
 
   private RemoteViews getTextWithImageViews(Context context, Notification notification, boolean hasMedia) {
@@ -511,6 +590,10 @@ public class NotificationService {
   }
 
   int showNotification(Context context, Notification notification, Subscription subscription) {
+    if (notification != null && !notification.shouldPresentNotification()) {
+      return 0;
+    }
+
     String notificationStr = notification.getRawPayload();
     String subscriptionStr = subscription.getRawPayload();
 
@@ -565,6 +648,7 @@ public class NotificationService {
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
     String groupKey = getGroupKeyForCurrentChannel(notification);
+    boolean muteSound = Boolean.FALSE.equals(notification.getShouldPlaySound());
     boolean firstInGroupOnly =
         getGroupNotificationSoundMode(context) == GroupNotificationSoundMode.FIRST_IN_GROUP_ONLY;
 
@@ -581,9 +665,11 @@ public class NotificationService {
                             .addLine(text))
                     .setGroup(groupKey)
                     .setGroupSummary(true)
-                    .setSound(firstInGroupOnly ? null : getSoundUri(context, notification));
+                    .setSound(muteSound || firstInGroupOnly ? null : getSoundUri(context, notification));
 
-    if (firstInGroupOnly) {
+    if (muteSound) {
+      builder.setSilent(true);
+    } else if (firstInGroupOnly) {
       builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
     }
 
