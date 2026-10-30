@@ -76,6 +76,13 @@ public class NotificationService {
   private final String  GROUPLESS_SUMMARY_KEY = "cleverpush_group_undefined";
   private final int GROUPLESS_SUMMARY_ID = 0;
   private String summaryNotificationId;
+  /**
+   * Set only for {@code shouldShowBanner == false}. The group summary is posted on this
+   * sound-enabled default-importance channel instead of a high-importance category channel.
+   */
+  private String noBannerSummaryChannelId;
+  /** Group key that matches {@link #noBannerSummaryChannelId}, so the category group keeps one summary. */
+  private String noBannerSummaryGroupKey;
 
   private NotificationService() {
 
@@ -222,6 +229,9 @@ public class NotificationService {
   private NotificationCompat.Builder createBasicNotification(Context context, String notificationStr,
                                                              String subscriptionStr, Notification notification,
                                                              int requestId) {
+    noBannerSummaryChannelId = null;
+    noBannerSummaryGroupKey = null;
+
     String voucherCode = notification.getVoucherCode();
     String iconUrl = notification.getIconUrl();
     String mediaUrl = notification.getMediaUrl();
@@ -402,7 +412,8 @@ public class NotificationService {
   /**
    * Applies per-notification alert, banner, and sound choices from a NotificationServiceExtension.
    * Muting also suppresses the heads-up popup and overrides the channel sound, matching Expo.
-   * The group summary stays on the category channel. Presentation channels are only for this notification.
+   * {@code shouldShowBanner == false} uses a sound-enabled default-importance channel for this
+   * notification and its group summary. Other presentation channels leave the category summary in place.
    */
   private void applyPresentationOptions(Context context, Notification notification, NotificationCompat.Builder builder) {
     if (notification == null || !notification.hasPresentationOptions()) {
@@ -446,6 +457,21 @@ public class NotificationService {
       }
     } else if (Boolean.FALSE.equals(notification.getShouldShowBanner())) {
       builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Uri soundUri = getSoundUri(context, notification);
+        String channelId = ensurePresentationChannel(
+            context,
+            presentationChannelId("default", soundUri),
+            "Alerts",
+            NotificationManager.IMPORTANCE_DEFAULT,
+            soundUri
+        );
+        builder.setChannelId(channelId);
+        noBannerSummaryChannelId = channelId;
+        // Own group so the category summary is not replaced or duplicated.
+        noBannerSummaryGroupKey = getGroupKeyForCurrentChannel(notification) + "_" + channelId;
+        builder.setGroup(noBannerSummaryGroupKey);
+      }
     }
   }
 
@@ -647,13 +673,18 @@ public class NotificationService {
     String voucherCode = notification.getVoucherCode();
     String title = VoucherCodeUtils.replaceVoucherCodeString(notification.getTitle(), voucherCode);
     String text = VoucherCodeUtils.replaceVoucherCodeString(notification.getText(), voucherCode);
-    String groupKey = getGroupKeyForCurrentChannel(notification);
+    String groupKey = noBannerSummaryGroupKey != null
+        ? noBannerSummaryGroupKey
+        : getGroupKeyForCurrentChannel(notification);
+    String summaryChannelId = noBannerSummaryChannelId != null
+        ? noBannerSummaryChannelId
+        : summaryNotificationId;
     boolean muteSound = Boolean.FALSE.equals(notification.getShouldPlaySound());
     boolean firstInGroupOnly =
         getGroupNotificationSoundMode(context) == GroupNotificationSoundMode.FIRST_IN_GROUP_ONLY;
 
     NotificationCompat.Builder builder =
-            new NotificationCompat.Builder(context, summaryNotificationId)
+            new NotificationCompat.Builder(context, summaryChannelId)
                     .setContentIntent(contentIntent)
                     .setDeleteIntent(this.getNotificationDeleteIntent(context, notification))
                     .setContentTitle(title)
@@ -691,7 +722,7 @@ public class NotificationService {
   }
 
   private int getSummaryIdForCurrentChannel() {
-    String key = summaryNotificationId;
+    String key = noBannerSummaryGroupKey != null ? noBannerSummaryGroupKey : summaryNotificationId;
     if (key == null || key.isEmpty()) {
       key = "default";
     }

@@ -236,7 +236,8 @@ public class Notification implements Serializable {
 
   /**
    * Heads-up popup. Android and iOS.
-   * On Android this uses a high-importance channel so the notification can pop up.
+   * On Android, {@code true} uses a high-importance channel so the notification can pop up.
+   * {@code false} keeps it in the shade on a sound-enabled default-importance channel.
    */
   public void setShouldShowBanner(boolean shouldShowBanner) {
     this.shouldShowBanner = shouldShowBanner;
