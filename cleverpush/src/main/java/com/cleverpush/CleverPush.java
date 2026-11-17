@@ -4261,44 +4261,118 @@ public class CleverPush {
                                          Set<String> selectedTopics, String id, CheckBox checkbox) {
     try {
       Set<String> childTopicIds = new HashSet<>();
-      final LinearLayout childLayout = new LinearLayout(context);
+      List<String> childTopicIdList = new ArrayList<>();
+      List<CheckBox> childCheckboxes = new ArrayList<>();
+
+      LinearLayout childLayout = new LinearLayout(context);
+      LinearLayout.LayoutParams childLayoutParams =
+              new LinearLayout.LayoutParams(
+                      LinearLayout.LayoutParams.MATCH_PARENT,
+                      LinearLayout.LayoutParams.WRAP_CONTENT);
+      childLayoutParams.setMargins(65, 0, 0, 20);
+      childLayout.setLayoutParams(childLayoutParams);
+      childLayout.setOrientation(LinearLayout.VERTICAL);
+
+      // Create child checkboxes.
       for (int j = 0; j < channelTopics.length(); j++) {
         JSONObject childTopic = channelTopics.getJSONObject(j);
+
         if (childTopic != null && childTopic.optString("parentTopic").equals(id)) {
           String childId = childTopic.optString("_id");
+
           childTopicIds.add(childId);
+          childTopicIdList.add(childId);
 
-          LinearLayout.LayoutParams childLayoutParams =
-              new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                  LinearLayout.LayoutParams.WRAP_CONTENT);
-          childLayoutParams.setMargins(65, 0, 0, 20);
-          childLayout.setLayoutParams(childLayoutParams);
-          childLayout.setOrientation(LinearLayout.VERTICAL);
-
-          CheckBox checkboxChild = getTopicCheckbox(nightModeFlags, getTopicCheckboxText(childTopic));
-
-          checkboxChild.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            toggleCheckedTopic(selectedTopics, childId, isChecked, unsubscribeCheckbox, null);
-          });
+          CheckBox childCheckbox =
+                  getTopicCheckbox(nightModeFlags, getTopicCheckboxText(childTopic));
 
           if (!hasDeSelectAll() && !deselectAll) {
-            checkboxChild.setChecked(this.isTopicCheckboxChecked(selectedTopics, childTopic));
+            childCheckbox.setChecked(isTopicCheckboxChecked(selectedTopics, childTopic));
           }
 
-          childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
-          childLayout.addView(checkboxChild);
+          childCheckboxes.add(childCheckbox);
+          childLayout.addView(childCheckbox);
         }
       }
 
-      final boolean hasChildren = childTopicIds.size() > 0;
+      final boolean hasChildren = !childCheckboxes.isEmpty();
+
+      // Prevent parent/child listeners from triggering each other recursively.
+      final boolean[] updatingChildren = {false};
+      final boolean[] updatingParentFromChild = {false};
+
+      // Parent selection updates all children.
       checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        if (updatingParentFromChild[0]) {
+          return;
+        }
+
         toggleCheckedTopic(selectedTopics, id, isChecked, unsubscribeCheckbox, childTopicIds);
+
         if (hasChildren) {
           childLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+
+          updatingChildren[0] = true;
+          try {
+            for (int childIndex = 0; childIndex < childCheckboxes.size(); childIndex++) {
+              CheckBox childCheckbox = childCheckboxes.get(childIndex);
+              if (childCheckbox.isChecked() != isChecked) {
+                childCheckbox.setChecked(isChecked);
+              }
+              // Child listeners return while updatingChildren is set, so the saved set
+              // has to follow the parent state here or a later save drops the children.
+              String childId = childTopicIdList.get(childIndex);
+              if (isChecked) {
+                selectedTopics.add(childId);
+              } else {
+                selectedTopics.remove(childId);
+              }
+            }
+          } finally {
+            updatingChildren[0] = false;
+          }
+
+          // toggleCheckedTopic refreshed the buttons before the children changed.
+          if (topicBulkActionsUpdater != null) {
+            topicBulkActionsUpdater.run();
+          }
         }
       });
 
-      if (childTopicIds.size() > 0) {
+      // Child selection selects the parent.
+      // Deselecting a child does not change the parent's checked state.
+      for (int i = 0; i < childCheckboxes.size(); i++) {
+        final CheckBox childCheckbox = childCheckboxes.get(i);
+        final String childId = childTopicIdList.get(i);
+
+        childCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+          if (updatingChildren[0]) {
+            return;
+          }
+
+          toggleCheckedTopic(
+                  selectedTopics, childId, isChecked, unsubscribeCheckbox, null);
+
+          if (isChecked && !checkbox.isChecked()) {
+            updatingParentFromChild[0] = true;
+            try {
+              checkbox.setChecked(true);
+            } finally {
+              updatingParentFromChild[0] = false;
+            }
+
+            // Parent listener returns while updatingParentFromChild is set, so record the parent here.
+            selectedTopics.add(id);
+            if (topicBulkActionsUpdater != null) {
+              topicBulkActionsUpdater.run();
+            }
+          }
+        });
+      }
+
+      childLayout.setVisibility(checkbox.isChecked() ? View.VISIBLE : View.GONE);
+
+      if (hasChildren) {
         parentLayout.addView(childLayout);
       }
     } catch (JSONException e) {
