@@ -43,6 +43,7 @@ import com.cleverpush.NotificationOpenedActivity;
 import com.cleverpush.NotificationStyle;
 import com.cleverpush.R;
 import com.cleverpush.Subscription;
+import com.cleverpush.util.BitmapUtils;
 import com.cleverpush.util.Logger;
 import com.cleverpush.util.NotificationCategorySetUp;
 import com.cleverpush.util.SharedPreferencesManager;
@@ -76,6 +77,8 @@ public class NotificationService {
   private final String  GROUPLESS_SUMMARY_KEY = "cleverpush_group_undefined";
   private final int GROUPLESS_SUMMARY_ID = 0;
   private String summaryNotificationId;
+  private static final int BIG_PICTURE_MAX_WIDTH = 1024;
+  private static final int BIG_PICTURE_MAX_HEIGHT = 512;
 
   private NotificationService() {
 
@@ -147,18 +150,24 @@ public class NotificationService {
     return soundUri;
   }
 
-  private Bitmap getBitmapFromUrl(String strURL) {
+  private Bitmap getBitmapFromUrl(
+          String imageUrl,
+          int targetWidth,
+          int targetHeight
+  ) {
     try {
-      URL url = new URL(strURL);
-      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-      connection.setConnectTimeout(GET_BITMAP_TIMEOUT);
-      connection.setReadTimeout(GET_BITMAP_TIMEOUT);
-      connection.setDoInput(true);
-      connection.connect();
-      InputStream input = connection.getInputStream();
-      return BitmapFactory.decodeStream(input);
+      return BitmapUtils.decodeSampledBitmapFromUrl(
+              imageUrl,
+              targetWidth,
+              targetHeight,
+              GET_BITMAP_TIMEOUT
+      );
     } catch (Exception exception) {
-      Logger.d(LOG_TAG, "NotificationService: Exception while loading image", exception);
+      Logger.d(
+              LOG_TAG,
+              "NotificationService: Exception while loading image",
+              exception
+      );
       return null;
     }
   }
@@ -354,7 +363,11 @@ public class NotificationService {
         notificationStyle == NotificationStyle.AUTO && hasMedia
     )) {
       try {
-        Bitmap media = getBitmapFromUrl(mediaUrl);
+        Bitmap media = getBitmapFromUrl(
+                mediaUrl,
+                BIG_PICTURE_MAX_WIDTH,
+                BIG_PICTURE_MAX_HEIGHT
+        );
         if (media != null) {
           notificationBuilder = notificationBuilder.setStyle(
               new NotificationCompat.BigPictureStyle().bigPicture(media)
@@ -407,7 +420,13 @@ public class NotificationService {
     expandedView.setTextViewText(R.id.notification_text, text);
     if (hasMedia) {
       try {
-        Bitmap media = getBitmapFromUrl(notification.getMediaUrl());
+        int[] targetSize = getTextWithImageTargetSize(context);
+
+        Bitmap media = getBitmapFromUrl(
+                notification.getMediaUrl(),
+                targetSize[0],
+                targetSize[1]
+        );
         if (media != null) {
           expandedView.setImageViewBitmap(R.id.notification_image, media);
         }
@@ -809,44 +828,65 @@ public class NotificationService {
     return Bitmap.createBitmap(targetBmp, 0, 0, targetBmp.getWidth(), targetBmp.getHeight(), matrix, true);
   }
 
-  private static void downloadCarouselImages(Context context, Notification message) {
-    if (context != null && message != null) {
-      NotificationCarouselItem[] NotificationCarouselItems = message.getCarouselItems();
-      if (NotificationCarouselItems != null) {
-        for (NotificationCarouselItem element : NotificationCarouselItems) {
-          FileOutputStream fileOutputStream = null;
-          try {
-            if (element != null) {
-              URL imageURL = new URL(element.getMediaUrl());
-              Bitmap bitmap = BitmapFactory.decodeStream(imageURL.openStream());
+  private void downloadCarouselImages(Context context, Notification message) {
+    if (context == null || message == null) {
+      return;
+    }
 
-              DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-              int ivWidth = displayMetrics.widthPixels;
+    NotificationCarouselItem[] carouselItems = message.getCarouselItems();
+    if (carouselItems == null) {
+      return;
+    }
 
-              bitmap = scaleBitmapAndKeepRation(bitmap, ivWidth, 90);
+    DisplayMetrics displayMetrics =
+            context.getResources().getDisplayMetrics();
 
-              String imageUrl = element.getMediaUrl();
-              String fileName = getImageFileName(imageUrl);
+    int targetWidth = displayMetrics.widthPixels;
+    int targetHeight = context.getResources().getDimensionPixelSize(
+            R.dimen.cp_notification_big_pic_height);
 
-              if (!TextUtils.isEmpty(fileName)) {
-                if (bitmap != null) {
-                  fileOutputStream = context.openFileOutput(fileName, Context.MODE_PRIVATE);
-                  bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
-                  fileOutputStream.close();
-                }
-              }
-            }
-          } catch (IOException e) {
-            Logger.e(LOG_TAG, "NotificationService: Error while downloading carousel images", e);
-          } finally {
-            if (fileOutputStream != null) {
-              try {
-                fileOutputStream.close();
-              } catch (IOException e) {
-                Logger.e(LOG_TAG, "NotificationService: Error while closing fileOutputStream", e);
-              }
-            }
-          }
+    for (NotificationCarouselItem element : carouselItems) {
+      if (element == null) {
+        continue;
+      }
+
+      String imageUrl = element.getMediaUrl();
+      if (TextUtils.isEmpty(imageUrl)) {
+        continue;
+      }
+
+      Bitmap bitmap = null;
+
+      try {
+        bitmap = BitmapUtils.decodeSampledBitmapFromUrl(
+                imageUrl,
+                targetWidth,
+                targetHeight,
+                GET_BITMAP_TIMEOUT
+        );
+
+        if (bitmap == null) {
+          continue;
+        }
+
+        String fileName = getImageFileName(imageUrl);
+        if (TextUtils.isEmpty(fileName)) {
+          continue;
+        }
+
+        try (FileOutputStream outputStream =
+                     context.openFileOutput(fileName, Context.MODE_PRIVATE)) {
+          bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+        }
+      } catch (Exception e) {
+        Logger.e(
+                LOG_TAG,
+                "NotificationService: Error while downloading carousel images",
+                e
+        );
+      } finally {
+        if (bitmap != null && !bitmap.isRecycled()) {
+          bitmap.recycle();
         }
       }
     }
@@ -945,4 +985,13 @@ public class NotificationService {
     return true;
   }
 
+  private int[] getTextWithImageTargetSize(Context context) {
+    android.util.DisplayMetrics metrics =
+            context.getResources().getDisplayMetrics();
+
+    int targetWidth = metrics.widthPixels;
+    int targetHeight = (int) (256 * metrics.density + 0.5f);
+
+    return new int[]{targetWidth, targetHeight};
+  }
 }

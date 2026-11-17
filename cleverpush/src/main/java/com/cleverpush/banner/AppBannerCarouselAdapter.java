@@ -8,8 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -41,13 +39,18 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.cleverpush.CleverPush;
 import com.cleverpush.R;
 import com.cleverpush.banner.models.Banner;
@@ -66,11 +69,7 @@ import com.cleverpush.util.Logger;
 import com.cleverpush.util.VoucherCodeUtils;
 import com.google.gson.Gson;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -540,86 +539,69 @@ public class AppBannerCarouselAdapter extends RecyclerView.Adapter<AppBannerCaro
 
     imgConstraints.applyTo(imageLayout);
 
-    new Thread(() -> {
-      HttpURLConnection connection = null;
-      InputStream in = null;
-      try {
-        String imageUrl;
-        if (appBannerPopup.getData().isDarkModeEnabled(activity)
-                && block.getDarkImageUrl() != null && !block.getDarkImageUrl().isEmpty()) {
-          imageUrl = block.getDarkImageUrl();
-        } else {
-          imageUrl = block.getImageUrl();
-        }
+    // Select the image URL based on dark mode.
+    String imageUrl;
 
-        if (imageUrl == null || TextUtils.isEmpty(imageUrl) || imageUrl.equalsIgnoreCase("null")) {
-          activity.runOnUiThread(() -> progressBar.setVisibility(View.GONE));
-          return;
-        }
+    if (appBannerPopup.getData().isDarkModeEnabled(activity)
+            && block.getDarkImageUrl() != null
+            && !block.getDarkImageUrl().isEmpty()) {
+      imageUrl = block.getDarkImageUrl();
+    } else {
+      imageUrl = block.getImageUrl();
+    }
 
-        URL url = new URL(imageUrl);
-        connection = (HttpURLConnection) url.openConnection();
-        connection.setDoInput(true);
+    if (imageUrl == null
+            || TextUtils.isEmpty(imageUrl)
+            || imageUrl.equalsIgnoreCase("null")) {
+      activity.runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+    } else {
+      Glide.with(activity)
+              .load(imageUrl)
+              .diskCacheStrategy(DiskCacheStrategy.ALL)
+              .listener(new RequestListener<Drawable>() {
+                @Override
+                public boolean onLoadFailed(
+                        @Nullable GlideException e,
+                        Object model,
+                        Target<Drawable> target,
+                        boolean isFirstResource
+                ) {
+                  progressBar.setVisibility(View.GONE);
 
-        // Get the content type from the response headers
-        String contentType = connection.getHeaderField("Content-Type");
+                  Logger.e(
+                          TAG,
+                          "Error loading App Banner image.",
+                          e
+                  );
 
-        // Checks whether the content at the specified URL is a GIF image.
-        boolean isGif = contentType != null && contentType.toLowerCase().startsWith("image/gif");
-
-        in = connection.getInputStream();
-        final Bitmap bitmap = BitmapFactory.decodeStream(in);
-
-        activity.runOnUiThread(() -> {
-          if (isGif) {
-            Glide.with(CleverPush.context)
-                .asGif()
-                .load(imageUrl)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(img);
-          } else {
-            if (bitmap != null) {
-              img.setImageBitmap(bitmap);
-            }
-          }
-          progressBar.setVisibility(View.GONE);
-
-          try {
-            new Handler().postDelayed(new Runnable() {
-              @Override
-              public void run() {
-                if (!isBannerPositionFull()) {
-                  appBannerPopup.getViewPager2().setPageTransformer((page, position1) -> {
-                    appBannerPopup.updatePagerHeightForChild(page, appBannerPopup.getViewPager2());
-                  });
+                  return false;
                 }
-              }
-            }, 1000);
-          } catch (Exception e) {
-            Logger.e(TAG, "Error while updating child height in composeImageBlock. " + e.getLocalizedMessage(), e);
-          }
-        });
 
-      } catch (Exception e) {
-        Logger.e(TAG, "Error in AppBanner composeImageBlock.", e);
-        if (activity != null) {
-          activity.runOnUiThread(() -> {
-            progressBar.setVisibility(View.GONE);
-          });
-        }
-      } finally {
-        if (connection != null) {
-          connection.disconnect();
-        }
-        if (in != null) {
-          try {
-            in.close();
-          } catch (IOException e) {
-            Logger.e(TAG, "Error in closing InputStream in AppBanner composeImageBlock.", e);
-          }
-        }
-      }
-    }).start();
+                @Override
+                public boolean onResourceReady(
+                        Drawable resource,
+                        Object model,
+                        Target<Drawable> target,
+                        DataSource dataSource,
+                        boolean isFirstResource
+                ) {
+                  progressBar.setVisibility(View.GONE);
+
+                  new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (!isBannerPositionFull()) {
+                      appBannerPopup.getViewPager2()
+                              .setPageTransformer((page, position1) ->
+                                      appBannerPopup.updatePagerHeightForChild(
+                                              page,
+                                              appBannerPopup.getViewPager2())
+                              );
+                    }
+                  }, 1000);
+                  return false;
+                }
+              })
+              .into(img);
+    }
 
     body.addView(imageLayout);
 
