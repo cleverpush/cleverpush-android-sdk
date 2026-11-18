@@ -217,13 +217,15 @@ public class NotificationDataProcessor {
     AtomicBoolean wantsToDisplay = new AtomicBoolean(true);
 
     NotificationReceivedEvent notificationReceivedEvent = new NotificationReceivedEvent(context, notification);
+    notificationReceivedEvent.setSubscription(subscription);
 
     Future<?> future = executor.submit(() -> {
       extension.onNotificationReceived(notificationReceivedEvent);
-      if (callbackReceivedListener && dontShowNotification) {
+      // A per-notification handler already chose how to present this notification.
+      if (callbackReceivedListener && dontShowNotification && !notification.hasPresentationOptions()) {
         notificationReceivedEvent.preventDefault();
       }
-      if (notificationReceivedEvent.isPreventDefault()) {
+      if (notificationReceivedEvent.isPreventDefault() || !notification.shouldPresentNotification()) {
         wantsToDisplay.set(false);
       }
     });
