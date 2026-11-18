@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.35.37 (18.11.2026)
+* Added the `verification.properties` file required for Google Play SDK Console verification of the `com.cleverpush:cleverpush` SDK.
+* Added per-notification presentation options for React Native Android.
+* Fixed parent and subtopic checkbox synchronization in the topic dialog.
+* Added support for preserving targeting data, including topics, tags, attributes, and Piano segments, when setKeepTargetingDataOnUnsubscribe(true) is enabled.
+
 ## 1.35.36 (16.10.2026)
 * Fixed consent detection and event queue handling in IabTcfMode.
 * Fixed main-thread disk access during SDK initialization.

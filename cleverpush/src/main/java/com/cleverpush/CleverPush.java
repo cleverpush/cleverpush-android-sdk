@@ -145,7 +145,7 @@ import java.util.concurrent.Executors;
 
 public class CleverPush {
 
-  public static final String SDK_VERSION = "1.35.36";
+  public static final String SDK_VERSION = "1.35.37";
 
   private static CleverPush instance;
   private static boolean isSubscribeForTopicsDialog = false;
