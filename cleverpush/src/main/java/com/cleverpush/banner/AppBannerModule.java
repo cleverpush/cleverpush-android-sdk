@@ -106,7 +106,9 @@ public class AppBannerModule {
   private Set<String> bannerClickedList = new HashSet<>();
   private Set<String> bannerDeliveredList = new HashSet<>();
   public String currentEventId = null;
-  Set<String> currentNotificationDeeplink = new HashSet<>();
+  // Deep links opened inside the host app (most recent one only). Static so a deep link that is handled before
+  // the SDK / banner module finished initializing is still available once banners are evaluated.
+  private static final Set<String> openedDeepLinks = Collections.synchronizedSet(new HashSet<>());
   private TriggeredEvent currentEvent = null;
   private AppBannerClosedListener appBannerClosedListener;
   Set<String> shownBanners = new HashSet<>();
@@ -1409,19 +1411,102 @@ public class AppBannerModule {
     }
   }
 
+  /**
+   * Evaluates a banner's deep link trigger condition against the deep links opened in the host app.
+   * <p>
+   * Only deep links opened in the app are considered (never notification URLs). The condition is
+   * satisfied when at least one opened deep link matches the configured URL, as defined by
+   * {@link #deepLinkMatchesCondition(String, String)}.
+   *
+   * @param condition the trigger condition holding the configured deep link URL
+   * @return {@code true} if the condition is satisfied, {@code false} if there is no opened deep link,
+   * the configured URL is empty, or no opened deep link matches
+   */
   private boolean checkDeeplinkTriggerCondition(BannerTriggerCondition condition) {
-    Set<String> deepLinks = getCurrentNotificationDeeplink();
+    Set<String> deepLinks;
+    synchronized (openedDeepLinks) {
+      deepLinks = new HashSet<>(openedDeepLinks);
+    }
     Logger.i(TAG, "deepLinks: " + new Gson().toJson(deepLinks));
-    if (deepLinks.size() == 0) {
+    String conditionUrl = condition.getDeepLinkUrl();
+    if (deepLinks.isEmpty() || conditionUrl == null || conditionUrl.trim().isEmpty()) {
       return false;
     }
 
+    String canonicalConditionUrl = canonicalizeDeepLink(conditionUrl.trim());
+    if (canonicalConditionUrl.isEmpty()) {
+      return false;
+    }
     for (String deepLink : deepLinks) {
-      if (deepLink.equalsIgnoreCase(condition.getDeepLinkUrl())) {
+      if (deepLinkMatchesCondition(deepLink, canonicalConditionUrl)) {
         return true;
       }
     }
     return false;
+  }
+
+  /**
+   * Checks whether the opened deep link matches a banner's configured deep link condition.
+   * The opened URL is canonicalized by removing query parameters, fragments, and trailing slashes
+   * (the condition URL must already be canonicalized). Matching is case-insensitive and supports
+   * sub-paths with segment boundary validation (e.g. {@code /shop} matches {@code /shop/shoes}
+   * but not {@code /shopping}).
+   */
+  static boolean deepLinkMatchesCondition(String openedUrl, String canonicalConditionUrl) {
+    String opened = canonicalizeDeepLink(openedUrl);
+    if (opened.equalsIgnoreCase(canonicalConditionUrl)) {
+      return true;
+    }
+    return opened.toLowerCase(Locale.ROOT).startsWith(canonicalConditionUrl.toLowerCase(Locale.ROOT) + "/");
+  }
+
+  /**
+   * Strips the query string, the fragment and any trailing slashes from a URL, so that URLs that differ
+   * only in those parts compare as equal.
+   *
+   * @param url the URL to canonicalize
+   * @return the URL without its query, fragment and trailing slashes
+   */
+  static String canonicalizeDeepLink(String url) {
+    String result = url;
+    int cut = result.indexOf('?');
+    if (cut >= 0) {
+      result = result.substring(0, cut);
+    }
+    cut = result.indexOf('#');
+    if (cut >= 0) {
+      result = result.substring(0, cut);
+    }
+    while (result.endsWith("/")) {
+      result = result.substring(0, result.length() - 1);
+    }
+    return result;
+  }
+
+  /**
+   * Called when a deep link was opened/handled inside the host app (not a notification click).
+   * Remembers the deep link and re-evaluates the app banners so banners with a "deep link" trigger
+   * condition can be shown.
+   */
+  public static void onDeepLinkOpened(String url) {
+    if (url == null || url.trim().isEmpty()) {
+      return;
+    }
+    String deepLink = url.trim();
+
+    synchronized (openedDeepLinks) {
+      openedDeepLinks.clear();
+      openedDeepLinks.add(deepLink);
+    }
+    Logger.d(TAG, "Deep link opened: " + deepLink);
+
+    // Re-evaluate banners right away. Do not gate this on isInitSessionCalled: it is reset on every pause,
+    // and initSession() skips banner evaluation when the last session was less than MIN_SESSION_LENGTH ago.
+    // Without this, a deep link opened from the background would be stored but never evaluated.
+    final AppBannerModule module = instance;
+    if (module != null && module.handler != null) {
+      module.handler.post(module::startup);
+    }
   }
 
   private boolean checkDaysSinceInstallationTriggerCondition(BannerTriggerCondition condition) {
@@ -2606,12 +2691,35 @@ public class AppBannerModule {
     }
   }
 
-  public Set<String> getCurrentNotificationDeeplink() {
-    return currentNotificationDeeplink;
+  /**
+   * @return the deep link(s) last opened inside the host app.
+   */
+  public Set<String> getCurrentDeeplinks() {
+    synchronized (openedDeepLinks) {
+      return new HashSet<>(openedDeepLinks);
+    }
   }
 
+  /**
+   * @deprecated Deep links are no longer taken from notifications. Use {@link #getCurrentDeeplinks()}.
+   */
+  @Deprecated
+  public Set<String> getCurrentNotificationDeeplink() {
+    return getCurrentDeeplinks();
+  }
+
+  /**
+   * @deprecated Deep links are no longer taken from notifications. Use
+   * {@link #onDeepLinkOpened(String)} instead.
+   */
+  @Deprecated
   public void setCurrentNotificationDeeplink(Set<String> currentNotificationDeeplink) {
-    this.currentNotificationDeeplink = currentNotificationDeeplink;
+    synchronized (openedDeepLinks) {
+      openedDeepLinks.clear();
+      if (currentNotificationDeeplink != null) {
+        openedDeepLinks.addAll(currentNotificationDeeplink);
+      }
+    }
   }
 
   public AppBannerClosedListener getAppBannerClosedListener() {

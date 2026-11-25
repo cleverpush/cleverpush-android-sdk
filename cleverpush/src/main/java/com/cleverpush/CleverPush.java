@@ -18,6 +18,7 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -4757,6 +4758,34 @@ public class CleverPush {
    */
   public void onNewIntent(Activity activity, Intent intent) {
     DeepLinkTracker.captureFromNewIntent(activity, intent);
+  }
+
+  /**
+   * Report a deep link that was handled inside your app. Used for App Banners with the
+   * "Open only if opened via one of the following deep links" filter.
+   * <p>
+   * Deep links declared in your AndroidManifest (VIEW + BROWSABLE intent-filter) are detected
+   * automatically. Call this only for deep links that are not delivered that way
+   * (e.g. link SDKs, custom in-app routing).
+   */
+  public void handleDeepLink(String url) {
+    DeepLinkTracker.handleDeepLink(getContext(), url);
+  }
+
+  /**
+   * @see #handleDeepLink(String)
+   */
+  public void handleDeepLink(Uri uri) {
+    if (uri != null) {
+      DeepLinkTracker.handleDeepLink(getContext(), uri.toString());
+    }
+  }
+
+  /**
+   * @see #handleDeepLink(String)
+   */
+  public void handleDeepLink(Intent intent) {
+    DeepLinkTracker.handleDeepLink(getContext(), intent);
   }
 
   public Context getCurrentContext() {
