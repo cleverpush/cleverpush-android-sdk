@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 
+import com.cleverpush.banner.AppBannerModule;
 import com.cleverpush.banner.WebViewActivity;
 import com.cleverpush.inbox.InboxDetailActivity;
 import com.cleverpush.stories.StoryDetailActivity;
@@ -103,12 +104,49 @@ public final class DeepLinkTracker {
     }
 
     storeDeepLink(context, url);
+    notifyAppBanners(url);
     lastProcessedUrl = url;
     lastProcessedIntentHash = intentHash;
     try {
       intent.putExtra(INTENT_EXTRA_TRACKED, true);
     } catch (Exception ignored) {
       // Some intents do not allow extra mutation; storage still succeeded.
+    }
+  }
+
+  /**
+   * Manually report a deep link that was handled by the host app. Use this when the deep link is not
+   * delivered through a regular VIEW intent (e.g. link SDKs, in-app navigation). The link is stored
+   * for event attribution and used for app banners with a "deep link" trigger condition.
+   */
+  public static void handleDeepLink(Context context, String url) {
+    String normalizedUrl = normalizeDeepLinkUrl(url);
+    if (context == null || normalizedUrl == null) {
+      return;
+    }
+    storeDeepLink(context, normalizedUrl);
+    notifyAppBanners(normalizedUrl);
+  }
+
+  /**
+   * Manually report a deep link {@link Intent} (see {@link #handleDeepLink(Context, String)}).
+   * The host deep link allowlist is not applied since the app explicitly reports the intent.
+   */
+  public static void handleDeepLink(Context context, Intent intent) {
+    if (intent == null || Intent.ACTION_MAIN.equals(intent.getAction())) {
+      return;
+    }
+    Uri data = intent.getData();
+    if (data != null) {
+      handleDeepLink(context, data.toString());
+    }
+  }
+
+  private static void notifyAppBanners(String url) {
+    try {
+      AppBannerModule.onDeepLinkOpened(url);
+    } catch (Exception e) {
+      Logger.e(LOG_TAG, "DeepLinkTracker: failed to notify app banners about deep link", e);
     }
   }
 

@@ -12,10 +12,7 @@ import androidx.core.app.NotificationManagerCompat;
 import com.cleverpush.util.Logger;
 import com.google.gson.Gson;
 
-import java.net.URI;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 public class NotificationOpenedProcessor {
 
@@ -103,7 +100,6 @@ public class NotificationOpenedProcessor {
             DeepLinkTracker.storeDeepLink(context, deepLinkURL);
           }
           if (autoHandleDeepLink && deepLinkURL != null && !deepLinkURL.isEmpty()) {
-            setNotificationDeepLink(deepLinkURL, cleverPush);
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkURL));
             context.startActivity(browserIntent);
           }
@@ -120,26 +116,6 @@ public class NotificationOpenedProcessor {
       }
     } catch (Exception e) {
       Logger.e(LOG_TAG, "Error while processing intent for push: " + e.getMessage(), e);
-    }
-  }
-
-  public static void setNotificationDeepLink(String deepLink, CleverPush cleverPush) {
-    try {
-      URI uri = new URI(deepLink);
-
-      // Remove query parameters
-      uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), null, uri.getFragment());
-
-      Set<String> currentDeeplink = new HashSet<>();
-
-      if (cleverPush.getAppBannerModule().getCurrentNotificationDeeplink() != null) {
-        currentDeeplink = cleverPush.getAppBannerModule().getCurrentNotificationDeeplink();
-      }
-
-      currentDeeplink.add(uri.toString());
-      cleverPush.getAppBannerModule().setCurrentNotificationDeeplink(currentDeeplink);
-    } catch (Exception e) {
-      Logger.e(LOG_TAG, "Error while setting notification deep link: " + e.getMessage(), e);
     }
   }
 }
