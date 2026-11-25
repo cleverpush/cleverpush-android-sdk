@@ -101,6 +101,8 @@ public class NotificationOpenedProcessor {
           }
           if (autoHandleDeepLink && deepLinkURL != null && !deepLinkURL.isEmpty()) {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLinkURL));
+            // Flag as notification-origin so DeepLinkTracker does not trigger deep link app banners for it.
+            browserIntent.putExtra(DeepLinkTracker.INTENT_EXTRA_FROM_NOTIFICATION, true);
             context.startActivity(browserIntent);
           }
         } catch (Exception e) {

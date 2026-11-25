@@ -1433,7 +1433,7 @@ public class AppBannerModule {
       return false;
     }
 
-    String canonicalConditionUrl = canonicalizeDeepLink(conditionUrl);
+    String canonicalConditionUrl = canonicalizeDeepLink(conditionUrl.trim());
     if (canonicalConditionUrl.isEmpty()) {
       return false;
     }
@@ -1445,11 +1445,14 @@ public class AppBannerModule {
     return false;
   }
 
-  /** Checks whether the opened deep link matches a banner's configured deep link condition.
-          * Both URLs are canonicalized by removing query parameters, fragments, and trailing slashes.
-          * Matching is case-insensitive and supports sub-paths with segment boundary validation.
-    */
-  private static boolean deepLinkMatchesCondition(String openedUrl, String canonicalConditionUrl) {
+  /**
+   * Checks whether the opened deep link matches a banner's configured deep link condition.
+   * The opened URL is canonicalized by removing query parameters, fragments, and trailing slashes
+   * (the condition URL must already be canonicalized). Matching is case-insensitive and supports
+   * sub-paths with segment boundary validation (e.g. {@code /shop} matches {@code /shop/shoes}
+   * but not {@code /shopping}).
+   */
+  static boolean deepLinkMatchesCondition(String openedUrl, String canonicalConditionUrl) {
     String opened = canonicalizeDeepLink(openedUrl);
     if (opened.equalsIgnoreCase(canonicalConditionUrl)) {
       return true;
@@ -1464,7 +1467,7 @@ public class AppBannerModule {
    * @param url the URL to canonicalize
    * @return the URL without its query, fragment and trailing slashes
    */
-  private static String canonicalizeDeepLink(String url) {
+  static String canonicalizeDeepLink(String url) {
     String result = url;
     int cut = result.indexOf('?');
     if (cut >= 0) {

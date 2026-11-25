@@ -37,6 +37,7 @@ import java.util.WeakHashMap;
 public final class DeepLinkTracker {
 
   static final String INTENT_EXTRA_TRACKED = "cleverpush_deep_link_tracked";
+  static final String INTENT_EXTRA_FROM_NOTIFICATION = "cleverpush_deep_link_from_notification";
 
   private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
   private static final long ATTRIBUTION_WINDOW_MS = 24L * 60L * 60L * 1000L;
@@ -104,7 +105,10 @@ public final class DeepLinkTracker {
     }
 
     storeDeepLink(context, url);
-    notifyAppBanners(url);
+    // Notification auto-open URLs are launched by the SDK itself; they must not trigger deep link banners.
+    if (!intent.getBooleanExtra(INTENT_EXTRA_FROM_NOTIFICATION, false)) {
+      notifyAppBanners(url);
+    }
     lastProcessedUrl = url;
     lastProcessedIntentHash = intentHash;
     try {
