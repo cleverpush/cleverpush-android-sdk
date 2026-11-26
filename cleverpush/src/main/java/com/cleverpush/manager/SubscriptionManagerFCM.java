@@ -270,8 +270,16 @@ public class SubscriptionManagerFCM extends SubscriptionManagerBase {
         boolean forcedTokenRefresh = changedToken != null;
         boolean tokenMissingLocally = existingToken == null;
         boolean tokenChanged = !newToken.equals(existingToken);
+        // The channel's fcmId is the source of truth. If it changed since the last sync,
+        // the backend still has the old value, so re-sync even when the token is unchanged.
+        String existingSenderId = sharedPreferences.getString(CleverPushPreferences.SYNCED_FCM_SENDER_ID, null);
+        boolean senderIdChanged = !senderId.equals(existingSenderId);
 
-        if (forcedTokenRefresh || tokenMissingLocally || tokenChanged) {
+        if (forcedTokenRefresh || tokenMissingLocally || tokenChanged || senderIdChanged) {
+          if (senderIdChanged && !forcedTokenRefresh && !tokenMissingLocally && !tokenChanged) {
+            Logger.i(LOG_TAG, "Channel FCM sender ID changed (synced=" + existingSenderId
+                    + ", channel=" + senderId + "), re-syncing subscription.");
+          }
 
           this.syncSubscription(
                   newToken,

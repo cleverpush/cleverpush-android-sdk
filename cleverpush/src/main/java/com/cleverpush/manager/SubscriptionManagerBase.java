@@ -194,6 +194,10 @@ abstract class SubscriptionManagerBase implements SubscriptionManager {
                       .apply();
             }
             sharedPreferences.edit().putString(CleverPushPreferences.SUBSCRIPTION_ID, newSubscriptionId).apply();
+            if (SubscriptionManagerBase.this.type == SubscriptionManagerType.FCM && senderId != null) {
+              // Remember which channel fcmId the backend now has for this subscription
+              sharedPreferences.edit().putString(CleverPushPreferences.SYNCED_FCM_SENDER_ID, senderId).apply();
+            }
             sharedPreferences.edit()
                     .putInt(CleverPushPreferences.SUBSCRIPTION_LAST_SYNC, (int) (System.currentTimeMillis() / 1000L))
                     .apply();
